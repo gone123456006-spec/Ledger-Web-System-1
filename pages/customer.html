@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Add Customer </title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ===============================
+   CUSTOMBER SYSTEM
+================================ */
+:root{
+  --bg:#f5f6f8;
+  --card:#ffffff;
+  --text:#000000;
+  --muted:#6e6e73;
+  --border:#e5e5ea;
+  --primary:#007aff;
+  --danger:#ff3b30;
+  --radius:14px;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:"Segoe UI", Roboto, Arial, sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.page{
+  max-width:1200px;
+  margin:30px auto;
+  padding:0 20px 90px;
+}
+
+h2{font-weight:600}
+
+/* ===============================
+   FORM CARD
+================================ */
+.erp-form{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:0 20px 40px rgba(0,0,0,.06);
+  padding:25px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:25px;
+}
+
+.form-left h4,
+.form-right h4{
+  margin:0 0 10px;
+  font-size:16px;
+  color:var(--muted);
+}
+
+label{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:14px;
+  display:block;
+}
+
+input, textarea, select{
+  width:100%;
+  padding:11px 12px;
+  margin-top:6px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-size:14px;
+}
+
+input:focus, textarea:focus, select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(0,122,255,.15);
+}
+
+textarea{resize:none;height:90px}
+
+.row{display:flex;gap:10px}
+.row select{max-width:90px}
+
+/* ===============================
+   ACTION BAR
+================================ */
+.form-actions{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  background:rgba(255,255,255,.95);
+  backdrop-filter:blur(12px);
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  padding:12px;
+}
+
+button{
+  padding:10px 18px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#cae8ff;
+  cursor:pointer;
+  font-size:14px;
+}
+
+button.primary{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+}
+
+/* ===============================
+   CUSTOMER LIST
+================================ */
+#customerListSection{
+  display:none;
+  margin-top:30px;
+  width:100%;
+}
+
+/* TABLE WRAPPER (IMPORTANT FOR RESPONSIVENESS) */
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
+  border-radius:12px;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  min-width:800px; /* prevents column crushing */
+  border-collapse:collapse;
+  background:#fff;
+  border:1px solid var(--border);
+}
+
+/* TABLE HEAD & BODY */
+th, td{
+  padding:10px 12px;
+  font-size:14px;
+  text-align:left;
+  border:1px solid var(--border); /* FULL GRID LINES */
+  white-space:nowrap;             /* stops overlap */
+}
+
+/* HEADER */
+th{
+  background:#f2f2f7;
+  font-weight:600;
+}
+
+/* ROW HOVER */
+tbody tr:hover{
+  background:#f9fafc;
+}
+
+/* ===============================
+   MOBILE RESPONSIVE FIX
+================================ */
+@media (max-width: 900px){
+
+  .erp-form{
+    grid-template-columns:1fr;
+  }
+
+  table{
+    min-width:100%; /* allow scroll instead of overlap */
+  }
+
+  th, td{
+    font-size:13px;
+    padding:8px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+<div class="page">
+
+<h2 id="pageTitle">Add Customer </h2>
+
+<form id="customerForm" class="erp-form">
+
+  <!-- LEFT -->
+  <div class="form-left">
+    <h4>Personal Details</h4>
+
+    <label>Customer ID</label>
+    <input id="cid" placeholder="Auto Generated">
+
+    <label>Name</label>
+    <input id="name">
+
+    <label>Relation</label>
+    <div class="row">
+      <select id="relation">
+        <option>S/O</option>
+        <option>W/O</option>
+        <option>D/O</option>
+        <option>C/O</option>
+      </select>
+      <input id="relationName">
+    </div>
+
+    <label>Type</label>
+    <input id="type">
+
+    <label>LF No</label>
+    <input id="lfno">
+
+    <label>Opening Date</label>
+    <input type="date" id="openingDate">
+
+    <h4 style="margin-top:25px">Account</h4>
+
+    <label>Opening Balance</label>
+    <input type="number" id="openingBalance">
+
+    <label>Gold Balance</label>
+    <div class="row">
+      <input type="number" id="goldBalance">
+      <select><option>gm</option></select>
+    </div>
+
+    <label>Silver Balance</label>
+    <div class="row">
+      <input type="number" id="silverBalance">
+      <select><option>gm</option></select>
+    </div>
+
+    <label>Max Credit Limit</label>
+    <input type="number" id="maxLimit">
+
+    <label>Aadhar No</label>
+    <input id="aadhar">
+
+    <label>PAN No</label>
+    <input id="pan">
+  </div>
+
+  <!-- RIGHT -->
+  <div class="form-right">
+    <h4>Contact Details</h4>
+
+    <label>Address</label>
+    <textarea id="address"></textarea>
+
+    <label>Station</label>
+    <input id="station">
+
+    <label>Phone *</label>
+    <input id="phone">
+
+    <label>Mobile</label>
+    <input id="mobile">
+
+    <label>Email</label>
+    <input type="email" id="email">
+  </div>
+</form>
+
+<!-- CUSTOMER LIST -->
+<div id="customerListSection">
+  <h2>Customer List</h2>
+
+  <input id="searchCustomer" placeholder="Search Name / Mobile"
+         onkeyup="renderCustomerList()" style="padding:10px;width:300px">
+
+  <table>
+    <thead>
+      <tr>
+        <th>CID</th>
+        <th>Name</th>
+        <th>Mobile</th>
+        <th>Station</th>
+        <th>Balance</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="customerTableBody"></tbody>
+  </table>
+</div>
+
+</div>
+
+<!-- ACTION BUTTONS -->
+<div class="form-actions">
+  <button type="button" class="primary" onclick="submitForm()">Save & Close</button>
+  <button type="button" onclick="saveAndNew()">Save & New</button>
+  <button type="button" onclick="resetForm()">Reset</button>
+  <button type="button" onclick="openList()">Customer List</button>
+</div>
+
+<script>
+/* =====================================================
+   CONSTANTS
+===================================================== */
+const STORE_KEY = "customers";
+const EDIT_KEY  = "editCustomerId";
+
+/* =====================================================
+   ELEMENT REFERENCES
+===================================================== */
+const $ = id => document.getElementById(id);
+
+const form = $("customerForm");
+
+const fields = {
+  cid: $("cid"),
+  name: $("name"),
+  relation: $("relation"),
+  relationName: $("relationName"),
+  type: $("type"),
+  lfno: $("lfno"),
+  openingDate: $("openingDate"),
+  openingBalance: $("openingBalance"),
+  goldBalance: $("goldBalance"),
+  silverBalance: $("silverBalance"),
+  maxLimit: $("maxLimit"),
+  aadhar: $("aadhar"),
+  pan: $("pan"),
+  address: $("address"),
+  station: $("station"),
+  phone: $("phone"),
+  mobile: $("mobile"),
+  email: $("email")
+};
+
+/* =====================================================
+   INIT
+===================================================== */
+const editId = localStorage.getItem(EDIT_KEY);
+if (editId) loadForEdit(editId);
+
+/* =====================================================
+   FORM ACTIONS
+===================================================== */
+function submitForm(){
+  if(!validateForm()) return;
+  saveCustomer();
+  openList();
+}
+
+function saveAndNew(){
+  if(!validateForm()) return;
+  saveCustomer();
+  resetForm(true);
+}
+
+function resetForm(focusName=false){
+  form.reset();
+  localStorage.removeItem(EDIT_KEY);
+  fields.cid.value = "";
+  fields.cid.placeholder = "Auto Generated";
+  if(focusName) fields.name.focus();
+}
+
+/* =====================================================
+   VALIDATION
+===================================================== */
+function validateForm(){
+
+  if(!fields.name.value.trim()){
+    alert("Customer name is required");
+    fields.name.focus();
+    return false;
+  }
+
+  if(!/^\d{10}$/.test(fields.mobile.value.trim())){
+    alert("Enter valid 10-digit mobile number");
+    fields.mobile.focus();
+    return false;
+  }
+
+  // Duplicate mobile check
+  const customers = getCustomers();
+  const duplicate = customers.find(c =>
+    c.mobile === fields.mobile.value.trim() &&
+    String(c.id) !== String(editId)
+  );
+
+  if(duplicate){
+    alert("This mobile number already exists");
+    return false;
+  }
+
+  return true;
+}
+
+/* =====================================================
+   SAVE / UPDATE
+===================================================== */
+function saveCustomer(){
+
+  let customers = getCustomers();
+  const isEdit = !!editId;
+  const id = isEdit ? Number(editId) : generateId(customers);
+
+  const data = {
+    id,
+    cid: isEdit
+      ? fields.cid.value
+      : fields.cid.value.trim() || "CUST-" + id,
+
+    name: fields.name.value.trim(),
+    relation: fields.relation.value,
+    relationName: fields.relationName.value.trim(),
+    type: fields.type.value.trim(),
+    lfno: fields.lfno.value.trim(),
+    openingDate: fields.openingDate.value,
+
+    openingBalance: num(fields.openingBalance.value),
+    goldBalance: num(fields.goldBalance.value),
+    silverBalance: num(fields.silverBalance.value),
+    maxLimit: num(fields.maxLimit.value),
+
+    aadhar: fields.aadhar.value.trim(),
+    pan: fields.pan.value.trim(),
+    address: fields.address.value.trim(),
+    station: fields.station.value.trim(),
+
+    phone: fields.phone.value.trim(),
+    mobile: fields.mobile.value.trim(),
+    email: fields.email.value.trim()
+  };
+
+  if(isEdit){
+    const index = customers.findIndex(c => c.id === id);
+    if(index === -1){
+      alert("Customer not found");
+      return;
+    }
+    customers[index] = data;
+    localStorage.removeItem(EDIT_KEY);
+  }else{
+    customers.push(data);
+  }
+
+  localStorage.setItem(STORE_KEY, JSON.stringify(customers));
+  alert("Customer saved successfully");
+}
+
+/* =====================================================
+   LIST
+===================================================== */
+function openList(){
+  document.querySelector(".erp-form").style.display = "none";
+  $("customerListSection").style.display = "block";
+  renderCustomerList();
+}
+
+function renderCustomerList(){
+  const tbody = $("customerTableBody");
+  const search = ($("searchCustomer").value || "").toLowerCase();
+  tbody.innerHTML = "";
+
+  getCustomers()
+    .filter(c =>
+      c.name.toLowerCase().includes(search) ||
+      c.mobile.includes(search)
+    )
+    .forEach(c => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${c.cid}</td>
+          <td>${c.name}</td>
+          <td>${c.mobile}</td>
+          <td>${c.station}</td>
+          <td>${c.openingBalance}</td>
+          <td>
+            <button onclick="editCustomer(${c.id})">Edit</button>
+            <button onclick="deleteCustomer(${c.id})">Delete</button>
+          </td>
+        </tr>`;
+    });
+}
+
+/* =====================================================
+   EDIT / DELETE
+===================================================== */
+function editCustomer(id){
+  localStorage.setItem(EDIT_KEY, id);
+  location.reload();
+}
+
+function deleteCustomer(id){
+  if(!confirm("Delete this customer?")) return;
+  let customers = getCustomers().filter(c => c.id !== id);
+  localStorage.setItem(STORE_KEY, JSON.stringify(customers));
+  renderCustomerList();
+}
+
+/* =====================================================
+   LOAD EDIT DATA
+===================================================== */
+function loadForEdit(id){
+  const customer = getCustomers().find(c => String(c.id) === String(id));
+  if(!customer) return;
+
+  Object.keys(fields).forEach(k=>{
+    if(customer[k] !== undefined){
+      fields[k].value = customer[k];
+    }
+  });
+
+  // Lock CID during edit
+  fields.cid.disabled = true;
+}
+
+/* =====================================================
+   HELPERS
+===================================================== */
+function getCustomers(){
+  return JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+}
+
+function generateId(customers){
+  const lastId = customers.length
+    ? Math.max(...customers.map(c => c.id))
+    : 1000;
+  return lastId + 1;
+}
+
+function num(v){
+  return Number(v) || 0;
+}
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>New Order</title>
+
+<style>
+/* =====================================================
+   FULLY RESPONSIVE APPLE-STYLE ERP UI – NEW ORDER
+===================================================== */
+
+:root{
+  --bg:#eef2f7;
+  --card:#ffffff;
+  --text:#1d1d1f;
+  --muted:#6e6e73;
+  --border:#d1d1d6;
+  --primary:#007aff;
+  --primary-soft:rgba(0,122,255,.14);
+  --danger:#ff3b30;
+  --radius:14px;
+  --shadow-lg:0 24px 48px rgba(0,0,0,.18);
+  --shadow-sm:0 6px 14px rgba(0,0,0,.08);
+}
+
+/* RESET */
+*{
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,
+              "Segoe UI",Roboto,Arial,sans-serif;
+}
+
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at top,#f5f7fb,#e6ebf3 60%);
+  color:var(--text);
+}
+
+/* ===============================
+   CONTAINER
+================================ */
+.order-window{
+  max-width:1400px;
+  margin:auto;
+  padding:16px;
+}
+
+/* ===============================
+   HEADER
+================================ */
+.order-title{
+  font-size:18px;
+  font-weight:600;
+  margin-bottom:16px;
+}
+
+/* ===============================
+   TOP GRID (DESKTOP)
+================================ */
+.order-top{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:16px;
+}
+
+/* ===============================
+   CARDS
+================================ */
+.box{
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+  padding:16px;
+}
+
+.box-title{
+  font-size:15px;
+  font-weight:600;
+  margin-bottom:12px;
+  color:var(--muted);
+}
+
+/* ===============================
+   FORM ROWS
+================================ */
+.row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.row label{
+  min-width:110px;
+  font-size:13px;
+  color:var(--muted);
+}
+
+.row input,
+.row select{
+  flex:1;
+  height:36px;
+  padding:6px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-size:14px;
+  background:#fff;
+  transition:.2s;
+}
+
+.row input:focus,
+.row select:focus{
+  outline:none;
+  border-color:var(--primary);
+  box-shadow:0 0 0 4px var(--primary-soft);
+}
+
+.row input[readonly]{
+  background:#f5f5f7;
+}
+
+/* ===============================
+   TABLE
+================================ */
+.order-details{
+  margin-top:18px;
+}
+
+.table-wrap{
+  background:var(--card);
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-lg);
+  overflow-x:auto;            /* MOBILE SAFE */
+}
+
+table{
+  width:100%;
+  min-width:900px;            /* prevents column collapse */
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:13.5px;
+}
+
+thead th{
+  position:sticky;
+  top:0;
+  background:#f5f6fa;
+  z-index:2;
+}
+
+th,td{
+  padding:8px 10px;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+
+tbody tr:hover{
+  background:#f8faff;
+}
+
+td input,
+td select{
+  width:100%;
+  height:30px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  padding:4px 6px;
+}
+
+/* ===============================
+   FOOTER
+================================ */
+.order-footer{
+  margin-top:18px;
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;             /* MOBILE SAFE */
+}
+
+.order-footer button{
+  min-width:96px;
+  height:38px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:14px;
+  cursor:pointer;
+}
+
+/* PRIMARY */
+.order-footer button:first-child{
+  background:var(--primary);
+  border-color:var(--primary);
+  color:#fff;
+  font-weight:600;
+}
+
+/* PRINT */
+.order-footer button:nth-child(2){
+  background:#eaf2ff;
+  border-color:#c9dcff;
+}
+
+/* CANCEL */
+.order-footer button:last-child{
+  background:#ffecec;
+  border-color:#ffb5b5;
+  color:#7f0000;
+}
+
+/* ===============================
+   ANIMATION
+================================ */
+.box,
+.table-wrap{
+  animation:fadeIn .35s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:none}
+}
+
+/* ===============================
+   TABLET (≤ 1024px)
+================================ */
+@media(max-width:1024px){
+  .order-top{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===============================
+   MOBILE (≤ 600px)
+================================ */
+@media(max-width:600px){
+
+  .order-window{
+    padding:12px;
+  }
+
+  .order-title{
+    font-size:16px;
+  }
+
+  .row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .row label{
+    min-width:100%;
+  }
+
+  .row input,
+  .row select{
+    width:100%;
+    height:40px;
+  }
+
+  table{
+    font-size:13px;
+  }
+
+  .order-footer{
+    justify-content:center;
+  }
+
+  .order-footer button{
+    width:100%;
+    max-width:260px;
+  }
+}
+
+/* ===============================
+   PRINT (A4)
+================================ */
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  .box,.table-wrap{
+    box-shadow:none;
+    border-radius:0;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="order-window">
+
+  <div class="order-title">New Order</div>
+
+  <!-- TOP -->
+  <div class="order-top">
+
+    <!-- CUSTOMER -->
+    <div class="box">
+      <div class="box-title">Customer Information</div>
+
+      <div class="row">
+        <label>Name *</label>
+        <select id="custName"></select>
+      </div>
+
+      <div class="row">
+        <label>Current Bal</label>
+        <input id="currentBal" readonly>
+      </div>
+
+      <div class="row">
+        <label>Relation</label>
+        <input id="relation" readonly>
+      </div>
+
+      <div class="row">
+        <label>Station</label>
+        <input id="station" readonly>
+      </div>
+
+      <div class="row">
+        <button onclick="openCustomer()" class="no-print">
+          + Add / Edit Customer
+        </button>
+      </div>
+    </div>
+
+    <!-- BILL -->
+    <div class="box">
+      <div class="box-title">Bill Information</div>
+
+      <div class="row">
+        <label>Bill No</label>
+        <input id="billNo">
+      </div>
+
+      <div class="row">
+        <label>Date</label>
+        <input type="date" id="billDate">
+      </div>
+
+      <div class="row">
+        <label>GST %</label>
+        <input id="gstRate" value="3">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DETAILS -->
+  <div class="order-details">
+    <div class="box-title">Order Details</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Qty</th>
+            <th>Item</th>
+            <th>Metal</th>
+            <th>Purity</th>
+            <th>Unit Wt</th>
+            <th>After Value</th>
+            <th>Marking %</th>
+            <th>GST</th>
+            <th>Total Amt</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="order-footer no-print">
+    <button onclick="saveOrder()">Save</button>
+    <button onclick="window.print()">Print</button>
+    <button onclick="cancelOrder()">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+/* ===============================
+   CONFIG
+================================ */
+const ROLE = localStorage.role || "staff";
+
+const RATES = {
+  Gold: 6200,
+  Silver: 75
+};
+
+/* ===============================
+   INIT
+================================ */
+billDate.value = new Date().toISOString().split("T")[0];
+loadCustomers();
+addRow();
+
+/* ===============================
+   CUSTOMER AUTOFILL
+================================ */
+function loadCustomers(){
+  const list = JSON.parse(localStorage.getItem("customers")||"[]");
+  custName.innerHTML = `<option value="">-- Select --</option>`;
+  list.forEach(c=>{
+    const o=document.createElement("option");
+    o.value=c.id;
+    o.textContent=c.name;
+    o.dataset.data=JSON.stringify(c);
+    custName.appendChild(o);
+  });
+}
+
+custName.onchange=()=>{
+  const o=custName.selectedOptions[0];
+  if(!o||!o.dataset.data)return;
+  const c=JSON.parse(o.dataset.data);
+  currentBal.value=c.openingBalance||0;
+  relation.value=(c.relation||"")+" "+(c.relationName||"");
+  station.value=c.station||"";
+};
+
+/* ===============================
+   ROW HANDLING
+================================ */
+function addRow(){
+  const tr=document.createElement("tr");
+  tr.innerHTML=`
+    <td><input class="qty" value="1"></td>
+    <td><input></td>
+    <td>
+      <select class="metal">
+        <option>Gold</option>
+        <option>Silver</option>
+      </select>
+    </td>
+    <td><input></td>
+    <td><input class="unit"></td>
+    <td><input class="after" readonly></td>
+    <td><input class="mark" value="0"></td>
+    <td><input class="gst" readonly></td>
+    <td><input class="total" readonly></td>
+  `;
+  rows.appendChild(tr);
+
+  tr.querySelectorAll("input,select").forEach(el=>{
+    el.addEventListener("input",()=>calc(tr));
+    el.addEventListener("keydown",e=>nav(e,tr));
+  });
+}
+
+function calc(tr){
+  const qty=+tr.querySelector(".qty").value||0;
+  const unit=+tr.querySelector(".unit").value||0;
+  const mark=+tr.querySelector(".mark").value||0;
+  const metal=tr.querySelector(".metal").value;
+  const gstP=+gstRate.value||0;
+
+  const base=qty*unit*RATES[metal];
+  const after=base+(base*mark/100);
+  const gst=after*gstP/100;
+  const total=after+gst;
+
+  tr.querySelector(".after").value=after.toFixed(2);
+  tr.querySelector(".gst").value=gst.toFixed(2);
+  tr.querySelector(".total").value=total.toFixed(2);
+}
+
+/* ===============================
+   KEYBOARD NAV
+================================ */
+function nav(e,tr){
+  if(e.key!=="Enter")return;
+  e.preventDefault();
+  const f=[...tr.querySelectorAll("input,select")];
+  const i=f.indexOf(e.target);
+  if(i===f.length-1){
+    addRow();
+    rows.lastChild.querySelector("input").focus();
+  }else{
+    f[i+1].focus();
+  }
+}
+
+/* ===============================
+   SAVE ORDER
+================================ */
+function saveOrder(){
+  if(!custName.value){
+    alert("Select customer");
+    return;
+  }
+
+  const orders=JSON.parse(localStorage.getItem("orders")||"[]");
+
+  const order={
+    id:Date.now(),
+    customerId:custName.value,
+    billNo:billNo.value,
+    date:billDate.value,
+    gst:+gstRate.value,
+    items:[]
+  };
+
+  rows.querySelectorAll("tr").forEach(tr=>{
+    order.items.push({
+      qty:tr.querySelector(".qty").value,
+      item:tr.children[1].firstChild.value,
+      metal:tr.querySelector(".metal").value,
+      purity:tr.children[3].firstChild.value,
+      total:tr.querySelector(".total").value
+    });
+  });
+
+  orders.push(order);
+  localStorage.setItem("orders",JSON.stringify(orders));
+
+  alert("Order saved successfully");
+}
+
+/* ===============================
+   UTIL
+================================ */
+function cancelOrder(){
+  document.querySelector(".workspace").innerHTML="";
+}
+
+function openCustomer(){
+  loadPage("../pages/customer.html");
+}
+</script>
+
+</body>
+</html>
