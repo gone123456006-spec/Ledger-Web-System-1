@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ledger Management System</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+/* =========================
+   If any need 
+========================= */
+</style>
+</head>
+
+<body>
+<!-- navigation bar -->
+<nav class="menu-bar">
+<ul class="menu-root">
+
+<li class="menu-item has-submenu">
+    Master
+    <ul class="submenu">
+
+        <li class="submenu-item has-submenu">
+            🚉 Stations
+            <ul class="submenu right">
+                <li onclick="openStation()">Add Station</li>
+                <li onclick="openStation()">List Stations</li>
+            </ul>
+        </li>
+
+        <li>👥 Customers</li>
+        <li>👷 Job Workers</li>
+
+        <li class="divider"></li>
+        <li>Exit</li>
+    </ul>
+</li>
+
+<li class="menu-item">Transactions</li>
+<li class="menu-item">Reports</li>
+<li class="menu-item">Tools</li>
+<li class="menu-item">Settings</li>
+<li class="menu-item">Help</li>
+
+</ul>
+</nav>
+
+
+<div class="app-container">
+
+<main class="workspace" id="workspace"></main>
+
+
+<!-- side bar  -->
+<aside class="sidebar">
+    <button>Add Customer</button> 
+    <button>Add Item</button>
+    <button>Agents</button>
+    <button>Customer Balance</button>
+
+    <button class="section-gap">Direct Bill</button>
+    <button>All Bill</button>
+
+    <button class="section-gap">New Order</button>
+    <button>Orders</button>
+    <button>Pending Orders</button>
+    <button>Ready Orders</button>
+    <button>Pending Items</button>
+
+    <button class="section-gap">Add Jobworker</button>
+    <button>Jobworker Entry</button>
+    <button>Jobworker Balance</button>
+
+    <button class="section-gap">New Loan</button>
+    <button>Pending Loans</button>
+
+    <button class="section-gap">Day Book</button>
+    <button class="exit">Exit</button>
+</aside>
+
+</div>
+
+<script>
+/* =========================
+   OPEN STATION FORM
+========================= */
+function openStation(){
+    document.getElementById("workspace").innerHTML = `
+    <div class="station-window">
+        <div class="station-titlebar">Station</div>
+
+        <div class="station-body">
+            <div class="station-group">
+                <label>Station <span>*</span></label>
+                <input id="stationName">
+            </div>
+
+            <div class="station-group">
+                <label>Country <span>*</span></label>
+                <input value="India" disabled>
+            </div>
+
+            <div class="station-group">
+                <label>State <span>*</span></label>
+                <select id="stationState">
+                    <option value="">-- Select State --</option>
+
+<option>Andhra Pradesh</option>
+<option>Arunachal Pradesh</option>
+<option>Assam</option>
+<option>Bihar</option>
+<option>Chhattisgarh</option>
+<option>Goa</option>
+<option>Gujarat</option>
+<option>Haryana</option>
+<option>Himachal Pradesh</option>
+<option>Jharkhand</option>
+<option>Karnataka</option>
+<option>Kerala</option>
+<option>Madhya Pradesh</option>
+<option>Maharashtra</option>
+<option>Manipur</option>
+<option>Meghalaya</option>
+<option>Mizoram</option>
+<option>Nagaland</option>
+<option>Odisha</option>
+<option>Punjab</option>
+<option>Rajasthan</option>
+<option>Sikkim</option>
+<option>Tamil Nadu</option>
+<option>Telangana</option>
+<option>Tripura</option>
+<option>Uttar Pradesh</option>
+<option>Uttarakhand</option>
+<option>West Bengal</option>
+
+<option disabled>──────────</option>
+
+<option>Andaman and Nicobar Islands</option>
+<option>Chandigarh</option>
+<option>Dadra and Nagar Haveli and Daman and Diu</option>
+<option>Delhi</option>
+<option>Jammu and Kashmir</option>
+<option>Ladakh</option>
+<option>Lakshadweep</option>
+<option>Puducherry</option>
+                </select>
+            </div>
+
+            <div class="station-group">
+                <label>City</label>
+                <input id="stationCity">
+            </div>
+
+            <div class="station-group">
+                <label>Pin code</label>
+                <input id="stationPin" maxlength="6">
+            </div>
+        </div>
+
+        <div class="station-footer">
+            <button class="btn" onclick="saveStation(true)">Save And Close</button>
+            <button class="btn" onclick="saveStation(false)">Save And New</button>
+            <button class="btn" onclick="resetStation()">Reset</button>
+            <button class="btn" onclick="closeStation()">Close</button>
+        </div>
+    </div>`;
+}
+
+/* =========================
+   SAVE STATION
+========================= */
+function saveStation(closeAfterSave){
+    const name  = document.getElementById("stationName").value.trim();
+    const state = document.getElementById("stationState").value;
+    const city  = document.getElementById("stationCity").value.trim();
+    const pin   = document.getElementById("stationPin").value.trim();
+
+    // Validation
+    if(name === ""){
+        alert("Station name is required");
+        return;
+    }
+    if(state === ""){
+        alert("Please select state");
+        return;
+    }
+    if(pin !== "" && !/^[0-9]{6}$/.test(pin)){
+        alert("Pin code must be 6 digits");
+        return;
+    }
+
+    // Load existing data
+    let stations = JSON.parse(localStorage.getItem("stations")) || [];
+
+    // Duplicate check
+    if(stations.some(s => s.name.toLowerCase() === name.toLowerCase())){
+        alert("Station already exists");
+        return;
+    }
+
+    // Save
+    stations.push({
+        name: name,
+        country: "India",
+        state: state,
+        city: city,
+        pin: pin
+    });
+
+    localStorage.setItem("stations", JSON.stringify(stations));
+
+    alert("Station saved successfully");
+
+    if(closeAfterSave){
+        closeStation();
+    } else {
+        resetStation();
+    }
+}
+
+/* =========================
+   RESET FORM
+========================= */
+function resetStation(){
+    document.getElementById("stationName").value = "";
+    document.getElementById("stationState").value = "";
+    document.getElementById("stationCity").value = "";
+    document.getElementById("stationPin").value = "";
+}
+
+/* =========================
+   CLOSE FORM
+========================= */
+function closeStation(){
+    document.getElementById("workspace").innerHTML = "";
+}
+
+/* =========================
+   EXIT APP
+========================= */
+function exitApp(){
+    if(confirm("Exit application?")){
+        window.close();
+    }
+}
+</script>
+<script src="script.js"></script>
+
+</body>
+</html>
