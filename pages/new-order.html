@@ -361,12 +361,13 @@ td select{
       <table>
         <thead>
           <tr>
+            <th>Type</th>
             <th>Qty</th>
             <th>Item</th>
             <th>Metal</th>
             <th>Purity</th>
-            <th>Unit Wt</th>
-            <th>After Value</th>
+            <th>Est Unit Wt</th>
+            <th>Total Wt </th>
             <th>Marking %</th>
             <th>GST</th>
             <th>Total Amt</th>
@@ -398,11 +399,31 @@ const RATES = {
 };
 
 /* ===============================
-   INIT
+  ELEMENTS + INIT
 ================================ */
-billDate.value = new Date().toISOString().split("T")[0];
-loadCustomers();
-addRow();
+const custName = document.getElementById('custName');
+const currentBal = document.getElementById('currentBal');
+const relation = document.getElementById('relation');
+const station = document.getElementById('station');
+const billNo = document.getElementById('billNo');
+const billDate = document.getElementById('billDate');
+const gstRate = document.getElementById('gstRate');
+const rows = document.getElementById('rows');
+
+function initNewOrder(){
+  billDate.value = new Date().toISOString().split("T")[0];
+  loadCustomers();
+  addRow();
+}
+
+// If this page is loaded directly the DOMContentLoaded event will fire;
+// when the page is injected via fetch into the dashboard the event
+// already happened, so call init immediately in that case.
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initNewOrder);
+} else {
+  initNewOrder();
+}
 
 /* ===============================
    CUSTOMER AUTOFILL
@@ -450,11 +471,16 @@ function addRow(){
     <td><input class="total" readonly></td>
   `;
   rows.appendChild(tr);
-
   tr.querySelectorAll("input,select").forEach(el=>{
     el.addEventListener("input",()=>calc(tr));
     el.addEventListener("keydown",e=>nav(e,tr));
   });
+
+  // Initialize computed values for the new row
+  calc(tr);
+
+  // Return the created row so callers can focus into it
+  return tr;
 }
 
 function calc(tr){
@@ -483,8 +509,10 @@ function nav(e,tr){
   const f=[...tr.querySelectorAll("input,select")];
   const i=f.indexOf(e.target);
   if(i===f.length-1){
-    addRow();
-    rows.lastChild.querySelector("input").focus();
+    const newTr = addRow();
+    // focus first input of the newly added row
+    const firstInput = newTr.querySelector("input,select");
+    if(firstInput) firstInput.focus();
   }else{
     f[i+1].focus();
   }

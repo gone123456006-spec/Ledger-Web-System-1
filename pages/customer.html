@@ -292,12 +292,32 @@ tbody tr:hover{
 
 </div>
 
-<!-- ACTION BUTTONS -->
+<!-- ACTION BUTTONS (OUTSIDE FORM) -->
 <div class="form-actions">
-  <button type="button" class="primary" onclick="submitForm()">Save & Close</button>
-  <button type="button" onclick="saveAndNew()">Save & New</button>
-  <button type="button" onclick="resetForm()">Reset</button>
-  <button type="button" onclick="openList()">Customer List</button>
+  <button
+    type="button"
+    class="primary"
+    onclick="submitForm(event)">
+    Save & Close
+  </button>
+
+  <button
+    type="button"
+    onclick="saveAndNew(event)">
+    Save & New
+  </button>
+
+  <button
+    type="button"
+    onclick="resetForm()">
+    Reset
+  </button>
+
+  <button
+    type="button"
+    onclick="openList()">
+    Customer List
+  </button>
 </div>
 
 <script>
@@ -344,17 +364,20 @@ if (editId) loadForEdit(editId);
 /* =====================================================
    FORM ACTIONS
 ===================================================== */
-function submitForm(){
+function submitForm(e){
+  if(e) e.preventDefault();
   if(!validateForm()) return;
   saveCustomer();
   openList();
 }
 
-function saveAndNew(){
+function saveAndNew(e){
+  if(e) e.preventDefault();
   if(!validateForm()) return;
   saveCustomer();
   resetForm(true);
 }
+
 
 function resetForm(focusName=false){
   form.reset();
@@ -363,6 +386,18 @@ function resetForm(focusName=false){
   fields.cid.placeholder = "Auto Generated";
   if(focusName) fields.name.focus();
 }
+
+// Block any accidental form submit (Enter key, browser behavior)
+form.addEventListener("submit", function(e){
+  e.preventDefault();
+});
+
+
+
+
+
+
+
 
 /* =====================================================
    VALIDATION
@@ -375,11 +410,18 @@ function validateForm(){
     return false;
   }
 
-  if(!/^\d{10}$/.test(fields.mobile.value.trim())){
-    alert("Enter valid 10-digit mobile number");
-    fields.mobile.focus();
-    return false;
-  }
+  if(!/^\d{10}$/.test(fields.phone.value.trim())){
+  alert("Enter valid 10-digit phone number");
+  fields.phone.focus();
+  return false;
+}
+
+if(fields.mobile.value.trim() &&
+   !/^\d{10}$/.test(fields.mobile.value.trim())){
+  alert("Enter valid 10-digit mobile number");
+  fields.mobile.focus();
+  return false;
+}
 
   // Duplicate mobile check
   const customers = getCustomers();
@@ -387,11 +429,16 @@ function validateForm(){
     c.mobile === fields.mobile.value.trim() &&
     String(c.id) !== String(editId)
   );
-
+  if(fields.mobile.value.trim()){
+  const duplicate = customers.find(c =>
+    c.mobile === fields.mobile.value.trim() &&
+    String(c.id) !== String(editId)
+  );
   if(duplicate){
     alert("This mobile number already exists");
     return false;
   }
+}
 
   return true;
 }
@@ -470,17 +517,19 @@ function renderCustomerList(){
     )
     .forEach(c => {
       tbody.innerHTML += `
-        <tr>
-          <td>${c.cid}</td>
-          <td>${c.name}</td>
-          <td>${c.mobile}</td>
-          <td>${c.station}</td>
-          <td>${c.openingBalance}</td>
-          <td>
-            <button onclick="editCustomer(${c.id})">Edit</button>
-            <button onclick="deleteCustomer(${c.id})">Delete</button>
-          </td>
-        </tr>`;
+  <tr ondblclick="selectCustomerForOrder('${c.name}')">
+    <td>${c.cid}</td>
+    <td>${c.name}</td>
+    <td>${c.mobile}</td>
+    <td>${c.station}</td>
+    <td>${c.openingBalance}</td>
+    <td>
+      <button onclick="editCustomer(${c.id})">Edit</button>
+      <button onclick="deleteCustomer(${c.id})">Delete</button>
+      <button onclick="selectCustomerForOrder('${c.name}')">Select</button>
+    </td>
+  </tr>`;
+
     });
 }
 
@@ -489,12 +538,12 @@ function renderCustomerList(){
 ===================================================== */
 function editCustomer(id){
   localStorage.setItem(EDIT_KEY, id);
-  location.reload();
+  loadForEdit(id);
 }
 
 function deleteCustomer(id){
   if(!confirm("Delete this customer?")) return;
-  let customers = getCustomers().filter(c => c.id !== id);
+  const customers = getCustomers().filter(c => c.id !== id);
   localStorage.setItem(STORE_KEY, JSON.stringify(customers));
   renderCustomerList();
 }
@@ -506,15 +555,26 @@ function loadForEdit(id){
   const customer = getCustomers().find(c => String(c.id) === String(id));
   if(!customer) return;
 
-  Object.keys(fields).forEach(k=>{
+  // Show form, hide list
+  document.querySelector(".erp-form").style.display = "grid";
+  document.getElementById("customerListSection").style.display = "none";
+
+  // Change title
+  const title = document.getElementById("pageTitle");
+  if(title) title.innerText = "Edit Customer";
+
+  // Fill fields
+  Object.keys(fields).forEach(k => {
     if(customer[k] !== undefined){
       fields[k].value = customer[k];
     }
   });
 
-  // Lock CID during edit
+  // Lock CID
+  fields.cid.value = customer.cid;
   fields.cid.disabled = true;
 }
+
 
 /* =====================================================
    HELPERS
@@ -533,6 +593,18 @@ function generateId(customers){
 function num(v){
   return Number(v) || 0;
 }
+
+function selectCustomerForOrder(name){
+  if (window.opener && window.opener.setCustomerName) {
+    window.opener.setCustomerName(name);
+    window.close();
+  } else {
+    alert("Order page not found");
+  }
+}
+
+
+
 </script>
 
 

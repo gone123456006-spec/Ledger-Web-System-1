@@ -1,12 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8" />
+  <title>Add Item</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="add-item.css" />
+  <style>
+  /* =========================
+   ADD ITEM WINDOW (ALIGNED)
+========================= */
+
+.window{
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #d1d6de;
+  box-shadow:0 25px 45px rgba(0,0,0,.25);
+  max-width:1000px;
+  margin:auto;
+}
+
+/* TITLE BAR */
+.title-bar{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:10px;
+  font-weight:600;
+  font-size:15px;
+  text-align:center;
+  border-bottom:1px solid #d1d6de;
+  border-radius:16px 16px 0 0;
+  color:#1d1d1f;
+}
+
+/* CONTENT AREA */
+.content{
+  display:flex;
+  gap:40px;
+  padding:22px 30px;
+  background:#f9fbfe;
+}
+
+/* LEFT / RIGHT PANELS */
+.left, .right{
+  flex:1;
+}
+
+/* HEADINGS */
+h3{
+  margin:0 0 16px 0;
+  font-size:15px;
+  color:#1d1d1f;
+}
+
+/* FORM ROW */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.form-row label{
+  width:160px;
+  font-size:14px;
+  color:#3a3a3c;
+}
+
+/* INPUTS */
+.form-row input,
+.form-row select{
+  flex:1;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+  background:#ffffff;
+}
+
+.form-row input:focus,
+.form-row select:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.18);
+}
+
+/* PICTURE */
+.picture-box{
+  margin-bottom:18px;
+}
+
+.picture-box span{
+  display:block;
+  font-size:14px;
+  margin-bottom:6px;
+  color:#3a3a3c;
+}
+
+.picture-box input{
+  width:100%;
+  padding:6px;
+}
+
+/* DESCRIPTION */
+.desc-box textarea{
+  width:100%;
+  height:200px;
+  resize:none;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+}
+
+.desc-box textarea:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.18);
+}
+
+/* FOOTER */
+.footer{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  padding:16px;
+  background:#f2f5f9;
+  border-top:1px solid #d1d6de;
+  border-radius:0 0 16px 16px;
+}
+
+/* BUTTONS */
+.footer button{
+  min-width:120px;
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  background:#ffffff;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.footer button:hover{
+  background:#f1f5fb;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media(max-width:800px){
+  .content{
+    flex-direction:column;
+  }
+
+  .form-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .form-row label{
+    width:100%;
+    margin-bottom:4px;
+  }
+}
+  
+
+  </style>
 </head>
 <body>
-    <main class="workspace" id="workspace"></main>
-    <h1>Agents Page</h1>
+
+<div class="window">
+  <div class="title-bar">Add_item</div>
+
+  <div class="content">
+
+    <!-- LEFT SIDE -->
+    <div class="left">
+      <h3>Add Item :-</h3>
+
+      <div class="form-row">
+        <label>Name :-</label>
+        <input type="text" id="name">
+      </div>
+
+      <div class="form-row">
+        <label>Tag/Level :-</label>
+        <input type="text" id="tag">
+      </div>
+
+      <div class="form-row">
+        <label>Group :-</label>
+        <select id="group">
+          <option value="">Select</option>
+          <option>Gold</option>
+          <option>Silver</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Type :-</label>
+        <select id="type">
+          <option value="">Select</option>
+          <option>Ring</option>
+          <option>Chain</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Sale Purity(%) :-</label>
+        <input type="number" id="salePurity">
+      </div>
+
+      <div class="form-row">
+        <label>Sale Wastage(%) :-</label>
+        <input type="number" id="saleWastage">
+      </div>
+
+      <div class="form-row">
+        <label>Purchase Purity(%) :-</label>
+        <input type="number" id="purchasePurity">
+      </div>
+
+      <div class="form-row">
+        <label>Purchase Wastage(%) :-</label>
+        <input type="number" id="purchaseWastage">
+      </div>
+
+      <div class="form-row">
+        <label>Weight :-</label>
+        <input type="number" id="weight">
+      </div>
+
+      <div class="form-row">
+        <label>Quantity :-</label>
+        <input type="number" id="quantity">
+      </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="right">
+      <h3>Details :-</h3>
+
+      <div class="picture-box">
+        <span>Picture :-</span>
+        <input type="file" id="picture">
+      </div>
+
+      <div class="desc-box">
+        <label>Description :-</label>
+        <textarea id="description"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BUTTON BAR -->
+  <div class="footer">
+    <button onclick="saveAndClose()">Save And Close</button>
+    <button onclick="saveAndNew()">Save And New</button>
+    <button onclick="resetForm()">Reset</button>
+    <button onclick="window.close()">Closed</button>
+  </div>
+
+</div>
+
+<script src="add-item.js"></script>
+<script>
+    function getFormData(){
+  return {
+    name: name.value,
+    tag: tag.value,
+    group: group.value,
+    type: type.value,
+    salePurity: salePurity.value,
+    saleWastage: saleWastage.value,
+    purchasePurity: purchasePurity.value,
+    purchaseWastage: purchaseWastage.value,
+    weight: weight.value,
+    quantity: quantity.value,
+    description: description.value
+  };
+}
+
+function saveAndClose(){
+  const data = getFormData();
+  console.log("Saved Data:", data);
+  alert("Item saved successfully");
+  // backend API call can be added here
+}
+
+function saveAndNew(){
+  saveAndClose();
+  resetForm();
+}
+
+function resetForm(){
+  document.querySelectorAll("input, textarea, select").forEach(el=>{
+    el.value = "";
+  });
+}
+
+</script>
 </body>
 </html>
