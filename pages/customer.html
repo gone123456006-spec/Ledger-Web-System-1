@@ -255,7 +255,9 @@ tbody tr:hover{
     <textarea id="address"></textarea>
 
     <label>Station</label>
-    <input id="station">
+    <select id="station">
+      <option value="">-- Select Station --</option>
+    </select>
 
     <label>Phone *</label>
     <input id="phone">
@@ -359,11 +361,24 @@ const fields = {
    INIT
 ===================================================== */
 const editId = localStorage.getItem(EDIT_KEY);
+loadStations();
 if (editId) loadForEdit(editId);
 
 /* =====================================================
    FORM ACTIONS
 ===================================================== */
+function loadStations(){
+  const stations = JSON.parse(localStorage.getItem("stations") || "[]");
+  const stationSelect = $("station");
+  stationSelect.innerHTML = '<option value="">-- Select Station --</option>';
+  stations.forEach(s => {
+    const option = document.createElement("option");
+    option.value = s.name;
+    option.textContent = s.name;
+    stationSelect.appendChild(option);
+  });
+}
+
 function submitForm(e){
   if(e) e.preventDefault();
   if(!validateForm()) return;

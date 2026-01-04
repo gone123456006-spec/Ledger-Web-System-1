@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Rate Booking</title>
+
+<style>
+
+/* =========================
+   WINDOW
+========================= */
+.window{
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #d1d6de;
+  box-shadow:0 25px 45px rgba(0,0,0,.25);
+  max-width:700px;
+  margin:40px auto;
+}
+
+/* TITLE BAR */
+.title-bar{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:10px;
+  font-weight:600;
+  font-size:15px;
+  text-align:left;
+  border-bottom:1px solid #d1d6de;
+  border-radius:16px 16px 0 0;
+  padding-left:16px;
+}
+
+/* CONTENT */
+.content{
+  padding:22px 30px;
+  background:#f9fbfe;
+}
+
+/* FORM ROW */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.form-row label{
+  width:120px;
+  font-size:14px;
+}
+
+/* INPUTS */
+.form-row input,
+.form-row select,
+.form-row textarea{
+  flex:1;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+}
+
+.form-row textarea{
+  height:80px;
+  resize:none;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.18);
+}
+
+/* SMALL ROW (DATE + TYPE) */
+.inline{
+  display:flex;
+  gap:14px;
+  flex:1;
+}
+
+/* FOOTER */
+.footer{
+  display:flex;
+  justify-content:center;
+  gap:20px;
+  padding:16px;
+  background:#f2f5f9;
+  border-top:1px solid #d1d6de;
+  border-radius:0 0 16px 16px;
+}
+
+.footer button{
+  min-width:120px;
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  background:#ffffff;
+  cursor:pointer;
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .form-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .form-row label{
+    width:100%;
+    margin-bottom:4px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+  <div class="title-bar">Rate Booking</div>
+
+  <div class="content">
+
+    <div class="form-row">
+      <label>Stamp</label>
+      <input id="stamp">
+    </div>
+
+    <div class="form-row">
+      <label>Weight</label>
+      <input id="weight" value="0.000" oninput="calcAmount()">
+    </div>
+
+    <div class="form-row">
+      <label>Rate</label>
+      <input id="rate" value="0.00" oninput="calcAmount()">
+    </div>
+
+    <div class="form-row">
+      <label>Amount</label>
+      <input id="amount" value="0" readonly>
+    </div>
+
+    <div class="form-row">
+      <label>Del Date</label>
+      <div class="inline">
+        <input type="date" id="delDate">
+        <label style="width:40px">Type</label>
+        <input id="type" value="S" style="max-width:80px">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label>Narration</label>
+      <textarea id="narration"></textarea>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button onclick="saveRate()">Save</button>
+    <button onclick="window.close()">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+function calcAmount(){
+  const w = Number(weight.value || 0);
+  const r = Number(rate.value || 0);
+  amount.value = (w * r).toFixed(2);
+}
+
+function saveRate(){
+  const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+
+  rates.push({
+    stamp: stamp.value,
+    weight: weight.value,
+    rate: rate.value,
+    amount: amount.value,
+    delDate: delDate.value,
+    type: type.value,
+    narration: narration.value,
+    date: new Date().toISOString().split("T")[0]
+  });
+
+  localStorage.setItem("rateBook", JSON.stringify(rates));
+  alert("Rate saved successfully");
+  window.close();
+}
+</script>
+
+</body>
+</html>

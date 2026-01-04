@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Payment Receipt</title>
+
+<style>
+
+/* =========================
+   WINDOW
+========================= */
+.window{
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #d1d6de;
+  box-shadow:0 25px 45px rgba(0,0,0,.25);
+  max-width:900px;
+  margin:40px auto;
+}
+
+/* TITLE BAR */
+.title-bar{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:10px;
+  font-weight:600;
+  font-size:15px;
+  text-align:center;
+  border-bottom:1px solid #d1d6de;
+  border-radius:16px 16px 0 0;
+}
+
+/* CONTENT */
+.content{
+  display:flex;
+  gap:40px;
+  padding:22px 30px;
+  background:#f9fbfe;
+}
+
+/* PANELS */
+.left, .right{
+  flex:1;
+}
+
+/* HEADINGS */
+h3{
+  margin:0 0 16px 0;
+  font-size:15px;
+}
+
+/* FORM ROW */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.form-row label{
+  width:160px;
+  font-size:14px;
+}
+
+/* INPUTS */
+.form-row input,
+.form-row select,
+.form-row textarea{
+  flex:1;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+}
+
+.form-row textarea{
+  height:90px;
+  resize:none;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.18);
+}
+
+/* FOOTER */
+.footer{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  padding:16px;
+  background:#f2f5f9;
+  border-top:1px solid #d1d6de;
+  border-radius:0 0 16px 16px;
+}
+
+.footer button{
+  min-width:120px;
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  background:#ffffff;
+  cursor:pointer;
+}
+
+/* RESPONSIVE */
+@media(max-width:800px){
+  .content{ flex-direction:column; }
+  .form-row{ flex-direction:column; align-items:flex-start; }
+  .form-row label{ width:100%; margin-bottom:4px; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+  <div class="title-bar">RECEIPT / PAYMENT</div>
+
+  <div class="content">
+
+    <!-- LEFT -->
+    <div class="left">
+      <h3>Payment Details</h3>
+
+      <div class="form-row">
+        <label>Payment Mode</label>
+        <select id="mode">
+          <option>Cash</option>
+          <option>Card</option>
+          <option>Cheque</option>
+          <option>UPI</option>
+          <option>Online</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Amount</label>
+        <input id="amount" placeholder="0.00">
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <h3>Additional Info</h3>
+
+      <div class="form-row">
+        <label>Narration</label>
+        <textarea id="narration"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label>Batch</label>
+        <input>
+      </div>
+
+      <div class="form-row">
+        <label>Type</label>
+        <input>
+      </div>
+
+      <div class="form-row">
+        <label>Exp Date</label>
+        <input placeholder="MM/YY">
+      </div>
+
+      <div class="form-row">
+        <label>Ap.Code</label>
+        <input>
+      </div>
+
+      <div class="form-row">
+        <label></label>
+        <div>
+          <label><input type="radio" name="ptype" checked> Cash</label>
+          &nbsp;&nbsp;
+          <label><input type="radio" name="ptype"> Chq</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button onclick="savePayment()">Save</button>
+    <button onclick="window.close()">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+/* READ PARAMS (HIDDEN LOGIC) */
+const params = new URLSearchParams(location.search);
+const billNo = params.get("billNo") || "";
+const customer = params.get("customer") || "";
+
+/* SAVE PAYMENT */
+function savePayment(){
+  const amt = Number(amount.value || 0);
+  if(!amt){
+    alert("Enter amount");
+    return;
+  }
+
+  const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+
+  payments.push({
+    billNo,
+    customer,
+    amount: amt,
+    mode: mode.value,
+    narration: narration.value,
+    date: new Date().toISOString().split("T")[0]
+  });
+
+  localStorage.setItem("payments", JSON.stringify(payments));
+  alert("Payment saved successfully");
+  window.close();
+}
+</script>
+
+</body>
+</html>
