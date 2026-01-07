@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATION LIST </title>
+    <STYLE> 
+        
+    </STYLE>
+</head>
+
+<body>
+    <MAIN>
+        <!-- STATION MASTER -->
+<div id="stationMasterSection" style="margin-top:40px">
+
+    <h2>Station Master</h2>
+  
+    <div style="display:flex;gap:10px;max-width:500px">
+      <input id="stationName" placeholder="Enter Station Name">
+      <button class="primary" onclick="addStation()">Add Station</button>
+    </div>
+  
+    <div class="table-wrap" style="margin-top:15px">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Station Name</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="stationTableBody"></tbody>
+      </table>
+    </div>
+  
+  </div>
+  
+    </MAIN>
+</body> 
+<script>
+    /* =====================================================
+   STATION MASTER
+===================================================== */
+const STATION_KEY = "stations";
+
+function getStations(){
+  return JSON.parse(localStorage.getItem(STATION_KEY) || "[]");
+}
+
+function saveStations(stations){
+  localStorage.setItem(STATION_KEY, JSON.stringify(stations));
+}
+
+function addStation(){
+  const input = document.getElementById("stationName");
+  const name = input.value.trim();
+
+  if(!name){
+    alert("Enter station name");
+    return;
+  }
+
+  let stations = getStations();
+
+  if(stations.some(s => s.name.toLowerCase() === name.toLowerCase())){
+    alert("Station already exists");
+    return;
+  }
+
+  stations.push({ name });
+  saveStations(stations);
+
+  input.value = "";
+  renderStationTable();
+  loadStationsToDropdown();
+}
+
+function deleteStation(index){
+  if(!confirm("Delete this station?")) return;
+  let stations = getStations();
+  stations.splice(index, 1);
+  saveStations(stations);
+  renderStationTable();
+  loadStationsToDropdown();
+}
+
+function renderStationTable(){
+  const tbody = document.getElementById("stationTableBody");
+  tbody.innerHTML = "";
+
+  getStations().forEach((s, i) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${s.name}</td>
+        <td>
+          <button onclick="deleteStation(${i})">Delete</button>
+        </td>
+      </tr>`;
+  });
+}
+
+</script>
+</html>

@@ -276,6 +276,26 @@ td select{
   }
 }
 
+.adv-btn{
+  width:100%;
+  height:30px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:#eef4ff;
+  color:#003a8f;
+  font-size:13px;
+  cursor:pointer;
+}
+.adv-btn:hover{
+  background:#dce9ff;
+}
+
+
+
+
+
+
+
 /* ===============================
    PRINT (A4)
 ================================ */
@@ -324,6 +344,29 @@ td select{
         <input id="station" readonly>
       </div>
 
+
+      <div class="row">
+        <label>Gold Purity</label>
+        <select id="goldRate">
+          <option value="6200">22 CR Gold</option>
+          <option value="6800">24 CR Gold</option>
+          <option value="5900">21 CR Gold</option>
+          <option value="5400">19 CR Gold</option>
+        </select>
+      </div>
+      
+      <div class="row">
+        <label>Silver Purity</label>
+        <select id="silverRate">
+          <option value="75">Fine Silver</option>
+          <option value="72">Sterling Silver</option>
+          <option value="68">800 Silver</option>
+          <option value="60">700 Silver</option>
+        </select>
+      </div>
+
+
+
       <div class="row">
         <button onclick="openCustomer()" class="no-print">
           + Add / Edit Customer
@@ -344,6 +387,10 @@ td select{
         <label>Date</label>
         <input type="date" id="billDate">
       </div>
+      <div class="row">
+        <label> Due Date</label>
+        <input type="date" id="dueDate">
+      </div>
 
       <div class="row">
         <label>GST %</label>
@@ -361,16 +408,15 @@ td select{
       <table>
         <thead>
           <tr>
-            <th>Type</th>
             <th>Qty</th>
             <th>Item</th>
             <th>Metal</th>
-            <th>Purity</th>
             <th>Est Unit Wt</th>
-            <th>Total Wt </th>
-            <th>Marking %</th>
+            <th>Total Wt</th>
+            <th>Mark %</th>
             <th>GST</th>
             <th>Total Amt</th>
+            <th>Adv</th>
           </tr>
         </thead>
         <tbody id="rows"></tbody>
@@ -381,8 +427,9 @@ td select{
   <!-- FOOTER -->
   <div class="order-footer no-print">
     <button onclick="saveOrder()">Save</button>
-    <button onclick="window.print()">Print</button>
-    <button onclick="cancelOrder()">Cancel</button>
+<button onclick="saveAndNew()">Save & New</button>
+<button onclick="window.print()">Print</button>
+<button onclick="cancelOrder()">Cancel</button>
   </div>
 
 </div>
@@ -453,117 +500,226 @@ custName.onchange=()=>{
    ROW HANDLING
 ================================ */
 function addRow(){
-  const tr=document.createElement("tr");
-  tr.innerHTML=`
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
     <td><input class="qty" value="1"></td>
-    <td><input></td>
+    <td><input class="item"></td>
     <td>
       <select class="metal">
         <option>Gold</option>
         <option>Silver</option>
       </select>
     </td>
-    <td><input></td>
     <td><input class="unit"></td>
     <td><input class="after" readonly></td>
     <td><input class="mark" value="0"></td>
     <td><input class="gst" readonly></td>
     <td><input class="total" readonly></td>
+    <td>
+      <button type="button" class="adv-btn" onclick="openAdvPopup()">Adv</button>
+    </td>
   `;
+
   rows.appendChild(tr);
+
   tr.querySelectorAll("input,select").forEach(el=>{
-    el.addEventListener("input",()=>calc(tr));
-    el.addEventListener("keydown",e=>nav(e,tr));
+    el.addEventListener("input", ()=>{
+      calc(tr);
+      autoExtendRow(tr);
+    });
+    el.addEventListener("keydown", e => nav(e,tr));
   });
 
-  // Initialize computed values for the new row
   calc(tr);
-
-  // Return the created row so callers can focus into it
   return tr;
 }
 
-function calc(tr){
-  const qty=+tr.querySelector(".qty").value||0;
-  const unit=+tr.querySelector(".unit").value||0;
-  const mark=+tr.querySelector(".mark").value||0;
-  const metal=tr.querySelector(".metal").value;
-  const gstP=+gstRate.value||0;
 
-  const base=qty*unit*RATES[metal];
-  const after=base+(base*mark/100);
-  const gst=after*gstP/100;
-  const total=after+gst;
 
-  tr.querySelector(".after").value=after.toFixed(2);
-  tr.querySelector(".gst").value=gst.toFixed(2);
-  tr.querySelector(".total").value=total.toFixed(2);
+function openAdvPopup(){
+  window.open(
+    "advanced.html",
+    "ADVANCED",
+    "width=900,height=600,top=80,left=120"
+  );
 }
+
+
+function isRowComplete(tr){
+  const qty  = tr.querySelector(".qty").value.trim();
+  const item = tr.querySelector(".item").value.trim();
+  const unit = tr.querySelector(".unit").value.trim();
+  return qty !== "" && item !== "" && unit !== "";
+}
+
+
+
+
+tr.querySelectorAll("input,select").forEach(el=>{
+  el.addEventListener("input", ()=>{
+    calc(tr);
+    autoExtendRow(tr);
+  });
+  el.addEventListener("keydown", e => nav(e,tr));
+});
+
+
+function autoExtendRow(tr){
+  const allRows = [...rows.querySelectorAll("tr")];
+  const isLastRow = tr === allRows[allRows.length - 1];
+
+  if(isLastRow && isRowComplete(tr)){
+    addRow();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===============================
+   GOLD AND SILVER RATE
+================================ */
+
+function calc(tr){
+  const qty   = +tr.querySelector(".qty").value || 0;
+  const unit  = +tr.querySelector(".unit").value || 0;
+  const mark  = +tr.querySelector(".mark").value || 0;
+  const metal = tr.querySelector(".metal").value;
+  const gstP  = +gstRate.value || 0;
+
+  const rate = metal === "Gold"
+    ? +document.getElementById("goldRate").value
+    : +document.getElementById("silverRate").value;
+
+  const base  = qty * unit * rate;
+  const after = base + (base * mark / 100);
+  const gst   = after * gstP / 100;
+  const total = after + gst;
+
+  tr.querySelector(".after").value = after.toFixed(2);
+  tr.querySelector(".gst").value   = gst.toFixed(2);
+  tr.querySelector(".total").value = total.toFixed(2);
+}
+
+document.getElementById("goldRate").addEventListener("change", ()=>{
+  document.querySelectorAll("#rows tr").forEach(tr=>calc(tr));
+});
+
+document.getElementById("silverRate").addEventListener("change", ()=>{
+  document.querySelectorAll("#rows tr").forEach(tr=>calc(tr));
+});
+
+
+
+
+
+
+
+
+
 
 /* ===============================
    KEYBOARD NAV
 ================================ */
 function nav(e,tr){
-  if(e.key!=="Enter")return;
+  if(e.key !== "Enter") return;
   e.preventDefault();
-  const f=[...tr.querySelectorAll("input,select")];
-  const i=f.indexOf(e.target);
-  if(i===f.length-1){
+
+  const f = [...tr.querySelectorAll("input,select")];
+  const i = f.indexOf(e.target);
+
+  if(i === f.length - 1){
     const newTr = addRow();
-    // focus first input of the newly added row
     const firstInput = newTr.querySelector("input,select");
     if(firstInput) firstInput.focus();
   }else{
-    f[i+1].focus();
+    f[i + 1].focus();
   }
 }
 
 /* ===============================
    SAVE ORDER
 ================================ */
-function saveOrder(){
+function saveOrder(redirect = true){
   if(!custName.value){
     alert("Select customer");
-    return;
+    return false;
   }
 
-  const orders=JSON.parse(localStorage.getItem("orders")||"[]");
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
 
-  const order={
-    id:Date.now(),
-    customerId:custName.value,
-    billNo:billNo.value,
-    date:billDate.value,
-    gst:+gstRate.value,
-    items:[]
+  const order = {
+    id: Date.now(),
+    customerId: custName.value,
+    billNo: billNo.value,
+    date: billDate.value,
+    gst: +gstRate.value,
+    items: []
   };
 
   rows.querySelectorAll("tr").forEach(tr=>{
+    const item = tr.querySelector(".item").value.trim();
+    if(!item) return; // skip empty rows
+
     order.items.push({
-      qty:tr.querySelector(".qty").value,
-      item:tr.children[1].firstChild.value,
-      metal:tr.querySelector(".metal").value,
-      purity:tr.children[3].firstChild.value,
-      total:tr.querySelector(".total").value
+      qty: tr.querySelector(".qty").value,
+      item,
+      metal: tr.querySelector(".metal").value,
+      purity: tr.querySelector(".unit").value,
+      total: tr.querySelector(".total").value
     });
   });
 
+  if(order.items.length === 0){
+    alert("Add at least one item");
+    return false;
+  }
+
   orders.push(order);
-  localStorage.setItem("orders",JSON.stringify(orders));
+  localStorage.setItem("orders", JSON.stringify(orders));
 
   alert("Order saved successfully");
+
+  if(redirect){
+    window.location.href = "orders.html";
+  }
+
+  return true;
+}
+
+/* ===============================
+   SAVE & NEW
+================================ */
+function saveAndNew(){
+  saveOrder(true); // same behavior: save → go to orders
 }
 
 /* ===============================
    UTIL
 ================================ */
 function cancelOrder(){
-  document.querySelector(".workspace").innerHTML="";
+  if(confirm("Discard current order?")){
+    window.location.href = "/public/orders.html";
+  }
 }
 
 function openCustomer(){
   loadPage("../pages/customer.html");
 }
+
 </script>
 
 </body>
