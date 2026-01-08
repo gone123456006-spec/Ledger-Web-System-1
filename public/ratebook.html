@@ -5,7 +5,6 @@
 <title>Rate Booking</title>
 
 <style>
-
 /* =========================
    WINDOW
 ========================= */
@@ -21,13 +20,11 @@
 /* TITLE BAR */
 .title-bar{
   background:linear-gradient(#f4f6fa,#e6eaf0);
-  padding:10px;
+  padding:10px 16px;
   font-weight:600;
   font-size:15px;
-  text-align:left;
   border-bottom:1px solid #d1d6de;
   border-radius:16px 16px 0 0;
-  padding-left:16px;
 }
 
 /* CONTENT */
@@ -50,7 +47,6 @@
 
 /* INPUTS */
 .form-row input,
-.form-row select,
 .form-row textarea{
   flex:1;
   padding:8px 10px;
@@ -65,14 +61,13 @@
 }
 
 .form-row input:focus,
-.form-row select:focus,
 .form-row textarea:focus{
   outline:none;
   border-color:#007aff;
   box-shadow:0 0 0 3px rgba(0,122,255,.18);
 }
 
-/* SMALL ROW (DATE + TYPE) */
+/* INLINE */
 .inline{
   display:flex;
   gap:14px;
@@ -111,7 +106,6 @@
     margin-bottom:4px;
   }
 }
-
 </style>
 </head>
 
@@ -140,7 +134,7 @@
 
     <div class="form-row">
       <label>Amount</label>
-      <input id="amount" value="0" readonly>
+      <input id="amount" value="0.00" readonly>
     </div>
 
     <div class="form-row">
@@ -161,7 +155,7 @@
 
   <div class="footer">
     <button onclick="saveRate()">Save</button>
-    <button onclick="window.close()">Cancel</button>
+    <button onclick="closeSelf()">Cancel</button>
   </div>
 
 </div>
@@ -173,6 +167,7 @@ function calcAmount(){
   amount.value = (w * r).toFixed(2);
 }
 
+/* SAVE RATE */
 function saveRate(){
   const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
 
@@ -189,6 +184,18 @@ function saveRate(){
 
   localStorage.setItem("rateBook", JSON.stringify(rates));
   alert("Rate saved successfully");
+  closeSelf();
+}
+
+/* CLOSE — WORKS FOR BOTH popup & window.open */
+function closeSelf(){
+  if(window.parent && window.parent !== window){
+    const popup = window.parent.document.getElementById("rateBookPopup");
+    if(popup){
+      popup.style.display = "none";
+      return;
+    }
+  }
   window.close();
 }
 </script>

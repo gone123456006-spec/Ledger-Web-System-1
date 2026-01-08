@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Advance Receipt</title>
+
+<style>
+/* =========================
+   WINDOW
+========================= */
+.window{
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #d1d6de;
+  box-shadow:0 25px 45px rgba(0,0,0,.25);
+  max-width:600px;
+  margin:40px auto;
+}
+
+/* TITLE BAR */
+.title-bar{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:10px;
+  font-weight:600;
+  font-size:15px;
+  text-align:center;
+  border-bottom:1px solid #d1d6de;
+  border-radius:16px 16px 0 0;
+}
+
+/* CONTENT */
+.content{
+  padding:22px 30px;
+  background:#f9fbfe;
+}
+
+/* FORM ROW */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+.form-row label{
+  width:160px;
+  font-size:14px;
+}
+
+/* INPUTS */
+.form-row input,
+.form-row textarea{
+  flex:1;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+}
+
+.form-row textarea{
+  height:90px;
+  resize:none;
+}
+
+.form-row input:focus,
+.form-row textarea:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.18);
+}
+
+/* FOOTER */
+.footer{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  padding:16px;
+  background:#f2f5f9;
+  border-top:1px solid #d1d6de;
+  border-radius:0 0 16px 16px;
+}
+
+.footer button{
+  min-width:120px;
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  background:#ffffff;
+  cursor:pointer;
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .form-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .form-row label{
+    width:100%;
+    margin-bottom:6px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+  <div class="title-bar">ADVANCE PAYMENT</div>
+
+  <div class="content">
+
+    <div class="form-row">
+      <label>Date</label>
+      <input type="date" id="payDate">
+    </div>
+
+    <div class="form-row">
+      <label>Advance Amount</label>
+      <input id="amount" placeholder="0.00">
+    </div>
+
+    <div class="form-row">
+      <label>Description</label>
+      <textarea id="description" placeholder="Advance received for order"></textarea>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button onclick="saveAdvance()">Save</button>
+    <button onclick="window.close()">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+/* INIT DATE */
+document.getElementById("payDate").value =
+  new Date().toISOString().split("T")[0];
+
+/* SAVE ADVANCE */
+function saveAdvance(){
+  const amount = Number(document.getElementById("amount").value || 0);
+  if(!amount){
+    alert("Enter advance amount");
+    return;
+  }
+
+  const advances = JSON.parse(localStorage.getItem("advances") || "[]");
+
+  advances.push({
+    date: document.getElementById("payDate").value,
+    amount,
+    description: document.getElementById("description").value.trim()
+  });
+
+  localStorage.setItem("advances", JSON.stringify(advances));
+
+  alert("Advance saved successfully");
+  window.close();
+}
+</script>
+
+</body>
+</html>

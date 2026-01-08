@@ -1,1123 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GST Order</title>
+<title>Orders</title>
 
 <style>
-/* =====================
-   BASE (MOBILE FIRST)
-===================== */
-*{
-  box-sizing:border-box;
-  font-family:Segoe UI, Arial, sans-serif;
-  font-size:13px;
-}
-
 body{
   margin:0;
-  background:#eee;
+  background:#eef2f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
 }
 
-.app{
-  padding:10px;
-}
-
-/* =====================
-   CARD / BOX
-===================== */
-.box{
+.container{
+  max-width:1400px;
+  margin:30px auto;
   background:#fff;
-  border:1px solid #d1d6de;
-  padding:10px;
+  border-radius:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.15);
+  padding:20px;
+}
+
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.top-bar h2{
+  margin:0;
+  font-size:18px;
+}
+
+.top-bar button{
+  padding:8px 14px;
   border-radius:10px;
-}
-
-/* =====================
-   FORM
-===================== */
-.row{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  margin-bottom:8px;
-}
-
-label{
-  font-weight:600;
-}
-
-input, select{
-  height:30px;
-  padding:5px 8px;
-  border-radius:6px;
-  border:1px solid #d1d6de;
-}
-
-input:focus, select:focus{
-  outline:none;
-  border-color:#007aff;
-}
-
-/* =====================
-   HEADER
-===================== */
-.header{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-/* =====================
-   TABLE (RESPONSIVE)
-===================== */
-.table-wrap{
-  width:100%;
-  overflow-x:auto;
-  margin-top:10px;
+  border:1px solid #007aff;
+  background:#007aff;
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
 }
 
 table{
   width:100%;
-  min-width:1200px;
   border-collapse:collapse;
+  font-size:13.5px;
+  min-width:1300px;
 }
 
-th, td{
-  border:1px solid #d1d6de;
-  padding:6px;
+thead{
+  background:#f5f6fa;
+}
+
+th,td{
+  padding:8px 10px;
+  border-bottom:1px solid #ddd;
   white-space:nowrap;
 }
 
-th{
-  background:#f2f4f8;
-  font-weight:600;
-  position:sticky;
-  top:0;
+tbody tr:hover{
+  background:#f8faff;
 }
 
-.total{
-  background:#fff2cc;
-  font-weight:600;
-}
-
-table input, table select{
-  width:100%;
-  height:26px;
-}
-
-/* =====================
-   ACTION BUTTONS
-===================== */
-.actions{
-  margin-top:10px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-
-.actions button{
-  padding:6px 14px;
-  border-radius:6px;
-  border:1px solid #d1d6de;
-  background:#fff;
-}
-
-/* =====================
-   HISTORY
-===================== */
-.history{
-  margin-top:12px;
-  border:1px solid #d1d6de;
-  border-radius:10px;
-  background:#fff;
-}
-
-.history h4{
-  margin:0;
-  padding:8px;
-  background:#f2f4f8;
-}
-
-/* =====================
-   INVOICE
-===================== */
-#invoice{
-  display:none;
-  padding:20px;
-  background:#fff;
-  max-width:210mm;
-  margin:0 auto;
-  font-size:12px;
-  overflow-x:hidden;
-  box-sizing:border-box;
-  word-wrap:break-word;
-}
-#invoice h2{
-  margin:10px 0 20px 0;
-  font-size:20px;
-  border-bottom:2px solid #333;
-  padding-bottom:10px;
-}
-#invoice table{
-  width:100%;
-  border-collapse:collapse;
-  margin:15px 0;
-  font-size:11px;
-  table-layout:fixed;
-  word-wrap:break-word;
-}
-#invoice table th{
-  background:#f5f5f5;
-  padding:6px 4px;
-  border:1px solid #ddd;
-  text-align:left;
-  font-weight:600;
-  font-size:10px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-#invoice table td{
-  padding:5px 4px;
-  border:1px solid #ddd;
-  font-size:10px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  word-wrap:break-word;
-}
-#invoice .invoice-header{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:15px;
-  padding-bottom:10px;
-  border-bottom:1px solid #ddd;
-  flex-wrap:wrap;
-  gap:10px;
-}
-#invoice .invoice-header-left, #invoice .invoice-header-right{
-  flex:1;
-  min-width:200px;
-}
-#invoice .invoice-header p{
-  margin:3px 0;
-  font-size:11px;
-}
-#invoice .payment-details{
-  margin-top:20px;
-  page-break-inside:avoid;
-}
-#invoice .payment-table{
-  width:100%;
-  border-collapse:collapse;
-  margin:10px 0;
-  table-layout:fixed;
-  font-size:10px;
-}
-#invoice .payment-table th{
-  background:#f8f9fa;
-  padding:6px 4px;
-  border:1px solid #ddd;
-  text-align:left;
-  font-size:10px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-#invoice .payment-table td{
-  padding:5px 4px;
-  border:1px solid #ddd;
-  font-size:10px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  word-wrap:break-word;
-}
-#invoice .summary-box{
-  margin-top:15px;
-  padding:12px;
-  background:#f8f9fa;
-  border:1px solid #ddd;
-  border-radius:5px;
-  page-break-inside:avoid;
-  overflow:hidden;
-}
-#invoice .summary-row{
-  display:flex;
-  justify-content:space-between;
-  padding:6px 0;
-  border-bottom:1px solid #eee;
-  font-size:12px;
-}
-#invoice .summary-row:last-child{
-  border-bottom:none;
-  font-weight:600;
-  font-size:13px;
-  padding-top:8px;
-}
-@media print{
-  #invoice{
-    padding:10mm;
-    max-width:100%;
-    overflow:hidden;
-    box-sizing:border-box;
-  }
-  body{
-    background:#fff;
-    margin:0;
-    padding:0;
-  }
-  .no-print{display:none !important;}
-  #invoice table{
-    font-size:9px;
-  }
-  #invoice table th, #invoice table td{
-    padding:4px 3px;
-    font-size:9px;
-  }
-  #invoice .invoice-header p{
-    font-size:10px;
-  }
-  #invoice .summary-row{
-    font-size:11px;
-  }
-  @page{
-    size:A4;
-    margin:10mm;
-  }
-  *{
-    box-sizing:border-box;
-  }
-}
-
-
-/* =====================
-   DESKTOP ENHANCEMENT
-===================== */
-@media(min-width:900px){
-  .header{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:10px;
-  }
-  .row{
-    flex-direction:row;
-    align-items:center;
-  }
-  label{
-    min-width:90px;
-  }
-}
-
-/* =====================
-   ORDER POPUP (NEW)
-===================== */
-.popup-bg{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.4);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-.popup-box{
-  background:#fff;
-  width:300px;
-  padding:15px;
-  border-radius:10px;
-}
-.popup-row{
-  margin-bottom:10px;
-}
-.popup-row label{
-  display:block;
-  font-weight:600;
-  margin-bottom:4px;
-}
-.popup-actions{
-  display:flex;
-  justify-content:flex-end;
-  gap:8px;
-}
-.popup-days{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:10px;
-}
-.popup-days input[type="number"]{
-  width:80px;
-}
-.popup-box textarea{
-  font-family:inherit;
-  resize:vertical;
-}
-/* =====================
-   PAYMENT POPUP STYLES
-===================== */
-.payment-window{
-  background:#ffffff;
-  border-radius:16px;
-  border:1px solid #d1d6de;
-  box-shadow:0 25px 45px rgba(0,0,0,.25);
-  max-width:900px;
-  width:90vw;
-  max-height:90vh;
-  overflow-y:auto;
-}
-.payment-title-bar{
-  background:linear-gradient(#f4f6fa,#e6eaf0);
-  padding:10px;
-  font-weight:600;
-  font-size:15px;
-  text-align:center;
-  border-bottom:1px solid #d1d6de;
-  border-radius:16px 16px 0 0;
-}
-.payment-content{
-  display:flex;
-  gap:40px;
-  padding:22px 30px;
-  background:#f9fbfe;
-}
-.payment-left, .payment-right{
-  flex:1;
-}
-.payment-content h3{
-  margin:0 0 16px 0;
-  font-size:15px;
-}
-.payment-form-row{
-  display:flex;
-  align-items:center;
-  margin-bottom:14px;
-}
-.payment-form-row label{
-  width:160px;
-  font-size:14px;
-}
-.payment-form-row input,
-.payment-form-row select,
-.payment-form-row textarea{
-  flex:1;
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid #d1d6de;
-  font-size:14px;
-}
-.payment-form-row textarea{
-  height:90px;
-  resize:none;
-}
-.payment-form-row input:focus,
-.payment-form-row select:focus,
-.payment-form-row textarea:focus{
-  outline:none;
-  border-color:#007aff;
-  box-shadow:0 0 0 3px rgba(0,122,255,.18);
-}
-.payment-footer{
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  padding:16px;
-  background:#f2f5f9;
-  border-top:1px solid #d1d6de;
-  border-radius:0 0 16px 16px;
-}
-.payment-footer button{
-  min-width:120px;
-  padding:8px 12px;
-  font-size:13px;
-  border-radius:10px;
-  border:1px solid #d1d6de;
-  background:#ffffff;
-  cursor:pointer;
-}
-@media(max-width:800px){
-  .payment-content{ flex-direction:column; }
-  .payment-form-row{ flex-direction:column; align-items:flex-start; }
-  .payment-form-row label{ width:100%; margin-bottom:4px; }
+.table-wrap{
+  overflow-x:auto;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app no-print" id="orderApp">
+<div class="container">
 
-<!-- HEADER -->
-<div class="header">
-  <div class="box">
-    <div class="row">
-      <label>New A/c</label>
-      <input id="customer" readonly onclick="openCustomer()" placeholder="Select Customer">
-    </div>
-    <div class="row">
-      <label>Search</label>
-      <input readonly onclick="openCustomer()" placeholder="Open Customer List">
-    </div>
+  <div class="top-bar">
+    <h2>Orders</h2>
+    <button onclick="newOrder()">+ New Order</button>
   </div>
 
-  <div class="box">
-    <div class="row">
-      <label>Order Date</label>
-      <input type="date" id="orderDate">
-    </div>
-    <div class="row">
-      <label>Due Date</label>
-      <input type="date" id="dueDate">
-    </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Select</th>
+          <th>Date</th>
+          <th>Bill No</th>
+          <th>Qty</th>
+          <th>Item</th>
+          <th>Metal</th>
+          <th>Unit Wt</th>
+          <th>Total Wt</th>
+          <th>GST</th>
+          <th>Total Amt</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="orderTable"></tbody>
+    </table>
   </div>
 
-  <div class="box">
-    <strong>GST ORDER</strong><br>
-    Bill No: <input id="billNo" style="width:90px">
-  </div>
-</div>
-
-<!-- ITEMS TABLE -->
-<table id="itemTable">
-<thead>
-<tr>
-  <th>Type</th><th>Job No.</th><th>Item Name</th><th>Stamp</th><th>Remarks</th>
-  <th>Design</th><th>Size</th><th>Pc</th><th>Gr.Wt.</th><th>Less</th>
-  <th>Net.Wt.</th><th>Rate</th><th>Dia.Wt.</th><th>Stn.Wt.</th>
-  <th>Lbr.%</th><th class="total">Total</th><th>❌</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<!-- ACTIONS -->
-<div class="actions">
-  <button onclick="addRow()"> Add Row</button>
-  <button onclick="openReceipt()"> Receipt</button>
-  <button onclick="openPayment()"> Payment</button>
-  <button onclick="openRateBook()"> Rate Book</button>
-  <button onclick="saveBill()"> Save Bill</button>
-  <button onclick="showInvoice()"> A4 Invoice</button>
-</div>
-
-<!-- BILL HISTORY -->
-<div class="history">
-  <h4>Bill History</h4>
-  <table width="100%">
-    <thead><tr><th>Date</th><th>Bill No</th><th>Customer</th></tr></thead>
-    <tbody id="historyBody"></tbody>
-  </table>
-</div>
-
-</div>
-
-<!-- INVOICE -->
-<div id="invoice">
-  <div class="no-print" style="margin-bottom:15px;">
-    <button onclick="back()" style="padding:8px 15px; margin-right:10px; cursor:pointer;">← Back</button>
-    <button onclick="window.print()" style="padding:8px 15px; cursor:pointer;">🖨️ Print</button>
-  </div>
-  
-  <h2 style="text-align:center">GST TAX INVOICE</h2>
-  
-  <div class="invoice-header">
-    <div class="invoice-header-left">
-      <p style="margin:5px 0;"><strong>Customer:</strong> <span id="iCustomer"></span></p>
-      <p style="margin:5px 0;"><strong>Order Date:</strong> <span id="iOrderDate"></span></p>
-      <p style="margin:5px 0;"><strong>Bill No:</strong> <span id="iBillNo"></span></p>
-    </div>
-    <div class="invoice-header-right" style="text-align:right;">
-      <p style="margin:5px 0;"><strong>Invoice Date:</strong> <span id="iInvoiceDate"></span></p>
-    </div>
-  </div>
-  
-  <table>
-    <thead>
-      <tr>
-        <th style="width:25%;">Item</th>
-        <th style="width:8%;">Pc</th>
-        <th style="width:10%;">Net Wt</th>
-        <th style="width:10%;">Rate</th>
-        <th style="width:12%;">Total</th>
-        <th style="width:35%;">Order Details</th>
-      </tr>
-    </thead>
-    <tbody id="iItems"></tbody>
-  </table>
-  
-  <div class="summary-box">
-    <div class="summary-row">
-      <span><strong>Grand Total:</strong></span>
-      <span><strong>₹ <span id="iGrand">0.00</span></strong></span>
-    </div>
-    <div class="summary-row" style="color:#28a745;">
-      <span><strong>Paid Amount:</strong></span>
-      <span><strong>₹ <span id="iPaid">0.00</span></strong></span>
-    </div>
-    <div class="summary-row" style="color:#dc3545;">
-      <span><strong>Balance Amount:</strong></span>
-      <span><strong>₹ <span id="iBalance">0.00</span></strong></span>
-    </div>
-  </div>
-  
-  <div id="paymentDetails" class="payment-details"></div>
-</div>
-
-<!-- ORDER POPUP -->
-<div id="orderPopup" class="popup-bg" onclick="if(event.target===this) closePopup()">
-  <div class="popup-box">
-    <h3>Order Details</h3>
-    <div class="popup-row">
-      <label>Days</label>
-      <input type="number" id="popupDays" min="1" placeholder="Enter days" oninput="calculateDeliveryDate()">
-      <button onclick="calculateDeliveryDate()" style="padding:6px 12px; height:30px;">Apply</button>
-    </div>
-    <div class="popup-row">
-      <label>Delivery Date</label>
-      <input type="date" id="popupDelivery">
-    </div>
-    <div class="popup-row">
-      <label>Sample Details</label>
-      <input id="popupSample">
-    </div>
-    <div class="popup-actions">
-      <button onclick="saveOrderPopup()">Save</button>
-      <button onclick="closePopup()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- PAYMENT POPUP (from payment.html) -->
-<div id="paymentPopup" class="popup-bg" onclick="if(event.target===this) closePaymentPopup()">
-  <div class="payment-window">
-    <div class="payment-title-bar">RECEIPT / PAYMENT</div>
-    <div class="payment-content">
-      <!-- LEFT -->
-      <div class="payment-left">
-        <h3>Payment Details</h3>
-        <div class="payment-form-row">
-          <label>Payment Mode</label>
-          <select id="mode">
-            <option>Cash</option>
-            <option>Card</option>
-            <option>Cheque</option>
-            <option>UPI</option>
-            <option>Online</option>
-          </select>
-        </div>
-        <div class="payment-form-row">
-          <label>Amount</label>
-          <input type="number" id="amount" placeholder="0.00" step="0.01" min="0" oninput="calculatePaymentBalance()">
-        </div>
-        <div class="payment-form-row" style="margin-top:15px; padding-top:15px; border-top:1px solid #d1d6de;">
-          <div style="width:100%;">
-            <div style="margin-bottom:8px;">
-              <strong>Bill Total: ₹<span id="paymentBillTotal">0.00</span></strong>
-            </div>
-            <div style="margin-bottom:8px;">
-              <strong>Amount: ₹<span id="paymentAmountDisplay">0.00</span></strong>
-            </div>
-            <div>
-              <strong style="color:#dc3545;">Balance: ₹<span id="paymentBalance">0.00</span></strong>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- RIGHT -->
-      <div class="payment-right">
-        <h3>Additional Info</h3>
-        <div class="payment-form-row">
-          <label>Narration</label>
-          <textarea id="narration"></textarea>
-        </div>
-        <div class="payment-form-row">
-          <label>Batch</label>
-          <input id="batch">
-        </div>
-        <div class="payment-form-row">
-          <label>Type</label>
-          <input id="type">
-        </div>
-        <div class="payment-form-row">
-          <label>Exp Date</label>
-          <input id="expDate" placeholder="MM/YY">
-        </div>
-        <div class="payment-form-row">
-          <label>Ap.Code</label>
-          <input id="apCode">
-        </div>
-        <div class="payment-form-row">
-          <label></label>
-          <div>
-            <label><input type="radio" name="ptype" value="Cash" checked> Cash</label>
-            &nbsp;&nbsp;
-            <label><input type="radio" name="ptype" value="Chq"> Chq</label>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="payment-footer">
-      <button onclick="savePaymentFromPopup()">Save</button>
-      <button onclick="closePaymentPopup()">Cancel</button>
-    </div>
-  </div>
 </div>
 
 <script>
-/* =====================
-   DOM REFERENCES
-===================== */
-const customer = document.getElementById("customer");
-const orderDate = document.getElementById("orderDate");
-const dueDate = document.getElementById("dueDate");
-const billNo = document.getElementById("billNo");
-const itemBody = document.querySelector("#itemTable tbody");
-const historyBody = document.getElementById("historyBody");
-const orderApp = document.getElementById("orderApp");
-const invoice = document.getElementById("invoice");
-const orderPopup = document.getElementById("orderPopup");
-const popupDelivery = document.getElementById("popupDelivery");
-const popupSample = document.getElementById("popupSample");
-const popupDays = document.getElementById("popupDays");
-const paymentPopup = document.getElementById("paymentPopup");
-const paymentBillTotal = document.getElementById("paymentBillTotal");
-const paymentAmountDisplay = document.getElementById("paymentAmountDisplay");
-const paymentBalance = document.getElementById("paymentBalance");
+function loadOrders(){
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const tbody = document.getElementById("orderTable");
+  tbody.innerHTML = "";
 
-let activeRow = null;
+  orders
+    .filter(o => o.status !== "READY") // optional: hide READY ones
+    .slice()
+    .reverse()
+    .forEach(order=>{
+      order.items.forEach((it, index)=>{
+        const tr = document.createElement("tr");
 
-/* INIT */
-orderDate.valueAsDate = new Date();
-billNo.value = generateBillNo();
-addRow();
-loadHistory();
-
-/* AUTO BILL NO */
-function generateBillNo(){
-  let last = localStorage.getItem("lastBillNo") || "0";
-  let next = Number(last) + 1;
-  localStorage.setItem("lastBillNo", next);
-  return "B-" + String(next).padStart(4,"0");
-}
-
-/* AUTO JOB NO */
-function generateJobNo(){
-  let last = localStorage.getItem("lastJobNo") || "0";
-  let next = Number(last) + 1;
-  localStorage.setItem("lastJobNo", next);
-  return "J-" + String(next).padStart(4,"0");
-}
-
-/* CUSTOMER */
-function openCustomer(){
-  window.open("/pages/customer.html","Customer","width=1200,height=700");
-}
-function setCustomerName(name){
-  customer.value = name;
-}
-
-/* ADD ROW */
-function addRow(){
-  const tr = document.createElement("tr");
-  tr.innerHTML = `
-<td>
-  <select onchange="handleTypeChange(this)">
-    <option>Order</option>
-    <option>Repair</option>
-    <option>Sale</option>
-    <option>Purchase</option>
-  </select>
-</td>
-<td><input readonly></td>
-<td>
-  <select>
-    <option value="">Select Item</option>
-    <option value="22CR GOLD">22CR GOLD</option>
-    <option value="19 CR GOLD">19 CR GOLD</option>
-    <option value="25 CR GOLD">25 CR GOLD</option>
-    <option value="CHAIN">CHAIN</option>
-    <option value="RING">RING</option>
-    <option value="BRACELET">BRACELET</option>
-    <option value="NECKLACE">NECKLACE</option>
-    <option value="EARRINGS">EARRINGS</option>
-    <option value="PENDANT">PENDANT</option>
-    <option value="BANGLE">BANGLE</option>
-    <option value="ANKLET">ANKLET</option>
-    <option value="NOSEPIN">NOSEPIN</option>
-    <option value="TOE RING">TOE RING</option>
-  </select>
-</td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td><input></td>
-<td><input oninput="calc(this)"></td>
-<td><input readonly></td>
-<td><input oninput="calc(this)"></td>
-<td><input readonly></td>
-<td><input oninput="calc(this)"></td>
-<td><input></td>
-<td><input></td>
-<td><input oninput="calc(this)"></td>
-<td class="total"><input readonly></td>
-<td><button onclick="this.closest('tr').remove()">X</button></td>
-`;
-  itemBody.appendChild(tr);
-  tr.cells[1].children[0].value = generateJobNo();
-}
-
-/* TYPE → POPUP */
-function handleTypeChange(sel){
-  const row = sel.closest("tr");
-  if(sel.value === "Order" && !row.dataset.orderFilled){
-    activeRow = row;
-    popupDelivery.value = "";
-    popupSample.value = "";
-    popupDays.value = "";
-    orderPopup.style.display = "flex";
-  }
-}
-
-/* CALCULATE DELIVERY DATE FROM DAYS */
-function calculateDeliveryDate(){
-  const days = parseInt(popupDays.value);
-  if(days && days > 0 && orderDate.value){
-    const orderDateObj = new Date(orderDate.value);
-    const deliveryDate = new Date(orderDateObj);
-    deliveryDate.setDate(deliveryDate.getDate() + days);
-    popupDelivery.value = deliveryDate.toISOString().split('T')[0];
-  }
-}
-function saveOrderPopup(){
-  if(!popupDelivery.value){ alert("Select delivery date"); return; }
-  activeRow.dataset.delivery = popupDelivery.value;
-  activeRow.dataset.sample = popupSample.value;
-  activeRow.dataset.orderFilled = "1";
-  closePopup();
-}
-function closePopup(){
-  orderPopup.style.display = "none";
-  activeRow = null;
-  popupDays.value = "";
-}
-
-/* CALCULATION */
-function calc(el){
-  const r = el.closest("tr");
-  const pc = +r.cells[7].children[0].value || 0;
-  const less = +r.cells[9].children[0].value || 0;
-  const rate = +r.cells[11].children[0].value || 0;
-  const lbr = +r.cells[14].children[0].value || 0;
-  const grwt = pc * 10;
-  const net = grwt - less;
-  const base = net * rate;
-  r.cells[8].children[0].value = grwt;
-  r.cells[10].children[0].value = net;
-  r.cells[15].children[0].value = (base + (base*lbr/100)).toFixed(2);
-}
-
-/* CALCULATE BILL TOTAL */
-function calculateBillTotal(){
-  let total = 0;
-  itemBody.querySelectorAll("tr").forEach(r=>{
-    const t = +r.cells[15].children[0].value || 0;
-    total += t;
-  });
-  return total;
-}
-
-/* GET PAID AMOUNT FOR BILL */
-function getPaidAmount(billNo){
-  const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-  return payments
-    .filter(p => p.billNo === billNo)
-    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-}
-
-/* SAVE BILL */
-function saveBill(){
-  if(!customer.value){ alert("Select customer"); return; }
-
-  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-  const billTotal = calculateBillTotal();
-
-  const rows = [...itemBody.querySelectorAll("tr")].map(tr => {
-    const type = tr.cells[0].children[0].value;
-    return {
-      values:[...tr.querySelectorAll("input,select")].map(el=>el.value),
-      type: type,
-      delivery: tr.dataset.delivery || "",
-      sample: tr.dataset.sample || "",
-      orderFilled: tr.dataset.orderFilled || ""
-    };
-  });
-
-  // Check if bill already exists (for update)
-  const existingIndex = bills.findIndex(b => b.billNo === billNo.value);
-  const billData = {
-    date: orderDate.value,
-    billNo: billNo.value,
-    customer: customer.value,
-    totalAmount: billTotal,
-    rows
-  };
-
-  if(existingIndex >= 0){
-    bills[existingIndex] = billData;
-  } else {
-    bills.push(billData);
-  }
-
-  localStorage.setItem("bills", JSON.stringify(bills));
-  billNo.value = generateBillNo();
-  loadHistory();
-  alert("Bill saved successfully");
-}
-
-/* HISTORY */
-function loadHistory(){
-  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-  historyBody.innerHTML = "";
-  bills.forEach((b,i)=>{
-    historyBody.innerHTML += `
-<tr onclick="loadBill(${i})">
-  <td>${b.date}</td>
-  <td>${b.billNo}</td>
-  <td>${b.customer}</td>
-</tr>`;
-  });
-}
-
-function loadBill(i){
-  const b = JSON.parse(localStorage.getItem("bills"))[i];
-  customer.value = b.customer;
-  orderDate.value = b.date;
-  billNo.value = b.billNo;
-  itemBody.innerHTML = "";
-
-  b.rows.forEach(r=>{
-    addRow();
-    const tr = itemBody.lastElementChild;
-    tr.querySelectorAll("input,select").forEach((el,j)=>el.value=r.values[j]);
-    
-    // Restore all order metadata
-    if(r.delivery || r.orderFilled){
-      tr.dataset.delivery = r.delivery || "";
-      tr.dataset.sample = r.sample || "";
-      tr.dataset.orderFilled = r.orderFilled || "";
-    }
-  });
-  
-  // Update payment display if bill exists
-  updatePaymentDisplay();
-}
-
-/* INVOICE */
-function showInvoice(){
-  iCustomer.textContent = customer.value || "—";
-  iOrderDate.textContent = orderDate.value || "—";
-  iBillNo.textContent = billNo.value || "—";
-  const invoiceDateEl = document.getElementById("iInvoiceDate");
-  if(invoiceDateEl) invoiceDateEl.textContent = new Date().toLocaleDateString();
-  
-  iItems.innerHTML = "";
-  let g = 0;
-  itemBody.querySelectorAll("tr").forEach(r=>{
-    const t = +r.cells[15].children[0].value || 0;
-    g += t;
-    const delivery = r.dataset.delivery || "";
-    const sample = r.dataset.sample || "";
-    const itemType = r.cells[0].children[0].value;
-    const orderDetails = (itemType === "Order" && delivery) ? `Delivery: ${delivery}${sample ? ' | Sample: ' + sample : ''}` : "—";
-    const itemName = (r.cells[2].children[0].value || "—").substring(0, 25);
-    const rowHTML = `
-<tr>
-  <td style="word-break:break-word; font-size:9px;">${itemName}</td>
-  <td style="font-size:9px;">${r.cells[7].children[0].value || "0"}</td>
-  <td style="font-size:9px;">${r.cells[10].children[0].value || "0"}</td>
-  <td style="font-size:9px;">${r.cells[11].children[0].value || "0"}</td>
-  <td style="font-size:9px;">${t.toFixed(2)}</td>
-  <td style="font-size:8px; word-break:break-word;">${orderDetails}</td>
-</tr>`;
-    iItems.innerHTML += rowHTML;
-  });
-  
-  // Calculate payment info
-  const total = g;
-  const paid = getPaidAmount(billNo.value);
-  const balance = total - paid;
-  
-  if (window.iGrand) iGrand.textContent = total.toFixed(2);
-  const iPaidEl = document.getElementById("iPaid");
-  const iBalanceEl = document.getElementById("iBalance");
-  if(iPaidEl) iPaidEl.textContent = paid.toFixed(2);
-  if(iBalanceEl) iBalanceEl.textContent = balance.toFixed(2);
-  
-  // Get all payments for this bill
-  const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-  const billPayments = payments.filter(p => p.billNo === billNo.value);
-  
-  // Display payment details
-  const paymentDetailsEl = document.getElementById("paymentDetails");
-  if(paymentDetailsEl){
-    if(billPayments.length > 0){
-      let paymentHTML = `
-        <h3 style="margin-top:25px; margin-bottom:10px; font-size:14px; border-bottom:1px solid #ddd; padding-bottom:5px;">Payment History</h3>
-        <table class="payment-table">
-          <thead>
-            <tr>
-              <th style="width:15%;">Date</th>
-              <th style="width:15%;">Amount</th>
-              <th style="width:15%;">Mode</th>
-              <th style="width:55%;">Narration</th>
-            </tr>
-          </thead>
-          <tbody>
-      `;
-      
-      billPayments.forEach(p => {
-        const narration = (p.narration || "—").substring(0, 35);
-        paymentHTML += `
-          <tr>
-            <td style="font-size:9px;">${p.date || "—"}</td>
-            <td style="font-size:9px;">₹ ${(Number(p.amount) || 0).toFixed(2)}</td>
-            <td style="font-size:9px;">${(p.mode || "—").substring(0, 8)}</td>
-            <td style="font-size:8px; word-break:break-word;">${narration}</td>
-          </tr>
+        tr.innerHTML = `
+          <td>
+            ${index === 0
+              ? `<input type="checkbox" onchange="moveToReady(${order.id}, this)">`
+              : ""}
+          </td>
+          <td>${index === 0 ? (order.date || "") : ""}</td>
+          <td>${index === 0 ? (order.billNo || "") : ""}</td>
+          <td>${it.qty || ""}</td>
+          <td>${it.item || ""}</td>
+          <td>${it.metal || ""}</td>
+          <td>${it.purity || ""}</td>
+          <td>${it.qty && it.purity ? (it.qty * it.purity) : ""}</td>
+          <td>${order.gst || 0}%</td>
+          <td>${it.total || ""}</td>
+          <td>
+            ${index === 0
+              ? `<button onclick="viewOrder(${order.id})">View</button>`
+              : ""}
+          </td>
         `;
+
+        tbody.appendChild(tr);
       });
-      
-      paymentHTML += `
-          </tbody>
-        </table>
-      `;
-      paymentDetailsEl.innerHTML = paymentHTML;
-    } else {
-      paymentDetailsEl.innerHTML = "";
-    }
-  }
-  
-  invoice.style.display="block";
-  orderApp.style.display="none";
-}
-function back(){
-  invoice.style.display="none";
-  orderApp.style.display="block";
+    });
 }
 
-/* PAYMENT POPUP */
-function openPayment(){
-  if(!customer.value){ alert("Select customer first"); return; }
-  if(!billNo.value){ alert("Bill number is required"); return; }
-  
-  // Calculate and show bill total
-  const total = calculateBillTotal();
-  if(paymentBillTotal) {
-    paymentBillTotal.textContent = total.toFixed(2);
-  }
-  
-  // Reset form fields
-  document.getElementById("amount").value = "";
-  document.getElementById("narration").value = "";
-  document.getElementById("mode").value = "Cash";
-  document.getElementById("batch").value = "";
-  document.getElementById("type").value = "";
-  document.getElementById("expDate").value = "";
-  document.getElementById("apCode").value = "";
-  const cashRadio = document.querySelector('input[name="ptype"][value="Cash"]');
-  if(cashRadio) cashRadio.checked = true;
-  
-  // Reset display
-  if(paymentAmountDisplay) paymentAmountDisplay.textContent = "0.00";
-  if(paymentBalance) {
-    paymentBalance.textContent = total.toFixed(2);
-    paymentBalance.style.color = "#dc3545";
-  }
-  
-  paymentPopup.style.display = "flex";
+function moveToReady(orderId, checkbox){
+  if(!checkbox.checked) return;
+
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const order = orders.find(o => o.id === orderId);
+  if(!order) return;
+
+  // ✅ SET STATUS TO READY
+  order.status = "READY";
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  // ✅ REDIRECT
+  window.location.href = "ready-orders.html";
 }
 
-function calculatePaymentBalance(){
-  const total = calculateBillTotal();
-  const amount = Number(document.getElementById("amount").value || 0);
-  const balance = total - amount;
-  
-  if(paymentAmountDisplay) {
-    paymentAmountDisplay.textContent = amount.toFixed(2);
-  }
-  
-  if(paymentBalance) {
-    paymentBalance.textContent = balance.toFixed(2);
-    if(balance < 0) {
-      paymentBalance.style.color = "#dc3545";
-    } else if(balance === 0) {
-      paymentBalance.style.color = "#28a745";
-    } else {
-      paymentBalance.style.color = "#dc3545";
-    }
-  }
+function newOrder(){
+  window.location.href = "new-order.html";
 }
 
-function closePaymentPopup(){
-  paymentPopup.style.display = "none";
-  document.getElementById("amount").value = "";
-  document.getElementById("narration").value = "";
+function viewOrder(id){
+  alert("View Order ID: " + id);
 }
 
-function savePaymentFromPopup(){
-  const amountEl = document.getElementById("amount");
-  const modeEl = document.getElementById("mode");
-  const narrationEl = document.getElementById("narration");
-  const batchEl = document.getElementById("batch");
-  const typeEl = document.getElementById("type");
-  const expDateEl = document.getElementById("expDate");
-  const apCodeEl = document.getElementById("apCode");
-  const ptypeEl = document.querySelector('input[name="ptype"]:checked');
-  
-  const amt = Number(amountEl.value || 0);
-  if(!amt || amt <= 0){
-    alert("Enter valid amount");
-    return;
-  }
-  
-  if(!billNo.value){
-    alert("Bill number is required");
-    return;
-  }
-  
-  const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-  
-  payments.push({
-    billNo: billNo.value,
-    customer: customer.value,
-    amount: amt,
-    mode: modeEl.value,
-    narration: narrationEl.value,
-    batch: batchEl.value,
-    type: typeEl.value,
-    expDate: expDateEl.value,
-    apCode: apCodeEl.value,
-    ptype: ptypeEl ? ptypeEl.value : "Cash",
-    date: new Date().toISOString().split("T")[0],
-    timestamp: new Date().toISOString()
-  });
-  
-  localStorage.setItem("payments", JSON.stringify(payments));
-  
-  // Update bill total if not set
-  const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-  const billIndex = bills.findIndex(b => b.billNo === billNo.value);
-  if(billIndex >= 0){
-    if(!bills[billIndex].totalAmount){
-      bills[billIndex].totalAmount = calculateBillTotal();
-      localStorage.setItem("bills", JSON.stringify(bills));
-    }
-  }
-  
-  alert("Payment saved successfully");
-  closePaymentPopup();
-}
-
-/* NAV */
-function openReceipt(){ if(customer.value) window.open(`receipt.html?customer=${customer.value}`); }
-function openRateBook(){ window.open("ratebook.html"); }
+loadOrders();
 </script>
 
 </body>
