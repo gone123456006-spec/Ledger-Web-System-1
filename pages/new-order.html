@@ -297,14 +297,278 @@ td select{
 
 
 /* ===============================
-   PRINT (A4)
+   ADVANCE MODAL
+================================ */
+#advModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+
+.adv-modal-content{
+  background:#fff;
+  border-radius:16px;
+  box-shadow:0 25px 45px rgba(0,0,0,.3);
+  max-width:500px;
+  width:90%;
+  max-height:90vh;
+  overflow-y:auto;
+}
+
+.adv-modal-header{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:15px 20px;
+  font-weight:600;
+  font-size:16px;
+  border-bottom:1px solid #d1d6de;
+  border-radius:16px 16px 0 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.adv-modal-close{
+  background:none;
+  border:none;
+  font-size:24px;
+  cursor:pointer;
+  color:#666;
+  padding:0;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.adv-modal-close:hover{
+  color:#000;
+}
+
+.adv-modal-body{
+  padding:25px;
+}
+
+.adv-form-row{
+  margin-bottom:18px;
+}
+
+.adv-form-row label{
+  display:block;
+  font-size:14px;
+  font-weight:600;
+  margin-bottom:8px;
+  color:#333;
+}
+
+.adv-form-row input,
+.adv-form-row textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+  font-family:inherit;
+}
+
+.adv-form-row textarea{
+  height:100px;
+  resize:vertical;
+}
+
+.adv-form-row input:focus,
+.adv-form-row textarea:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.15);
+}
+
+.adv-modal-footer{
+  padding:15px 25px;
+  border-top:1px solid #d1d6de;
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  border-radius:0 0 16px 16px;
+}
+
+.adv-modal-footer button{
+  padding:10px 20px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+  cursor:pointer;
+  font-weight:500;
+}
+
+.adv-btn-save{
+  background:#007aff;
+  color:#fff;
+  border-color:#007aff;
+}
+
+.adv-btn-save:hover{
+  background:#0056b3;
+}
+
+.adv-btn-cancel{
+  background:#fff;
+  color:#333;
+}
+
+.adv-btn-cancel:hover{
+  background:#f5f5f5;
+}
+
+/* ===============================
+   PRINT (A4) - BILL FORMAT
 ================================ */
 @media print{
-  body{background:#fff}
-  .no-print{display:none!important}
-  .box,.table-wrap{
+  body{
+    background:#fff;
+    margin:0;
+    padding:0;
+  }
+  
+  .no-print{
+    display:none!important;
+  }
+  
+  .order-window{
+    max-width:100%;
+    padding:0;
+    margin:0;
+  }
+  
+  .order-title{
+    font-size:24px;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:20px;
+    border-bottom:3px solid #000;
+    padding-bottom:10px;
+  }
+  
+  .order-top{
+    display:block;
+    margin-bottom:25px;
+  }
+  
+  .box{
     box-shadow:none;
+    border:1px solid #000;
     border-radius:0;
+    padding:15px;
+    margin-bottom:15px;
+    page-break-inside:avoid;
+  }
+  
+  .box-title{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:12px;
+    border-bottom:2px solid #000;
+    padding-bottom:5px;
+  }
+  
+  .row{
+    margin-bottom:8px;
+  }
+  
+  .row label{
+    font-weight:600;
+    min-width:140px;
+  }
+  
+  .row input,
+  .row select{
+    border:1px solid #000;
+    border-radius:0;
+    padding:4px 8px;
+  }
+  
+  .order-details{
+    margin-top:20px;
+  }
+  
+  .table-wrap{
+    box-shadow:none;
+    border:2px solid #000;
+    border-radius:0;
+    overflow:visible;
+  }
+  
+  table{
+    border-collapse:collapse;
+    width:100%;
+    font-size:12px;
+  }
+  
+  thead th{
+    background:#f0f0f0!important;
+    border:1px solid #000;
+    padding:10px 8px;
+    font-weight:700;
+    text-align:left;
+  }
+  
+  tbody td{
+    border:1px solid #000;
+    padding:8px;
+  }
+  
+  tbody td input,
+  tbody td select{
+    border:none;
+    background:transparent;
+    width:100%;
+    padding:0;
+  }
+  
+  /* Advance details in print */
+  .adv-details-print{
+    display:none;
+  }
+  
+  tr[data-adv-data]:not([data-adv-data=""]) .adv-details-print{
+    display:block;
+    font-size:10px;
+    color:#555;
+    margin-top:4px;
+    font-style:italic;
+  }
+  
+  /* Bill summary */
+  .bill-summary{
+    margin-top:25px;
+    border:2px solid #000;
+    padding:15px;
+    page-break-inside:avoid;
+  }
+  
+  .summary-row{
+    display:flex;
+    justify-content:space-between;
+    padding:8px 0;
+    border-bottom:1px solid #ccc;
+    font-size:14px;
+  }
+  
+  .summary-row:last-child{
+    border-bottom:2px solid #000;
+    font-weight:700;
+    font-size:16px;
+    margin-top:5px;
+    padding-top:10px;
+  }
+  
+  @page{
+    size:A4;
+    margin:15mm;
   }
 }
 </style>
@@ -313,7 +577,7 @@ td select{
 
 <body>
 
-<div class="order-window">
+<div class="order-window" id="order-window">
 
   <div class="order-title">New Order</div>
 
@@ -428,10 +692,38 @@ td select{
   <div class="order-footer no-print">
     <button onclick="saveOrder()">Save</button>
 <button onclick="saveAndNew()">Save & New</button>
-<button onclick="window.print()">Print</button>
+    <button onclick="printBill()">Print</button>
 <button onclick="cancelOrder()">Cancel</button>
   </div>
 
+</div>
+
+<!-- ADVANCE PAYMENT MODAL -->
+<div id="advModal" class="no-print">
+  <div class="adv-modal-content">
+    <div class="adv-modal-header">
+      <span>ADVANCE PAYMENT</span>
+      <button class="adv-modal-close" onclick="closeAdvModal()">&times;</button>
+    </div>
+    <div class="adv-modal-body">
+      <div class="adv-form-row">
+        <label>Date</label>
+        <input type="date" id="advPayDate">
+      </div>
+      <div class="adv-form-row">
+        <label>Advance Amount</label>
+        <input type="number" id="advAmount" placeholder="0.00" step="0.01">
+      </div>
+      <div class="adv-form-row">
+        <label>Description</label>
+        <textarea id="advDescription" placeholder="Advance received for order"></textarea>
+      </div>
+    </div>
+    <div class="adv-modal-footer">
+      <button class="adv-btn-cancel" onclick="closeAdvModal()">Cancel</button>
+      <button class="adv-btn-save" onclick="saveAdvance()">Save</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -460,7 +752,17 @@ const rows = document.getElementById('rows');
 function initNewOrder(){
   billDate.value = new Date().toISOString().split("T")[0];
   loadCustomers();
-  addRow();
+  
+  // Check if editing an existing order
+  const editOrderId = localStorage.getItem("editOrderId");
+  if(editOrderId){
+    // Wait a bit for DOM to be fully ready, then load order
+    setTimeout(() => {
+      loadOrderForEdit(editOrderId);
+    }, 100);
+  } else {
+    addRow();
+  }
 }
 
 // If this page is loaded directly the DOMContentLoaded event will fire;
@@ -504,7 +806,10 @@ function addRow(){
 
   tr.innerHTML = `
     <td><input class="qty" value="1"></td>
-    <td><input class="item"></td>
+    <td>
+      <input class="item">
+      <div class="adv-details-print"></div>
+    </td>
     <td>
       <select class="metal">
         <option>Gold</option>
@@ -517,9 +822,12 @@ function addRow(){
     <td><input class="gst" readonly></td>
     <td><input class="total" readonly></td>
     <td>
-      <button type="button" class="adv-btn" onclick="openAdvPopup()">Adv</button>
+      <button type="button" class="adv-btn" onclick="openAdvPopup(this)">Adv</button>
     </td>
   `;
+  
+  // Initialize row data
+  tr.dataset.advData = '';
 
   rows.appendChild(tr);
 
@@ -537,12 +845,58 @@ function addRow(){
 
 
 
-function openAdvPopup(){
-  window.open(
-    "advanced.html",
-    "ADVANCED",
-    "width=900,height=600,top=80,left=120"
-  );
+// Store current row for advance modal
+let currentAdvRow = null;
+
+function openAdvPopup(btn){
+  currentAdvRow = btn.closest('tr');
+  const modal = document.getElementById('advModal');
+  const advData = currentAdvRow.dataset.advData ? JSON.parse(currentAdvRow.dataset.advData) : {};
+  
+  // Populate form with existing data if any
+  document.getElementById('advPayDate').value = advData.date || new Date().toISOString().split("T")[0];
+  document.getElementById('advAmount').value = advData.amount || '';
+  document.getElementById('advDescription').value = advData.description || '';
+  
+  modal.style.display = 'flex';
+}
+
+function closeAdvModal(){
+  document.getElementById('advModal').style.display = 'none';
+  currentAdvRow = null;
+}
+
+function saveAdvance(){
+  if(!currentAdvRow) return;
+  
+  const amount = parseFloat(document.getElementById('advAmount').value) || 0;
+  if(!amount){
+    alert("Enter advance amount");
+    return;
+  }
+
+  const advData = {
+    date: document.getElementById('advPayDate').value,
+    amount: amount,
+    description: document.getElementById('advDescription').value.trim()
+  };
+
+  // Store in row data attribute
+  currentAdvRow.dataset.advData = JSON.stringify(advData);
+  
+  // Update button to show it has advance
+  const btn = currentAdvRow.querySelector('.adv-btn');
+  btn.textContent = 'Adv ✓';
+  btn.style.background = '#d4edda';
+  btn.style.color = '#155724';
+  
+  // Update print display
+  const advPrint = currentAdvRow.querySelector('.adv-details-print');
+  if(advPrint){
+    advPrint.textContent = `Adv: ₹${amount.toFixed(2)} on ${new Date(advData.date).toLocaleDateString()}`;
+  }
+  
+  closeAdvModal();
 }
 
 
@@ -651,6 +1005,216 @@ function nav(e,tr){
 }
 
 /* ===============================
+   NAVIGATION HELPER
+================================ */
+function navigateToOrders(){
+  // Try to use loadPage if available (workspace context)
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/orders.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/orders.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/orders.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
+  const currentPath = window.location.pathname;
+  if(currentPath.includes('/pages/')){
+    window.location.href = "orders.html";
+  } else {
+    window.location.href = "/pages/orders.html";
+  }
+}
+
+/* ===============================
+   LOAD ORDER FOR EDITING
+================================ */
+function loadOrderForEdit(orderId){
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const order = orders.find(o => o.id === Number(orderId));
+  
+  if(!order){
+    alert("Order not found");
+    localStorage.removeItem("editOrderId");
+    return;
+  }
+
+  // Update page title
+  const title = document.querySelector('.order-title');
+  if(title) title.textContent = "Edit Order";
+
+  // Ensure customers are loaded first
+  loadCustomers();
+  
+  // Function to set customer after dropdown is ready
+  const setCustomer = (retryCount = 0) => {
+    // Ensure customers are loaded
+    loadCustomers();
+    
+    // Load customer data
+    const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+    
+    // Try to find customer by matching ID (handle both string and number)
+    let customer = customers.find(c => String(c.id) === String(order.customerId));
+    
+    // If not found, try with number comparison
+    if(!customer){
+      customer = customers.find(c => Number(c.id) === Number(order.customerId));
+    }
+    
+    if(!customer){
+      if(retryCount < 3){
+        // Retry after a short delay
+        setTimeout(() => setCustomer(retryCount + 1), 100);
+        return;
+      }
+      console.error("Customer not found for ID:", order.customerId);
+      alert("Customer not found. Please select a customer manually.");
+      return;
+    }
+    
+    // Check if the option exists in dropdown
+    const optionExists = Array.from(custName.options).some(opt => {
+      return String(opt.value) === String(order.customerId) || 
+             Number(opt.value) === Number(order.customerId);
+    });
+    
+    if(optionExists){
+      // Set customer in dropdown - try both string and number
+      const customerIdStr = String(order.customerId);
+      const customerIdNum = Number(order.customerId);
+      
+      // Find the correct option value
+      let selectedValue = null;
+      for(let opt of custName.options){
+        if(opt.value === customerIdStr || Number(opt.value) === customerIdNum){
+          selectedValue = opt.value;
+          break;
+        }
+      }
+      
+      if(selectedValue !== null){
+        // Set the value
+        custName.value = selectedValue;
+        
+        // Manually trigger the change handler to populate fields
+        // This ensures the fields are populated even if the event doesn't fire
+        const selectedOption = custName.selectedOptions[0];
+        if(selectedOption && selectedOption.dataset.data){
+          try {
+            const c = JSON.parse(selectedOption.dataset.data);
+            currentBal.value = c.openingBalance || 0;
+            relation.value = (c.relation || "") + " " + (c.relationName || "");
+            station.value = c.station || "";
+          } catch(e){
+            console.error("Error parsing customer data:", e);
+            // Fallback to direct customer object
+            currentBal.value = customer.openingBalance || 0;
+            relation.value = (customer.relation || "") + " " + (customer.relationName || "");
+            station.value = customer.station || "";
+          }
+        } else {
+          // Fallback: use customer object directly
+          currentBal.value = customer.openingBalance || 0;
+          relation.value = (customer.relation || "") + " " + (customer.relationName || "");
+          station.value = customer.station || "";
+        }
+        
+        // Also trigger the onchange event for any other listeners
+        if(custName.onchange){
+          try {
+            custName.onchange();
+          } catch(e){
+            console.warn("Error triggering onchange:", e);
+          }
+        }
+      } else {
+        // Fallback: manually populate fields
+        currentBal.value = customer.openingBalance || 0;
+        relation.value = (customer.relation || "") + " " + (customer.relationName || "");
+        station.value = customer.station || "";
+      }
+    } else {
+      // If option doesn't exist, manually populate fields
+      currentBal.value = customer.openingBalance || 0;
+      relation.value = (customer.relation || "") + " " + (customer.relationName || "");
+      station.value = customer.station || "";
+      console.warn("Customer option not found in dropdown, but data loaded manually");
+    }
+  };
+  
+  // Wait for dropdown to be populated
+  // Use multiple attempts to ensure it works
+  setTimeout(() => {
+    setCustomer();
+  }, 150);
+
+  // Load bill information
+  billNo.value = order.billNo || "";
+  billDate.value = order.date || billDate.value;
+  if(document.getElementById("dueDate")){
+    document.getElementById("dueDate").value = order.dueDate || "";
+  }
+  gstRate.value = order.gst || 3;
+
+  // Clear existing rows
+  rows.innerHTML = "";
+
+  // Load order items
+  if(order.items && order.items.length > 0){
+    order.items.forEach(item => {
+      const tr = addRow();
+      
+      // Populate item fields
+      tr.querySelector(".qty").value = item.qty || 1;
+      tr.querySelector(".item").value = item.item || "";
+      tr.querySelector(".metal").value = item.metal || "Gold";
+      tr.querySelector(".unit").value = item.purity || "";
+      
+      // Recalculate to populate computed fields
+      calc(tr);
+      
+      // Load advance data if exists
+      if(item.advance){
+        tr.dataset.advData = JSON.stringify(item.advance);
+        
+        // Update button to show advance is set
+        const btn = tr.querySelector('.adv-btn');
+        if(btn){
+          btn.textContent = 'Adv ✓';
+          btn.style.background = '#d4edda';
+          btn.style.color = '#155724';
+        }
+        
+        // Update print display
+        const advPrint = tr.querySelector('.adv-details-print');
+        if(advPrint && item.advance.amount){
+          const advDate = item.advance.date ? new Date(item.advance.date).toLocaleDateString() : '';
+          advPrint.textContent = `Adv: ₹${parseFloat(item.advance.amount).toFixed(2)}${advDate ? ' on ' + advDate : ''}`;
+        }
+      }
+    });
+  } else {
+    addRow();
+  }
+
+  // Store order ID for update
+  const orderWindow = document.getElementById("order-window");
+  if(orderWindow){
+    orderWindow.dataset.orderId = orderId;
+  }
+}
+
+/* ===============================
    SAVE ORDER
 ================================ */
 function saveOrder(redirect = true){
@@ -660,26 +1224,33 @@ function saveOrder(redirect = true){
   }
 
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const editOrderId = localStorage.getItem("editOrderId");
+  const isEdit = !!editOrderId;
 
   const order = {
-    id: Date.now(),
+    id: isEdit ? Number(editOrderId) : Date.now(),
     customerId: custName.value,
     billNo: billNo.value,
     date: billDate.value,
+    dueDate: document.getElementById("dueDate")?.value || "",
     gst: +gstRate.value,
-    items: []
+    items: [],
+    status: isEdit ? orders.find(o => o.id === Number(editOrderId))?.status : undefined
   };
 
   rows.querySelectorAll("tr").forEach(tr=>{
     const item = tr.querySelector(".item").value.trim();
     if(!item) return; // skip empty rows
 
+    const advData = tr.dataset.advData ? JSON.parse(tr.dataset.advData) : null;
+    
     order.items.push({
       qty: tr.querySelector(".qty").value,
       item,
       metal: tr.querySelector(".metal").value,
       purity: tr.querySelector(".unit").value,
-      total: tr.querySelector(".total").value
+      total: tr.querySelector(".total").value,
+      advance: advData // Include advance data
     });
   });
 
@@ -688,13 +1259,32 @@ function saveOrder(redirect = true){
     return false;
   }
 
-  orders.push(order);
+  if(isEdit){
+    // Update existing order
+    const index = orders.findIndex(o => o.id === Number(editOrderId));
+    if(index !== -1){
+      // Preserve status if it exists
+      if(orders[index].status){
+        order.status = orders[index].status;
+      }
+      orders[index] = order;
+      alert("Order updated successfully");
+    } else {
+      alert("Order not found");
+      return false;
+    }
+    // Clear edit flag
+    localStorage.removeItem("editOrderId");
+  } else {
+    // Add new order
+    orders.push(order);
+    alert("Order saved successfully");
+  }
+
   localStorage.setItem("orders", JSON.stringify(orders));
 
-  alert("Order saved successfully");
-
   if(redirect){
-    window.location.href = "orders.html";
+    navigateToOrders();
   }
 
   return true;
@@ -704,7 +1294,10 @@ function saveOrder(redirect = true){
    SAVE & NEW
 ================================ */
 function saveAndNew(){
-  saveOrder(true); // same behavior: save → go to orders
+  // Save the order and redirect to orders page
+  if(saveOrder(true)){
+    // Order saved successfully, navigation handled in saveOrder
+  }
 }
 
 /* ===============================
@@ -712,13 +1305,105 @@ function saveAndNew(){
 ================================ */
 function cancelOrder(){
   if(confirm("Discard current order?")){
-    window.location.href = "..pages/orders.html";
+    navigateToOrders();
   }
 }
 
 function openCustomer(){
   loadPage("../pages/customer.html");
 }
+
+/* ===============================
+   PRINT BILL FUNCTION
+================================ */
+function printBill(){
+  // Calculate totals
+  let subtotal = 0;
+  let totalGst = 0;
+  let totalAdvance = 0;
+  
+  rows.querySelectorAll("tr").forEach(tr => {
+    const total = parseFloat(tr.querySelector(".total").value) || 0;
+    const gst = parseFloat(tr.querySelector(".gst").value) || 0;
+    subtotal += total - gst;
+    totalGst += gst;
+    
+    // Get advance if exists
+    if(tr.dataset.advData){
+      const adv = JSON.parse(tr.dataset.advData);
+      totalAdvance += parseFloat(adv.amount) || 0;
+    }
+  });
+  
+  const grandTotal = subtotal + totalGst;
+  
+  // Create bill summary element
+  let summaryHTML = `
+    <div class="bill-summary">
+      <div class="summary-row">
+        <span>Subtotal:</span>
+        <span>₹${subtotal.toFixed(2)}</span>
+      </div>
+      <div class="summary-row">
+        <span>GST (${gstRate.value}%):</span>
+        <span>₹${totalGst.toFixed(2)}</span>
+      </div>
+  `;
+  
+  if(totalAdvance > 0){
+    summaryHTML += `
+      <div class="summary-row">
+        <span>Advance Received:</span>
+        <span>₹${totalAdvance.toFixed(2)}</span>
+      </div>
+    `;
+  }
+  
+  summaryHTML += `
+      <div class="summary-row">
+        <span>Grand Total:</span>
+        <span>₹${grandTotal.toFixed(2)}</span>
+      </div>
+      ${totalAdvance > 0 ? `
+      <div class="summary-row">
+        <span>Balance Amount:</span>
+        <span>₹${(grandTotal - totalAdvance).toFixed(2)}</span>
+      </div>
+      ` : ''}
+    </div>
+  `;
+  
+  // Add summary before printing
+  const existingSummary = document.querySelector('.bill-summary');
+  if(existingSummary) existingSummary.remove();
+  
+  const orderDetails = document.querySelector('.order-details');
+  orderDetails.insertAdjacentHTML('afterend', summaryHTML);
+  
+  // Trigger print
+  window.print();
+  
+  // Remove summary after print (optional)
+  setTimeout(() => {
+    const summary = document.querySelector('.bill-summary');
+    if(summary) summary.remove();
+  }, 1000);
+}
+
+// Close modal on outside click
+document.getElementById('advModal').addEventListener('click', function(e){
+  if(e.target === this){
+    closeAdvModal();
+  }
+});
+
+// Initialize date in modal
+document.addEventListener('DOMContentLoaded', function(){
+  const advDate = document.getElementById('advPayDate');
+  if(advDate && !advDate.value){
+    advDate.value = new Date().toISOString().split("T")[0];
+  }
+});
 
 </script>
 

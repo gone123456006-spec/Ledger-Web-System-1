@@ -140,9 +140,40 @@ function loadReadyOrders(){
   });
 }
 
+/* ===============================
+   NAVIGATION HELPER
+================================ */
+function navigateToNewOrder(){
+  // Try to use loadPage if available (workspace context)
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
+  const currentPath = window.location.pathname;
+  if(currentPath.includes('/pages/')){
+    window.location.href = "new-order.html";
+  } else {
+    window.location.href = "/pages/new-order.html";
+  }
+}
+
 function editOrder(orderId){
   localStorage.setItem("editOrderId", orderId);
-  window.location.href = "new-order.html";
+  navigateToNewOrder();
 }
 
 loadReadyOrders();

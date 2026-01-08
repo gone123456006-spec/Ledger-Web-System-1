@@ -142,6 +142,65 @@ function loadOrders(){
     });
 }
 
+/* ===============================
+   NAVIGATION HELPER
+================================ */
+function navigateToReadyOrders(){
+  // Try to use loadPage if available (workspace context)
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/ready-orders.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/ready-orders.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/ready-orders.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
+  const currentPath = window.location.pathname;
+  if(currentPath.includes('/pages/')){
+    window.location.href = "ready-orders.html";
+  } else {
+    window.location.href = "/pages/ready-orders.html";
+  }
+}
+
+function navigateToNewOrder(){
+  // Try to use loadPage if available (workspace context)
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
+  const currentPath = window.location.pathname;
+  if(currentPath.includes('/pages/')){
+    window.location.href = "new-order.html";
+  } else {
+    window.location.href = "/pages/new-order.html";
+  }
+}
+
 function moveToReady(orderId, checkbox){
   if(!checkbox.checked) return;
 
@@ -154,16 +213,49 @@ function moveToReady(orderId, checkbox){
 
   localStorage.setItem("orders", JSON.stringify(orders));
 
-  // ✅ REDIRECT
-  window.location.href = "ready-orders.html";
+  // ✅ REDIRECT TO READY ORDERS
+  navigateToReadyOrders();
 }
 
 function newOrder(){
-  window.location.href = "new-order.html";
+  navigateToNewOrder();
+}
+
+function navigateToNewOrderForEdit(orderId){
+  // Try to use loadPage if available (workspace context)
+  if(typeof loadPage === 'function'){
+    localStorage.setItem("editOrderId", orderId);
+    loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    localStorage.setItem("editOrderId", orderId);
+    window.parent.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    localStorage.setItem("editOrderId", orderId);
+    window.top.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
+  localStorage.setItem("editOrderId", orderId);
+  const currentPath = window.location.pathname;
+  if(currentPath.includes('/pages/')){
+    window.location.href = "new-order.html";
+  } else {
+    window.location.href = "/pages/new-order.html";
+  }
 }
 
 function viewOrder(id){
-  alert("View Order ID: " + id);
+  // Navigate to edit order
+  navigateToNewOrderForEdit(id);
 }
 
 loadOrders();
