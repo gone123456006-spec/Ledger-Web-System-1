@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ready Orders</title>
+
+<style>
+body{
+  margin:0;
+  background:#eef2f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+}
+
+.container{
+  max-width:1400px;
+  margin:30px auto;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.15);
+  padding:20px;
+}
+
+h2{
+  margin:0 0 14px;
+  font-size:18px;
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+}
+
+thead{
+  background:#f5f6fa;
+}
+
+th,td{
+  padding:10px 12px;
+  border-bottom:1px solid #ddd;
+  white-space:nowrap;
+}
+
+tbody tr:hover{
+  background:#f8faff;
+}
+
+.badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.ready{
+  background:#e7f8ee;
+  color:#1f7a3f;
+}
+
+button{
+  padding:6px 14px;
+  border-radius:8px;
+  border:none;
+  background:#0d6efd;
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Ready Orders</h2>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Bill No</th>
+          <th>Total Qty</th>
+          <th>Items</th>
+          <th>Metal</th>
+          <th>Total Amount</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function loadReadyOrders(){
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+
+  const readyOrders = orders.filter(o => o.status === "READY");
+
+  if(readyOrders.length === 0){
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;color:#777">
+          No ready orders
+        </td>
+      </tr>`;
+    return;
+  }
+
+  readyOrders.forEach(order=>{
+    const totalQty = order.items.reduce((s,i)=>s + (+i.qty || 0), 0);
+    const totalAmt = order.items.reduce((s,i)=>s + (+i.total || 0), 0);
+    const itemNames = order.items.map(i=>i.item).join(", ");
+    const metal = order.items[0]?.metal || "";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="badge ready">READY</span></td>
+      <td>${order.date || ""}</td>
+      <td>${order.billNo || ""}</td>
+      <td>${totalQty}</td>
+      <td title="${itemNames}">
+        ${order.items.length > 1 ? "Multiple Items" : itemNames}
+      </td>
+      <td>${metal}</td>
+      <td>${totalAmt.toFixed(2)}</td>
+      <td>
+        <button onclick="editOrder(${order.id})">Edit</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function editOrder(orderId){
+  localStorage.setItem("editOrderId", orderId);
+  window.location.href = "new-order.html";
+}
+
+loadReadyOrders();
+</script>
+
+</body>
+</html>
