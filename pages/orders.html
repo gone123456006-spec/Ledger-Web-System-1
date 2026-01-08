@@ -12,7 +12,7 @@ body{
 }
 
 .container{
-  max-width:1200px;
+  max-width:1400px;
   margin:30px auto;
   background:#fff;
   border-radius:14px;
@@ -20,15 +20,33 @@ body{
   padding:20px;
 }
 
-h2{
-  margin:0 0 16px;
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.top-bar h2{
+  margin:0;
   font-size:18px;
+}
+
+.top-bar button{
+  padding:8px 14px;
+  border-radius:10px;
+  border:1px solid #007aff;
+  background:#007aff;
+  color:#fff;
+  cursor:pointer;
+  font-size:14px;
 }
 
 table{
   width:100%;
   border-collapse:collapse;
-  font-size:14px;
+  font-size:13.5px;
+  min-width:1300px;
 }
 
 thead{
@@ -36,36 +54,17 @@ thead{
 }
 
 th,td{
-  padding:10px;
+  padding:8px 10px;
   border-bottom:1px solid #ddd;
-  text-align:left;
+  white-space:nowrap;
 }
 
 tbody tr:hover{
   background:#f8faff;
 }
 
-.actions button{
-  padding:4px 10px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  cursor:pointer;
-  background:#fff;
-}
-
-.top-bar{
-  display:flex;
-  justify-content:space-between;
-  margin-bottom:12px;
-}
-
-.top-bar button{
-  padding:6px 12px;
-  border-radius:8px;
-  border:1px solid #007aff;
-  background:#007aff;
-  color:#fff;
-  cursor:pointer;
+.table-wrap{
+  overflow-x:auto;
 }
 </style>
 </head>
@@ -79,46 +78,84 @@ tbody tr:hover{
     <button onclick="newOrder()">+ New Order</button>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Bill No</th>
-        <th>Customer</th>
-        <th>Total Items</th>
-        <th>GST %</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="orderTable"></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Select</th>
+          <th>Date</th>
+          <th>Bill No</th>
+          <th>Qty</th>
+          <th>Item</th>
+          <th>Metal</th>
+          <th>Unit Wt</th>
+          <th>Total Wt</th>
+          <th>GST</th>
+          <th>Total Amt</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="orderTable"></tbody>
+    </table>
+  </div>
 
 </div>
 
 <script>
 function loadOrders(){
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const customers = JSON.parse(localStorage.getItem("customers") || "[]");
   const tbody = document.getElementById("orderTable");
   tbody.innerHTML = "";
 
-  orders.reverse().forEach(o=>{
-    const cust = customers.find(c=>c.id == o.customerId);
-    const tr = document.createElement("tr");
+  orders
+    .filter(o => o.status !== "READY") // optional: hide READY ones
+    .slice()
+    .reverse()
+    .forEach(order=>{
+      order.items.forEach((it, index)=>{
+        const tr = document.createElement("tr");
 
-    tr.innerHTML = `
-      <td>${o.date || ""}</td>
-      <td>${o.billNo || ""}</td>
-      <td>${cust ? cust.name : ""}</td>
-      <td>${o.items.length}</td>
-      <td>${o.gst}%</td>
-      <td class="actions">
-        <button onclick="viewOrder(${o.id})">View</button>
-      </td>
-    `;
+        tr.innerHTML = `
+          <td>
+            ${index === 0
+              ? `<input type="checkbox" onchange="moveToReady(${order.id}, this)">`
+              : ""}
+          </td>
+          <td>${index === 0 ? (order.date || "") : ""}</td>
+          <td>${index === 0 ? (order.billNo || "") : ""}</td>
+          <td>${it.qty || ""}</td>
+          <td>${it.item || ""}</td>
+          <td>${it.metal || ""}</td>
+          <td>${it.purity || ""}</td>
+          <td>${it.qty && it.purity ? (it.qty * it.purity) : ""}</td>
+          <td>${order.gst || 0}%</td>
+          <td>${it.total || ""}</td>
+          <td>
+            ${index === 0
+              ? `<button onclick="viewOrder(${order.id})">View</button>`
+              : ""}
+          </td>
+        `;
 
-    tbody.appendChild(tr);
-  });
+        tbody.appendChild(tr);
+      });
+    });
+}
+
+function moveToReady(orderId, checkbox){
+  if(!checkbox.checked) return;
+
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const order = orders.find(o => o.id === orderId);
+  if(!order) return;
+
+  // ✅ SET STATUS TO READY
+  order.status = "READY";
+
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  // ✅ REDIRECT
+  window.location.href = "ready-orders.html";
 }
 
 function newOrder(){
@@ -126,7 +163,7 @@ function newOrder(){
 }
 
 function viewOrder(id){
-  alert("Order ID: " + id + " (view/edit coming next)");
+  alert("View Order ID: " + id);
 }
 
 loadOrders();

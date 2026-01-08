@@ -1,13 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Pending Orders</title>
+<meta charset="UTF-8">
+<title>Pending Orders</title>
+
+<style>
+body{
+  margin:0;
+  background:#eef2f7;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+}
+.container{
+  max-width:1400px;
+  margin:30px auto;
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.15);
+  padding:20px;
+}
+table{
+  width:100%;
+  min-width:1200px;
+  border-collapse:collapse;
+}
+th,td{
+  padding:8px 10px;
+  border-bottom:1px solid #ddd;
+  white-space:nowrap;
+}
+.badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+}
+.pending{background:#fff4d6;color:#9a6a00}
+</style>
 </head>
+
 <body>
-  <div style="padding:30px;font-family:Segoe UI,Arial,sans-serif">
-    <h2>Pending Orders</h2>
-    <p>This module is not implemented yet.</p>
+
+<div class="container">
+  <h2>Pending Orders</h2>
+
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>Date</th>
+          <th>Bill No</th>
+          <th>Qty</th>
+          <th>Item</th>
+          <th>Metal</th>
+          <th>Unit Wt</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
   </div>
+</div>
+
+<script>
+function loadPendingOrders(){
+  const orders = JSON.parse(localStorage.getItem("orders")||"[]");
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML="";
+
+  const pending = orders.filter(o=>o.status==="PENDING");
+
+  if(pending.length===0){
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:#777">
+      No pending orders</td></tr>`;
+    return;
+  }
+
+  pending.forEach(order=>{
+    order.items.forEach((it,idx)=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${idx===0?'<span class="badge pending">PENDING</span>':""}</td>
+        <td>${idx===0?order.date:""}</td>
+        <td>${idx===0?order.billNo:""}</td>
+        <td>${it.qty}</td>
+        <td>${it.item}</td>
+        <td>${it.metal}</td>
+        <td>${it.purity}</td>
+        <td>${it.total}</td>
+        <td>${idx===0
+          ? `<button onclick="markReady(${order.id})">Mark Ready</button>`
+          : ""}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+function markReady(orderId){
+  const orders = JSON.parse(localStorage.getItem("orders")||"[]");
+  const order = orders.find(o=>o.id===orderId);
+  if(!order) return;
+
+  order.status="READY";
+  localStorage.setItem("orders", JSON.stringify(orders));
+
+  window.location.href="ready-orders.html";
+}
+
+loadPendingOrders();
+</script>
+
 </body>
 </html>
