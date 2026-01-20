@@ -574,19 +574,19 @@ function updateFooter(){
 function navigateToNewOrder(){
   // Try to use loadPage if available (workspace context)
   if(typeof loadPage === 'function'){
-    loadPage("../pages/new-order.html");
+    loadPage("pages/new-order.html");
     return;
   }
   
   // Try parent window
   if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-    window.parent.loadPage("../pages/new-order.html");
+    window.parent.loadPage("pages/new-order.html");
     return;
   }
   
   // Try top window
   if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-    window.top.loadPage("../pages/new-order.html");
+    window.top.loadPage("pages/new-order.html");
     return;
   }
   
@@ -617,26 +617,26 @@ function editOrder(orderId){
     // DO NOT change the status - keep it as READY while editing
     localStorage.setItem("editOrderId", orderId);
     
-    // Open ready extra order.html for editing
+    // Open ready-extra-order for editing
     if(typeof loadPage === 'function'){
-      loadPage("../public/ready extra order.html");
+      loadPage("pages/ready-extra-order.html");
       return;
     }
     
     // Try parent window
     if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-      window.parent.loadPage("../public/ready extra order.html");
+      window.parent.loadPage("pages/ready-extra-order.html");
       return;
     }
     
     // Try top window
     if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-      window.top.loadPage("../public/ready extra order.html");
+      window.top.loadPage("pages/ready-extra-order.html");
       return;
     }
     
     // Fallback: open in new window
-    window.open("../public/ready extra order.html", "ReadyExtraOrder", "width=1400,height=800");
+    window.open("/pages/ready-extra-order.html", "ReadyExtraOrder", "width=1400,height=800");
     
   } catch(e) {
     console.error("Error editing order:", e);

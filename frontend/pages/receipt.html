@@ -338,7 +338,7 @@ function closeReceipt(){
       if(loadPageFunc){
         // Check if we should restore new-order (was open before receipt)
         const shouldRestore = localStorage.getItem("newOrderState");
-        const returnTarget = localStorage.getItem("receiptReturnTarget") || "../pages/new-order.html";
+        const returnTarget = localStorage.getItem("receiptReturnTarget") || "pages/new-order.html";
         
         if(shouldRestore){
           // Restore new-order page - it will restore its own state
@@ -375,14 +375,14 @@ function closeReceipt(){
       window.history.back();
     } else {
       // Last resort - navigate to new-order
-      const returnTarget = localStorage.getItem("receiptReturnTarget") || "../pages/new-order.html";
+      const returnTarget = localStorage.getItem("receiptReturnTarget") || "pages/new-order.html";
       window.location.href = returnTarget;
     }
   } catch(e) {
     console.error("Error closing receipt:", e);
     // Fallback navigation
     try {
-      const returnTarget = localStorage.getItem("receiptReturnTarget") || "../pages/new-order.html";
+      const returnTarget = localStorage.getItem("receiptReturnTarget") || "pages/new-order.html";
       window.location.href = returnTarget;
     } catch(e2) {
       alert("Payment saved. Please navigate back manually.");

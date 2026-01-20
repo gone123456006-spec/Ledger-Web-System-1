@@ -77,8 +77,7 @@ app.use(
   })
 );
 
-// Set static folder
-app.use(express.static(path.join(__dirname, '../public')));
+// Frontend is deployed separately (static site). Keep API-only backend.
 
 // API Routes
 const API_VERSION = '/api/v1';

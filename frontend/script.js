@@ -32,71 +32,71 @@ function initSidebarButtons(){
         switch (action) {
 
             case "add customer":
-                loadPage("../pages/customer.html");   
+                loadPage("pages/customer.html");   
                 break;
 
             case "add item":
-                loadPage("../pages/add-item.html");
+                loadPage("pages/add-item.html");
                 break;
 
             case "agents":
-                loadPage("../pages/agents.html");
+                loadPage("pages/agents.html");
                 break;
 
             case "customer balance":
-                loadPage("../pages/customer-balance.html");
+                loadPage("pages/customer-balance.html");
                 break;
 
             case "direct bill":
-                loadPage("../pages/direct-bill.html");
+                loadPage("pages/direct-bill.html");
                 break;
 
             case "all bill":
-                loadPage("../pages/all-bill.html");
+                loadPage("pages/all-bill.html");
                 break;
 
             case "new order":
-                loadPage("../pages/new-order.html");
+                loadPage("pages/new-order.html");
                 break;
 
             case "orders":
-                loadPage("../pages/orders.html");
+                loadPage("pages/orders.html");
                 break;
 
             case "pending orders":
-                loadPage("../pages/pending-orders.html");
+                loadPage("pages/pending-orders.html");
                 break;
 
             case "ready orders":
-                loadPage("../pages/ready-orders.html");
+                loadPage("pages/ready-orders.html");
                 break;
 
             case "pending items":
-                loadPage("../pages/pending-items.html");
+                loadPage("pages/pending-items.html");
                 break;
 
             case "add jobworker":
-                loadPage("../pages/add-jobworker.html");
+                loadPage("pages/add-jobworker.html");
                 break;
 
             case "jobworker entry":
-                loadPage("../pages/jobworker-entry.html");
+                loadPage("pages/jobworker-entry.html");
                 break;
 
             case "jobworker balance":
-                loadPage("../pages/jobworker-balance.html");
+                loadPage("pages/jobworker-balance.html");
                 break;
 
             case "new loan":
-                loadPage("../pages/new-loan.html");
+                loadPage("pages/new-loan.html");
                 break;
 
             case "pending loans":
-                loadPage("../pages/pending-loans.html");
+                loadPage("pages/pending-loans.html");
                 break;
 
             case "day book":
-                loadPage("../pages/day-book.html");
+                loadPage("pages/day-book.html");
                 break;
 
             default:
@@ -294,6 +294,7 @@ function loadPage(pageUrl) {
             }, 100); // Delay to ensure DOM is ready
         })
         .catch(err => {
+            const isFile = (window.location && window.location.protocol === "file:");
             workspace.innerHTML = `
                 <div style="
                     padding:30px;
@@ -302,9 +303,13 @@ function loadPage(pageUrl) {
                 ">
                     Module could not be loaded.<br>
                     <small>${pageUrl}</small>
+                    ${isFile ? `<div style="margin-top:10px; font-size:12px; color:#6e6e73;">
+                      You are opening the app using <strong>file://</strong>. Browsers block <strong>fetch()</strong> for local files.
+                      Run a local server (example: <code>npx serve frontend</code>) or deploy on Render.
+                    </div>` : ``}
                 </div>
             `;
-            console.error(err);
+            console.error("loadPage failed:", { pageUrl, fetchUrl, err });
         });
 }
 

@@ -1,0 +1,28 @@
+services:
+  # =========================
+  # Frontend (Static Site)
+  # =========================
+  - type: static
+    name: ledger-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: ""
+    staticPublishPath: .
+
+  # =========================
+  # Backend (Node/Express API)
+  # =========================
+  - type: web
+    name: ledger-backend
+    env: node
+    rootDir: BackEnd
+    buildCommand: npm ci
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Set this in Render dashboard to your frontend URL after deploy:
+      # e.g. https://ledger-frontend.onrender.com
+      - key: CORS_ORIGIN
+        value: https://YOUR-FRONTEND.onrender.com
+

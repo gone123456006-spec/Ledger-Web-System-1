@@ -370,17 +370,17 @@ function closeExtra(){
   
   // If in dashboard workspace, navigate back to ready-orders
   if(typeof loadPage === 'function'){
-    loadPage("../pages/ready-orders.html");
+    loadPage("pages/ready-orders.html");
     return;
   }
   
   if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-    window.parent.loadPage("../pages/ready-orders.html");
+    window.parent.loadPage("pages/ready-orders.html");
     return;
   }
   
   if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-    window.top.loadPage("../pages/ready-orders.html");
+    window.top.loadPage("pages/ready-orders.html");
     return;
   }
   
@@ -388,7 +388,7 @@ function closeExtra(){
   if(window.history.length > 1){
     window.history.back();
   } else {
-    window.location.href = "../pages/ready-orders.html";
+    window.location.href = "pages/ready-orders.html";
   }
 }
 
