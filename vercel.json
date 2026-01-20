@@ -1,8 +1,10 @@
 {
   "version": 2,
   "routes": [
-    { "src": "^/$", "dest": "/frontend/index.html" },
-    { "handle": "filesystem" }
+    { "handle": "filesystem" },
+    { "src": "^/pages/(.*)$", "dest": "/frontend/pages/$1" },
+    { "src": "^/public/(.*)$", "dest": "/frontend/$1" },
+    { "src": "^/$", "dest": "/frontend/index.html" }
   ]
 }
 
