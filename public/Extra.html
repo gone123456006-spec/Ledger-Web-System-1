@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Extra Details</title>
+
+<style>
+/* =========================
+   RESET & BASE
+========================= */
+*{
+  box-sizing:border-box;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+}
+
+body{
+  margin:0;
+  padding:20px;
+  background:linear-gradient(to bottom,#cde1ff,#e6f1ff);
+  min-height:100vh;
+}
+
+/* =========================
+   WINDOW
+========================= */
+.window{
+  background:#ffffff;
+  border-radius:18px;
+  border:1px solid #d1d6de;
+  box-shadow:0 25px 45px rgba(0,0,0,.25);
+  max-width:800px;
+  width:100%;
+  margin:30px auto;
+}
+
+.window-content{
+  padding:30px 40px;
+  background:#f9fbfe;
+}
+
+/* TITLE BAR */
+.title-bar{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:16px 20px;
+  font-weight:600;
+  font-size:18px;
+  text-align:center;
+  color:#1d1d1f;
+  border-bottom:1px solid #d1d6de;
+  border-radius:18px 18px 0 0;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.close-btn{
+  position:absolute;
+  right:20px;
+  top:50%;
+  transform:translateY(-50%);
+  width:32px;
+  height:32px;
+  border:none;
+  background:#ff3b30;
+  color:#fff;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:18px;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:all 0.2s;
+  line-height:1;
+  padding:0;
+}
+
+.close-btn:hover{
+  background:#ff2d20;
+  transform:translateY(-50%) scale(1.1);
+  box-shadow:0 2px 8px rgba(255,59,48,0.3);
+}
+
+.close-btn:active{
+  transform:translateY(-50%) scale(0.95);
+}
+
+/* FORM ROW */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.form-row label{
+  width:140px;
+  font-size:15px;
+  color:#3a3a3c;
+  font-weight:500;
+}
+
+/* INPUTS */
+.form-row input,
+.form-row textarea,
+.form-row select{
+  flex:1;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #d1d6de;
+  font-size:15px;
+  background:#ffffff;
+  transition:all 0.2s;
+  height:44px;
+}
+
+.form-row textarea{
+  height:100px;
+  resize:none;
+  padding:12px 14px;
+}
+
+.form-row input:focus,
+.form-row textarea:focus,
+.form-row select:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 4px rgba(0,122,255,.18);
+}
+
+/* FOOTER */
+.footer{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  padding:20px;
+  background:#f2f5f9;
+  border-top:1px solid #d1d6de;
+  border-radius:0 0 18px 18px;
+}
+
+.footer button{
+  min-width:140px;
+  padding:12px 24px;
+  font-size:15px;
+  font-weight:500;
+  border-radius:12px;
+  border:1px solid #d1d6de;
+  background:#ffffff;
+  cursor:pointer;
+  transition:all 0.2s;
+  color:#1d1d1f;
+}
+
+.footer button:hover{
+  background:#e6f0ff;
+  border-color:#007aff;
+  transform:translateY(-1px);
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+
+.footer button:first-child{
+  background:#007aff;
+  color:#fff;
+  border-color:#007aff;
+  font-weight:600;
+}
+
+.footer button:first-child:hover{
+  background:#0056b3;
+  border-color:#0056b3;
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .form-row{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+  }
+  
+  .form-row label{
+    width:100%;
+    margin-bottom:4px;
+  }
+  
+  .form-row input,
+  .form-row textarea,
+  .form-row select{
+    width:100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+  <div class="title-bar">
+    Extra Details
+    <button class="close-btn" onclick="closeExtra()" title="Close">×</button>
+  </div>
+
+  <div class="window-content">
+    <div class="form-row">
+      <label>Order No</label>
+      <input id="orderNo" readonly>
+    </div>
+
+    <div class="form-row">
+      <label>Customer</label>
+      <input id="customer" readonly>
+    </div>
+
+    <div class="form-row">
+      <label>Amount</label>
+      <input type="number" id="amount" step="0.01" placeholder="0.00">
+    </div>
+
+    <div class="form-row">
+      <label>Ready Weight</label>
+      <input type="number" id="readyWeight" step="0.001" placeholder="0.000">
+    </div>
+
+    <div class="form-row">
+      <label>Neg</label>
+      <input type="number" id="neg" step="0.001" placeholder="0.000">
+    </div>
+
+    <div class="form-row">
+      <label>Ready Metal</label>
+      <input id="readyMetal" placeholder="e.g. 22K Gold">
+    </div>
+
+    <div class="form-row">
+      <label>Payment</label>
+      <input id="payment" placeholder="e.g. Cash / UPI / Bank">
+    </div>
+
+    <div class="form-row">
+      <label>Narration</label>
+      <textarea id="narration" placeholder="Enter details..."></textarea>
+    </div>
+
+    <div class="form-row">
+      <label>Date</label>
+      <input type="date" id="balanceDate">
+    </div>
+  </div>
+
+  <div class="footer">
+    <button type="button" id="saveBtn" onclick="saveExtraDetails()">Save</button>
+    <button type="button" id="cancelBtn" onclick="closeExtra()">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+// Get order details from URL or localStorage
+let currentOrderId = null;
+let currentOrder = null;
+
+function initExtraPage(){
+  // Get order ID from URL or localStorage
+  const params = new URLSearchParams(window.location.search);
+  currentOrderId = params.get("orderId") || localStorage.getItem("extraOrderId");
+  
+  if(!currentOrderId){
+    alert("Order ID not found");
+    closeExtra();
+    return;
+  }
+  
+  // Load order details
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  currentOrder = orders.find(o => o.id === Number(currentOrderId));
+  
+  if(!currentOrder){
+    alert("Order not found");
+    closeExtra();
+    return;
+  }
+  
+  // Populate form with order details
+  const orderNoEl = document.getElementById("orderNo");
+  const customerEl = document.getElementById("customer");
+  const amountEl = document.getElementById("amount");
+  const dateEl = document.getElementById("balanceDate");
+  
+  if(orderNoEl) orderNoEl.value = currentOrder.orderNo || currentOrder.billNo || "";
+  if(customerEl) customerEl.value = currentOrder.customer || "";
+  if(amountEl) amountEl.value = currentOrder.netAmount || "";
+  if(dateEl) dateEl.value = new Date().toISOString().split("T")[0];
+}
+
+function saveExtraDetails(){
+  const orderNoEl = document.getElementById("orderNo");
+  const customerEl = document.getElementById("customer");
+  const amountEl = document.getElementById("amount");
+  const readyWeightEl = document.getElementById("readyWeight");
+  const negEl = document.getElementById("neg");
+  const readyMetalEl = document.getElementById("readyMetal");
+  const paymentEl = document.getElementById("payment");
+  const narrationEl = document.getElementById("narration");
+  const dateEl = document.getElementById("balanceDate");
+  
+  if(!orderNoEl || !customerEl || !amountEl){
+    alert("Form elements not found");
+    return;
+  }
+  
+  const amount = parseFloat(amountEl.value || 0);
+  const readyWeight = parseFloat(readyWeightEl ? readyWeightEl.value || 0 : 0);
+  const neg = parseFloat(negEl ? negEl.value || 0 : 0);
+  const readyMetal = readyMetalEl ? readyMetalEl.value.trim() : "";
+  const payment = paymentEl ? paymentEl.value.trim() : "";
+  const narration = narrationEl ? narrationEl.value.trim() : "";
+  const date = dateEl ? dateEl.value : new Date().toISOString().split("T")[0];
+  
+  if(!amount && !readyWeight && !neg){
+    alert("Please enter at least one value (Amount, Ready Weight, or Neg)");
+    return;
+  }
+  
+  try {
+    // Get existing customer balances
+    let customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+    
+    // Create balance entry
+    const balanceEntry = {
+      id: Date.now(),
+      orderId: currentOrderId,
+      orderNo: orderNoEl.value,
+      customer: customerEl.value,
+      customerId: currentOrder.customerId || "",
+      amount: amount,
+      readyWeight: readyWeight,
+      neg: neg,
+      readyMetal: readyMetal,
+      payment: payment,
+      narration: narration,
+      date: date,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Add to balances
+    customerBalances.push(balanceEntry);
+    localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
+    
+    alert("Details saved successfully");
+    closeExtra();
+  } catch(e) {
+    console.error("Error saving details:", e);
+    alert("Error saving details: " + (e.message || String(e)));
+  }
+}
+
+function closeExtra(){
+  // Clear order ID from localStorage
+  localStorage.removeItem("extraOrderId");
+  
+  // Try to close window or navigate back
+  if(window.opener){
+    try {
+      window.close();
+      return;
+    } catch(e) {}
+  }
+  
+  // If in dashboard workspace, navigate back to ready-orders
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/ready-orders.html");
+    return;
+  }
+  
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/ready-orders.html");
+    return;
+  }
+  
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/ready-orders.html");
+    return;
+  }
+  
+  // Fallback
+  if(window.history.length > 1){
+    window.history.back();
+  } else {
+    window.location.href = "../pages/ready-orders.html";
+  }
+}
+
+// Make functions globally accessible
+window.saveExtraDetails = saveExtraDetails;
+window.closeExtra = closeExtra;
+
+// Initialize on page load
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initExtraPage);
+} else {
+  setTimeout(initExtraPage, 100);
+}
+</script>
+
+</body>
+</html>

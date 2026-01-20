@@ -3,7 +3,18 @@
    SIDEBAR BUTTON HANDLING (ERP STYLE)
 ====================================================== */
 
-document.querySelectorAll(".sidebar button").forEach(btn => {
+// Wait for DOM to be ready
+function initSidebarButtons(){
+    const sidebarButtons = document.querySelectorAll(".sidebar button");
+    
+    if(sidebarButtons.length === 0){
+        console.warn("Sidebar buttons not found. Retrying...");
+        // Retry after a short delay if DOM not ready
+        setTimeout(initSidebarButtons, 100);
+        return;
+    }
+    
+    sidebarButtons.forEach(btn => {
     btn.addEventListener("click", () => {
 
         // EXIT
@@ -92,13 +103,52 @@ document.querySelectorAll(".sidebar button").forEach(btn => {
                 showInfo(`"${btn.innerText}" module not connected yet`);
         }
     });
-});
+    });
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSidebarButtons);
+} else {
+    // DOM already ready
+    initSidebarButtons();
+}
+
+/* ======================================================
+   HELPER: Ensure element exists before accessing
+====================================================== */
+function ensureElementReady(selector, maxRetries = 10, delay = 50) {
+    return new Promise((resolve) => {
+        let retries = 0;
+        const checkElement = () => {
+            const element = document.querySelector(selector) || document.getElementById(selector.replace('#', ''));
+            if (element || retries >= maxRetries) {
+                resolve(element);
+            } else {
+                retries++;
+                setTimeout(checkElement, delay);
+            }
+        };
+        checkElement();
+    });
+}
 
 /* ======================================================
    PAGE LOADER (THIS MAKES IT OPEN INSIDE DASHBOARD)
 ====================================================== */
 function loadPage(pageUrl) {
     const workspace = document.querySelector(".workspace");
+    
+    if(!workspace){
+        console.error("Workspace element not found");
+        alert("Dashboard workspace not found. Please refresh the page.");
+        return;
+    }
+    
+    if(!pageUrl){
+        console.error("Page URL is required");
+        return;
+    }
 
     // Loading screen
     workspace.innerHTML = `
@@ -117,31 +167,119 @@ function loadPage(pageUrl) {
             return res.text();
         })
         .then(html => {
-            // Insert HTML
-            workspace.innerHTML = html;
-
-            // Execute any inline scripts present in the fetched HTML so page-level
-            // functions (like those in pages/customer.html) become available.
-            try {
-                const temp = document.createElement('div');
-                temp.innerHTML = html;
-                temp.querySelectorAll('script').forEach(oldScript => {
-                    const script = document.createElement('script');
-                    if (oldScript.src) {
-                        // External script: copy src so browser loads & executes it
-                        script.src = oldScript.src;
-                        script.async = false;
-                        document.body.appendChild(script);
-                    } else {
-                        // Inline script: copy content and execute immediately
-                        script.textContent = oldScript.textContent;
-                        document.body.appendChild(script);
-                        document.body.removeChild(script);
-                    }
-                });
-            } catch (e) {
-                console.error('Error executing inline scripts from loaded page', e);
-            }
+            // Parse HTML to extract and remove scripts before inserting
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            
+            // Extract all scripts (both inline and external)
+            const scripts = Array.from(temp.querySelectorAll('script'));
+            scripts.forEach(script => script.remove());
+            
+            // Extract style tags to preserve CSS
+            const styles = Array.from(temp.querySelectorAll('style'));
+            const styleContents = styles.map(style => style.textContent).join('\n');
+            styles.forEach(style => style.remove());
+            
+        // Insert HTML content (without scripts and styles)
+        workspace.innerHTML = temp.innerHTML;
+        
+        // Inject styles into workspace if any
+        if (styleContents) {
+            const styleTag = document.createElement('style');
+            styleTag.textContent = styleContents;   
+            workspace.appendChild(styleTag);
+        }
+        
+        // Force a reflow to ensure DOM is fully updated
+        void workspace.offsetHeight;
+            
+            // Execute scripts AFTER DOM is inserted
+            // This ensures getElementById can find elements
+            // Use a longer delay to ensure DOM is fully ready
+            setTimeout(() => {
+                try {
+                    let scriptIndex = 0;
+                    const executeNextScript = () => {
+                        if (scriptIndex >= scripts.length) {
+                            // All scripts executed, now refresh
+                            setTimeout(() => {
+                                refreshPageData(workspace);
+                            }, 200);
+                            return;
+                        }
+                        
+                        const oldScript = scripts[scriptIndex];
+                        const script = document.createElement('script');
+                        
+                        if (oldScript.src) {
+                            // External script: check if already loaded to avoid duplicates
+                            const existingScript = document.querySelector(`script[src="${oldScript.src}"]`);
+                            if (!existingScript) {
+                                script.src = oldScript.src;
+                                script.async = false;
+                                script.onload = () => {
+                                    scriptIndex++;
+                                    executeNextScript();
+                                };
+                                script.onerror = () => {
+                                    console.warn(`Failed to load external script: ${oldScript.src}`);
+                                    scriptIndex++;
+                                    executeNextScript();
+                                };
+                                document.body.appendChild(script);
+                            } else {
+                                // Script already loaded, skip to next
+                                scriptIndex++;
+                                executeNextScript();
+                            }
+                        } else {
+                            // Inline script: execute in workspace context
+                            try {
+                                const scriptContent = oldScript.textContent;
+                                
+                                // Wrap script to handle errors gracefully and ensure proper scope
+                                const wrappedScript = `
+                                    (function() {
+                                        'use strict';
+                                        try {
+                                            ${scriptContent}
+                                        } catch(e) {
+                                            console.error('Error in page script (line ${scriptIndex}):', e);
+                                            console.error('Script content:', e.stack);
+                                        }
+                                    })();
+                                `;
+                                
+                                script.textContent = wrappedScript;
+                                document.body.appendChild(script);
+                                
+                                // Remove after execution and move to next script
+                                setTimeout(() => {
+                                    if (script.parentNode) {
+                                        document.body.removeChild(script);
+                                    }
+                                    scriptIndex++;
+                                    executeNextScript();
+                                }, 30);
+                            } catch (e) {
+                                console.error('Error preparing inline script:', e);
+                                scriptIndex++;
+                                executeNextScript();
+                            }
+                        }
+                    };
+                    
+                    // Start executing scripts sequentially
+                    executeNextScript();
+                    
+                } catch (e) {
+                    console.error('Error executing scripts from loaded page', e);
+                    // Still try to refresh even if script execution had errors
+                    setTimeout(() => {
+                        refreshPageData(workspace);
+                    }, 300);
+                }
+            }, 100); // Delay to ensure DOM is ready
         })
         .catch(err => {
             workspace.innerHTML = `
@@ -172,8 +310,153 @@ function setActiveSidebar(activeBtn){
 ====================================================== */
 function exitApp(){
     if(confirm("Exit application?")){
-        window.location.href = "login.html";
+        // Try to close window, fallback to redirect
+        if(window.opener){
+            window.close();
+        } else {
+            window.location.href = "about:blank";
+        }
     }
+}
+
+/* ======================================================
+   SHOW INFO MESSAGE
+====================================================== */
+function showInfo(message){
+    // Simple alert for now, can be replaced with toast notification
+    console.log(message);
+    // Optional: Show a toast notification instead of console.log
+    // You can implement a proper toast notification system here
+}
+
+/* ======================================================
+   AUTO REFRESH PAGE DATA
+====================================================== */
+function refreshPageData(workspace) {
+    if (!workspace) return;
+    
+    // Wait a bit for DOM to be fully inserted and scripts executed
+    setTimeout(() => {
+        // First, try to re-initialize any const declarations that might have failed
+        // Some pages declare const elements at the top level which fail if elements don't exist
+        try {
+            // Re-evaluate common element references that might have failed
+            const commonElementIds = [
+                'custName', 'currentBal', 'relation', 'station',
+                'orderDate', 'dueDate', 'billNo', 'gstRate',
+                'itemTable', 'rows', 'orderApp', 'invoice',
+                'customer', 'billDate', 'historyBody'
+            ];
+            
+            // This helps pages that have const declarations that failed
+            // by ensuring elements exist before functions try to use them
+        } catch (e) {
+            console.debug('Error in element re-initialization:', e);
+        }
+        
+        // List of common refresh/load functions to call
+        const refreshFunctions = [
+            'loadCustomers',
+            'loadReadyOrders',
+            'loadPendingOrders',
+            'loadOrders',
+            'loadStations',
+            'loadHistory',
+            'initNewOrder',
+            'refreshData',
+            'loadData',
+            'reloadData'
+        ];
+        
+        // Try to call refresh functions if they exist
+        refreshFunctions.forEach(funcName => {
+            try {
+                if (typeof window[funcName] === 'function') {
+                    // Add a small delay between function calls to avoid conflicts
+                    setTimeout(() => {
+                        try {
+                            window[funcName]();
+                        } catch (e) {
+                            console.debug(`Refresh function ${funcName} errored:`, e);
+                        }
+                    }, 10);
+                }
+            } catch (e) {
+                console.debug(`Refresh function ${funcName} not available:`, e);
+            }
+        });
+        
+        // Dispatch a custom event that pages can listen to for refresh
+        const refreshEvent = new CustomEvent('pageRefresh', {
+            detail: { source: 'dashboard', workspace: workspace }
+        });
+        workspace.dispatchEvent(refreshEvent);
+        window.dispatchEvent(refreshEvent);
+        document.dispatchEvent(refreshEvent);
+        
+        // For pages that check document.readyState, manually trigger their init
+        // This handles cases like new-order.html which checks readyState
+        try {
+            const initFunctions = ['initNewOrder', 'initPage', 'initialize'];
+            initFunctions.forEach((funcName, index) => {
+                setTimeout(() => {
+                    try {
+                        if (typeof window[funcName] === 'function') {
+                            window[funcName]();
+                        }
+                    } catch (e) {
+                        console.debug(`Init function ${funcName} errored:`, e);
+                    }
+                }, index * 50); // Stagger init calls
+            });
+        } catch (e) {
+            console.debug('Error calling init functions:', e);
+        }
+        
+        // For pages with immediate initialization code (like orders.html)
+        // Look for common initialization patterns and ensure they run
+        try {
+            // Check workspace for elements that indicate what needs to be initialized
+            const custNameEl = workspace.querySelector('#custName') || document.getElementById('custName');
+            if (custNameEl && typeof window.loadCustomers === 'function') {
+                setTimeout(() => window.loadCustomers(), 100);
+            }
+            
+            const rowsEl = workspace.querySelector('#rows') || document.getElementById('rows');
+            if (rowsEl && typeof window.addRow === 'function') {
+                // Check if rows are empty, if so add a row
+                if (!rowsEl.querySelector('tr')) {
+                    setTimeout(() => window.addRow(), 150);
+                }
+            }
+            
+            const itemTableEl = workspace.querySelector('#itemTable tbody') || document.querySelector('#itemTable tbody');
+            if (itemTableEl && typeof window.addRow === 'function') {
+                if (!itemTableEl.querySelector('tr')) {
+                    setTimeout(() => window.addRow(), 150);
+                }
+            }
+            
+            // Check for order date and set it if not set
+            const orderDateEl = workspace.querySelector('#orderDate') || document.getElementById('orderDate');
+            if (orderDateEl && !orderDateEl.value) {
+                orderDateEl.valueAsDate = new Date();
+            }
+            
+            const billDateEl = workspace.querySelector('#billDate') || document.getElementById('billDate');
+            if (billDateEl && !billDateEl.value) {
+                billDateEl.valueAsDate = new Date();
+            }
+            
+            // Generate bill number if needed
+            const billNoEl = workspace.querySelector('#billNo') || document.getElementById('billNo');
+            if (billNoEl && !billNoEl.value && typeof window.generateBillNo === 'function') {
+                billNoEl.value = window.generateBillNo();
+            }
+        } catch (e) {
+            console.debug('Error in element-based initialization:', e);
+        }
+    }, 200); // Increased delay to ensure everything is ready
 }
 
 /* ======================================================

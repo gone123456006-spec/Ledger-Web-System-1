@@ -5,246 +5,604 @@
 <title>Orders</title>
 
 <style>
+/* =========================
+   BASE
+========================= */
+*{
+  box-sizing:border-box;
+  font-family:Segoe UI, Arial, sans-serif;
+  font-size:13px;
+}
+
 body{
   margin:0;
-  background:#eef2f7;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+  background:#e6ebf2;
 }
 
-.container{
-  max-width:1400px;
-  margin:30px auto;
+/* =========================
+   CONTAINER
+========================= */
+.orders-wrap{
+  margin:15px;
   background:#fff;
-  border-radius:14px;
-  box-shadow:0 12px 30px rgba(0,0,0,.15);
-  padding:20px;
-}
-
-.top-bar{
+  border:1px solid #d1d6de;
+  border-radius:12px;
   display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:14px;
+  flex-direction:column;
+  height:calc(100vh - 30px);
+  max-height:calc(100vh - 30px);
+  overflow:hidden;
+  box-sizing:border-box;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
-.top-bar h2{
+/* Workspace integration */
+.workspace .orders-wrap{
   margin:0;
-  font-size:18px;
+  height:100%;
+  max-height:100%;
+  border-radius:0;
+  box-shadow:none;
 }
 
-.top-bar button{
-  padding:8px 14px;
-  border-radius:10px;
-  border:1px solid #007aff;
-  background:#007aff;
-  color:#fff;
+/* =========================
+   TOOLBAR
+========================= */
+.orders-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  padding:16px;
+  border-bottom:1px solid #e5e7eb;
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa);
+  flex-shrink:0;
+  box-sizing:border-box;
+}
+
+.btn{
+  padding:8px 16px;
+  border:1px solid #d1d6de;
+  background:#fff;
   cursor:pointer;
-  font-size:14px;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:500;
+  transition:all 0.2s;
+  color:#1d1d1f;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn:hover{ 
+  background:#007aff;
+  border-color:#007aff;
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(0,122,255,0.2);
+}
+
+.btn:active{
+  transform:translateY(0);
+  box-shadow:0 1px 2px rgba(0,0,0,0.1);
+}
+
+label{
+  font-size:13px;
+  color:#3a3a3c;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+input, select{
+  height:36px;
+  padding:6px 12px;
+  border:1px solid #d1d6de;
+  border-radius:8px;
+  font-size:13px;
+  background:#fff;
+  transition:all 0.2s;
+  min-width:120px;
+}
+
+input:focus, select:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.12);
+  background:#fff;
+}
+
+input::placeholder{
+  color:#8e8e93;
+}
+
+/* =========================
+   TABLE
+========================= */
+.table-wrap{
+  flex:1;
+  overflow:auto;
+  overflow-x:auto;
+  overflow-y:auto;
+  position:relative;
+  min-height:0;
+  box-sizing:border-box;
+  background:#fff;
 }
 
 table{
   width:100%;
-  border-collapse:collapse;
-  font-size:13.5px;
-  min-width:1300px;
+  min-width:1000px;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:auto;
+  background:#fff;
 }
 
 thead{
-  background:#f5f6fa;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#fff;
 }
 
-th,td{
-  padding:8px 10px;
-  border-bottom:1px solid #ddd;
+thead th{
+  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5);
+  border-bottom:2px solid #d1d6de;
+  padding:14px 12px;
   white-space:nowrap;
+  position:sticky;
+  top:0;
+  z-index:10;
+  font-weight:600;
+  font-size:12px;
+  text-align:left;
+  color:#1d1d1f;
+  text-transform:uppercase;
+  letter-spacing:0.3px;
 }
 
-tbody tr:hover{
-  background:#f8faff;
+thead th.center{
+  text-align:center;
 }
 
-.table-wrap{
-  overflow-x:auto;
+thead th.right{
+  text-align:right;
+}
+
+tbody td{
+  padding:12px;
+  border-bottom:1px solid #f0f0f0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:200px;
+  font-size:13px;
+  vertical-align:middle;
+  color:#333;
+  transition:all 0.15s ease;
+}
+
+/* Allow some columns to wrap if needed */
+tbody td:nth-child(3){
+  max-width:200px;
+  white-space:normal;
+  word-break:break-word;
+  line-height:1.4;
+}
+
+tbody td:nth-child(2){
+  max-width:120px;
+}
+
+tbody td:nth-child(6){
+  max-width:100px;
+  text-align:center;
+  font-weight:500;
+  color:#007aff;
+  text-transform:capitalize;
+}
+
+tbody tr{
+  transition:all 0.2s ease;
+  background:#fff;
+}
+
+tbody tr:nth-child(even){
+  background:#fafbfc;
+}
+
+tbody tr:hover{ 
+  background:#e8f2ff !important;
+  transform:scale(1.001);
+  box-shadow:0 2px 4px rgba(0,0,0,0.05);
+}
+
+tbody tr:hover td{
+  border-bottom-color:#d1e7ff;
+}
+
+tbody tr.selected{ 
+  background:#ffe6e6 !important;
+  border-left:3px solid #ff3b30;
+}
+
+tbody tr.selected td{
+  border-bottom-color:#ffcccc;
+}
+
+tbody tr:last-child td{
+  border-bottom:none;
+}
+
+tbody tr td:first-child{
+  padding-left:16px;
+}
+
+tbody tr td:last-child{
+  padding-right:16px;
+}
+
+.center{ 
+  text-align:center;
+}
+
+.right{ 
+  text-align:right;
+  font-weight:500;
+  color:#1d1d1f;
+  font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+
+/* Checkbox styling */
+tbody input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  cursor:pointer;
+  accent-color:#007aff;
+}
+
+/* =========================
+   FOOTER
+========================= */
+.footer{
+  padding:12px 16px;
+  font-size:13px;
+  color:#6e6e73;
+  border-top:1px solid #e5e7eb;
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa);
+  flex-shrink:0;
+  box-sizing:border-box;
+  font-weight:500;
+}
+
+/* =========================
+   SCROLLBAR STYLING
+========================= */
+.table-wrap::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+.table-wrap::-webkit-scrollbar-track{
+  background:#f5f5f7;
+  border-radius:5px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb{
+  background:#c1c1c6;
+  border-radius:5px;
+  border:2px solid #f5f5f7;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover{
+  background:#a1a1a6;
+}
+
+/* =========================
+   SCROLLBAR STYLING
+========================= */
+.table-wrap::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+.table-wrap::-webkit-scrollbar-track{
+  background:#f5f5f7;
+  border-radius:5px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb{
+  background:#c1c1c6;
+  border-radius:5px;
+  border:2px solid #f5f5f7;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover{
+  background:#a1a1a6;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .orders-wrap{
+    margin:8px;
+    height:calc(100vh - 16px);
+    max-height:calc(100vh - 16px);
+  }
+  
+  .workspace .orders-wrap{
+    margin:0;
+    height:100%;
+    max-height:100%;
+  }
+  
+  .orders-toolbar{
+    padding:12px;
+    gap:8px;
+  }
+  
+  .orders-toolbar label{
+    font-size:12px;
+  }
+  
+  .orders-toolbar input,
+  .orders-toolbar select{
+    height:32px;
+    font-size:12px;
+    min-width:100px;
+  }
+  
+  .btn{
+    padding:6px 12px;
+    font-size:12px;
+  }
+  
+  .table-wrap{
+    overflow-x:scroll;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  
+  table{
+    min-width:900px;
+  }
+  
+  tbody td{
+    max-width:150px;
+    font-size:12px;
+    padding:10px;
+  }
+  
+  thead th{
+    font-size:11px;
+    padding:12px 10px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="orders-wrap">
 
-  <div class="top-bar">
-    <h2>Orders</h2>
-    <button onclick="newOrder()">+ New Order</button>
+  <!-- TOOLBAR -->
+  <div class="orders-toolbar">
+    <button class="btn" onclick="newOrder()">➕ New Order</button>
+
+    <label>Customer</label>
+    <input type="text" id="customerFilter" onkeyup="filterTable()">
+
+    <label>Order Hallmark</label>
+    <select id="hallmarkFilter" onchange="filterTable()">
+      <option value="">All</option>
+    </select>
+
+    <label>
+      <input type="checkbox" id="originalBillFilter" onchange="filterTable()"> Original Bill
+    </label>
+
+    <label>Search</label>
+    <input type="text" id="searchBox" placeholder="Search orders..." onkeyup="searchTable()">
   </div>
 
+  <!-- TABLE -->
   <div class="table-wrap">
-    <table>
+    <table id="ordersTable">
       <thead>
         <tr>
-          <th>Select</th>
-          <th>Date</th>
-          <th>Bill No</th>
-          <th>Qty</th>
-          <th>Item</th>
-          <th>Metal</th>
-          <th>Unit Wt</th>
-          <th>Total Wt</th>
-          <th>GST</th>
-          <th>Total Amt</th>
-          <th>Action</th>
+          <th class="center">Mark</th>
+          <th>Order No</th>
+          <th>Customer</th>
+          <th>Order Date</th>
+          <th>Due Date</th>
+          <th>Type</th>
+          <th class="right">Pc</th>
+          <th class="right">Gr.Wt</th>
+          <th class="right">Net (Rs)</th>
+          <th class="right">Advance (Rs)</th>
+          <th class="right">Balance</th>
+          <th class="center">Action</th>
         </tr>
       </thead>
-      <tbody id="orderTable"></tbody>
+
+      <!-- EMPTY BODY (NO DATA) -->
+      <tbody></tbody>
     </table>
+  </div>
+
+  <div class="footer" id="footerText">
+    No orders available
   </div>
 
 </div>
 
 <script>
+/* =========================
+   ELEMENT REFERENCES
+========================= */
+let tbody = null;
+let footer = null;
+
+/* =========================
+   INITIALIZE ELEMENTS
+========================= */
+function initElements(){
+  // Try to find elements in workspace first (dashboard context)
+  const workspace = document.querySelector(".workspace");
+  
+  if(workspace){
+    // Look in workspace first
+    tbody = workspace.querySelector("#ordersTable tbody");
+    footer = workspace.querySelector("#footerText");
+    
+    // If not found in workspace, try document
+    if(!tbody){
+      tbody = document.querySelector("#ordersTable tbody");
+    }
+    if(!footer){
+      footer = document.querySelector("#footerText") || document.getElementById("footerText");
+    }
+  } else {
+    // Not in workspace, look in document
+    tbody = document.querySelector("#ordersTable tbody");
+    footer = document.querySelector("#footerText") || document.getElementById("footerText");
+  }
+  
+  if(!tbody || !footer){
+    return false;
+  }
+  
+  return true;
+}
+
+/* =========================
+   LOAD ORDERS
+========================= */
 function loadOrders(){
+  if(!tbody){
+    if(!initElements()){
+      console.warn("Orders table elements not found. Retrying...");
+      setTimeout(loadOrders, 100);
+      return;
+    }
+  }
+  
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const tbody = document.getElementById("orderTable");
   tbody.innerHTML = "";
-
-  orders
-    .filter(o => o.status !== "READY") // optional: hide READY ones
-    .slice()
-    .reverse()
-    .forEach(order=>{
-      order.items.forEach((it, index)=>{
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td>
-            ${index === 0
-              ? `<input type="checkbox" onchange="moveToReady(${order.id}, this)">`
-              : ""}
-          </td>
-          <td>${index === 0 ? (order.date || "") : ""}</td>
-          <td>${index === 0 ? (order.billNo || "") : ""}</td>
-          <td>${it.qty || ""}</td>
-          <td>${it.item || ""}</td>
-          <td>${it.metal || ""}</td>
-          <td>${it.purity || ""}</td>
-          <td>${it.qty && it.purity ? (it.qty * it.purity) : ""}</td>
-          <td>${order.gst || 0}%</td>
-          <td>${it.total || ""}</td>
-          <td>
-            ${index === 0
-              ? `<button onclick="viewOrder(${order.id})">View</button>`
-              : ""}
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      });
-    });
+  
+  if(orders.length === 0){
+    updateFooter();
+    return;
+  }
+  
+  // Show ALL orders (including READY, PENDING, and any other status)
+  // Do NOT filter out READY orders - they should remain visible in orders.html
+  
+  // Sort by date (newest first)
+  const sortedOrders = [...orders].sort((a, b) => {
+    const dateA = new Date(a.orderDate || a.timestamp || 0);
+    const dateB = new Date(b.orderDate || b.timestamp || 0);
+    return dateB - dateA;
+  });
+  
+  sortedOrders.forEach(order => {
+    try {
+      const row = document.createElement("tr");
+      row.dataset.orderId = order.id;
+      
+      // Calculate Pc and Gr.Wt from items if not directly stored
+      let totalPc = order.pc || 0;
+      let totalGrWt = parseFloat(order.grWt || 0);
+      
+      // If not in order data, calculate from items
+      if(!totalPc && order.items && order.items.length > 0){
+        order.items.forEach(item => {
+          // Support both old structure (Pc at index 7) and new structure (Pc at index 4)
+          const pc = parseFloat(item.values[4] || item.values[7] || 0);
+          // Support both old structure (Gr.Wt at index 8) and new structure (Gr.Wt at index 5)
+          const grWt = parseFloat(item.values[5] || item.values[8] || 0);
+          totalPc += pc;
+          totalGrWt += grWt;
+        });
+      }
+      
+      // Get type from order or from first item
+      let orderType = order.type || "Order";
+      if(!orderType && order.items && order.items.length > 0){
+        const firstItemType = order.items[0].type;
+        if(firstItemType) orderType = firstItemType;
+      }
+      
+      // Check if order is marked as PENDING
+      const isPending = order.status === "PENDING";
+      
+      row.innerHTML = `
+        <td class="center"><input type="checkbox" ${isPending ? 'checked' : ''} onclick="toggleOrderStatus(this, ${order.id}); event.stopPropagation();"></td>
+        <td>${order.orderNo || order.billNo || "-"}</td>
+        <td>${order.customer || "-"}</td>
+        <td>${order.orderDate || "-"}</td>
+        <td>${order.dueDate || "-"}</td>
+        <td>${orderType}</td>
+        <td class="right">${totalPc.toFixed(0)}</td>
+        <td class="right">${totalGrWt.toFixed(3)}</td>
+        <td class="right">${parseFloat(order.netAmount || 0).toFixed(2)}</td>
+        <td class="right">${parseFloat(order.advance || 0).toFixed(2)}</td>
+        <td class="right">${parseFloat(order.balance || 0).toFixed(2)}</td>
+        <td class="center">
+          <button class="btn" onclick="editOrder(${order.id}); event.stopPropagation();" style="padding:4px 12px; font-size:12px;">Edit</button>
+        </td>
+      `;
+      
+      // Make row clickable to edit order (but not if clicking checkbox or edit button)
+      row.style.cursor = "pointer";
+      row.onclick = function(e) {
+        // Don't trigger if clicking checkbox or button
+        if(e.target && (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON')) return;
+        editOrder(order.id);
+      };
+      
+      if(tbody){
+        tbody.appendChild(row);
+      }
+    } catch(e) {
+      console.error("Error creating order row:", e);
+    }
+  });
+  
+  updateFooter();
 }
 
-/* ===============================
-   NAVIGATION HELPER
-================================ */
-function navigateToReadyOrders(){
-  // Try to use loadPage if available (workspace context)
-  if(typeof loadPage === 'function'){
-    loadPage("../pages/ready-orders.html");
-    return;
-  }
-  
-  // Try parent window
-  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-    window.parent.loadPage("../pages/ready-orders.html");
-    return;
-  }
-  
-  // Try top window
-  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-    window.top.loadPage("../pages/ready-orders.html");
-    return;
-  }
-  
-  // Fallback: direct navigation
-  const currentPath = window.location.pathname;
-  if(currentPath.includes('/pages/')){
-    window.location.href = "ready-orders.html";
-  } else {
-    window.location.href = "/pages/ready-orders.html";
-  }
-}
-
-function navigateToNewOrder(){
-  // Try to use loadPage if available (workspace context)
-  if(typeof loadPage === 'function'){
-    loadPage("../pages/new-order.html");
-    return;
-  }
-  
-  // Try parent window
-  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-    window.parent.loadPage("../pages/new-order.html");
-    return;
-  }
-  
-  // Try top window
-  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-    window.top.loadPage("../pages/new-order.html");
-    return;
-  }
-  
-  // Fallback: direct navigation
-  const currentPath = window.location.pathname;
-  if(currentPath.includes('/pages/')){
-    window.location.href = "new-order.html";
-  } else {
-    window.location.href = "/pages/new-order.html";
-  }
-}
-
-function moveToReady(orderId, checkbox){
-  if(!checkbox.checked) return;
-
-  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const order = orders.find(o => o.id === orderId);
-  if(!order) return;
-
-  // ✅ SET STATUS TO READY
-  order.status = "READY";
-
-  localStorage.setItem("orders", JSON.stringify(orders));
-
-  // ✅ REDIRECT TO READY ORDERS
-  navigateToReadyOrders();
-}
-
-function newOrder(){
-  navigateToNewOrder();
-}
-
-function navigateToNewOrderForEdit(orderId){
-  // Try to use loadPage if available (workspace context)
-  if(typeof loadPage === 'function'){
-    localStorage.setItem("editOrderId", orderId);
-    loadPage("../pages/new-order.html");
-    return;
-  }
-  
-  // Try parent window
-  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-    localStorage.setItem("editOrderId", orderId);
-    window.parent.loadPage("../pages/new-order.html");
-    return;
-  }
-  
-  // Try top window
-  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-    localStorage.setItem("editOrderId", orderId);
-    window.top.loadPage("../pages/new-order.html");
-    return;
-  }
-  
-  // Fallback: direct navigation
+/* =========================
+   EDIT ORDER
+========================= */
+function editOrder(orderId){
+  // Store order ID for editing
   localStorage.setItem("editOrderId", orderId);
+  
+  // Set flag to make customer name read-only when editing from orders page
+  localStorage.setItem("editCustomerReadOnly", "true");
+  
+  // Navigate to new-order page
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
   const currentPath = window.location.pathname;
   if(currentPath.includes('/pages/')){
     window.location.href = "new-order.html";
@@ -253,12 +611,339 @@ function navigateToNewOrderForEdit(orderId){
   }
 }
 
-function viewOrder(id){
-  // Navigate to edit order
-  navigateToNewOrderForEdit(id);
+/* =========================
+   NEW ORDER
+========================= */
+function newOrder(){
+  // Try to use loadPage if available (workspace context)
+  if(typeof loadPage === 'function'){
+    loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try parent window
+  if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+    window.parent.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Try top window
+  if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+    window.top.loadPage("../pages/new-order.html");
+    return;
+  }
+  
+  // Fallback: direct navigation
+  const currentPath = window.location.pathname;
+  if(currentPath.includes('/pages/')){
+    window.location.href = "new-order.html";
+  } else {
+    window.location.href = "/pages/new-order.html";
+  }
 }
 
-loadOrders();
+
+/* =========================
+   SELECT ROW
+========================= */
+function selectRow(cb){
+  cb.closest("tr").classList.toggle("selected", cb.checked);
+}
+
+/* =========================
+   TOGGLE ORDER STATUS (Mark/Unmark as PENDING)
+========================= */
+function toggleOrderStatus(cb, orderId){
+  try {
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const orderIndex = orders.findIndex(o => o.id === orderId);
+    
+    if(orderIndex === -1){
+      console.error("Order not found:", orderId);
+      return;
+    }
+    
+    const order = orders[orderIndex];
+    const row = cb.closest("tr");
+    
+    if(cb.checked){
+      // Mark as PENDING (order will appear in pending-orders.html)
+      order.status = "PENDING";
+      
+      // Save updated orders
+      localStorage.setItem("orders", JSON.stringify(orders));
+      
+      // Keep row visible - don't remove it
+      // The order will now appear in pending-orders.html as well
+    } else {
+      // Unmark - set status to null or empty string
+      // This makes it a regular order that's not pending
+      order.status = null;
+      
+      // Save updated orders
+      localStorage.setItem("orders", JSON.stringify(orders));
+    }
+    
+    // Dispatch event to refresh pending orders page if it's open
+    const refreshEvent = new CustomEvent('orderStatusChanged', {
+      detail: { orderId: orderId, status: order.status || "UNMARKED" }
+    });
+    window.dispatchEvent(refreshEvent);
+    if(window.parent && window.parent !== window){
+      window.parent.dispatchEvent(refreshEvent);
+    }
+    if(window.top && window.top !== window){
+      window.top.dispatchEvent(refreshEvent);
+    }
+    
+  } catch(e) {
+    console.error("Error toggling order status:", e);
+    alert("Error updating order status");
+  }
+}
+
+/* =========================
+   SEARCH FILTER
+========================= */
+function searchTable(){
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  // Try to find searchBox in workspace or document
+  const workspace = document.querySelector(".workspace");
+  let searchBox = null;
+  
+  if(workspace){
+    searchBox = workspace.querySelector("#searchBox");
+  }
+  
+  if(!searchBox){
+    searchBox = document.querySelector("#searchBox") || document.getElementById("searchBox");
+  }
+  
+  if(!searchBox) return;
+  
+  const value = searchBox.value.toLowerCase();
+  filterTable();
+}
+
+/* =========================
+   FILTER TABLE
+========================= */
+function filterTable(){
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  const workspace = document.querySelector(".workspace");
+  let searchBox = null;
+  let customerFilter = null;
+  let hallmarkFilter = null;
+  let originalBillFilter = null;
+  
+  if(workspace){
+    searchBox = workspace.querySelector("#searchBox");
+    customerFilter = workspace.querySelector("#customerFilter");
+    hallmarkFilter = workspace.querySelector("#hallmarkFilter");
+    originalBillFilter = workspace.querySelector("#originalBillFilter");
+  }
+  
+  if(!searchBox){
+    searchBox = document.querySelector("#searchBox") || document.getElementById("searchBox");
+  }
+  if(!customerFilter){
+    customerFilter = document.querySelector("#customerFilter") || document.getElementById("customerFilter");
+  }
+  if(!hallmarkFilter){
+    hallmarkFilter = document.querySelector("#hallmarkFilter") || document.getElementById("hallmarkFilter");
+  }
+  if(!originalBillFilter){
+    originalBillFilter = document.querySelector("#originalBillFilter") || document.getElementById("originalBillFilter");
+  }
+  
+  const searchValue = searchBox ? searchBox.value.toLowerCase() : "";
+  const customerValue = customerFilter ? customerFilter.value.toLowerCase() : "";
+  const hallmarkValue = hallmarkFilter ? hallmarkFilter.value : "";
+  const originalBillChecked = originalBillFilter ? originalBillFilter.checked : false;
+  
+  const rows = tbody.querySelectorAll("tr");
+  let visibleCount = 0;
+
+  rows.forEach(row=>{
+    const rowText = row.innerText.toLowerCase();
+    const cells = row.querySelectorAll("td");
+    
+    // Get customer name from row (usually column 2 or 3)
+    const customerCell = cells[2] ? cells[2].textContent.toLowerCase() : "";
+    
+    let show = true;
+    
+    // Search filter
+    if(searchValue && !rowText.includes(searchValue)){
+      show = false;
+    }
+    
+    // Customer filter
+    if(customerValue && !customerCell.includes(customerValue)){
+      show = false;
+    }
+    
+    // Hallmark filter (if implemented)
+    if(hallmarkValue && hallmarkValue !== ""){
+      // Add hallmark filtering logic if needed
+    }
+    
+    // Original bill filter (if implemented)
+    if(originalBillChecked){
+      // Add original bill filtering logic if needed
+    }
+    
+    row.style.display = show ? "" : "none";
+    if(show) visibleCount++;
+  });
+  
+  // Update footer with filtered count
+  if(footer){
+    const totalRows = rows.length;
+    if(visibleCount < totalRows){
+      footer.textContent = `Showing ${visibleCount} of ${totalRows} orders`;
+    } else {
+      footer.textContent = visibleCount ? `Showing ${visibleCount} orders` : "No orders available";
+    }
+  }
+}
+
+/* =========================
+   FOOTER UPDATE
+========================= */
+function updateFooter(){
+  if(!tbody || !footer){
+    if(!initElements()) return;
+  }
+  
+  const allRows = tbody.querySelectorAll("tr");
+  const visibleRows = Array.from(allRows).filter(row => row.style.display !== "none");
+  const count = visibleRows.length;
+  const total = allRows.length;
+  
+  if(count < total && total > 0){
+    footer.textContent = `Showing ${count} of ${total} orders`;
+  } else {
+    footer.textContent = count ? `Showing ${count} orders` : "No orders available";
+  }
+}
+
+/* =========================
+   INITIALIZE PAGE
+========================= */
+function initOrdersPage(){
+  // Wait for elements to be ready
+  if(!initElements()){
+    // Retry after a short delay
+    setTimeout(initOrdersPage, 100);
+    return;
+  }
+  
+  // Load orders
+  loadOrders();
+  
+  // Ensure all functions are accessible
+  ensureFunctionsGlobal();
+}
+
+/* =========================
+   INITIALIZE
+========================= */
+// Check if we're in workspace context
+function isInWorkspace(){
+  return !!document.querySelector(".workspace");
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    // If in workspace, wait a bit longer for content to be inserted
+    if(isInWorkspace()){
+      setTimeout(initOrdersPage, 200);
+    } else {
+      initOrdersPage();
+    }
+  });
+} else {
+  // DOM already ready, but might be in workspace
+  if(isInWorkspace()){
+    // In workspace, wait for content to be inserted
+    setTimeout(initOrdersPage, 200);
+  } else {
+    setTimeout(initOrdersPage, 50);
+  }
+}
+
+// Listen for page refresh event from dashboard
+window.addEventListener('pageRefresh', function() {
+  setTimeout(initOrdersPage, 150);
+});
+
+// Also listen on workspace if it exists
+const workspace = document.querySelector(".workspace");
+if(workspace){
+  workspace.addEventListener('pageRefresh', function() {
+    setTimeout(initOrdersPage, 150);
+  });
+}
+
+// Listen for order saved event
+window.addEventListener('orderSaved', function() {
+  loadOrders();
+});
+
+// Listen for order status changed event
+window.addEventListener('orderStatusChanged', function() {
+  loadOrders();
+});
+
+// Also listen for storage changes (when orders are saved from other pages)
+window.addEventListener('storage', function(e) {
+  if(e.key === 'orders'){
+    loadOrders();
+  }
+});
+
+// Poll for changes (for same-window updates)
+let lastOrderCount = 0;
+setInterval(function() {
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  if(orders.length !== lastOrderCount){
+    lastOrderCount = orders.length;
+    loadOrders();
+  }
+}, 1000);
+
+/* =========================
+   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+   (For onclick handlers and dashboard integration)
+========================= */
+function ensureFunctionsGlobal(){
+  // Make all functions available globally
+  window.loadOrders = loadOrders;
+  window.newOrder = newOrder;
+  window.editOrder = editOrder;
+  window.selectRow = selectRow;
+  window.toggleOrderStatus = toggleOrderStatus;
+  window.searchTable = searchTable;
+  window.filterTable = filterTable;
+  window.updateFooter = updateFooter;
+  window.initOrdersPage = initOrdersPage;
+  window.initElements = initElements;
+}
+
+// Make functions globally accessible immediately
+ensureFunctionsGlobal();
 </script>
 
 </body>

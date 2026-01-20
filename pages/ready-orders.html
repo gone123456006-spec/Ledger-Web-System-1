@@ -5,48 +5,260 @@
 <title>Ready Orders</title>
 
 <style>
+/* =========================
+   BASE
+========================= */
+*{
+  box-sizing:border-box;
+  font-family:Segoe UI, Arial, sans-serif;
+  font-size:13px;
+}
+
 body{
   margin:0;
-  background:#eef2f7;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial;
+  background:#e6ebf2;
 }
 
-.container{
-  max-width:1400px;
-  margin:30px auto;
-  background:#fff;
-  border-radius:14px;
-  box-shadow:0 12px 30px rgba(0,0,0,.15);
-  padding:20px;
+/* When loaded in workspace - body doesn't exist, content is in .workspace */
+.workspace{
+  background:linear-gradient(to bottom,#cde1ff,#e6f1ff) !important;
 }
 
-h2{
-  margin:0 0 14px;
+/* =========================
+   CONTAINER
+========================= */
+.ready-orders-wrap{
+  margin:15px;
+  background:#fff !important;
+  border:1px solid #d1d6de;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - 30px);
+  max-height:calc(100vh - 30px);
+  overflow:hidden;
+  box-sizing:border-box;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Workspace integration */
+.workspace .ready-orders-wrap{
+  margin:0 !important;
+  height:100% !important;
+  max-height:100% !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  background:#fff !important;
+  border:none !important;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+.ready-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  padding:16px;
+  border-bottom:1px solid #e5e7eb;
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+  flex-shrink:0;
+  box-sizing:border-box;
+}
+
+/* Force toolbar colors in workspace */
+.workspace .ready-orders-wrap .ready-toolbar{
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+}
+
+.ready-toolbar h2{
+  margin:0;
   font-size:18px;
+  font-weight:600;
+  color:#000 !important;
+  flex:1;
 }
 
+.btn{
+  padding:8px 16px;
+  border:1px solid #d1d6de;
+  background:#fff;
+  cursor:pointer;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:500;
+  transition:all 0.2s;
+  color:#000 !important;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn:hover{ 
+  background:#007aff;
+  border-color:#007aff;
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(0,122,255,0.2);
+}
+
+.btn:active{
+  transform:translateY(0);
+  box-shadow:0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* =========================
+   TABLE
+========================= */
 .table-wrap{
+  flex:1;
+  overflow:auto;
   overflow-x:auto;
+  overflow-y:auto;
+  position:relative;
+  min-height:0;
+  box-sizing:border-box;
+  background:#fff !important;
+}
+
+/* Force colors in workspace */
+.workspace .ready-orders-wrap .table-wrap{
+  background:#fff !important;
 }
 
 table{
   width:100%;
-  border-collapse:collapse;
-  font-size:13.5px;
+  min-width:1000px;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:auto;
+  background:#fff !important;
+}
+
+/* Force table colors in workspace */
+.workspace .ready-orders-wrap table{
+  background:#fff !important;
 }
 
 thead{
-  background:#f5f6fa;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#fff !important;
 }
 
-th,td{
-  padding:10px 12px;
-  border-bottom:1px solid #ddd;
+/* Force thead colors in workspace */
+.workspace .ready-orders-wrap thead{
+  background:#fff !important;
+}
+
+thead th{
+  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
+  border-bottom:2px solid #d1d6de;
+  padding:14px 12px;
   white-space:nowrap;
+  position:sticky;
+  top:0;
+  z-index:10;
+  font-weight:600;
+  font-size:12px;
+  text-align:left;
+  color:#000 !important;
+  text-transform:uppercase;
+  letter-spacing:0.3px;
 }
 
-tbody tr:hover{
-  background:#f8faff;
+/* Force th colors in workspace */
+.workspace .ready-orders-wrap thead th{
+  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
+  color:#000 !important;
+}
+
+thead th.center{
+  text-align:center;
+}
+
+thead th.right{
+  text-align:right;
+}
+
+tbody td{
+  padding:12px;
+  border-bottom:1px solid #f0f0f0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:200px;
+  font-size:13px;
+  vertical-align:middle;
+  color:#000 !important;
+  background:transparent !important;
+  transition:all 0.15s ease;
+}
+
+/* Force td colors in workspace */
+.workspace .ready-orders-wrap tbody td{
+  color:#000 !important;
+  background:transparent !important;
+}
+
+/* Allow some columns to wrap if needed */
+tbody td:nth-child(5){
+  max-width:250px;
+  white-space:normal;
+  word-break:break-word;
+  line-height:1.4;
+}
+
+tbody tr{
+  transition:all 0.2s ease;
+  background:#fff !important;
+}
+
+tbody tr:nth-child(even){
+  background:#fafbfc !important;
+}
+
+/* Force tr colors in workspace */
+.workspace .ready-orders-wrap tbody tr{
+  background:#fff !important;
+}
+
+.workspace .ready-orders-wrap tbody tr:nth-child(even){
+  background:#fafbfc !important;
+}
+
+tbody tr:hover{ 
+  background:#e8f2ff !important;
+  transform:scale(1.001);
+  box-shadow:0 2px 4px rgba(0,0,0,0.05);
+}
+
+tbody tr:hover td{
+  border-bottom-color:#d1e7ff;
+}
+
+tbody tr:last-child td{
+  border-bottom:none;
+}
+
+tbody tr td:first-child{
+  padding-left:16px;
+}
+
+tbody tr td:last-child{
+  padding-right:16px;
+}
+
+.center{ 
+  text-align:center;
+}
+
+.right{ 
+  text-align:right;
+  font-weight:500;
+  color:#000 !important;
+  font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-variant-numeric:tabular-nums;
 }
 
 .badge{
@@ -54,6 +266,7 @@ tbody tr:hover{
   border-radius:20px;
   font-size:12px;
   font-weight:600;
+  display:inline-block;
 }
 
 .ready{
@@ -69,15 +282,122 @@ button{
   color:#fff;
   font-size:12px;
   cursor:pointer;
+  transition:all 0.2s;
+  font-weight:500;
+}
+
+button:hover{
+  background:#0b5ed7;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(11,94,215,0.2);
+}
+
+button:active{
+  transform:translateY(0);
+}
+
+/* =========================
+   FOOTER
+========================= */
+.footer{
+  padding:12px 16px;
+  font-size:13px;
+  color:#000 !important;
+  border-top:1px solid #e5e7eb;
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+  flex-shrink:0;
+  box-sizing:border-box;
+  font-weight:500;
+}
+
+/* Force footer colors in workspace */
+.workspace .ready-orders-wrap .footer{
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+  color:#000 !important;
+}
+
+/* =========================
+   SCROLLBAR STYLING
+========================= */
+.table-wrap::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+.table-wrap::-webkit-scrollbar-track{
+  background:#f5f5f7;
+  border-radius:5px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb{
+  background:#c1c1c6;
+  border-radius:5px;
+  border:2px solid #f5f5f7;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover{
+  background:#a1a1a6;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .ready-orders-wrap{
+    margin:8px;
+    height:calc(100vh - 16px);
+    max-height:calc(100vh - 16px);
+  }
+  
+  .workspace .ready-orders-wrap{
+    margin:0;
+    height:100%;
+    max-height:100%;
+  }
+  
+  .ready-toolbar{
+    padding:12px;
+    gap:8px;
+  }
+  
+  .ready-toolbar h2{
+    font-size:16px;
+  }
+  
+  .table-wrap{
+    overflow-x:scroll;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  
+  table{
+    min-width:900px;
+  }
+  
+  tbody td{
+    max-width:150px;
+    font-size:12px;
+    padding:10px;
+  }
+  
+  thead th{
+    font-size:11px;
+    padding:12px 10px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>Ready Orders</h2>
+<div class="ready-orders-wrap">
+  <!-- TOOLBAR -->
+  <div class="ready-toolbar">
+    <h2>Ready Orders</h2>
+    <button class="btn" onclick="loadReadyOrders()">🔄 Refresh</button>
+  </div>
 
+  <!-- TABLE -->
   <div class="table-wrap">
     <table>
       <thead>
@@ -89,55 +409,163 @@ button{
           <th>Items</th>
           <th>Metal</th>
           <th>Total Amount</th>
-          <th>Action</th>
+          <th class="center">Action</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
   </div>
+
+  <div class="footer" id="footerText">
+    No ready orders available
+  </div>
 </div>
 
 <script>
+/* =========================
+   ELEMENT REFERENCES
+========================= */
+let tbody = null;
+let footer = null;
+
+/* =========================
+   INITIALIZE ELEMENTS
+========================= */
+function initElements(){
+  // Try to find elements in workspace first (dashboard context)
+  const workspace = document.querySelector(".workspace");
+  
+  if(workspace){
+    // Look in workspace first
+    tbody = workspace.querySelector("#tableBody");
+    footer = workspace.querySelector("#footerText");
+    
+    // If not found in workspace, try document
+    if(!tbody){
+      tbody = document.getElementById("tableBody");
+    }
+    if(!footer){
+      footer = document.getElementById("footerText");
+    }
+  } else {
+    // Not in workspace, look in document
+    tbody = document.getElementById("tableBody");
+    footer = document.getElementById("footerText");
+  }
+  
+  if(!tbody || !footer){
+    return false;
+  }
+  
+  return true;
+}
+
 function loadReadyOrders(){
+  if(!tbody){
+    if(!initElements()){
+      console.warn("Ready orders table elements not found. Retrying...");
+      setTimeout(loadReadyOrders, 100);
+      return;
+    }
+  }
+  
   const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const tbody = document.getElementById("tableBody");
   tbody.innerHTML = "";
 
+  // Filter orders with READY status
   const readyOrders = orders.filter(o => o.status === "READY");
 
   if(readyOrders.length === 0){
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center;color:#777">
+        <td colspan="8" style="text-align:center;color:#777;padding:30px;">
           No ready orders
         </td>
       </tr>`;
+    updateFooter();
     return;
   }
 
-  readyOrders.forEach(order=>{
-    const totalQty = order.items.reduce((s,i)=>s + (+i.qty || 0), 0);
-    const totalAmt = order.items.reduce((s,i)=>s + (+i.total || 0), 0);
-    const itemNames = order.items.map(i=>i.item).join(", ");
-    const metal = order.items[0]?.metal || "";
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><span class="badge ready">READY</span></td>
-      <td>${order.date || ""}</td>
-      <td>${order.billNo || ""}</td>
-      <td>${totalQty}</td>
-      <td title="${itemNames}">
-        ${order.items.length > 1 ? "Multiple Items" : itemNames}
-      </td>
-      <td>${metal}</td>
-      <td>${totalAmt.toFixed(2)}</td>
-      <td>
-        <button onclick="editOrder(${order.id})">Edit</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
+  // Sort by date (newest first)
+  const sortedReadyOrders = [...readyOrders].sort((a, b) => {
+    const dateA = new Date(a.orderDate || a.timestamp || 0);
+    const dateB = new Date(b.orderDate || b.timestamp || 0);
+    return dateB - dateA;
   });
+
+  sortedReadyOrders.forEach(order => {
+    try {
+      // Calculate totals from items
+      let totalPc = order.pc || 0;
+      let totalGrWt = parseFloat(order.grWt || 0);
+      let itemNames = [];
+      
+      if(order.items && order.items.length > 0){
+        order.items.forEach(item => {
+          // Get item name - support both old structure (index 2) and new structure (index 1)
+          const itemName = item.values && (item.values[1] || item.values[2]) ? (item.values[1] || item.values[2]) : "";
+          if(itemName) itemNames.push(itemName);
+          
+          // Calculate Pc and Gr.Wt if not already stored
+          // Support both old structure (Pc at index 7) and new structure (Pc at index 4)
+          if(!totalPc){
+            const pc = parseFloat(item.values[4] || item.values[7] || 0);
+            totalPc += pc;
+          }
+          // Support both old structure (Gr.Wt at index 8) and new structure (Gr.Wt at index 5)
+          if(!totalGrWt){
+            const grWt = parseFloat(item.values[5] || item.values[8] || 0);
+            totalGrWt += grWt;
+          }
+        });
+      }
+      
+      const itemNamesStr = itemNames.length > 0 ? itemNames.join(", ") : "—";
+      const displayItemNames = itemNames.length > 3 
+        ? itemNames.slice(0, 3).join(", ") + ` (+${itemNames.length - 3} more)`
+        : itemNamesStr;
+      
+      const tr = document.createElement("tr");
+      tr.dataset.orderId = order.id;
+      tr.innerHTML = `
+        <td><span class="badge ready">READY</span></td>
+        <td>${order.orderDate || order.date || "—"}</td>
+        <td>${order.orderNo || order.billNo || "—"}</td>
+        <td>${totalPc.toFixed(0)}</td>
+        <td title="${itemNamesStr}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${displayItemNames}</td>
+        <td>—</td>
+        <td class="right">₹${parseFloat(order.netAmount || 0).toFixed(2)}</td>
+        <td class="center">
+          <button onclick="editOrder(${order.id})">Edit</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    } catch(e) {
+      console.error("Error creating ready order row:", e);
+    }
+  });
+  
+  updateFooter();
+}
+
+/* =========================
+   FOOTER UPDATE
+========================= */
+function updateFooter(){
+  if(!tbody || !footer){
+    if(!initElements()) return;
+  }
+  
+  const allRows = tbody.querySelectorAll("tr");
+  const visibleRows = Array.from(allRows).filter(row => row.style.display !== "none");
+  const count = visibleRows.length;
+  const total = allRows.length;
+  
+  if(count < total && total > 0){
+    footer.textContent = `Showing ${count} of ${total} ready orders`;
+  } else {
+    footer.textContent = count ? `Showing ${count} ready orders` : "No ready orders available";
+  }
 }
 
 /* ===============================
@@ -172,11 +600,143 @@ function navigateToNewOrder(){
 }
 
 function editOrder(orderId){
-  localStorage.setItem("editOrderId", orderId);
-  navigateToNewOrder();
+  try {
+    // Verify order exists
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const order = orders.find(o => {
+      // Handle both number and string ID comparisons
+      return o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId);
+    });
+    
+    if(!order){
+      alert("Order not found");
+      return;
+    }
+    
+    // Store order ID for ready extra order.html (uses editOrderId)
+    // DO NOT change the status - keep it as READY while editing
+    localStorage.setItem("editOrderId", orderId);
+    
+    // Open ready extra order.html for editing
+    if(typeof loadPage === 'function'){
+      loadPage("../public/ready extra order.html");
+      return;
+    }
+    
+    // Try parent window
+    if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+      window.parent.loadPage("../public/ready extra order.html");
+      return;
+    }
+    
+    // Try top window
+    if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+      window.top.loadPage("../public/ready extra order.html");
+      return;
+    }
+    
+    // Fallback: open in new window
+    window.open("../public/ready extra order.html", "ReadyExtraOrder", "width=1400,height=800");
+    
+  } catch(e) {
+    console.error("Error editing order:", e);
+    alert("Error opening order for editing");
+  }
 }
 
-loadReadyOrders();
+/* =========================
+   INITIALIZE PAGE
+========================= */
+function initReadyOrdersPage(){
+  // Wait for elements to be ready
+  if(!initElements()){
+    // Retry after a short delay
+    setTimeout(initReadyOrdersPage, 100);
+    return;
+  }
+  
+  loadReadyOrders();
+  ensureFunctionsGlobal();
+}
+
+/* =========================
+   INITIALIZE
+========================= */
+// Check if we're in workspace context
+function isInWorkspace(){
+  return !!document.querySelector(".workspace");
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    // If in workspace, wait a bit longer for content to be inserted
+    if(isInWorkspace()){
+      setTimeout(initReadyOrdersPage, 200);
+    } else {
+      initReadyOrdersPage();
+    }
+  });
+} else {
+  // DOM already ready, but might be in workspace
+  if(isInWorkspace()){
+    // In workspace, wait for content to be inserted
+    setTimeout(initReadyOrdersPage, 200);
+  } else {
+    setTimeout(initReadyOrdersPage, 50);
+  }
+}
+
+// Listen for page refresh event from dashboard
+window.addEventListener('pageRefresh', function() {
+  setTimeout(initReadyOrdersPage, 150);
+});
+
+// Listen for order status changes
+window.addEventListener('orderStatusChanged', function() {
+  loadReadyOrders();
+});
+
+// Listen for order saved event
+window.addEventListener('orderSaved', function() {
+  loadReadyOrders();
+});
+
+// Listen for storage changes
+window.addEventListener('storage', function(e) {
+  if(e.key === 'orders'){
+    loadReadyOrders();
+  }
+});
+
+// Poll for changes (for same-window updates)
+let lastReadyOrderCount = 0;
+setInterval(function() {
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+  const readyOrders = orders.filter(o => o.status === "READY");
+  if(readyOrders.length !== lastReadyOrderCount){
+    lastReadyOrderCount = readyOrders.length;
+    loadReadyOrders();
+  }
+}, 1000);
+
+/* =========================
+   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+========================= */
+function ensureFunctionsGlobal(){
+  window.loadReadyOrders = loadReadyOrders;
+  window.editOrder = editOrder;
+  window.navigateToNewOrder = navigateToNewOrder;
+  window.updateFooter = updateFooter;
+  window.initReadyOrdersPage = initReadyOrdersPage;
+  window.initElements = initElements;
+}
+
+ensureFunctionsGlobal();
 </script>
 
 </body>

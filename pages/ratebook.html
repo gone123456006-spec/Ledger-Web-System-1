@@ -142,7 +142,7 @@
 
       <div class="form-row">
         <label>Weight</label>
-        <input id="weight" value="0.000" oninput="calcAmount()">
+        <input id="weight" value="0.000" readonly>
       </div>
 
       <div class="form-row">
@@ -151,8 +151,8 @@
       </div>
 
       <div class="form-row">
-        <label>Amount</label>
-        <input id="amount" value="0.00" readonly>
+        <label>Amount Difference</label>
+        <input id="amount" value="0.00" oninput="calcAmount()">
       </div>
 
       <div class="form-row">
@@ -182,9 +182,10 @@
 
 <script>
 function calcAmount(){
-  const w = Number(weight.value || 0);
   const r = Number(rate.value || 0);
-  amount.value = (w * r).toFixed(2);
+  const a = Number(amount.value || 0);
+  const w = (r > 0) ? (a / r) : 0;
+  if(weight) weight.value = (r > 0 && isFinite(w)) ? w.toFixed(3) : "0.000";
 }
 
 /* SAVE RATE */

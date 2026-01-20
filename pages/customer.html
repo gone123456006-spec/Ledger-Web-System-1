@@ -25,19 +25,36 @@
   font-family:"Segoe UI", Roboto, Arial, sans-serif;
 }
 
-body{
+/* Reset for dashboard workspace integration */
+html, body{
   margin:0;
-  background:var(--bg);
+  padding:0;
+  height:100%;
+  background:transparent;
   color:var(--text);
 }
 
 .page{
-  max-width:1200px;
-  margin:30px auto;
-  padding:0 20px 90px;
+  width:100%;
+  height:100%;
+  margin:0;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  align-items:center;
+  justify-content:flex-start;
+  box-sizing:border-box;
 }
 
-h2{font-weight:600}
+h2{
+  font-weight:600;
+  margin:0 0 15px 0;
+  font-size:20px;
+  flex-shrink:0;
+  width:100%;
+  max-width:1200px;
+}
 
 /* ===============================
    FORM CARD
@@ -45,69 +62,157 @@ h2{font-weight:600}
 .erp-form{
   background:var(--card);
   border-radius:var(--radius);
-  box-shadow:0 20px 40px rgba(0,0,0,.06);
-  padding:25px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);
+  border:1px solid var(--border);
+  padding:22px 28px;
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:25px;
+  gap:16px 24px;
+  flex:1;
+  overflow:hidden;
+  min-height:0;
+  margin-bottom:0;
+  width:100%;
+  max-width:1200px;
+  align-self:center;
+}
+
+.form-left,
+.form-right{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  min-height:0;
+  overflow:hidden;
+  max-height:100%;
+}
+
+.table-wrap::-webkit-scrollbar{
+  width:8px;
+}
+
+.table-wrap::-webkit-scrollbar-track{
+  background:#f1f1f1;
+  border-radius:4px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb{
+  background:#c1c1c1;
+  border-radius:4px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover{
+  background:#a1a1a1;
+}
+
+/* Ensure page content wrapper fills workspace */
+.page > *:not(.form-actions){
+  flex-shrink:0;
+}
+
+.page > .erp-form,
+.page > #customerListSection{
+  flex:1;
+  min-height:0;
 }
 
 .form-left h4,
 .form-right h4{
-  margin:0 0 10px;
-  font-size:16px;
+  margin:0 0 6px 0;
+  font-size:15px;
   color:var(--muted);
+  font-weight:600;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-left h4:not(:first-child),
+.form-right h4:not(:first-child){
+  margin-top:8px;
 }
 
 label{
-  font-size:13px;
+  font-size:12px;
   color:var(--muted);
-  margin-top:14px;
+  margin-top:4px;
+  margin-bottom:2px;
   display:block;
+  font-weight:500;
 }
 
 input, textarea, select{
   width:100%;
-  padding:11px 12px;
-  margin-top:6px;
-  border-radius:10px;
+  padding:6px 10px;
+  margin-top:2px;
+  border-radius:8px;
   border:1px solid var(--border);
-  font-size:14px;
+  font-size:13px;
+  transition:border-color 0.2s;
+  box-sizing:border-box;
 }
 
 input:focus, textarea:focus, select:focus{
   outline:none;
   border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(0,122,255,.15);
+  box-shadow:0 0 0 2px rgba(0,122,255,.12);
 }
 
-textarea{resize:none;height:90px}
+textarea{
+  resize:none;
+  height:55px;
+  font-family:inherit;
+  box-sizing:border-box;
+}
 
-.row{display:flex;gap:10px}
-.row select{max-width:90px}
+.row{
+  display:flex;
+  gap:8px;
+  align-items:flex-end;
+}
+
+.row select{
+  max-width:75px;
+  flex-shrink:0;
+}
 
 /* ===============================
    ACTION BAR
 ================================ */
 .form-actions{
-  position:fixed;
-  left:0;right:0;bottom:0;
-  background:rgba(255,255,255,.95);
+  position:sticky;
+  bottom:0;
+  left:0;
+  right:0;
+  background:rgba(255,255,255,.98);
   backdrop-filter:blur(12px);
   border-top:1px solid var(--border);
   display:flex;
   justify-content:center;
-  gap:12px;
-  padding:12px;
+  gap:10px;
+  padding:12px 15px;
+  z-index:100;
+  box-shadow:0 -2px 8px rgba(0,0,0,.05);
+  margin-top:auto;
+  flex-shrink:0;
+  width:100%;
+}
+
+.form-actions button{
+  min-width:120px;
 }
 
 button{
-  padding:10px 18px;
-  border-radius:10px;
+  padding:8px 16px;
+  border-radius:8px;
   border:1px solid var(--border);
   background:#cae8ff;
   cursor:pointer;
-  font-size:14px;
+  font-size:13px;
+  transition:all 0.2s;
+}
+
+button:hover{
+  background:#b0d9f0;
 }
 
 button.primary{
@@ -116,26 +221,68 @@ button.primary{
   border:none;
 }
 
+button.primary:hover{
+  background:#0056cc;
+}
+
 /* ===============================
    CUSTOMER LIST
 ================================ */
 #customerListSection{
   display:none;
-  margin-top:30px;
+  flex:1;
   width:100%;
+  max-width:1200px;
+  overflow:hidden;
+  flex-direction:column;
+  min-height:0;
+  align-self:center;
+}
+
+#customerListSection[style*="flex"]{
+  display:flex !important;
+}
+
+#customerListSection .list-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+  gap:10px;
+  flex-shrink:0;
+}
+
+#customerListSection h2{
+  margin:0;
+  flex-shrink:0;
+}
+
+#customerListSection .back-btn{
+  padding:8px 16px;
+  font-size:13px;
+  white-space:nowrap;
+}
+
+#customerListSection input{
+  margin-bottom:12px;
+  max-width:300px;
+  flex-shrink:0;
 }
 
 /* TABLE WRAPPER (IMPORTANT FOR RESPONSIVENESS) */
 .table-wrap{
   width:100%;
-  overflow-x:auto;
+  overflow:auto;
   border-radius:12px;
+  flex:1;
+  min-height:0;
 }
 
 /* TABLE */
 table{
   width:100%;
-  min-width:800px; /* prevents column crushing */
+  min-width:800px;
   border-collapse:collapse;
   background:#fff;
   border:1px solid var(--border);
@@ -143,17 +290,20 @@ table{
 
 /* TABLE HEAD & BODY */
 th, td{
-  padding:10px 12px;
-  font-size:14px;
+  padding:8px 10px;
+  font-size:12px;
   text-align:left;
-  border:1px solid var(--border); /* FULL GRID LINES */
-  white-space:nowrap;             /* stops overlap */
+  border:1px solid var(--border);
+  white-space:nowrap;
 }
 
 /* HEADER */
 th{
   background:#f2f2f7;
   font-weight:600;
+  position:sticky;
+  top:0;
+  z-index:10;
 }
 
 /* ROW HOVER */
@@ -161,23 +311,70 @@ tbody tr:hover{
   background:#f9fafc;
 }
 
+#customerListSection table button{
+  padding:4px 8px;
+  font-size:11px;
+  margin:0 2px;
+}
+
 /* ===============================
    MOBILE RESPONSIVE FIX
 ================================ */
 @media (max-width: 900px){
+  .page{
+    padding:12px;
+  }
 
   .erp-form{
     grid-template-columns:1fr;
+    padding:18px 20px;
+    gap:14px;
+    max-width:100%;
+  }
+
+  h2{
+    font-size:18px;
+    max-width:100%;
+  }
+
+  #customerListSection{
+    max-width:100%;
   }
 
   table{
-    min-width:100%; /* allow scroll instead of overlap */
+    min-width:100%;
   }
 
   th, td{
-    font-size:13px;
-    padding:8px;
+    font-size:11px;
+    padding:6px 8px;
   }
+
+  .form-actions{
+    flex-wrap:wrap;
+    padding:10px 12px;
+  }
+
+  .form-actions button{
+    min-width:100px;
+    padding:8px 14px;
+    font-size:12px;
+  }
+
+  #customerListSection .list-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  #customerListSection .back-btn{
+    width:100%;
+    max-width:200px;
+  }
+}
+
+/* Ensure form is visible when not in list mode */
+.erp-form[style*="none"]{
+  display:none !important;
 }
 
 </style>
@@ -408,24 +605,34 @@ tbody tr:hover{
 
 <!-- CUSTOMER LIST -->
 <div id="customerListSection">
-  <h2>Customer List</h2>
+  <div class="list-header">
+    <h2 style="margin:0;">Customer List</h2>
+    <button 
+      type="button"
+      class="primary back-btn"
+      onclick="goBackToAddCustomer()">
+      ← Add Customer
+    </button>
+  </div>
 
   <input id="searchCustomer" placeholder="Search Name / Mobile"
-         onkeyup="renderCustomerList()" style="padding:10px;width:300px">
+         onkeyup="renderCustomerList()" style="padding:8px 10px;width:300px;font-size:13px;margin-bottom:10px;">
 
-  <table>
-    <thead>
-      <tr>
-        <th>CID</th>
-        <th>Name</th>
-        <th>Mobile</th>
-        <th>Station</th>
-        <th>Balance</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="customerTableBody"></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>CID</th>
+          <th>Name</th>
+          <th>Mobile</th>
+          <th>Station</th>
+          <th>Balance</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="customerTableBody"></tbody>
+    </table>
+  </div>
 </div>
 
 </div>
@@ -470,42 +677,100 @@ const EDIT_KEY  = "editCustomerId";
 ===================================================== */
 const $ = id => document.getElementById(id);
 
-const form = $("customerForm");
+let form = null;
+let fields = {};
 
-const fields = {
-  cid: $("cid"),
-  name: $("name"),
-  relation: $("relation"),
-  relationName: $("relationName"),
-  type: $("type"),
-  lfno: $("lfno"),
-  openingDate: $("openingDate"),
-  openingBalance: $("openingBalance"),
-  goldBalance: $("goldBalance"),
-  silverBalance: $("silverBalance"),
-  maxLimit: $("maxLimit"),
-  aadhar: $("aadhar"),
-  pan: $("pan"),
-  address: $("address"),
-  station: $("station"),
-  phone: $("phone"),
-  mobile: $("mobile"),
-  email: $("email")
-};
+/* =====================================================
+   INITIALIZE ELEMENTS
+===================================================== */
+function initElements(){
+  form = $("customerForm");
+  if(!form) return false;
+  
+  fields = {
+    cid: $("cid"),
+    name: $("name"),
+    relation: $("relation"),
+    relationName: $("relationName"),
+    type: $("type"),
+    lfno: $("lfno"),
+    openingDate: $("openingDate"),
+    openingBalance: $("openingBalance"),
+    goldBalance: $("goldBalance"),
+    silverBalance: $("silverBalance"),
+    maxLimit: $("maxLimit"),
+    aadhar: $("aadhar"),
+    pan: $("pan"),
+    address: $("address"),
+    station: $("station"),
+    phone: $("phone"),
+    mobile: $("mobile"),
+    email: $("email")
+  };
+  
+  // Check if all required fields exist
+  const requiredFields = ['cid', 'name', 'phone'];
+  for(let key of requiredFields){
+    if(!fields[key]){
+      console.warn(`Field ${key} not found`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+
 
 /* =====================================================
    INIT
 ===================================================== */
-const editId = localStorage.getItem(EDIT_KEY);
-loadStations();
-if (editId) loadForEdit(editId);
+function initCustomerPage(){
+  // Wait for elements to be ready
+  if(!initElements()){
+    // Retry after a short delay
+    setTimeout(initCustomerPage, 100);
+    return;
+  }
+  
+  // Set up form event listener
+  if(form){
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+    });
+  }
+  
+  // Load stations
+  loadStations();
+  
+  // Check for edit mode
+  const editId = localStorage.getItem(EDIT_KEY);
+  if (editId) {
+    loadForEdit(editId);
+  }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCustomerPage);
+} else {
+  // DOM already ready, but might be in workspace
+  setTimeout(initCustomerPage, 50);
+}
+
+// Also listen for page refresh event from dashboard
+window.addEventListener('pageRefresh', function() {
+  setTimeout(initCustomerPage, 100);
+});
 
 /* =====================================================
    FORM ACTIONS
 ===================================================== */
 function loadStations(){
+  if(!fields.station) return;
+  
   const stations = JSON.parse(localStorage.getItem("stations") || "[]");
-  const stationSelect = $("station");
+  const stationSelect = fields.station;
   stationSelect.innerHTML = '<option value="">-- Select Station --</option>';
   stations.forEach(s => {
     const option = document.createElement("option");
@@ -517,6 +782,10 @@ function loadStations(){
 
 function submitForm(e){
   if(e) e.preventDefault();
+  if(!form || !fields.name) {
+    alert("Form not initialized. Please refresh the page.");
+    return;
+  }
   if(!validateForm()) return;
   saveCustomer();
   openList();
@@ -524,29 +793,25 @@ function submitForm(e){
 
 function saveAndNew(e){
   if(e) e.preventDefault();
+  if(!form || !fields.name) {
+    alert("Form not initialized. Please refresh the page.");
+    return;
+  }
   if(!validateForm()) return;
   saveCustomer();
   resetForm(true);
 }
 
-
 function resetForm(focusName=false){
+  if(!form) return;
   form.reset();
   localStorage.removeItem(EDIT_KEY);
-  fields.cid.value = "";
-  fields.cid.placeholder = "Auto Generated";
-  if(focusName) fields.name.focus();
+  if(fields.cid){
+    fields.cid.value = "";
+    fields.cid.placeholder = "Auto Generated";
+  }
+  if(focusName && fields.name) fields.name.focus();
 }
-
-// Block any accidental form submit (Enter key, browser behavior)
-form.addEventListener("submit", function(e){
-  e.preventDefault();
-});
-
-
-
-
-
 
 
 
@@ -554,6 +819,10 @@ form.addEventListener("submit", function(e){
    VALIDATION
 ===================================================== */
 function validateForm(){
+  if(!fields.name || !fields.phone){
+    alert("Form not initialized. Please refresh the page.");
+    return false;
+  }
 
   if(!fields.name.value.trim()){
     alert("Customer name is required");
@@ -562,44 +831,51 @@ function validateForm(){
   }
 
   if(!/^\d{10}$/.test(fields.phone.value.trim())){
-  alert("Enter valid 10-digit phone number");
-  fields.phone.focus();
-  return false;
-}
+    alert("Enter valid 10-digit phone number");
+    fields.phone.focus();
+    return false;
+  }
 
-if(fields.mobile.value.trim() &&
-   !/^\d{10}$/.test(fields.mobile.value.trim())){
-  alert("Enter valid 10-digit mobile number");
-  fields.mobile.focus();
-  return false;
-}
+  if(fields.mobile && fields.mobile.value.trim() &&
+     !/^\d{10}$/.test(fields.mobile.value.trim())){
+    alert("Enter valid 10-digit mobile number");
+    fields.mobile.focus();
+    return false;
+  }
 
   // Duplicate mobile check
   const customers = getCustomers();
-  const duplicate = customers.find(c =>
-    c.mobile === fields.mobile.value.trim() &&
-    String(c.id) !== String(editId)
-  );
-  if(fields.mobile.value.trim()){
-  const duplicate = customers.find(c =>
-    c.mobile === fields.mobile.value.trim() &&
-    String(c.id) !== String(editId)
-  );
-  if(duplicate){
-    alert("This mobile number already exists");
-    return false;
+  const editId = localStorage.getItem(EDIT_KEY);
+  if(fields.mobile && fields.mobile.value.trim()){
+    const duplicate = customers.find(c =>
+      c.mobile === fields.mobile.value.trim() &&
+      String(c.id) !== String(editId)
+    );
+    if(duplicate){
+      alert("This mobile number already exists");
+      return false;
+    }
   }
-}
 
   return true;
 }
+
+
+
+
+
 
 /* =====================================================
    SAVE / UPDATE
 ===================================================== */
 function saveCustomer(){
+  if(!form || !fields.name){
+    alert("Form not initialized. Please refresh the page.");
+    return;
+  }
 
   let customers = getCustomers();
+  const editId = localStorage.getItem(EDIT_KEY);
   const isEdit = !!editId;
   const id = isEdit ? Number(editId) : generateId(customers);
 
@@ -647,18 +923,65 @@ function saveCustomer(){
   alert("Customer saved successfully");
 }
 
+
 /* =====================================================
    LIST
 ===================================================== */
 function openList(){
-  document.querySelector(".erp-form").style.display = "none";
-  $("customerListSection").style.display = "block";
+  const formEl = document.querySelector(".erp-form");
+  const listSection = $("customerListSection");
+  
+  if(formEl) formEl.style.display = "none";
+  if(listSection) {
+    listSection.style.display = "flex";
+    listSection.style.flexDirection = "column";
+  }
   renderCustomerList();
 }
 
+function goBackToAddCustomer(){
+  const formEl = document.querySelector(".erp-form");
+  const listSection = $("customerListSection");
+  
+  // Show form, hide list
+  if(formEl) {
+    formEl.style.display = "grid";
+    formEl.style.flex = "1";
+  }
+  if(listSection) listSection.style.display = "none";
+  
+  // Reset form
+  resetForm();
+  
+  // Update title
+  const title = $("pageTitle");
+  if(title) {
+    title.innerText = "Add Customer";
+  } else {
+    // Try to find title in workspace if in dashboard
+    const workspace = document.querySelector(".workspace");
+    if(workspace){
+      const workspaceTitle = workspace.querySelector("#pageTitle");
+      if(workspaceTitle) workspaceTitle.innerText = "Add Customer";
+    }
+  }
+
+
+  // Focus on name field
+  if(fields && fields.name) {
+    setTimeout(() => fields.name.focus(), 100);
+  }
+}
+
+
+
 function renderCustomerList(){
   const tbody = $("customerTableBody");
-  const search = ($("searchCustomer").value || "").toLowerCase();
+  const searchBox = $("searchCustomer");
+  
+  if(!tbody) return;
+  
+  const search = (searchBox ? searchBox.value || "" : "").toLowerCase();
   tbody.innerHTML = "";
 
   getCustomers()
@@ -684,6 +1007,19 @@ function renderCustomerList(){
     });
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* =====================================================
    EDIT / DELETE
 ===================================================== */
@@ -703,27 +1039,50 @@ function deleteCustomer(id){
    LOAD EDIT DATA
 ===================================================== */
 function loadForEdit(id){
+  if(!form || !fields.name){
+    // Elements not ready, retry
+    setTimeout(() => loadForEdit(id), 100);
+    return;
+  }
+  
   const customer = getCustomers().find(c => String(c.id) === String(id));
   if(!customer) return;
 
   // Show form, hide list
-  document.querySelector(".erp-form").style.display = "grid";
-  document.getElementById("customerListSection").style.display = "none";
+  const formEl = document.querySelector(".erp-form");
+  const listSection = document.getElementById("customerListSection");
+  
+  if(formEl) {
+    formEl.style.display = "grid";
+    formEl.style.flex = "1";
+  }
+  if(listSection) listSection.style.display = "none";
 
   // Change title
   const title = document.getElementById("pageTitle");
-  if(title) title.innerText = "Edit Customer";
+  if(title) {
+    title.innerText = "Edit Customer";
+  } else {
+    // Try to find title in workspace if in dashboard
+    const workspace = document.querySelector(".workspace");
+    if(workspace){
+      const workspaceTitle = workspace.querySelector("#pageTitle");
+      if(workspaceTitle) workspaceTitle.innerText = "Edit Customer";
+    }
+  }
 
   // Fill fields
   Object.keys(fields).forEach(k => {
-    if(customer[k] !== undefined){
+    if(fields[k] && customer[k] !== undefined){
       fields[k].value = customer[k];
     }
   });
 
   // Lock CID
-  fields.cid.value = customer.cid;
-  fields.cid.disabled = true;
+  if(fields.cid){
+    fields.cid.value = customer.cid;
+    fields.cid.disabled = true;
+  }
 }
 
 
@@ -746,18 +1105,85 @@ function num(v){
 }
 
 function selectCustomerForOrder(name){
+  // Try to set customer in new-order page if available
+  // Check if we're in dashboard context
+  if(typeof loadPage === 'function'){
+    // We're in dashboard, try to find and update customer in new-order page
+    const workspace = document.querySelector(".workspace");
+    if(workspace){
+      const custNameSelect = workspace.querySelector("#custName");
+      if(custNameSelect){
+        // Find option with matching name
+        const options = Array.from(custNameSelect.options);
+        const option = options.find(opt => opt.textContent === name);
+        if(option){
+          custNameSelect.value = option.value;
+          // Trigger change event
+          custNameSelect.dispatchEvent(new Event('change'));
+          alert(`Customer "${name}" selected`);
+          return;
+        }
+      }
+    }
+  }
+  
+  // Try window.opener (for popup windows)
   if (window.opener && window.opener.setCustomerName) {
     window.opener.setCustomerName(name);
     window.close();
-  } else {
-    alert("Order page not found");
+    return;
   }
+  
+  // Try parent window
+  if (window.parent && window.parent !== window) {
+    if (window.parent.setCustomerName) {
+      window.parent.setCustomerName(name);
+      return;
+    }
+    // Try to find custName in parent
+    try {
+      const parentCustName = window.parent.document.getElementById("custName");
+      if(parentCustName){
+        const options = Array.from(parentCustName.options);
+        const option = options.find(opt => opt.textContent === name);
+        if(option){
+          parentCustName.value = option.value;
+          parentCustName.dispatchEvent(new Event('change'));
+          alert(`Customer "${name}" selected`);
+          return;
+        }
+      }
+    } catch(e){
+      // Cross-origin or other error
+    }
+  }
+  
+  // Fallback: store in localStorage and show message
+  localStorage.setItem("selectedCustomerName", name);
+  alert(`Customer "${name}" selected. Please go to New Order page.`);
 }
 
-
+/* =====================================================
+   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+   (For onclick handlers and dashboard integration)
+===================================================== */
+// Make all functions available globally
+window.submitForm = submitForm;
+window.saveAndNew = saveAndNew;
+window.resetForm = resetForm;
+window.openList = openList;
+window.goBackToAddCustomer = goBackToAddCustomer;
+window.editCustomer = editCustomer;
+window.deleteCustomer = deleteCustomer;
+window.selectCustomerForOrder = selectCustomerForOrder;
+window.renderCustomerList = renderCustomerList;
+window.loadStations = loadStations;
+window.initCustomerPage = initCustomerPage;
 
 </script>
 
 
 </body>
 </html>
+
+

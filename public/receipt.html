@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Payment Receipt</title>
+
+<style>
+
+/* =========================
+   WINDOW
+========================= */
+.window{
+  background:#ffffff;
+  border-radius:16px;
+  border:1px solid #d1d6de;
+  box-shadow:0 25px 45px rgba(0,0,0,.25);
+  max-width:900px;
+  margin:40px auto;
+}
+
+/* TITLE BAR */
+.title-bar{
+  background:linear-gradient(#f4f6fa,#e6eaf0);
+  padding:10px;
+  font-weight:600;
+  font-size:15px;
+  text-align:center;
+  border-bottom:1px solid #d1d6de;
+  border-radius:16px 16px 0 0;
+}
+
+/* CONTENT */
+.content{
+  display:flex;
+  gap:40px;
+  padding:22px 30px;
+  background:#f9fbfe;
+}
+
+/* PANELS */
+.left, .right{
+  flex:1;
+}
+
+/* HEADINGS */
+h3{
+  margin:0 0 16px 0;
+  font-size:15px;
+}
+
+/* FORM ROW */
+.form-row{
+  display:flex;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+.form-row label{
+  width:160px;
+  font-size:14px;
+}
+
+/* INPUTS */
+.form-row input,
+.form-row select,
+.form-row textarea{
+  flex:1;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+}
+
+.form-row textarea{
+  height:90px;
+  resize:none;
+}
+
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.18);
+}
+
+/* FOOTER */
+.footer{
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  padding:16px;
+  background:#f2f5f9;
+  border-top:1px solid #d1d6de;
+  border-radius:0 0 16px 16px;
+}
+
+.footer button{
+  min-width:120px;
+  padding:8px 12px;
+  font-size:13px;
+  border-radius:10px;
+  border:1px solid #d1d6de;
+  background:#ffffff;
+  cursor:pointer;
+}
+
+/* RESPONSIVE */
+@media(max-width:800px){
+  .content{ flex-direction:column; }
+  .form-row{ flex-direction:column; align-items:flex-start; }
+  .form-row label{ width:100%; margin-bottom:4px; }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="window">
+
+  <div class="title-bar">RECEIPT / PAYMENT</div>
+
+  <div class="content">
+
+    <!-- LEFT -->
+    <div class="left">
+      <h3>Payment Details</h3>
+
+      <div class="form-row">
+        <label>Payment Mode</label>
+        <select id="mode">
+          <option>Cash</option>
+          <option>Card</option>
+          <option>Cheque</option>
+          <option>UPI</option>
+          <option>Online</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>Amount</label>
+        <input id="amount" placeholder="0.00">
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <h3>Additional Info</h3>
+
+      <div class="form-row">
+        <label>Narration</label>
+        <textarea id="narration"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label>Batch</label>
+        <input id="batch">
+      </div>
+
+      <div class="form-row">
+        <label>Type</label>
+        <input id="type">
+      </div>
+
+      <div class="form-row">
+        <label>Exp Date</label>
+        <input id="expDate" placeholder="MM/YY">
+      </div>
+
+      <div class="form-row">
+        <label>Ap.Code</label>
+        <input id="apCode">
+      </div>
+
+      <div class="form-row">
+        <label></label>
+        <div>
+          <label><input type="radio" name="ptype" value="Cash" checked> Cash</label>
+          &nbsp;&nbsp;
+          <label><input type="radio" name="ptype" value="Chq"> Chq</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button onclick="saveReceipt()">Save</button>
+    <button onclick="closeReceipt()">Cancel</button>
+  </div>
+
+</div>
+
+<script>
+/* READ PARAMS */
+const params = new URLSearchParams(location.search);
+const billNoParam = params.get("billNo") || "";
+const customerParam = params.get("customer") || "";
+const customerIdParam = params.get("customerId") || "";
+
+/* GET ELEMENTS */
+let mode, amount, narration, batch, type, expDate, apCode;
+
+function initElements(){
+  mode = document.getElementById("mode");
+  amount = document.getElementById("amount");
+  narration = document.getElementById("narration");
+  batch = document.getElementById("batch");
+  type = document.getElementById("type");
+  expDate = document.getElementById("expDate");
+  apCode = document.getElementById("apCode");
+  
+  return mode && amount && narration && batch && type && expDate && apCode;
+}
+
+// Initialize when DOM is ready
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', function(){
+    if(!initElements()){
+      setTimeout(initElements, 100);
+    }
+  });
+} else {
+  if(!initElements()){
+    setTimeout(initElements, 100);
+  }
+}
+
+/* SAVE RECEIPT */
+function saveReceipt(){
+  if(!initElements()){
+    alert("Form not initialized. Please refresh the page.");
+    return;
+  }
+  
+  const amt = Number(amount.value || 0);
+  if(!amt || amt <= 0){
+    alert("Enter valid amount");
+    return;
+  }
+  
+  // Bill number is optional - use provided or empty string
+  const billNo = billNoParam || "";
+  
+  // Customer is optional - use provided or empty string
+  const customer = customerParam || "";
+  const customerId = customerIdParam || "";
+
+  // Get ptype radio button value
+  const ptypeEl = document.querySelector('input[name="ptype"]:checked');
+  const ptype = ptypeEl ? ptypeEl.value : "Cash";
+
+  // Save to receipts storage (separate from payments)
+  const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
+
+  // Create receipt object with all fields
+  const receiptData = {
+    id: Date.now(),
+    billNo: billNo,
+    customer: customer,
+    customerId: customerId,
+    amount: amt,
+    mode: mode.value || "Cash",
+    narration: narration.value || "",
+    batch: batch.value || "",
+    type: type.value || "",
+    expDate: expDate.value || "",
+    apCode: apCode.value || "",
+    ptype: ptype,
+    date: new Date().toISOString().split("T")[0],
+    timestamp: new Date().toISOString()
+  };
+
+  receipts.push(receiptData);
+  localStorage.setItem("receipts", JSON.stringify(receipts));
+  
+  // Also update the bill with receipt information (only if billNo is provided)
+  if(billNo){
+    const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+    const billIndex = bills.findIndex(b => b.billNo === billNo);
+    if(billIndex >= 0){
+      // Update existing bill
+      if(!bills[billIndex].receipts) bills[billIndex].receipts = [];
+      bills[billIndex].receipts.push(receiptData.id);
+      localStorage.setItem("bills", JSON.stringify(bills));
+    } else {
+      // Create new bill entry
+      const newBill = {
+        billNo: billNo,
+        customer: customer,
+        customerId: customerId,
+        date: new Date().toISOString().split("T")[0],
+        receipts: [receiptData.id],
+        totalAmount: 0
+      };
+      bills.push(newBill);
+      localStorage.setItem("bills", JSON.stringify(bills));
+    }
+  }
+  
+  // Dispatch event to notify parent window
+  try {
+    if(window.parent && window.parent !== window){
+      window.parent.dispatchEvent(new CustomEvent('receiptSaved'));
+    }
+    if(window.top && window.top !== window){
+      window.top.dispatchEvent(new CustomEvent('receiptSaved'));
+    }
+    window.dispatchEvent(new CustomEvent('receiptSaved'));
+  } catch(e) {
+    console.error("Error dispatching event:", e);
+  }
+  
+  alert("Receipt saved successfully");
+  
+  // Close window properly
+  closeReceipt();
+}
+
+/* CLOSE RECEIPT */
+function closeReceipt(){
+  try {
+    // If in dashboard workspace, try to go back to new-order page
+    const workspace = document.querySelector(".workspace");
+    if(workspace || (window.parent && window.parent !== window)){
+      // Check if loadPage function exists
+      let loadPageFunc = null;
+      
+      if(typeof loadPage === 'function'){
+        loadPageFunc = loadPage;
+      } else if(window.parent && typeof window.parent.loadPage === 'function'){
+        loadPageFunc = window.parent.loadPage.bind(window.parent);
+      } else if(window.top && typeof window.top.loadPage === 'function'){
+        loadPageFunc = window.top.loadPage.bind(window.top);
+      }
+      
+      if(loadPageFunc){
+        // Check if we should restore new-order (was open before receipt)
+        const shouldRestore = localStorage.getItem("newOrderState");
+        const returnTarget = localStorage.getItem("receiptReturnTarget") || "../pages/new-order.html";
+        
+        if(shouldRestore){
+          // Restore new-order page - it will restore its own state
+          // The flag will be cleared by new-order.html's initOrderPage
+          loadPageFunc(returnTarget);
+          // Give it time to load, then restore state
+          setTimeout(() => {
+            try {
+              // Try to call restoreOrderState if it exists
+              if(window.parent && typeof window.parent.restoreOrderState === 'function'){
+                window.parent.restoreOrderState();
+              } else if(window.top && typeof window.top.restoreOrderState === 'function'){
+                window.top.restoreOrderState();
+              } else if(typeof restoreOrderState === 'function'){
+                restoreOrderState();
+              }
+            } catch(e) {
+              console.error("Error restoring order state:", e);
+            }
+          }, 500);
+          return;
+        } else {
+          // No saved state, just load order page
+          loadPageFunc(returnTarget);
+          return;
+        }
+      }
+    }
+    
+    // Try to close window (for popup mode - original page still has data, no restore needed)
+    if(window.close && window.opener){
+      window.close();
+    } else if(window.history && window.history.length > 1){
+      window.history.back();
+    } else {
+      // Last resort - navigate to new-order
+      const returnTarget = localStorage.getItem("receiptReturnTarget") || "../pages/new-order.html";
+      window.location.href = returnTarget;
+    }
+  } catch(e) {
+    console.error("Error closing receipt:", e);
+    // Fallback navigation
+    try {
+      const returnTarget = localStorage.getItem("receiptReturnTarget") || "../pages/new-order.html";
+      window.location.href = returnTarget;
+    } catch(e2) {
+      alert("Payment saved. Please navigate back manually.");
+    }
+  }
+}
+
+// Make functions globally accessible
+window.saveReceipt = saveReceipt;
+window.closeReceipt = closeReceipt;
+</script>
+
+</body>
+</html>

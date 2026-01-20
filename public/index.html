@@ -6,9 +6,7 @@
 <link rel="stylesheet" href="style.css">
 
 <style>
-/* =========================
-   If any need 
-========================= */
+/* (empty – keep main theme from style.css) */
 </style>
 </head>
 
@@ -29,19 +27,19 @@
             </ul>
         </li>
 
-        <li>👥 Customers</li>
-        <li>👷 Job Workers</li>
+        <li onclick="loadPage('../pages/customer.html')">👥 Customers</li>
+        <li onclick="loadPage('../pages/jobworker.html')">👷 Job Workers</li>
 
         <li class="divider"></li>
-        <li>Exit</li>
+        <li onclick="exitApp()">Exit</li>
     </ul>
 </li>
 
-<li class="menu-item">Transactions</li>
-<li class="menu-item">Reports</li>
-<li class="menu-item">Tools</li>
-<li class="menu-item">Settings</li>
-<li class="menu-item">Help</li>
+<li class="menu-item" onclick="showInfo('Transactions module coming soon')">Transactions</li>
+<li class="menu-item" onclick="showInfo('Reports module coming soon')">Reports</li>
+<li class="menu-item" onclick="showInfo('Tools module coming soon')">Tools</li>
+<li class="menu-item" onclick="showInfo('Settings module coming soon')">Settings</li>
+<li class="menu-item" onclick="showInfo('Help module coming soon')">Help</li>
 
 </ul>
 </nav>
@@ -172,10 +170,20 @@ function openStation(){
    SAVE STATION
 ========================= */
 function saveStation(closeAfterSave){
-    const name  = document.getElementById("stationName").value.trim();
-    const state = document.getElementById("stationState").value;
-    const city  = document.getElementById("stationCity").value.trim();
-    const pin   = document.getElementById("stationPin").value.trim();
+    const nameEl  = document.getElementById("stationName");
+    const stateEl = document.getElementById("stationState");
+    const cityEl  = document.getElementById("stationCity");
+    const pinEl   = document.getElementById("stationPin");
+    
+    if(!nameEl || !stateEl || !cityEl || !pinEl){
+        alert("Form elements not found. Please refresh the page.");
+        return;
+    }
+    
+    const name  = nameEl.value.trim();
+    const state = stateEl.value;
+    const city  = cityEl.value.trim();
+    const pin   = pinEl.value.trim();
 
     // Validation
     if(name === ""){
@@ -224,13 +232,16 @@ function saveStation(closeAfterSave){
    RESET FORM
 ========================= */
 function resetStation(){
-    document.getElementById("stationName").value = "";
-    document.getElementById("stationState").value = "";
-    document.getElementById("stationCity").value = "";
-    document.getElementById("stationPin").value = "";
+    const nameEl = document.getElementById("stationName");
+    const stateEl = document.getElementById("stationState");
+    const cityEl = document.getElementById("stationCity");
+    const pinEl = document.getElementById("stationPin");
+    
+    if(nameEl) nameEl.value = "";
+    if(stateEl) stateEl.value = "";
+    if(cityEl) cityEl.value = "";
+    if(pinEl) pinEl.value = "";
 }
-
-
 
 
 /* =========================
@@ -241,13 +252,9 @@ function closeStation(){
 }
 
 /* =========================
-   EXIT APP
+   EXIT APP (Handled by script.js)
 ========================= */
-function exitApp(){
-    if(confirm("Exit application?")){
-        window.close();
-    }
-}
+// exitApp function is defined in script.js
 
 
 </script>

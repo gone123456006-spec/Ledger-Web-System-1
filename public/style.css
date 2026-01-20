@@ -139,10 +139,12 @@ ul, li{
     text-align:left;
     cursor:pointer;
     transition:.2s;
+    color:#000 !important;
 }
 
 .sidebar button:hover{
     background:#abccff;
+    color:#000 !important;
 }
 
 .sidebar button.active{
@@ -154,10 +156,12 @@ ul, li{
 .sidebar .exit{
     background:#ffecec;
     border-color:#ffb5b5;
+    color:#000 !important;
 }
 
 .sidebar .exit:hover{
     background:#ff9595;
+    color:#000 !important;
 }
 
 /* =========================
@@ -266,14 +270,38 @@ ul, li{
 }
 
 @media(max-width:700px){
+    /* Stack sidebar below menu and allow full-height scroll */
+    body{
+        height:auto;
+        min-height:100vh;
+        overflow:auto;
+    }
+
     .app-container{
         flex-direction:column;
+        height:auto;
+        min-height:calc(100vh - 36px);
+    }
+
+    .workspace{
+        padding:12px;
     }
 
     .sidebar{
         width:100%;
         border-left:none;
         border-top:1px solid #c7ccd4;
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        padding:8px;
+    }
+
+    .sidebar button{
+        flex:1 1 calc(50% - 8px);
+        min-width:140px;
+        text-align:center;
+        font-size:12px;
     }
 
     .station-group{

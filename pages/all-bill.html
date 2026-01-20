@@ -1,13 +1,719 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>All Bill</title>
+  <meta charset="UTF-8">
+  <title>Customer Balance</title>
+
+<style>
+/* =========================
+   BASE
+========================= */
+*{
+  box-sizing:border-box;
+  font-family:Segoe UI, Arial, sans-serif;
+  font-size:13px;
+}
+
+body{
+  margin:0;
+  background:#e6ebf2;
+}
+
+/* =========================
+   CONTAINER
+========================= */
+.balance-wrap{
+  margin:15px;
+  background:#fff;
+  border:1px solid #d1d6de;
+  border-radius:12px;
+  display:flex;
+  flex-direction:column;
+  height:calc(100vh - 30px);
+  max-height:calc(100vh - 30px);
+  overflow:hidden;
+  box-sizing:border-box;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+.workspace .balance-wrap{
+  margin:0;
+  height:100%;
+  max-height:100%;
+  border-radius:0;
+  box-shadow:none;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+.balance-toolbar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  padding:16px;
+  border-bottom:1px solid #e5e7eb;
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa);
+  flex-shrink:0;
+  box-sizing:border-box;
+}
+
+.btn{
+  padding:8px 16px;
+  border:1px solid #d1d6de;
+  background:#fff;
+  cursor:pointer;
+  border-radius:8px;
+  font-size:13px;
+  font-weight:500;
+  transition:all 0.2s;
+  color:#1d1d1f;
+  box-shadow:0 1px 2px rgba(0,0,0,0.05);
+}
+
+.btn:hover{ 
+  background:#007aff;
+  border-color:#007aff;
+  color:#fff;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(0,122,255,0.2);
+}
+
+label{
+  font-size:13px;
+  color:#3a3a3c;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+input, select{
+  height:36px;
+  padding:6px 12px;
+  border:1px solid #d1d6de;
+  border-radius:8px;
+  font-size:13px;
+  background:#fff;
+  transition:all 0.2s;
+  min-width:120px;
+}
+
+input:focus, select:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.12);
+}
+
+/* =========================
+   TABLE
+========================= */
+.table-wrap{
+  flex:1;
+  overflow:auto;
+  overflow-x:auto;
+  overflow-y:auto;
+  position:relative;
+  min-height:0;
+  box-sizing:border-box;
+  background:#fff;
+}
+
+table{
+  width:100%;
+  min-width:1000px;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:auto;
+  background:#fff;
+}
+
+thead{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:#fff;
+}
+
+thead th{
+  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5);
+  border-bottom:2px solid #d1d6de;
+  padding:14px 12px;
+  white-space:nowrap;
+  position:sticky;
+  top:0;
+  z-index:10;
+  font-weight:600;
+  font-size:12px;
+  text-align:left;
+  color:#1d1d1f;
+  text-transform:uppercase;
+  letter-spacing:0.3px;
+}
+
+thead th.center{
+  text-align:center;
+}
+
+thead th.right{
+  text-align:right;
+}
+
+tbody td{
+  padding:12px;
+  border-bottom:1px solid #f0f0f0;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:200px;
+  font-size:13px;
+  vertical-align:middle;
+  color:#333;
+  transition:all 0.15s ease;
+}
+
+tbody tr{
+  transition:all 0.2s ease;
+  background:#fff;
+}
+
+tbody tr:nth-child(even){
+  background:#fafbfc;
+}
+
+tbody tr:hover{ 
+  background:#e8f2ff !important;
+  transform:scale(1.001);
+  box-shadow:0 2px 4px rgba(0,0,0,0.05);
+}
+
+tbody tr:hover td{
+  border-bottom-color:#d1e7ff;
+}
+
+.center{ 
+  text-align:center;
+}
+
+.right{ 
+  text-align:right;
+  font-weight:500;
+  color:#1d1d1f;
+  font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-variant-numeric:tabular-nums;
+}
+
+.center{ 
+  text-align:center;
+}
+
+button{
+  padding:6px 14px;
+  border-radius:8px;
+  border:none;
+  background:#0d6efd;
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-weight:500;
+}
+
+button:hover{
+  background:#0b5ed7;
+  transform:translateY(-1px);
+  box-shadow:0 2px 4px rgba(11,94,215,0.2);
+}
+
+button:active{
+  transform:translateY(0);
+}
+
+/* =========================
+   FOOTER
+========================= */
+.footer{
+  padding:12px 16px;
+  font-size:13px;
+  color:#6e6e73;
+  border-top:1px solid #e5e7eb;
+  background:linear-gradient(to bottom, #fafbfc, #f5f7fa);
+  flex-shrink:0;
+  box-sizing:border-box;
+  font-weight:500;
+}
+
+/* =========================
+   SCROLLBAR STYLING
+========================= */
+.table-wrap::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+
+.table-wrap::-webkit-scrollbar-track{
+  background:#f5f5f7;
+  border-radius:5px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb{
+  background:#c1c1c6;
+  border-radius:5px;
+  border:2px solid #f5f5f7;
+}
+
+.table-wrap::-webkit-scrollbar-thumb:hover{
+  background:#a1a1a6;
+}
+</style>
 </head>
+
 <body>
-  <div style="padding:30px;font-family:Segoe UI,Arial,sans-serif">
-    <h2>All Bill</h2>
-    <p>This module is not implemented yet.</p>
+
+<div class="balance-wrap">
+
+  <!-- TOOLBAR -->
+  <div class="balance-toolbar">
+    <button class="btn" onclick="loadBalances()">🔄 Refresh</button>
+
+    <label>Customer</label>
+    <input type="text" id="customerFilter" onkeyup="filterTable()" placeholder="Filter by customer...">
+
+    <label>Search</label>
+    <input type="text" id="searchBox" placeholder="Search..." onkeyup="searchTable()">
   </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table id="balanceTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Order No</th>
+          <th>Customer</th>
+          <th class="right">Amount (₹)</th>
+          <th class="right">Ready Wt</th>
+          <th class="right">Neg</th>
+          <th>Ready Metal</th>
+          <th>Payment</th>
+          <th>Narration</th>
+          <th class="center">Action</th>
+        </tr>
+      </thead>
+      <tbody id="balanceTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="footer" id="footerText">
+    No balance entries available
+  </div>
+
+</div>
+
+<script>
+/* =========================
+   ELEMENT REFERENCES
+========================= */
+let tbody = null;
+let footer = null;
+
+/* =========================
+   INITIALIZE ELEMENTS
+========================= */
+function initElements(){
+  const workspace = document.querySelector(".workspace");
+  
+  if(workspace){
+    tbody = workspace.querySelector("#balanceTableBody");
+    footer = workspace.querySelector("#footerText");
+    
+    if(!tbody){
+      tbody = document.querySelector("#balanceTableBody");
+    }
+    if(!footer){
+      footer = document.querySelector("#footerText") || document.getElementById("footerText");
+    }
+  } else {
+    tbody = document.querySelector("#balanceTableBody");
+    footer = document.querySelector("#footerText") || document.getElementById("footerText");
+  }
+  
+  if(!tbody || !footer){
+    return false;
+  }
+  
+  return true;
+}
+
+/* =========================
+   LOAD BALANCES
+========================= */
+function loadBalances(){
+  if(!tbody){
+    if(!initElements()){
+      console.warn("Balance table elements not found. Retrying...");
+      setTimeout(loadBalances, 100);
+      return;
+    }
+  }
+  
+  const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+  tbody.innerHTML = "";
+  
+  if(balances.length === 0){
+    updateFooter();
+    return;
+  }
+  
+  // Sort by date (newest first)
+  const sortedBalances = [...balances].sort((a, b) => {
+    const dateA = new Date(a.date || a.timestamp || 0);
+    const dateB = new Date(b.date || b.timestamp || 0);
+    return dateB - dateA;
+  });
+  
+  sortedBalances.forEach((balance, index) => {
+    try {
+      const row = document.createElement("tr");
+      // Store balance data in row for editing
+      row.dataset.balanceIndex = index;
+      row.dataset.balanceTimestamp = balance.timestamp || "";
+      row.dataset.orderNo = balance.orderNo || "";
+      
+      row.innerHTML = `
+        <td>${balance.date || "—"}</td>
+        <td>${balance.orderNo || "—"}</td>
+        <td>${balance.customer || "—"}</td>
+        <td class="right">${parseFloat(balance.amount || 0).toFixed(2)}</td>
+        <td class="right">${parseFloat(balance.readyWeight || 0).toFixed(3)}</td>
+        <td class="right">${parseFloat(balance.neg || 0).toFixed(3)}</td>
+        <td>${balance.readyMetal || "—"}</td>
+        <td>${balance.payment || "—"}</td>
+        <td style="max-width:200px;white-space:normal;word-break:break-word;">${balance.narration || "—"}</td>
+        <td class="center">
+          <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:6px 14px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;margin-right:6px;">Edit</button>
+          <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${(balance.customer || '').replace(/'/g, "\\'")}')" style="padding:6px 14px;border-radius:8px;border:none;background:#dc3545;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Remove</button>
+        </td>
+      `;
+      
+      if(tbody){
+        tbody.appendChild(row);
+      }
+    } catch(e) {
+      console.error("Error creating balance row:", e);
+    }
+  });
+  
+  updateFooter();
+}
+
+/* =========================
+   SEARCH FILTER
+========================= */
+function searchTable(){
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  filterTable();
+}
+
+/* =========================
+   FILTER TABLE
+========================= */
+function filterTable(){
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  const workspace = document.querySelector(".workspace");
+  let searchBox = null;
+  let customerFilter = null;
+  
+  if(workspace){
+    searchBox = workspace.querySelector("#searchBox");
+    customerFilter = workspace.querySelector("#customerFilter");
+  }
+  
+  if(!searchBox){
+    searchBox = document.querySelector("#searchBox") || document.getElementById("searchBox");
+  }
+  if(!customerFilter){
+    customerFilter = document.querySelector("#customerFilter") || document.getElementById("customerFilter");
+  }
+  
+  const searchValue = searchBox ? searchBox.value.toLowerCase() : "";
+  const customerValue = customerFilter ? customerFilter.value.toLowerCase() : "";
+  
+  const rows = tbody.querySelectorAll("tr");
+  let visibleCount = 0;
+
+  rows.forEach(row=>{
+    const rowText = row.innerText.toLowerCase();
+    const cells = row.querySelectorAll("td");
+    const customerCell = cells[2] ? cells[2].textContent.toLowerCase() : "";
+    
+    let show = true;
+    
+    if(searchValue && !rowText.includes(searchValue)){
+      show = false;
+    }
+    
+    if(customerValue && !customerCell.includes(customerValue)){
+      show = false;
+    }
+    
+    row.style.display = show ? "" : "none";
+    if(show) visibleCount++;
+  });
+  
+  if(footer){
+    const totalRows = rows.length;
+    if(visibleCount < totalRows){
+      footer.textContent = `Showing ${visibleCount} of ${totalRows} entries`;
+    } else {
+      footer.textContent = visibleCount ? `Showing ${visibleCount} entries` : "No balance entries available";
+    }
+  }
+}
+
+/* =========================
+   FOOTER UPDATE
+========================= */
+function updateFooter(){
+  if(!tbody || !footer){
+    if(!initElements()) return;
+  }
+  
+  const allRows = tbody.querySelectorAll("tr");
+  const visibleRows = Array.from(allRows).filter(row => row.style.display !== "none");
+  const count = visibleRows.length;
+  const total = allRows.length;
+  
+  if(count < total && total > 0){
+    footer.textContent = `Showing ${count} of ${total} entries`;
+  } else {
+    footer.textContent = count ? `Showing ${count} entries` : "No balance entries available";
+  }
+}
+
+/* =========================
+   INITIALIZE PAGE
+========================= */
+function initBalancePage(){
+  if(!initElements()){
+    setTimeout(initBalancePage, 100);
+    return;
+  }
+  
+  loadBalances();
+  ensureFunctionsGlobal();
+}
+
+/* =========================
+   INITIALIZE
+========================= */
+function isInWorkspace(){
+  return !!document.querySelector(".workspace");
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    if(isInWorkspace()){
+      setTimeout(initBalancePage, 200);
+    } else {
+      initBalancePage();
+    }
+  });
+} else {
+  if(isInWorkspace()){
+    setTimeout(initBalancePage, 200);
+  } else {
+    setTimeout(initBalancePage, 50);
+  }
+}
+
+// Listen for page refresh event
+window.addEventListener('pageRefresh', function() {
+  setTimeout(initBalancePage, 150);
+});
+
+// Listen for storage changes
+window.addEventListener('storage', function(e) {
+  if(e.key === 'customerBalances'){
+    loadBalances();
+  }
+});
+
+// Listen for custom customerBalancesUpdated event
+window.addEventListener('customerBalancesUpdated', function() {
+  loadBalances();
+});
+
+// Also listen on parent/top window
+if(window.parent && window.parent !== window){
+  window.parent.addEventListener('customerBalancesUpdated', function() {
+    loadBalances();
+  });
+}
+if(window.top && window.top !== window){
+  window.top.addEventListener('customerBalancesUpdated', function() {
+    loadBalances();
+  });
+}
+
+// Poll for changes
+let lastBalanceCount = 0;
+setInterval(function() {
+  if(!tbody){
+    if(!initElements()) return;
+  }
+  
+  const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+  if(balances.length !== lastBalanceCount){
+    lastBalanceCount = balances.length;
+    loadBalances();
+  }
+}, 1000);
+
+/* =========================
+   REMOVE BILL FUNCTION
+========================= */
+function removeBill(balanceIndex, timestamp, customerName){
+  try {
+    // Confirm deletion
+    if(!confirm(`Are you sure you want to DELETE this bill entry${customerName ? ' for customer "' + customerName + '"' : ''}? This action cannot be undone.`)){
+      return;
+    }
+    
+    const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+    
+    // Find balance entry by timestamp (most reliable) or index
+    let balanceEntryIndex = -1;
+    if(timestamp){
+      balanceEntryIndex = balances.findIndex(b => b.timestamp === timestamp);
+    } else if(balanceIndex >= 0 && balanceIndex < balances.length){
+      balanceEntryIndex = balanceIndex;
+    }
+    
+    if(balanceEntryIndex === -1){
+      alert("Bill entry not found");
+      return;
+    }
+    
+    // Remove the entry
+    balances.splice(balanceEntryIndex, 1);
+    
+    // Save updated balances
+    localStorage.setItem("customerBalances", JSON.stringify(balances));
+    
+    // Reload the table
+    loadBalances();
+    
+    // Dispatch event to refresh other pages
+    const refreshEvent = new CustomEvent('customerBalancesUpdated', {});
+    window.dispatchEvent(refreshEvent);
+    if(window.parent && window.parent !== window){
+      window.parent.dispatchEvent(refreshEvent);
+    }
+    if(window.top && window.top !== window){
+      window.top.dispatchEvent(refreshEvent);
+    }
+    
+    alert("Bill entry removed successfully");
+    
+  } catch(e) {
+    console.error("Error removing bill:", e);
+    alert("Error removing bill entry: " + (e.message || String(e)));
+  }
+}
+
+/* =========================
+   EDIT BILL FUNCTION
+========================= */
+function editBill(balanceIndex, timestamp){
+  try {
+    const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+    
+    // Find balance entry by index or timestamp
+    let balanceEntry = null;
+    if(timestamp){
+      balanceEntry = balances.find(b => b.timestamp === timestamp);
+    } else if(balanceIndex >= 0 && balanceIndex < balances.length){
+      balanceEntry = balances[balanceIndex];
+    }
+    
+    if(!balanceEntry){
+      alert("Bill entry not found");
+      return;
+    }
+    
+    // Store the balance entry data for loading into ready extra order.html
+    // We'll use a special flag to indicate we're editing from all-bill
+    localStorage.setItem("editBalanceEntry", JSON.stringify(balanceEntry));
+    localStorage.setItem("editFromAllBill", "true");
+    
+    // If balance entry has rows data, we can load it directly
+    // Otherwise, try to find the order from orders storage
+    if(balanceEntry.rows && balanceEntry.rows.length > 0){
+      // Store rows data for ready extra order.html to load
+      localStorage.setItem("editBalanceRows", JSON.stringify(balanceEntry.rows));
+    }
+    
+    // Try to find the order in orders storage by orderNo
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const order = orders.find(o => o.orderNo === balanceEntry.orderNo);
+    
+    if(order && order.id){
+      // Use the order ID for editing
+      localStorage.setItem("editOrderId", order.id);
+    } else {
+      // Create a temporary order ID or use timestamp
+      localStorage.setItem("editOrderId", balanceEntry.timestamp || Date.now().toString());
+    }
+    
+    // Open ready extra order.html for editing
+    if(typeof loadPage === 'function'){
+      loadPage("../public/ready extra order.html");
+      return;
+    }
+    
+    // Try parent window
+    if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
+      window.parent.loadPage("../public/ready extra order.html");
+      return;
+    }
+    
+    // Try top window
+    if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
+      window.top.loadPage("../public/ready extra order.html");
+      return;
+    }
+    
+    // Fallback: open in new window
+    window.open("../public/ready extra order.html", "EditBill", "width=1400,height=800");
+    
+  } catch(e) {
+    console.error("Error editing bill:", e);
+    alert("Error opening bill for editing: " + (e.message || String(e)));
+  }
+}
+
+/* =========================
+   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+========================= */
+function ensureFunctionsGlobal(){
+  window.loadBalances = loadBalances;
+  window.searchTable = searchTable;
+  window.filterTable = filterTable;
+  window.updateFooter = updateFooter;
+  window.initBalancePage = initBalancePage;
+  window.initElements = initElements;
+  window.editBill = editBill;
+  window.removeBill = removeBill;
+}
+
+ensureFunctionsGlobal();
+</script>
+
 </body>
 </html>
