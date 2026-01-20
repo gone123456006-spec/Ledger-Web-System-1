@@ -1,11 +1,8 @@
 {
   "version": 2,
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/public/index.html",
-      "permanent": false
-    }
+  "routes": [
+    { "src": "^/$", "dest": "/public/index.html" },
+    { "handle": "filesystem" }
   ]
 }
 
