@@ -150,6 +150,18 @@ function loadPage(pageUrl) {
         return;
     }
 
+    // Normalize/encode URL (handles spaces like "ready extra order.html")
+    let fetchUrl = pageUrl;
+    try {
+        fetchUrl = new URL(pageUrl, window.location.href).href;
+    } catch (e) {
+        try {
+            fetchUrl = encodeURI(pageUrl);
+        } catch (e2) {
+            fetchUrl = pageUrl;
+        }
+    }
+
     // Loading screen
     workspace.innerHTML = `
         <div style="
@@ -161,7 +173,7 @@ function loadPage(pageUrl) {
         </div>
     `;
 
-    fetch(pageUrl)
+    fetch(fetchUrl)
         .then(res => {
             if (!res.ok) throw new Error("Page not found");
             return res.text();
