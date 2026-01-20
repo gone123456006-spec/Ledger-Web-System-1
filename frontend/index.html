@@ -11,6 +11,15 @@
 </head>
 
 <body>
+<script src="auth.js"></script>
+<script>
+  // Block dashboard access if not logged in
+  if(!window.ledgerAuth){
+    window.location.replace("login.html");
+  } else {
+    window.ledgerAuth.requireAuth("login.html");
+  }
+</script>
 <!-- navigation bar -->
 <nav class="menu-bar">
 <ul class="menu-root">
@@ -31,7 +40,7 @@
         <li onclick="loadPage('pages/jobworker-entry.html')">👷 Job Workers</li>
 
         <li class="divider"></li>
-        <li onclick="exitApp()">Exit</li>
+        <li onclick="window.ledgerAuth && (window.ledgerAuth.logout(), window.location.replace('login.html'))">Logout</li>
     </ul>
 </li>
 
@@ -74,7 +83,7 @@
     <button>Pending Loans</button>
 
     <button class="section-gap">Day Book</button>
-    <button class="exit">Exit</button>
+    <button class="logout">Logout</button>
 </aside>
 
 </div>

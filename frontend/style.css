@@ -164,6 +164,17 @@ ul, li{
     color:#000 !important;
 }
 
+/* Logout button (same style as exit) */
+.sidebar .logout{
+    background:#ffecec;
+    border-color:#ffb5b5;
+    color:#000 !important;
+}
+.sidebar .logout:hover{
+    background:#ff9595;
+    color:#000 !important;
+}
+
 /* =========================
    STATION POPUP 
 ========================= */

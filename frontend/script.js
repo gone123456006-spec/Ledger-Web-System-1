@@ -17,6 +17,16 @@ function initSidebarButtons(){
     sidebarButtons.forEach(btn => {
     btn.addEventListener("click", () => {
 
+        // LOGOUT
+        if (btn.classList.contains("logout")) {
+            try {
+                if (window.ledgerAuth) window.ledgerAuth.logout();
+            } catch(e) {}
+            // Always go to login page
+            try { window.location.replace("login.html"); } catch(e) { window.location.href = "login.html"; }
+            return;
+        }
+
         // EXIT
         if (btn.classList.contains("exit")) {
             exitApp();
@@ -149,6 +159,25 @@ function loadPage(pageUrl) {
         console.error("Page URL is required");
         return;
     }
+
+    // Block module loading unless logged in (fail closed)
+    try {
+        if (!window.ledgerAuth) {
+            try { window.location.replace("login.html"); } catch(e) { window.location.href = "login.html"; }
+            return;
+        }
+        if (!window.ledgerAuth.isLoggedIn()) {
+            window.ledgerAuth.requireAuth("login.html");
+            return;
+        }
+    } catch (e) {}
+
+    // Normalize legacy paths from older deployments
+    try {
+        pageUrl = String(pageUrl || "");
+        pageUrl = pageUrl.replace(/^(\.\.\/)+pages\//i, "pages/");
+        pageUrl = pageUrl.replace(/^(\.\.\/)+public\//i, "");
+    } catch (e) {}
 
     // Normalize/encode URL (handles spaces like "ready extra order.html")
     let fetchUrl = pageUrl;
