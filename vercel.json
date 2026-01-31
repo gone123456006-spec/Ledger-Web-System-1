@@ -3,8 +3,10 @@
   "routes": [
     { "handle": "filesystem" },
     { "src": "^/pages/(.*)$", "dest": "/frontend/pages/$1" },
+    { "src": "^/assets/(.*)$", "dest": "/frontend/assets/$1" },
     { "src": "^/public/(.*)$", "dest": "/frontend/$1" },
-    { "src": "^/$", "dest": "/frontend/index.html" }
+    { "src": "^/$", "dest": "/frontend/index.html" },
+    { "src": "^/(.*)$", "dest": "/frontend/$1" }
   ]
 }
 
