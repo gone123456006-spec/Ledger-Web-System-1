@@ -906,7 +906,7 @@
               <th>Design</th>
               <th>Size</th>
               <th>Pc</th>
-              <th>Est.Ut. Wt.</th>
+              <th>Ut. Wt.</th>
               <th>Est. Total Wt.</th>
               <th>Rate</th>
               <th>Lbr.%</th>
@@ -1774,16 +1774,14 @@
       try {
         // Get input values
         const pc = parseFloat(r.cells[7].children[0].value) || 0;
-        const estUtWt = parseFloat(r.cells[8].children[0].value) || 0; // Est.Ut. Wt
+        const utWt = parseFloat(r.cells[8].children[0].value) || 0; // Ut. Wt.
 
-        // Calculate Est. Total Wt. = Pc * Est.Ut. Wt.
-        let estTotalWt = 0;
-        if (pc > 0 && estUtWt > 0) {
-          estTotalWt = pc * estUtWt;
-          // Update the Est. Total Wt. input (Cell 9)
-          if (r.cells[9] && r.cells[9].children[0]) {
-            r.cells[9].children[0].value = estTotalWt.toFixed(3);
-          }
+        // Calculate Est. Total Wt. = Pc * Ut. Wt.
+        const estTotalWt = pc * utWt;
+
+        // Always update the Est. Total Wt. input (Cell 9)
+        if (r.cells[9] && r.cells[9].children[0]) {
+          r.cells[9].children[0].value = estTotalWt.toFixed(3);
         }
 
         // Use the value from cell 9 (Est. Total Wt) for further calculations

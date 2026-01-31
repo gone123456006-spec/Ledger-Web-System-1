@@ -906,7 +906,7 @@
               <th>Design</th>
               <th>Size</th>
               <th>Pc</th>
-              <th>Est.Ut. Wt.</th>
+              <th>Ut. Wt.</th>
               <th>Est. Total Wt.</th>
               <th>Rate</th>
               <th>Lbr.%</th>
@@ -1736,32 +1736,14 @@
         // Get input values
         // Note: Indices shifted due to removal of Less column
         const pc = parseFloat(r.cells[7].children[0].value) || 0;
-        const estUtWt = parseFloat(r.cells[8].children[0].value) || 0; // Est.Ut. Wt
+        const utWt = parseFloat(r.cells[8].children[0].value) || 0; // Ut. Wt.
 
-        // Calculate Est. Total Wt. = Pc * Est.Ut. Wt.
-        let estTotalWt = 0;
-        if (pc > 0 && estUtWt > 0) {
-          estTotalWt = pc * estUtWt;
-          // Update the Est. Total Wt. input (Cell 9)
-          if (r.cells[9] && r.cells[9].children[0]) {
-            r.cells[9].children[0].value = estTotalWt.toFixed(3); // 3 decimal places for weight
-          }
-        } else {
-          // If manual entry in Total Wt exists and we rely on that? 
-          // Logic strictly says Pc * Unit = Total. So if Pc or Unit is missing, Total is 0?
-          // Or allow manual override? Re-reading: "Pc × Est. Unit Wt. = Est. Total Wt."
-          // Implies strict calculation.
-          if (r.cells[9] && r.cells[9].children[0] && (pc === 0 || estUtWt === 0)) {
-            // Optimization: If user clears PC/Unit, clear Total?
-            // Let's assume yes, but maybe keep existing value if user typed it?
-            // But the formula overrides it.
-            // Let's just calculate whenever valid.
-            // If not valid calculation, maybe don't overwrite?
-            // But then it might be stale.
-            // Let's use the current value of cell 9 if calculation isn't possible, 
-            // BUT if we modified Pc or Unit, we should update.
-            // Let's just strictly enforce: Total = Pc * Unit if both present.
-          }
+        // Calculate Est. Total Wt. = Pc * Ut. Wt.
+        const estTotalWt = pc * utWt;
+
+        // Always update the Est. Total Wt. input (Cell 9)
+        if (r.cells[9] && r.cells[9].children[0]) {
+          r.cells[9].children[0].value = estTotalWt.toFixed(3); // 3 decimal places for weight
         }
 
         // If calculation wasn't performed (e.g. cleared inputs), read the value from input (allow manual)
