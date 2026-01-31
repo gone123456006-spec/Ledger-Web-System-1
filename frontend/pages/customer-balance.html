@@ -1,11 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
+  <title>Customer Balance Sheet</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <style>
+    /* =========================
+       BASE & RESET
+    ========================= */
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fa;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* =========================
+       CONTAINER
+    ========================= */
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      overflow: hidden;
+      border: 1px solid #e1e4e8;
+    }
+
+    /* =========================
+       HEADER & TOOLBAR
+    ========================= */
+    .header {
+      padding: 16px 20px;
+      background: linear-gradient(to right, #ffffff, #f9fafb);
+      border-bottom: 1px solid #e1e4e8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 18px;
+      color: #1a1a1a;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      justify-content: flex-end;
+    }
+
+    input[type="text"] {
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      width: 250px;
+      transition: all 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    }
+
+    .btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #007aff, #0056b3);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* =========================
+       TABLE
+    ========================= */
+    .table-container {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1200px;
+      /* Ensure horizontal scroll on small screens */
+    }
+
+    thead th {
+      background: #f8f9fa;
+      color: #4b5563;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #e1e4e8;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 10px 15px;
+      font-size: 13px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #1f2937;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background-color: #f1f7ff;
+    }
+
+    /* Column Specifics */
+    .col-amount {
+      text-align: right;
+      font-weight: 600;
+      color: #059669;
+      /* Green shade for money */
+    }
+
+    .col-mark {
+      font-weight: 600;
+      color: #007aff;
+    }
+
+    /* =========================
+       SCROLLBAR
+    ========================= */
+    .table-container::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+
+    /* =========================
+       EMPTY STATE
+    ========================= */
+    .empty-state {
+      padding: 40px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 14px;
+    }
+  </style>
 </head>
+
 <body>
-  
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h2>Customer Balance Sheet</h2>
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Search by Name, Mark, or Phone..." onkeyup="filterTable()">
+        <button class="btn" onclick="loadCustomers()">Refresh</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table id="balanceTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Mark (CID)</th>
+            <th>LF No.</th>
+            <th>Bill No</th>
+            <th>Name</th>
+            <th>Relation</th>
+            <th>Relation Name</th>
+            <th>Station</th>
+            <th>Phone No.</th>
+            <th>Mobile Number</th>
+            <th class="col-amount">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows will be populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ============================
+    // INITIALIZATION
+    // ============================
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCustomers();
+    });
+
+    // Listen for storage changes to auto-update
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'customers' || e.key === 'customerBalances') {
+        loadCustomers();
+      }
+    });
+
+    // Listen for custom event from all-bill.html
+    window.addEventListener('customersUpdated', () => {
+      loadCustomers();
+    });
+    if (window.top && window.top !== window) {
+      window.top.addEventListener('customersUpdated', () => {
+        loadCustomers();
+      });
+    }
+
+    // ============================
+    // LOAD DATA
+    // ============================
+    function loadCustomers() {
+      const tableBody = document.getElementById('tableBody');
+      tableBody.innerHTML = '';
+
+      try {
+        const customers = JSON.parse(localStorage.getItem('customers') || "[]");
+        const balances = JSON.parse(localStorage.getItem('customerBalances') || "[]");
+
+        if (customers.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="11" class="empty-state">No customers found.</td></tr>`;
+          return;
+        }
+
+        // Sort by Name alphabetically by default
+        customers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+        customers.forEach(cust => {
+          const row = document.createElement('tr');
+
+          // Find latest bill for this customer
+          const custNameNormalized = (cust.name || "").toLowerCase().trim();
+          const latestBill = balances
+            .filter(b => (b.customer || "").toLowerCase().trim() === custNameNormalized)
+            .sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date))[0];
+
+          const billNo = latestBill ? latestBill.orderNo : "—";
+
+          // Date determination
+          let displayDate = "—";
+          if (cust.openingDate) {
+            displayDate = new Date(cust.openingDate).toLocaleDateString();
+          } else if (cust.timestamp) {
+            displayDate = new Date(cust.timestamp).toLocaleDateString();
+          }
+
+          // Data Mapping
+          const mark = cust.cid || "—";
+          const lfNo = cust.lfno || "—";
+          const name = cust.name || "—";
+          const relation = cust.relation || "—";
+          const relationName = cust.relationName || "—";
+          const station = cust.station || "—";
+          const phone = cust.phone || "—";
+          const mobile = cust.mobile || "—";
+          const amount = parseFloat(cust.openingBalance || 0).toFixed(2);
+
+          row.innerHTML = `
+            <td>${displayDate}</td>
+            <td class="col-mark">${mark}</td>
+            <td>${lfNo}</td>
+            <td>${billNo}</td>
+            <td>${name}</td>
+            <td>${relation}</td>
+            <td>${relationName}</td>
+            <td>${station}</td>
+            <td>${phone}</td>
+            <td>${mobile}</td>
+            <td class="col-amount">₹ ${amount}</td>
+          `;
+
+          tableBody.appendChild(row);
+        });
+
+        // Re-apply filter if search box has text
+        filterTable();
+
+      } catch (e) {
+        console.error("Error loading customers:", e);
+        tableBody.innerHTML = `<tr><td colspan="11" class="empty-state">Error loading data.</td></tr>`;
+      }
+    }
+
+    // ============================
+    // SEARCH FILTER
+    // ============================
+    function filterTable() {
+      const input = document.getElementById('searchInput');
+      const filter = input.value.toLowerCase().trim();
+      const table = document.getElementById('balanceTable');
+      const tr = table.getElementsByTagName('tr');
+
+      for (let i = 1; i < tr.length; i++) { // Start at 1 to skip header
+        const row = tr[i];
+        if (row.cells.length < 11) continue; // Skip empty state or malformed rows
+
+        // Search across all text columns
+        const textContent = row.textContent || row.innerText;
+
+        if (textContent.toLowerCase().indexOf(filter) > -1) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      }
+    }
+  </script>
+
 </body>
+
 </html>

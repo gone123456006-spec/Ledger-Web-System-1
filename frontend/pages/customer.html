@@ -1,996 +1,1054 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Add Customer </title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-/* ===============================
+<head>
+  <meta charset="UTF-8">
+  <title>Add Customer </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    /* ===============================
    CUSTOMBER SYSTEM
 ================================ */
-:root{
-  --bg:#f5f6f8;
-  --card:#ffffff;
-  --text:#000000;
-  --muted:#6e6e73;
-  --border:#e5e5ea;
-  --primary:#007aff;
-  --danger:#ff3b30;
-  --radius:14px;
-}
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #000000;
+      --muted: #6e6e73;
+      --border: #e5e5ea;
+      --primary: #007aff;
+      --danger: #ff3b30;
+      --radius: 14px;
+    }
 
-*{
-  box-sizing:border-box;
-  font-family:"Segoe UI", Roboto, Arial, sans-serif;
-}
+    * {
+      box-sizing: border-box;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    }
 
-/* Reset for dashboard workspace integration */
-html, body{
-  margin:0;
-  padding:0;
-  height:100%;
-  background:transparent;
-  color:var(--text);
-}
+    /* Reset for dashboard workspace integration */
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: transparent;
+      color: var(--text);
+    }
 
-.page{
-  width:100%;
-  height:100%;
-  margin:0;
-  padding:20px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-  align-items:center;
-  justify-content:flex-start;
-  box-sizing:border-box;
-}
+    .page {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      align-items: center;
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
 
-h2{
-  font-weight:600;
-  margin:0 0 15px 0;
-  font-size:20px;
-  flex-shrink:0;
-  width:100%;
-  max-width:1200px;
-}
+    h2 {
+      font-weight: 600;
+      margin: 0 0 15px 0;
+      font-size: 20px;
+      flex-shrink: 0;
+      width: 100%;
+      max-width: 1200px;
+    }
 
-/* ===============================
+    /* ===============================
    FORM CARD
 ================================ */
-.erp-form{
-  background:var(--card);
-  border-radius:var(--radius);
-  box-shadow:0 4px 16px rgba(0,0,0,.12);
-  border:1px solid var(--border);
-  padding:22px 28px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:16px 24px;
-  flex:1;
-  overflow:hidden;
-  min-height:0;
-  margin-bottom:0;
-  width:100%;
-  max-width:1200px;
-  align-self:center;
-}
+    .erp-form {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+      border: 1px solid var(--border);
+      padding: 22px 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 24px;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+      margin-bottom: 0;
+      width: 100%;
+      max-width: 1200px;
+      align-self: center;
+    }
 
-.form-left,
-.form-right{
-  display:flex;
-  flex-direction:column;
-  gap:0;
-  min-height:0;
-  overflow:hidden;
-  max-height:100%;
-}
+    .form-left,
+    .form-right {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      min-height: 0;
+      overflow: hidden;
+      max-height: 100%;
+    }
 
-.table-wrap::-webkit-scrollbar{
-  width:8px;
-}
+    .table-wrap::-webkit-scrollbar {
+      width: 8px;
+    }
 
-.table-wrap::-webkit-scrollbar-track{
-  background:#f1f1f1;
-  border-radius:4px;
-}
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
 
-.table-wrap::-webkit-scrollbar-thumb{
-  background:#c1c1c1;
-  border-radius:4px;
-}
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
 
-.table-wrap::-webkit-scrollbar-thumb:hover{
-  background:#a1a1a1;
-}
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a1;
+    }
 
-/* Ensure page content wrapper fills workspace */
-.page > *:not(.form-actions){
-  flex-shrink:0;
-}
+    /* Ensure page content wrapper fills workspace */
+    .page>*:not(.form-actions) {
+      flex-shrink: 0;
+    }
 
-.page > .erp-form,
-.page > #customerListSection{
-  flex:1;
-  min-height:0;
-}
+    .page>.erp-form,
+    .page>#customerListSection {
+      flex: 1;
+      min-height: 0;
+    }
 
-.form-left h4,
-.form-right h4{
-  margin:0 0 6px 0;
-  font-size:15px;
-  color:var(--muted);
-  font-weight:600;
-  padding-bottom:4px;
-  border-bottom:1px solid var(--border);
-}
+    .form-left h4,
+    .form-right h4 {
+      margin: 0 0 6px 0;
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 600;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
 
-.form-left h4:not(:first-child),
-.form-right h4:not(:first-child){
-  margin-top:8px;
-}
+    .form-left h4:not(:first-child),
+    .form-right h4:not(:first-child) {
+      margin-top: 8px;
+    }
 
-label{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:4px;
-  margin-bottom:2px;
-  display:block;
-  font-weight:500;
-}
+    label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      margin-bottom: 2px;
+      display: block;
+      font-weight: 500;
+    }
 
-input, textarea, select{
-  width:100%;
-  padding:6px 10px;
-  margin-top:2px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  font-size:13px;
-  transition:border-color 0.2s;
-  box-sizing:border-box;
-}
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 6px 10px;
+      margin-top: 2px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
 
-input:focus, textarea:focus, select:focus{
-  outline:none;
-  border-color:var(--primary);
-  box-shadow:0 0 0 2px rgba(0,122,255,.12);
-}
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, .12);
+    }
 
-textarea{
-  resize:none;
-  height:55px;
-  font-family:inherit;
-  box-sizing:border-box;
-}
+    textarea {
+      resize: none;
+      height: 55px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
 
-.row{
-  display:flex;
-  gap:8px;
-  align-items:flex-end;
-}
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
 
-.row select{
-  max-width:75px;
-  flex-shrink:0;
-}
+    .row select {
+      max-width: 75px;
+      flex-shrink: 0;
+    }
 
-/* ===============================
+    /* ===============================
    ACTION BAR
 ================================ */
-.form-actions{
-  position:sticky;
-  bottom:0;
-  left:0;
-  right:0;
-  background:rgba(255,255,255,.98);
-  backdrop-filter:blur(12px);
-  border-top:1px solid var(--border);
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  padding:12px 15px;
-  z-index:100;
-  box-shadow:0 -2px 8px rgba(0,0,0,.05);
-  margin-top:auto;
-  flex-shrink:0;
-  width:100%;
-}
+    .form-actions {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, .98);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 15px;
+      z-index: 100;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, .05);
+      margin-top: auto;
+      flex-shrink: 0;
+      width: 100%;
+    }
 
-.form-actions button{
-  min-width:120px;
-}
+    .form-actions button {
+      min-width: 120px;
+    }
 
-button{
-  padding:8px 16px;
-  border-radius:8px;
-  border:1px solid var(--border);
-  background:#cae8ff;
-  cursor:pointer;
-  font-size:13px;
-  transition:all 0.2s;
-}
+    button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #cae8ff;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
 
-button:hover{
-  background:#b0d9f0;
-}
+    button:hover {
+      background: #b0d9f0;
+    }
 
-button.primary{
-  background:var(--primary);
-  color:#fff;
-  border:none;
-}
+    button.primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+    }
 
-button.primary:hover{
-  background:#0056cc;
-}
+    button.primary:hover {
+      background: #0056cc;
+    }
 
-/* ===============================
+    /* ===============================
    CUSTOMER LIST
 ================================ */
-#customerListSection{
-  display:none;
-  flex:1;
-  width:100%;
-  max-width:1200px;
-  overflow:hidden;
-  flex-direction:column;
-  min-height:0;
-  align-self:center;
-}
+    #customerListSection {
+      display: none;
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      overflow: hidden;
+      flex-direction: column;
+      min-height: 0;
+      align-self: center;
+    }
 
-#customerListSection[style*="flex"]{
-  display:flex !important;
-}
+    #customerListSection[style*="flex"] {
+      display: flex !important;
+    }
 
-#customerListSection .list-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:12px;
-  flex-wrap:wrap;
-  gap:10px;
-  flex-shrink:0;
-}
+    #customerListSection .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex-shrink: 0;
+    }
 
-#customerListSection h2{
-  margin:0;
-  flex-shrink:0;
-}
+    #customerListSection h2 {
+      margin: 0;
+      flex-shrink: 0;
+    }
 
-#customerListSection .back-btn{
-  padding:8px 16px;
-  font-size:13px;
-  white-space:nowrap;
-}
+    #customerListSection .back-btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
 
-#customerListSection input{
-  margin-bottom:12px;
-  max-width:300px;
-  flex-shrink:0;
-}
+    #customerListSection input {
+      margin-bottom: 12px;
+      max-width: 300px;
+      flex-shrink: 0;
+    }
 
-/* TABLE WRAPPER (IMPORTANT FOR RESPONSIVENESS) */
-.table-wrap{
-  width:100%;
-  overflow:auto;
-  border-radius:12px;
-  flex:1;
-  min-height:0;
-}
+    /* TABLE WRAPPER (IMPORTANT FOR RESPONSIVENESS) */
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      border-radius: 12px;
+      flex: 1;
+      min-height: 0;
+    }
 
-/* TABLE */
-table{
-  width:100%;
-  min-width:800px;
-  border-collapse:collapse;
-  background:#fff;
-  border:1px solid var(--border);
-}
+    /* TABLE */
+    table {
+      width: 100%;
+      min-width: 800px;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--border);
+    }
 
-/* TABLE HEAD & BODY */
-th, td{
-  padding:8px 10px;
-  font-size:12px;
-  text-align:left;
-  border:1px solid var(--border);
-  white-space:nowrap;
-}
+    /* TABLE HEAD & BODY */
+    th,
+    td {
+      padding: 8px 10px;
+      font-size: 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
 
-/* HEADER */
-th{
-  background:#f2f2f7;
-  font-weight:600;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
+    /* HEADER */
+    th {
+      background: #f2f2f7;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-/* ROW HOVER */
-tbody tr:hover{
-  background:#f9fafc;
-}
+    /* ROW HOVER */
+    tbody tr:hover {
+      background: #f9fafc;
+    }
 
-#customerListSection table button{
-  padding:4px 8px;
-  font-size:11px;
-  margin:0 2px;
-}
+    #customerListSection table button {
+      padding: 4px 8px;
+      font-size: 11px;
+      margin: 0 2px;
+    }
 
-/* ===============================
+    /* ===============================
    MOBILE RESPONSIVE FIX
 ================================ */
-@media (max-width: 900px){
-  .page{
-    padding:12px;
-  }
+    @media (max-width: 900px) {
+      .page {
+        padding: 12px;
+      }
 
-  .erp-form{
-    grid-template-columns:1fr;
-    padding:18px 20px;
-    gap:14px;
-    max-width:100%;
-  }
+      .erp-form {
+        grid-template-columns: 1fr;
+        padding: 18px 20px;
+        gap: 14px;
+        max-width: 100%;
+      }
 
-  h2{
-    font-size:18px;
-    max-width:100%;
-  }
+      h2 {
+        font-size: 18px;
+        max-width: 100%;
+      }
 
-  #customerListSection{
-    max-width:100%;
-  }
+      #customerListSection {
+        max-width: 100%;
+      }
 
-  table{
-    min-width:100%;
-  }
+      table {
+        min-width: 100%;
+      }
 
-  th, td{
-    font-size:11px;
-    padding:6px 8px;
-  }
+      th,
+      td {
+        font-size: 11px;
+        padding: 6px 8px;
+      }
 
-  .form-actions{
-    flex-wrap:wrap;
-    padding:10px 12px;
-  }
+      .form-actions {
+        flex-wrap: wrap;
+        padding: 10px 12px;
+      }
 
-  .form-actions button{
-    min-width:100px;
-    padding:8px 14px;
-    font-size:12px;
-  }
+      .form-actions button {
+        min-width: 100px;
+        padding: 8px 14px;
+        font-size: 12px;
+      }
 
-  #customerListSection .list-header{
-    flex-direction:column;
-    align-items:flex-start;
-  }
+      #customerListSection .list-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
 
-  #customerListSection .back-btn{
-    width:100%;
-    max-width:200px;
-  }
-}
+      #customerListSection .back-btn {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
 
-/* Ensure form is visible when not in list mode */
-.erp-form[style*="none"]{
-  display:none !important;
-}
-
-</style>
+    /* Ensure form is visible when not in list mode */
+    .erp-form[style*="none"] {
+      display: none !important;
+    }
+  </style>
 </head>
 
 <body>
-<div class="page">
+  <div class="page">
 
-<h2 id="pageTitle">Add Customer </h2>
+    <h2 id="pageTitle">Add Customer </h2>
 
-<form id="customerForm" class="erp-form">
+    <form id="customerForm" class="erp-form">
 
-  <!-- LEFT -->
-  <div class="form-left">
-    <h4>Personal Details</h4>
+      <!-- LEFT -->
+      <div class="form-left">
+        <h4>Personal Details</h4>
 
-    <label>Customer ID</label>
-    <input id="cid" placeholder="Auto Generated">
+        <label>Customer ID</label>
+        <input id="cid" placeholder="Auto Generated">
 
-    <label>Name</label>
-    <input id="name">
+        <label>Name</label>
+        <input id="name">
 
-    <label>Relation</label>
-    <div class="row">
-      <select id="relation">
-        <option>S/O</option>
-        <option>W/O</option>
-        <option>D/O</option>
-        <option>C/O</option>
-      </select>
-      <input id="relationName">
+        <label>Relation</label>
+        <div class="row">
+          <select id="relation">
+            <option>S/O</option>
+            <option>W/O</option>
+            <option>D/O</option>
+            <option>C/O</option>
+          </select>
+          <input id="relationName">
+        </div>
+
+        <label>Type</label>
+        <input id="type">
+
+        <label>LF No</label>
+        <input id="lfno">
+
+        <label>Opening Date</label>
+        <input type="date" id="openingDate">
+
+        <h4 style="margin-top:25px">Account</h4>
+
+        <label>Opening Balance</label>
+        <input type="number" id="openingBalance">
+
+        <label>Gold Balance</label>
+        <div class="row">
+          <input type="number" id="goldBalance">
+          <select>
+            <option>gm</option>
+          </select>
+        </div>
+
+        <label>Silver Balance</label>
+        <div class="row">
+          <input type="number" id="silverBalance">
+          <select>
+            <option>gm</option>
+          </select>
+        </div>
+
+        <label>Max Credit Limit</label>
+        <input type="number" id="maxLimit">
+
+        <label>Aadhar No</label>
+        <input id="aadhar">
+
+        <label>PAN No</label>
+        <input id="pan">
+      </div>
+
+      <!-- RIGHT -->
+      <div class="form-right">
+        <h4>Contact Details</h4>
+
+        <label>Address</label>
+        <textarea id="address"></textarea>
+
+        <label>Station</label>
+        <select id="station">
+          <option value="">-- Select Station --</option>
+
+          <!-- Andhra Pradesh -->
+          <option>Visakhapatnam</option>
+          <option>Vijayawada</option>
+          <option>Guntur</option>
+          <option>Tirupati</option>
+          <option>Nellore</option>
+
+          <!-- Telangana -->
+          <option>Hyderabad</option>
+          <option>Secunderabad</option>
+          <option>Warangal</option>
+          <option>Karimnagar</option>
+          <option>Nizamabad</option>
+
+          <!-- Tamil Nadu -->
+          <option>Chennai</option>
+          <option>Coimbatore</option>
+          <option>Madurai</option>
+          <option>Salem</option>
+          <option>Tiruchirappalli</option>
+
+          <!-- Karnataka -->
+          <option>Bengaluru</option>
+          <option>Mysuru</option>
+          <option>Mangaluru</option>
+          <option>Hubballi</option>
+
+          <!-- Maharashtra -->
+          <option>Mumbai</option>
+          <option>Pune</option>
+          <option>Nagpur</option>
+          <option>Nashik</option>
+          <option>Aurangabad</option>
+
+          <!-- Gujarat -->
+          <option>Ahmedabad</option>
+          <option>Surat</option>
+          <option>Vadodara</option>
+          <option>Rajkot</option>
+
+          <!-- Rajasthan -->
+          <option>Jaipur</option>
+          <option>Jodhpur</option>
+          <option>Udaipur</option>
+          <option>Kota</option>
+
+          <!-- Uttar Pradesh -->
+          <option>Lucknow</option>
+          <option>Kanpur</option>
+          <option>Varanasi</option>
+          <option>Prayagraj</option>
+          <option>Agra</option>
+          <option>Noida</option>
+
+          <!-- Delhi -->
+          <option>New Delhi</option>
+          <option>Old Delhi</option>
+          <option>Dwarka</option>
+          <option>Rohini</option>
+
+          <!-- West Bengal -->
+          <option>Kolkata</option>
+          <option>Howrah</option>
+          <option>Durgapur</option>
+          <option>Siliguri</option>
+
+          <!-- Bihar -->
+          <option>Patna</option>
+          <option>Gaya</option>
+          <option>Bhagalpur</option>
+
+          <!-- Odisha -->
+          <option>Bhubaneswar</option>
+          <option>Cuttack</option>
+          <option>Rourkela</option>
+
+          <!-- Madhya Pradesh -->
+          <option>Bhopal</option>
+          <option>Indore</option>
+          <option>Jabalpur</option>
+          <option>Gwalior</option>
+
+          <!-- Kerala -->
+          <option>Kochi</option>
+          <option>Thiruvananthapuram</option>
+          <option>Kozhikode</option>
+          <option>Thrissur</option>
+
+          <!-- Punjab -->
+          <option>Amritsar</option>
+          <option>Ludhiana</option>
+          <option>Jalandhar</option>
+
+          <!-- Haryana -->
+          <option>Gurugram</option>
+          <option>Faridabad</option>
+          <option>Panipat</option>
+
+          <!-- Assam -->
+          <option>Guwahati</option>
+          <option>Dibrugarh</option>
+          <option>Silchar</option>
+
+          <!-- Jammu & Kashmir -->
+          <option>Srinagar</option>
+          <option>Jammu</option>
+
+          <!-- Uttarakhand -->
+          <option>Dehradun</option>
+          <option>Haridwar</option>
+          <option>Rishikesh</option>
+
+          <!-- Himachal Pradesh -->
+          <option>Shimla</option>
+          <option>Solan</option>
+
+          <!-- Goa -->
+          <option>Panaji</option>
+          <option>Margao</option>
+
+          <!-- Chhattisgarh -->
+          <option>Raipur</option>
+          <option>Bhilai</option>
+
+          <!-- Jharkhand -->
+          <option>Ranchi</option>
+          <option>Dhanbad</option>
+
+          <!-- North East -->
+          <option>Imphal</option>
+          <option>Aizawl</option>
+          <option>Kohima</option>
+          <option>Shillong</option>
+          <option>Agartala</option>
+
+          <!-- More Important Cities -->
+          <option>Shimoga</option>
+          <option>Belagavi</option>
+          <option>Davanagere</option>
+          <option>Tirunelveli</option>
+          <option>Thoothukudi</option>
+          <option>Akola</option>
+          <option>Latur</option>
+          <option>Muzaffarpur</option>
+          <option>Purnia</option>
+          <option>Ujjain</option>
+          <option>Dewas</option>
+          <option>Jhansi</option>
+          <option>Mathura</option>
+          <option>Jamnagar</option>
+          <option>Junagadh</option>
+          <option>Panvel</option>
+          <option>Gandhinagar</option>
+          <option>Satara</option>
+          <option>Ratlam</option>
+          <option>Sagar</option>
+
+        </select>
+
+        <label>Phone *</label>
+        <input id="phone">
+
+        <label>Mobile</label>
+        <input id="mobile">
+
+        <label>Email</label>
+        <input type="email" id="email">
+      </div>
+    </form>
+
+    <!-- CUSTOMER LIST -->
+    <div id="customerListSection">
+      <div class="list-header">
+        <h2 style="margin:0;">Customer List</h2>
+        <button type="button" class="primary back-btn" onclick="goBackToAddCustomer()">
+          ← Add Customer
+        </button>
+      </div>
+
+      <input id="searchCustomer" placeholder="Search Name / Mobile" onkeyup="renderCustomerList()"
+        style="padding:8px 10px;width:300px;font-size:13px;margin-bottom:10px;">
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>CID</th>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>Station</th>
+              <th>Balance</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customerTableBody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <label>Type</label>
-    <input id="type">
-
-    <label>LF No</label>
-    <input id="lfno">
-
-    <label>Opening Date</label>
-    <input type="date" id="openingDate">
-
-    <h4 style="margin-top:25px">Account</h4>
-
-    <label>Opening Balance</label>
-    <input type="number" id="openingBalance">
-
-    <label>Gold Balance</label>
-    <div class="row">
-      <input type="number" id="goldBalance">
-      <select><option>gm</option></select>
-    </div>
-
-    <label>Silver Balance</label>
-    <div class="row">
-      <input type="number" id="silverBalance">
-      <select><option>gm</option></select>
-    </div>
-
-    <label>Max Credit Limit</label>
-    <input type="number" id="maxLimit">
-
-    <label>Aadhar No</label>
-    <input id="aadhar">
-
-    <label>PAN No</label>
-    <input id="pan">
   </div>
 
-  <!-- RIGHT -->
-  <div class="form-right">
-    <h4>Contact Details</h4>
+  <!-- ACTION BUTTONS (OUTSIDE FORM) -->
+  <div class="form-actions">
+    <button type="button" class="primary" onclick="submitForm(event)">
+      Save & Close
+    </button>
 
-    <label>Address</label>
-    <textarea id="address"></textarea>
+    <button type="button" onclick="saveAndNew(event)">
+      Save & New
+    </button>
 
-    <label>Station</label>
-<select id="station">
-  <option value="">-- Select Station --</option>
+    <button type="button" onclick="resetForm()">
+      Reset
+    </button>
 
-  <!-- Andhra Pradesh -->
-  <option>Visakhapatnam</option>
-  <option>Vijayawada</option>
-  <option>Guntur</option>
-  <option>Tirupati</option>
-  <option>Nellore</option>
-
-  <!-- Telangana -->
-  <option>Hyderabad</option>
-  <option>Secunderabad</option>
-  <option>Warangal</option>
-  <option>Karimnagar</option>
-  <option>Nizamabad</option>
-
-  <!-- Tamil Nadu -->
-  <option>Chennai</option>
-  <option>Coimbatore</option>
-  <option>Madurai</option>
-  <option>Salem</option>
-  <option>Tiruchirappalli</option>
-
-  <!-- Karnataka -->
-  <option>Bengaluru</option>
-  <option>Mysuru</option>
-  <option>Mangaluru</option>
-  <option>Hubballi</option>
-
-  <!-- Maharashtra -->
-  <option>Mumbai</option>
-  <option>Pune</option>
-  <option>Nagpur</option>
-  <option>Nashik</option>
-  <option>Aurangabad</option>
-
-  <!-- Gujarat -->
-  <option>Ahmedabad</option>
-  <option>Surat</option>
-  <option>Vadodara</option>
-  <option>Rajkot</option>
-
-  <!-- Rajasthan -->
-  <option>Jaipur</option>
-  <option>Jodhpur</option>
-  <option>Udaipur</option>
-  <option>Kota</option>
-
-  <!-- Uttar Pradesh -->
-  <option>Lucknow</option>
-  <option>Kanpur</option>
-  <option>Varanasi</option>
-  <option>Prayagraj</option>
-  <option>Agra</option>
-  <option>Noida</option>
-
-  <!-- Delhi -->
-  <option>New Delhi</option>
-  <option>Old Delhi</option>
-  <option>Dwarka</option>
-  <option>Rohini</option>
-
-  <!-- West Bengal -->
-  <option>Kolkata</option>
-  <option>Howrah</option>
-  <option>Durgapur</option>
-  <option>Siliguri</option>
-
-  <!-- Bihar -->
-  <option>Patna</option>
-  <option>Gaya</option>
-  <option>Bhagalpur</option>
-
-  <!-- Odisha -->
-  <option>Bhubaneswar</option>
-  <option>Cuttack</option>
-  <option>Rourkela</option>
-
-  <!-- Madhya Pradesh -->
-  <option>Bhopal</option>
-  <option>Indore</option>
-  <option>Jabalpur</option>
-  <option>Gwalior</option>
-
-  <!-- Kerala -->
-  <option>Kochi</option>
-  <option>Thiruvananthapuram</option>
-  <option>Kozhikode</option>
-  <option>Thrissur</option>
-
-  <!-- Punjab -->
-  <option>Amritsar</option>
-  <option>Ludhiana</option>
-  <option>Jalandhar</option>
-
-  <!-- Haryana -->
-  <option>Gurugram</option>
-  <option>Faridabad</option>
-  <option>Panipat</option>
-
-  <!-- Assam -->
-  <option>Guwahati</option>
-  <option>Dibrugarh</option>
-  <option>Silchar</option>
-
-  <!-- Jammu & Kashmir -->
-  <option>Srinagar</option>
-  <option>Jammu</option>
-
-  <!-- Uttarakhand -->
-  <option>Dehradun</option>
-  <option>Haridwar</option>
-  <option>Rishikesh</option>
-
-  <!-- Himachal Pradesh -->
-  <option>Shimla</option>
-  <option>Solan</option>
-
-  <!-- Goa -->
-  <option>Panaji</option>
-  <option>Margao</option>
-
-  <!-- Chhattisgarh -->
-  <option>Raipur</option>
-  <option>Bhilai</option>
-
-  <!-- Jharkhand -->
-  <option>Ranchi</option>
-  <option>Dhanbad</option>
-
-  <!-- North East -->
-  <option>Imphal</option>
-  <option>Aizawl</option>
-  <option>Kohima</option>
-  <option>Shillong</option>
-  <option>Agartala</option>
-
-</select>
-
-    <label>Phone *</label>
-    <input id="phone">
-
-    <label>Mobile</label>
-    <input id="mobile">
-
-    <label>Email</label>
-    <input type="email" id="email">
-  </div>
-</form>
-
-<!-- CUSTOMER LIST -->
-<div id="customerListSection">
-  <div class="list-header">
-    <h2 style="margin:0;">Customer List</h2>
-    <button 
-      type="button"
-      class="primary back-btn"
-      onclick="goBackToAddCustomer()">
-      ← Add Customer
+    <button type="button" onclick="openList()">
+      Customer List
     </button>
   </div>
 
-  <input id="searchCustomer" placeholder="Search Name / Mobile"
-         onkeyup="renderCustomerList()" style="padding:8px 10px;width:300px;font-size:13px;margin-bottom:10px;">
+  <script>
+    /* =====================================================
+       CONSTANTS
+    ===================================================== */
+    const STORE_KEY = "customers";
+    const EDIT_KEY = "editCustomerId";
 
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>CID</th>
-          <th>Name</th>
-          <th>Mobile</th>
-          <th>Station</th>
-          <th>Balance</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="customerTableBody"></tbody>
-    </table>
-  </div>
-</div>
+    /* =====================================================
+       ELEMENT REFERENCES
+    ===================================================== */
+    const $ = id => document.getElementById(id);
 
-</div>
+    let form = null;
+    let fields = {};
 
-<!-- ACTION BUTTONS (OUTSIDE FORM) -->
-<div class="form-actions">
-  <button
-    type="button"
-    class="primary"
-    onclick="submitForm(event)">
-    Save & Close
-  </button>
+    /* =====================================================
+       INITIALIZE ELEMENTS
+    ===================================================== */
+    function initElements() {
+      form = $("customerForm");
+      if (!form) return false;
 
-  <button
-    type="button"
-    onclick="saveAndNew(event)">
-    Save & New
-  </button>
+      fields = {
+        cid: $("cid"),
+        name: $("name"),
+        relation: $("relation"),
+        relationName: $("relationName"),
+        type: $("type"),
+        lfno: $("lfno"),
+        openingDate: $("openingDate"),
+        openingBalance: $("openingBalance"),
+        goldBalance: $("goldBalance"),
+        silverBalance: $("silverBalance"),
+        maxLimit: $("maxLimit"),
+        aadhar: $("aadhar"),
+        pan: $("pan"),
+        address: $("address"),
+        station: $("station"),
+        phone: $("phone"),
+        mobile: $("mobile"),
+        email: $("email")
+      };
 
-  <button
-    type="button"
-    onclick="resetForm()">
-    Reset
-  </button>
+      // Check if all required fields exist
+      const requiredFields = ['cid', 'name', 'phone'];
+      for (let key of requiredFields) {
+        if (!fields[key]) {
+          console.warn(`Field ${key} not found`);
+          return false;
+        }
+      }
 
-  <button
-    type="button"
-    onclick="openList()">
-    Customer List
-  </button>
-</div>
-
-<script>
-/* =====================================================
-   CONSTANTS
-===================================================== */
-const STORE_KEY = "customers";
-const EDIT_KEY  = "editCustomerId";
-
-/* =====================================================
-   ELEMENT REFERENCES
-===================================================== */
-const $ = id => document.getElementById(id);
-
-let form = null;
-let fields = {};
-
-/* =====================================================
-   INITIALIZE ELEMENTS
-===================================================== */
-function initElements(){
-  form = $("customerForm");
-  if(!form) return false;
-  
-  fields = {
-    cid: $("cid"),
-    name: $("name"),
-    relation: $("relation"),
-    relationName: $("relationName"),
-    type: $("type"),
-    lfno: $("lfno"),
-    openingDate: $("openingDate"),
-    openingBalance: $("openingBalance"),
-    goldBalance: $("goldBalance"),
-    silverBalance: $("silverBalance"),
-    maxLimit: $("maxLimit"),
-    aadhar: $("aadhar"),
-    pan: $("pan"),
-    address: $("address"),
-    station: $("station"),
-    phone: $("phone"),
-    mobile: $("mobile"),
-    email: $("email")
-  };
-  
-  // Check if all required fields exist
-  const requiredFields = ['cid', 'name', 'phone'];
-  for(let key of requiredFields){
-    if(!fields[key]){
-      console.warn(`Field ${key} not found`);
-      return false;
+      return true;
     }
-  }
-  
-  return true;
-}
 
 
 
-/* =====================================================
-   INIT
-===================================================== */
-function initCustomerPage(){
-  // Wait for elements to be ready
-  if(!initElements()){
-    // Retry after a short delay
-    setTimeout(initCustomerPage, 100);
-    return;
-  }
-  
-  // Set up form event listener
-  if(form){
-    form.addEventListener("submit", function(e){
-      e.preventDefault();
+    /* =====================================================
+       INIT
+    ===================================================== */
+    /* =====================================================
+       INIT
+    ===================================================== */
+    function initCustomerPage() {
+      // Wait for elements to be ready
+      if (!initElements()) {
+        // Retry after a short delay
+        setTimeout(initCustomerPage, 100);
+        return;
+      }
+
+      // Set up form event listener
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+        });
+      }
+
+      // Load stations
+      loadStations();
+
+      // Check for Customer List request
+      if (localStorage.getItem('showCustomerList') === 'true') {
+        localStorage.removeItem('showCustomerList');
+        // Wait slightly for layout then open list
+        setTimeout(openList, 100);
+      }
+
+      // Check for edit mode
+      const editId = localStorage.getItem(EDIT_KEY);
+      if (editId) {
+        loadForEdit(editId);
+      } else {
+        // DATA FIX: Always reset form if not editing to prevent stale data
+        resetForm();
+      }
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initCustomerPage);
+    } else {
+      // DOM already ready, but might be in workspace
+      setTimeout(initCustomerPage, 50);
+    }
+
+    // Also listen for page refresh event from dashboard
+    window.addEventListener('pageRefresh', function () {
+      setTimeout(initCustomerPage, 100);
     });
-  }
-  
-  // Load stations
-  loadStations();
-  
-  // Check for edit mode
-  const editId = localStorage.getItem(EDIT_KEY);
-  if (editId) {
-    loadForEdit(editId);
-  }
-}
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initCustomerPage);
-} else {
-  // DOM already ready, but might be in workspace
-  setTimeout(initCustomerPage, 50);
-}
+    /* =====================================================
+       FORM ACTIONS
+    ===================================================== */
+    function loadStations() {
+      if (!fields.station) return;
 
-// Also listen for page refresh event from dashboard
-window.addEventListener('pageRefresh', function() {
-  setTimeout(initCustomerPage, 100);
-});
+      const stations = JSON.parse(localStorage.getItem("stations") || "[]");
+      const stationSelect = fields.station;
 
-/* =====================================================
-   FORM ACTIONS
-===================================================== */
-function loadStations(){
-  if(!fields.station) return;
-  
-  const stations = JSON.parse(localStorage.getItem("stations") || "[]");
-  const stationSelect = fields.station;
-  stationSelect.innerHTML = '<option value="">-- Select Station --</option>';
-  stations.forEach(s => {
-    const option = document.createElement("option");
-    option.value = s.name;
-    option.textContent = s.name;
-    stationSelect.appendChild(option);
-  });
-}
+      // MERGE LOGIC: Don't wipe existing options
+      // stationSelect.innerHTML = '<option value="">-- Select Station --</option>';
 
-function submitForm(e){
-  if(e) e.preventDefault();
-  if(!form || !fields.name) {
-    alert("Form not initialized. Please refresh the page.");
-    return;
-  }
-  if(!validateForm()) return;
-  saveCustomer();
-  openList();
-}
+      stations.forEach(s => {
+        // Check if station already exists
+        let exists = false;
+        for (let i = 0; i < stationSelect.options.length; i++) {
+          if (stationSelect.options[i].value.toLowerCase() === s.name.toLowerCase()) {
+            exists = true;
+            break;
+          }
+        }
 
-function saveAndNew(e){
-  if(e) e.preventDefault();
-  if(!form || !fields.name) {
-    alert("Form not initialized. Please refresh the page.");
-    return;
-  }
-  if(!validateForm()) return;
-  saveCustomer();
-  resetForm(true);
-}
-
-function resetForm(focusName=false){
-  if(!form) return;
-  form.reset();
-  localStorage.removeItem(EDIT_KEY);
-  if(fields.cid){
-    fields.cid.value = "";
-    fields.cid.placeholder = "Auto Generated";
-  }
-  if(focusName && fields.name) fields.name.focus();
-}
-
-
-
-/* =====================================================
-   VALIDATION
-===================================================== */
-function validateForm(){
-  if(!fields.name || !fields.phone){
-    alert("Form not initialized. Please refresh the page.");
-    return false;
-  }
-
-  if(!fields.name.value.trim()){
-    alert("Customer name is required");
-    fields.name.focus();
-    return false;
-  }
-
-  if(!/^\d{10}$/.test(fields.phone.value.trim())){
-    alert("Enter valid 10-digit phone number");
-    fields.phone.focus();
-    return false;
-  }
-
-  if(fields.mobile && fields.mobile.value.trim() &&
-     !/^\d{10}$/.test(fields.mobile.value.trim())){
-    alert("Enter valid 10-digit mobile number");
-    fields.mobile.focus();
-    return false;
-  }
-
-  // Duplicate mobile check
-  const customers = getCustomers();
-  const editId = localStorage.getItem(EDIT_KEY);
-  if(fields.mobile && fields.mobile.value.trim()){
-    const duplicate = customers.find(c =>
-      c.mobile === fields.mobile.value.trim() &&
-      String(c.id) !== String(editId)
-    );
-    if(duplicate){
-      alert("This mobile number already exists");
-      return false;
+        if (!exists) {
+          const option = document.createElement("option");
+          option.value = s.name;
+          option.textContent = s.name;
+          stationSelect.appendChild(option);
+        }
+      });
     }
-  }
 
-  return true;
-}
-
-
-
-
-
-
-/* =====================================================
-   SAVE / UPDATE
-===================================================== */
-function saveCustomer(){
-  if(!form || !fields.name){
-    alert("Form not initialized. Please refresh the page.");
-    return;
-  }
-
-  let customers = getCustomers();
-  const editId = localStorage.getItem(EDIT_KEY);
-  const isEdit = !!editId;
-  const id = isEdit ? Number(editId) : generateId(customers);
-
-  const data = {
-    id,
-    cid: isEdit
-      ? fields.cid.value
-      : fields.cid.value.trim() || "CUST-" + id,
-
-    name: fields.name.value.trim(),
-    relation: fields.relation.value,
-    relationName: fields.relationName.value.trim(),
-    type: fields.type.value.trim(),
-    lfno: fields.lfno.value.trim(),
-    openingDate: fields.openingDate.value,
-
-    openingBalance: num(fields.openingBalance.value),
-    goldBalance: num(fields.goldBalance.value),
-    silverBalance: num(fields.silverBalance.value),
-    maxLimit: num(fields.maxLimit.value),
-
-    aadhar: fields.aadhar.value.trim(),
-    pan: fields.pan.value.trim(),
-    address: fields.address.value.trim(),
-    station: fields.station.value.trim(),
-
-    phone: fields.phone.value.trim(),
-    mobile: fields.mobile.value.trim(),
-    email: fields.email.value.trim()
-  };
-
-  if(isEdit){
-    const index = customers.findIndex(c => c.id === id);
-    if(index === -1){
-      alert("Customer not found");
-      return;
+    function submitForm(e) {
+      if (e) e.preventDefault();
+      if (!form || !fields.name) {
+        alert("Form not initialized. Please refresh the page.");
+        return;
+      }
+      if (!validateForm()) return;
+      saveCustomer();
+      openList();
     }
-    customers[index] = data;
-    localStorage.removeItem(EDIT_KEY);
-  }else{
-    customers.push(data);
-  }
 
-  localStorage.setItem(STORE_KEY, JSON.stringify(customers));
-  alert("Customer saved successfully");
-}
-
-
-/* =====================================================
-   LIST
-===================================================== */
-function openList(){
-  const formEl = document.querySelector(".erp-form");
-  const listSection = $("customerListSection");
-  
-  if(formEl) formEl.style.display = "none";
-  if(listSection) {
-    listSection.style.display = "flex";
-    listSection.style.flexDirection = "column";
-  }
-  renderCustomerList();
-}
-
-function goBackToAddCustomer(){
-  const formEl = document.querySelector(".erp-form");
-  const listSection = $("customerListSection");
-  
-  // Show form, hide list
-  if(formEl) {
-    formEl.style.display = "grid";
-    formEl.style.flex = "1";
-  }
-  if(listSection) listSection.style.display = "none";
-  
-  // Reset form
-  resetForm();
-  
-  // Update title
-  const title = $("pageTitle");
-  if(title) {
-    title.innerText = "Add Customer";
-  } else {
-    // Try to find title in workspace if in dashboard
-    const workspace = document.querySelector(".workspace");
-    if(workspace){
-      const workspaceTitle = workspace.querySelector("#pageTitle");
-      if(workspaceTitle) workspaceTitle.innerText = "Add Customer";
+    function saveAndNew(e) {
+      if (e) e.preventDefault();
+      if (!form || !fields.name) {
+        alert("Form not initialized. Please refresh the page.");
+        return;
+      }
+      if (!validateForm()) return;
+      saveCustomer();
+      resetForm(true);
     }
-  }
+
+    function resetForm(focusName = false) {
+      if (!form) return;
+      form.reset();
+      localStorage.removeItem(EDIT_KEY);
+      if (fields.cid) {
+        fields.cid.value = "";
+        fields.cid.placeholder = "Auto Generated";
+      }
+      if (focusName && fields.name) fields.name.focus();
+    }
 
 
-  // Focus on name field
-  if(fields && fields.name) {
-    setTimeout(() => fields.name.focus(), 100);
-  }
-}
+
+    /* =====================================================
+       VALIDATION
+    ===================================================== */
+    function validateForm() {
+      if (!fields.name || !fields.phone) {
+        alert("Form not initialized. Please refresh the page.");
+        return false;
+      }
+
+      if (!fields.name.value.trim()) {
+        alert("Customer name is required");
+        fields.name.focus();
+        return false;
+      }
+
+      if (!/^\d{10}$/.test(fields.phone.value.trim())) {
+        alert("Enter valid 10-digit phone number");
+        fields.phone.focus();
+        return false;
+      }
+
+      if (fields.mobile && fields.mobile.value.trim() &&
+        !/^\d{10}$/.test(fields.mobile.value.trim())) {
+        alert("Enter valid 10-digit mobile number");
+        fields.mobile.focus();
+        return false;
+      }
+
+      // Duplicate mobile check
+      const customers = getCustomers();
+      const editId = localStorage.getItem(EDIT_KEY);
+      if (fields.mobile && fields.mobile.value.trim()) {
+        const duplicate = customers.find(c =>
+          c.mobile === fields.mobile.value.trim() &&
+          String(c.id) !== String(editId)
+        );
+        if (duplicate) {
+          alert("This mobile number already exists");
+          return false;
+        }
+      }
+
+      return true;
+    }
 
 
 
-function renderCustomerList(){
-  const tbody = $("customerTableBody");
-  const searchBox = $("searchCustomer");
-  
-  if(!tbody) return;
-  
-  const search = (searchBox ? searchBox.value || "" : "").toLowerCase();
-  tbody.innerHTML = "";
 
-  getCustomers()
-    .filter(c =>
-      c.name.toLowerCase().includes(search) ||
-      c.mobile.includes(search)
-    )
-    .forEach(c => {
-      tbody.innerHTML += `
+
+
+
+
+    /* =====================================================
+       SAVE / UPDATE
+    ===================================================== */
+    function saveCustomer() {
+      if (!form || !fields.name) {
+        alert("Form not initialized. Please refresh the page.");
+        return;
+      }
+
+      let customers = getCustomers();
+      const editId = localStorage.getItem(EDIT_KEY);
+      const isEdit = !!editId;
+      const id = isEdit ? Number(editId) : generateId(customers);
+
+      const data = {
+        id,
+        cid: isEdit
+          ? fields.cid.value
+          : fields.cid.value.trim() || "CUST-" + id,
+
+        name: fields.name.value.trim(),
+        relation: fields.relation.value,
+        relationName: fields.relationName.value.trim(),
+        type: fields.type.value.trim(),
+        lfno: fields.lfno.value.trim(),
+        openingDate: fields.openingDate.value,
+
+        openingBalance: num(fields.openingBalance.value),
+        goldBalance: num(fields.goldBalance.value),
+        silverBalance: num(fields.silverBalance.value),
+        maxLimit: num(fields.maxLimit.value),
+
+        aadhar: fields.aadhar.value.trim(),
+        pan: fields.pan.value.trim(),
+        address: fields.address.value.trim(),
+        station: fields.station.value.trim(),
+
+        phone: fields.phone.value.trim(),
+        mobile: fields.mobile.value.trim(),
+        email: fields.email.value.trim()
+      };
+
+      if (isEdit) {
+        const index = customers.findIndex(c => c.id === id);
+        if (index === -1) {
+          alert("Customer not found");
+          return;
+        }
+        customers[index] = data;
+        localStorage.removeItem(EDIT_KEY);
+      } else {
+        customers.push(data);
+      }
+
+      localStorage.setItem(STORE_KEY, JSON.stringify(customers));
+      alert("Customer saved successfully");
+    }
+
+
+    /* =====================================================
+       LIST
+    ===================================================== */
+    function openList() {
+      const formEl = document.querySelector(".erp-form");
+      const listSection = $("customerListSection");
+      const actionButtons = document.querySelector(".form-actions");
+
+      if (formEl) formEl.style.display = "none";
+      if (listSection) {
+        listSection.style.display = "flex";
+        listSection.style.flexDirection = "column";
+      }
+      // VIEW FIX: Hide request buttons in list view
+      if (actionButtons) actionButtons.style.display = "none";
+
+      renderCustomerList();
+    }
+
+    function goBackToAddCustomer() {
+      const formEl = document.querySelector(".erp-form");
+      const listSection = $("customerListSection");
+      const actionButtons = document.querySelector(".form-actions");
+
+      // Show form, hide list
+      if (formEl) {
+        formEl.style.display = "grid";
+        formEl.style.flex = "1";
+      }
+      if (listSection) listSection.style.display = "none";
+
+      // VIEW FIX: Show request buttons in form view
+      if (actionButtons) actionButtons.style.display = "flex";
+
+      // Reset form
+      resetForm();
+
+      // Update title
+      const title = $("pageTitle");
+      if (title) {
+        title.innerText = "Add Customer";
+      } else {
+        // Try to find title in workspace if in dashboard
+        const workspace = document.querySelector(".workspace");
+        if (workspace) {
+          const workspaceTitle = workspace.querySelector("#pageTitle");
+          if (workspaceTitle) workspaceTitle.innerText = "Add Customer";
+        }
+      }
+
+
+      // Focus on name field
+      if (fields && fields.name) {
+        setTimeout(() => fields.name.focus(), 100);
+      }
+    }
+
+
+
+    function renderCustomerList() {
+      const tbody = $("customerTableBody");
+      const searchBox = $("searchCustomer");
+
+      if (!tbody) return;
+
+      const search = (searchBox ? searchBox.value || "" : "").toLowerCase();
+      tbody.innerHTML = "";
+
+      getCustomers()
+        .filter(c =>
+          c.name.toLowerCase().includes(search) ||
+          c.mobile.includes(search)
+        )
+        .forEach(c => {
+          tbody.innerHTML += `
   <tr ondblclick="selectCustomerForOrder('${c.name}')">
     <td>${c.cid}</td>
     <td>${c.name}</td>
@@ -1004,186 +1062,185 @@ function renderCustomerList(){
     </td>
   </tr>`;
 
-    });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* =====================================================
-   EDIT / DELETE
-===================================================== */
-function editCustomer(id){
-  localStorage.setItem(EDIT_KEY, id);
-  loadForEdit(id);
-}
-
-function deleteCustomer(id){
-  if(!confirm("Delete this customer?")) return;
-  const customers = getCustomers().filter(c => c.id !== id);
-  localStorage.setItem(STORE_KEY, JSON.stringify(customers));
-  renderCustomerList();
-}
-
-/* =====================================================
-   LOAD EDIT DATA
-===================================================== */
-function loadForEdit(id){
-  if(!form || !fields.name){
-    // Elements not ready, retry
-    setTimeout(() => loadForEdit(id), 100);
-    return;
-  }
-  
-  const customer = getCustomers().find(c => String(c.id) === String(id));
-  if(!customer) return;
-
-  // Show form, hide list
-  const formEl = document.querySelector(".erp-form");
-  const listSection = document.getElementById("customerListSection");
-  
-  if(formEl) {
-    formEl.style.display = "grid";
-    formEl.style.flex = "1";
-  }
-  if(listSection) listSection.style.display = "none";
-
-  // Change title
-  const title = document.getElementById("pageTitle");
-  if(title) {
-    title.innerText = "Edit Customer";
-  } else {
-    // Try to find title in workspace if in dashboard
-    const workspace = document.querySelector(".workspace");
-    if(workspace){
-      const workspaceTitle = workspace.querySelector("#pageTitle");
-      if(workspaceTitle) workspaceTitle.innerText = "Edit Customer";
+        });
     }
-  }
 
-  // Fill fields
-  Object.keys(fields).forEach(k => {
-    if(fields[k] && customer[k] !== undefined){
-      fields[k].value = customer[k];
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /* =====================================================
+       EDIT / DELETE
+    ===================================================== */
+    function editCustomer(id) {
+      localStorage.setItem(EDIT_KEY, id);
+      loadForEdit(id);
     }
-  });
 
-  // Lock CID
-  if(fields.cid){
-    fields.cid.value = customer.cid;
-    fields.cid.disabled = true;
-  }
-}
+    function deleteCustomer(id) {
+      if (!confirm("Delete this customer?")) return;
+      const customers = getCustomers().filter(c => c.id !== id);
+      localStorage.setItem(STORE_KEY, JSON.stringify(customers));
+      renderCustomerList();
+    }
 
+    /* =====================================================
+       LOAD EDIT DATA
+    ===================================================== */
+    function loadForEdit(id) {
+      if (!form || !fields.name) {
+        // Elements not ready, retry
+        setTimeout(() => loadForEdit(id), 100);
+        return;
+      }
 
-/* =====================================================
-   HELPERS
-===================================================== */
-function getCustomers(){
-  return JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
-}
+      const customer = getCustomers().find(c => String(c.id) === String(id));
+      if (!customer) return;
 
-function generateId(customers){
-  const lastId = customers.length
-    ? Math.max(...customers.map(c => c.id))
-    : 1000;
-  return lastId + 1;
-}
+      // Show form, hide list
+      const formEl = document.querySelector(".erp-form");
+      const listSection = document.getElementById("customerListSection");
 
-function num(v){
-  return Number(v) || 0;
-}
+      if (formEl) {
+        formEl.style.display = "grid";
+        formEl.style.flex = "1";
+      }
+      if (listSection) listSection.style.display = "none";
 
-function selectCustomerForOrder(name){
-  // Try to set customer in new-order page if available
-  // Check if we're in dashboard context
-  if(typeof loadPage === 'function'){
-    // We're in dashboard, try to find and update customer in new-order page
-    const workspace = document.querySelector(".workspace");
-    if(workspace){
-      const custNameSelect = workspace.querySelector("#custName");
-      if(custNameSelect){
-        // Find option with matching name
-        const options = Array.from(custNameSelect.options);
-        const option = options.find(opt => opt.textContent === name);
-        if(option){
-          custNameSelect.value = option.value;
-          // Trigger change event
-          custNameSelect.dispatchEvent(new Event('change'));
-          alert(`Customer "${name}" selected`);
-          return;
+      // Change title
+      const title = document.getElementById("pageTitle");
+      if (title) {
+        title.innerText = "Edit Customer";
+      } else {
+        // Try to find title in workspace if in dashboard
+        const workspace = document.querySelector(".workspace");
+        if (workspace) {
+          const workspaceTitle = workspace.querySelector("#pageTitle");
+          if (workspaceTitle) workspaceTitle.innerText = "Edit Customer";
         }
       }
+
+      // Fill fields
+      Object.keys(fields).forEach(k => {
+        if (fields[k] && customer[k] !== undefined) {
+          fields[k].value = customer[k];
+        }
+      });
+
+      // Lock CID
+      if (fields.cid) {
+        fields.cid.value = customer.cid;
+        fields.cid.disabled = true;
+      }
     }
-  }
-  
-  // Try window.opener (for popup windows)
-  if (window.opener && window.opener.setCustomerName) {
-    window.opener.setCustomerName(name);
-    window.close();
-    return;
-  }
-  
-  // Try parent window
-  if (window.parent && window.parent !== window) {
-    if (window.parent.setCustomerName) {
-      window.parent.setCustomerName(name);
-      return;
+
+
+    /* =====================================================
+       HELPERS
+    ===================================================== */
+    function getCustomers() {
+      return JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
     }
-    // Try to find custName in parent
-    try {
-      const parentCustName = window.parent.document.getElementById("custName");
-      if(parentCustName){
-        const options = Array.from(parentCustName.options);
-        const option = options.find(opt => opt.textContent === name);
-        if(option){
-          parentCustName.value = option.value;
-          parentCustName.dispatchEvent(new Event('change'));
-          alert(`Customer "${name}" selected`);
-          return;
+
+    function generateId(customers) {
+      const lastId = customers.length
+        ? Math.max(...customers.map(c => c.id))
+        : 1000;
+      return lastId + 1;
+    }
+
+    function num(v) {
+      return Number(v) || 0;
+    }
+
+    function selectCustomerForOrder(name) {
+      // Try to set customer in new-order page if available
+      // Check if we're in dashboard context
+      if (typeof loadPage === 'function') {
+        // We're in dashboard, try to find and update customer in new-order page
+        const workspace = document.querySelector(".workspace");
+        if (workspace) {
+          const custNameSelect = workspace.querySelector("#custName");
+          if (custNameSelect) {
+            // Find option with matching name
+            const options = Array.from(custNameSelect.options);
+            const option = options.find(opt => opt.textContent === name);
+            if (option) {
+              custNameSelect.value = option.value;
+              // Trigger change event
+              custNameSelect.dispatchEvent(new Event('change'));
+              alert(`Customer "${name}" selected`);
+              return;
+            }
+          }
         }
       }
-    } catch(e){
-      // Cross-origin or other error
+
+      // Try window.opener (for popup windows)
+      if (window.opener && window.opener.setCustomerName) {
+        window.opener.setCustomerName(name);
+        window.close();
+        return;
+      }
+
+      // Try parent window
+      if (window.parent && window.parent !== window) {
+        if (window.parent.setCustomerName) {
+          window.parent.setCustomerName(name);
+          return;
+        }
+        // Try to find custName in parent
+        try {
+          const parentCustName = window.parent.document.getElementById("custName");
+          if (parentCustName) {
+            const options = Array.from(parentCustName.options);
+            const option = options.find(opt => opt.textContent === name);
+            if (option) {
+              parentCustName.value = option.value;
+              parentCustName.dispatchEvent(new Event('change'));
+              alert(`Customer "${name}" selected`);
+              return;
+            }
+          }
+        } catch (e) {
+          // Cross-origin or other error
+        }
+      }
+
+      // Fallback: store in localStorage and show message
+      localStorage.setItem("selectedCustomerName", name);
+      alert(`Customer "${name}" selected. Please go to New Order page.`);
     }
-  }
-  
-  // Fallback: store in localStorage and show message
-  localStorage.setItem("selectedCustomerName", name);
-  alert(`Customer "${name}" selected. Please go to New Order page.`);
-}
 
-/* =====================================================
-   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
-   (For onclick handlers and dashboard integration)
-===================================================== */
-// Make all functions available globally
-window.submitForm = submitForm;
-window.saveAndNew = saveAndNew;
-window.resetForm = resetForm;
-window.openList = openList;
-window.goBackToAddCustomer = goBackToAddCustomer;
-window.editCustomer = editCustomer;
-window.deleteCustomer = deleteCustomer;
-window.selectCustomerForOrder = selectCustomerForOrder;
-window.renderCustomerList = renderCustomerList;
-window.loadStations = loadStations;
-window.initCustomerPage = initCustomerPage;
+    /* =====================================================
+       ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+       (For onclick handlers and dashboard integration)
+    ===================================================== */
+    // Make all functions available globally
+    window.submitForm = submitForm;
+    window.saveAndNew = saveAndNew;
+    window.resetForm = resetForm;
+    window.openList = openList;
+    window.goBackToAddCustomer = goBackToAddCustomer;
+    window.editCustomer = editCustomer;
+    window.deleteCustomer = deleteCustomer;
+    window.selectCustomerForOrder = selectCustomerForOrder;
+    window.renderCustomerList = renderCustomerList;
+    window.loadStations = loadStations;
+    window.initCustomerPage = initCustomerPage;
 
-</script>
+  </script>
 
 
 </body>
+
 </html>
-
-

@@ -1,764 +1,1195 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Rate Booking</title>
 
-<style>
-/* =========================
+<head>
+  <meta charset="UTF-8">
+  <title>Rate Booking</title>
+
+  <style>
+    /* =========================
    RESET & BASE
 ========================= */
-*{
-  box-sizing:border-box;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-}
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
 
-body{
-  margin:0;
-  padding:20px;
-  background:linear-gradient(to bottom,#cde1ff,#e6f1ff);
-  min-height:100vh;
-}
+    /* Hide number input arrows */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
 
-/* =========================
+    input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(to bottom, #cde1ff, #e6f1ff);
+      min-height: 100vh;
+    }
+
+    /* =========================
    WINDOW - BIGGER
 ========================= */
-.window{
-  background:#ffffff;
-  border-radius:18px;
-  border:1px solid #d1d6de;
-  box-shadow:0 25px 45px rgba(0,0,0,.25);
-  max-width:1200px;
-  width:100%;
-  margin:30px auto;
-}
+    .window {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #d1d6de;
+      box-shadow: 0 25px 45px rgba(0, 0, 0, .25);
+      max-width: 95%;
+      width: 95%;
+      margin: 20px auto;
+    }
 
-.window-content{
-  display:flex;
-  gap:30px;
-  padding:30px 40px;
-  background:#f9fbfe;
-}
+    .window-content {
+      display: flex;
+      flex-direction: column;
+      /* Stack vertically */
+      gap: 15px;
+      /* Reduced gap */
+      padding: 15px 20px;
+      /* Reduced padding */
+      background: #f9fbfe;
+    }
 
-.window-left, .window-right{
-  flex:1;
-}
+    .window-left,
+    .window-right {
+      width: 100%;
+      /* Full width */
+      flex: none;
+      /* Disable flex scaling */
+    }
 
-.window-right{
-  min-width:350px;
-}
+    .window-right {
+      min-width: unset;
+      /* Remove min-width */
+    }
 
-/* TITLE BAR - BIGGER */
-.title-bar{
-  background:linear-gradient(#f4f6fa,#e6eaf0);
-  padding:16px 20px;
-  font-weight:600;
-  font-size:18px;
-  text-align:center;
-  color:#1d1d1f;
-  border-bottom:1px solid #d1d6de;
-  border-radius:18px 18px 0 0;
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+    /* TITLE BAR - BIGGER */
+    .title-bar {
+      background: linear-gradient(#f4f6fa, #e6eaf0);
+      padding: 10px 15px;
+      /* Compact padding */
+      font-weight: 600;
+      font-size: 16px;
+      /* Smaller font */
+      text-align: center;
+      color: #1d1d1f;
+      border-bottom: 1px solid #d1d6de;
+      border-radius: 18px 18px 0 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-.close-btn{
-  position:absolute;
-  right:20px;
-  top:50%;
-  transform:translateY(-50%);
-  width:32px;
-  height:32px;
-  border:none;
-  background:#ff3b30;
-  color:#fff;
-  border-radius:8px;
-  cursor:pointer;
-  font-size:18px;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:all 0.2s;
-  line-height:1;
-  padding:0;
-}
+    .close-btn {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #ff3b30;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+      padding: 0;
+    }
 
-.close-btn:hover{
-  background:#ff2d20;
-  transform:translateY(-50%) scale(1.1);
-  box-shadow:0 2px 8px rgba(255,59,48,0.3);
-}
+    .close-btn:hover {
+      background: #ff2d20;
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+    }
 
-.close-btn:active{
-  transform:translateY(-50%) scale(0.95);
-}
+    .close-btn:active {
+      transform: translateY(-50%) scale(0.95);
+    }
 
-/* HISTORY SECTION - BIGGER */
-.history-section{
-  margin-top:0;
-  padding:20px;
-  background:#fff;
-  border:1px solid #d1d6de;
-  border-radius:12px;
-  max-height:500px;
-  overflow-y:auto;
-  box-shadow:0 2px 8px rgba(0,0,0,.08);
-}
+    /* HISTORY SECTION - BIGGER */
+    .history-section {
+      margin-top: 0;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid #d1d6de;
+      border-radius: 12px;
+      max-height: 70vh;
+      min-height: 500px;
+      overflow: auto;
+      /* Allow both X and Y scroll */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    }
 
-.history-section h3{
-  margin:0 0 16px 0;
-  font-size:16px;
-  color:#1d1d1f;
-  font-weight:600;
-  padding-bottom:8px;
-  border-bottom:2px solid #d1d6de;
-}
+    .history-section h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      color: #1d1d1f;
+      font-weight: 600;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #d1d6de;
+    }
 
-.history-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:13px;
-}
+    /* HISTORY TABLE - PREMIUM */
+    .history-table {
+      width: 100%;
+      min-width: 1000px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
 
-.history-table th{
-  background:#f2f4f8;
-  padding:12px 10px;
-  text-align:left;
-  border-bottom:2px solid #d1d6de;
-  font-weight:600;
-  font-size:13px;
-  color:#1d1d1f;
-}
+    .history-table th {
+      background: #f8f9fa;
+      padding: 14px 12px;
+      text-align: left;
+      border-bottom: 2px solid #e9ecef;
+      border-right: 1px solid #e9ecef;
+      /* Added vertical line */
+      font-weight: 600;
+      font-size: 12px;
+      color: #495057;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-.history-table td{
-  padding:10px;
-  border-bottom:1px solid #e0e0e0;
-  font-size:13px;
-}
+    .history-table th:last-child {
+      border-right: none;
+    }
 
-.history-table tr:hover{
-  background:#f8f9fa;
-}
+    .history-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f1f3f5;
+      border-right: 1px solid #f1f3f5;
+      /* Added vertical line */
+      font-size: 13.5px;
+      color: #343a40;
+      vertical-align: middle;
+    }
 
-/* Apply button removed */
+    .history-table td:last-child {
+      border-right: none;
+    }
 
-/* FORM ROW - BIGGER */
-.form-row{
-  display:flex;
-  align-items:center;
-  margin-bottom:18px;
-}
+    .history-table tr:hover {
+      background: #f1f8ff;
+    }
 
-.form-row label{
-  width:140px;
-  font-size:15px;
-  color:#3a3a3c;
-  font-weight:500;
-}
+    /* PREMIUM INPUTS IN TABLE */
+    .history-table input,
+    .history-table select {
+      border: none;
+      border-bottom: 1px solid transparent;
+      background: transparent;
+      padding: 6px 4px;
+      font-family: inherit;
+      width: 100%;
+      transition: all 0.2s ease;
+      color: inherit;
+    }
 
-/* INPUTS - BIGGER */
-.form-row input,
-.form-row textarea{
-  flex:1;
-  padding:12px 14px;
-  border-radius:12px;
-  border:1px solid #d1d6de;
-  font-size:15px;
-  background:#ffffff;
-  transition:all 0.2s;
-  height:44px;
-}
+    .history-table input:hover,
+    .history-table select:hover {
+      border-bottom-color: #dee2e6;
+      background: #ffffff;
+    }
 
-.form-row textarea{
-  height:100px;
-  resize:none;
-  padding:12px 14px;
-}
+    .history-table input:focus,
+    .history-table select:focus {
+      outline: none;
+      border-bottom: 2px solid #007aff;
+      background: #ffffff;
+    }
 
-.form-row input:focus,
-.form-row textarea:focus{
-  outline:none;
-  border-color:#007aff;
-  box-shadow:0 0 0 4px rgba(0,122,255,.18);
-}
+    /* Apply button removed */
 
-/* INLINE */
-.inline{
-  display:flex;
-  gap:16px;
-  flex:1;
-  align-items:center;
-}
+    /* FORM ROW - COMPACT */
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      /* Reduced margin */
+    }
 
-.inline label{
-  width:auto;
-  min-width:50px;
-  margin-right:8px;
-}
+    .form-row label {
+      width: 140px;
+      font-size: 13px;
+      /* Smaller label */
+      color: #3a3a3c;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
 
-/* FOOTER - BIGGER */
-.footer{
-  display:flex;
-  justify-content:center;
-  gap:16px;
-  padding:20px;
-  background:#f2f5f9;
-  border-top:1px solid #d1d6de;
-  border-radius:0 0 18px 18px;
-}
+    /* INPUTS - COMPACT */
+    .form-row input,
+    .form-row select,
+    .form-row textarea {
+      flex: 1;
+      padding: 6px 10px;
+      /* Reduced padding */
+      border-radius: 6px;
+      /* Smaller radius */
+      border: 1px solid #d1d6de;
+      font-size: 13px;
+      /* Smaller font */
+      background: #ffffff;
+      transition: all 0.2s;
+      height: 32px;
+      /* Smaller height */
+      width: 100%;
+    }
 
-.footer button{
-  min-width:140px;
-  padding:12px 24px;
-  font-size:15px;
-  font-weight:500;
-  border-radius:12px;
-  border:1px solid #d1d6de;
-  background:#ffffff;
-  cursor:pointer;
-  transition:all 0.2s;
-  color:#1d1d1f;
-}
+    .form-row textarea {
+      height: 60px;
+      /* Smaller textarea */
+      resize: none;
+      padding: 8px 10px;
+    }
 
-.footer button:hover{
-  background:#e6f0ff;
-  border-color:#007aff;
-  transform:translateY(-1px);
-  box-shadow:0 2px 8px rgba(0,0,0,.1);
-}
+    .form-row input:focus,
+    .form-row select:focus,
+    .form-row textarea:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 2px rgba(0, 122, 255, .18);
+      /* Smaller shadow */
+    }
 
-.footer button:first-child{
-  background:#007aff;
-  color:#fff;
-  border-color:#007aff;
-  font-weight:600;
-}
+    /* INLINE */
+    .inline {
+      display: flex;
+      gap: 16px;
+      flex: 1;
+      align-items: center;
+    }
 
-.footer button:first-child:hover{
-  background:#0056b3;
-  border-color:#0056b3;
-}
+    .inline label {
+      width: auto;
+      min-width: 50px;
+      margin-right: 8px;
+    }
 
-/* RESPONSIVE */
-@media(max-width:900px){
-  .window-content{
-    flex-direction:column;
-    gap:20px;
-  }
-  
-  .window-right{
-    min-width:100%;
-  }
-  
-  .form-row{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:8px;
-  }
-  
-  .form-row label{
-    width:100%;
-    margin-bottom:4px;
-  }
-  
-  .form-row input,
-  .form-row textarea{
-    width:100%;
-  }
-  
-  .title-bar{
-    padding:14px 16px;
-    font-size:16px;
-  }
-  
-  .close-btn{
-    right:16px;
-    width:28px;
-    height:28px;
-    font-size:16px;
-  }
-}
-</style>
+    /* FOOTER - COMPACT */
+    .footer {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 12px;
+      background: #f2f5f9;
+      border-top: 1px solid #d1d6de;
+      border-radius: 0 0 18px 18px;
+    }
+
+    .footer button {
+      min-width: 100px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 12px;
+      border: 1px solid #d1d6de;
+      background: #ffffff;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #1d1d1f;
+    }
+
+    .footer button:hover {
+      background: #e6f0ff;
+      border-color: #007aff;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+    }
+
+    .footer button:first-child {
+      background: #007aff;
+      color: #fff;
+      border-color: #007aff;
+      font-weight: 600;
+    }
+
+    .footer button:first-child:hover {
+      background: #0056b3;
+      border-color: #0056b3;
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:900px) {
+      .window-content {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .window-right {
+        min-width: 100%;
+      }
+
+      .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .form-row label {
+        width: 100%;
+        margin-bottom: 4px;
+      }
+
+      .form-row input,
+      .form-row textarea {
+        width: 100%;
+      }
+
+      .title-bar {
+        padding: 14px 16px;
+        font-size: 16px;
+      }
+
+      .close-btn {
+        right: 16px;
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="window">
+  <div class="window">
 
-  <div class="title-bar">
-    Rate Booking
-    <button class="close-btn" onclick="closeSelf()" title="Close">×</button>
-  </div>
+    <div class="title-bar">
+      Rate Booking
+      <button class="close-btn" onclick="closeSelf()" title="Close">×</button>
+    </div>
 
-  <div class="window-content">
-    <!-- LEFT: Form -->
-    <div class="window-left">
-      <div class="form-row">
-        <label>Stamp</label>
-        <input id="stamp">
-      </div>
+    <div class="window-content">
+      <!-- LEFT: Form -->
+      <div class="window-left">
+        <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+          <button type="button" onclick="saveRate()"
+            style="background:#007aff; color:white; border:none; padding:8px 24px; border-radius:8px; font-weight:600; cursor:pointer; font-size:14px;">
+            Save
+          </button>
+        </div>
+        <div class="form-row">
+          <label>Stamp</label>
+          <input id="stamp">
+        </div>
 
-      <div class="form-row">
-        <label>Weight</label>
-        <input id="weight" value="0.000" step="0.001" readonly title="Auto: Amount Difference ÷ Rate">
-      </div>
+        <div class="form-row">
+          <label>Weight</label>
+          <input id="weight" value="0.000" step="0.001" oninput="calcAmount()" title="Weight">
+        </div>
 
-      <div class="form-row">
-        <label>Rate</label>
-        <input type="number" id="rate" value="0.00" step="0.01" oninput="calcAmount()" title="Enter rate">
-      </div>
+        <div class="form-row">
+          <label>Rate</label>
+          <input type="number" id="rate" value="0.00" step="0.01" oninput="calcAmount()" title="Enter rate">
+        </div>
 
-      <div class="form-row">
-        <label>Amount Difference</label>
-        <input type="number" id="amount" value="0.00" step="0.01" oninput="calcAmount()" title="Amount Difference (Weight = Amount Difference ÷ Rate)">
-      </div>
+        <div class="form-row">
+          <label>Amount</label>
+          <input type="number" id="amount" value="0.00" step="0.01" oninput="calcAmount()"
+            title="Amount (Weight = Amount ÷ Rate)">
+        </div>
 
-      <div class="form-row">
-        <label>Del Date</label>
-        <div class="inline">
-          <input type="date" id="delDate" style="flex:1;">
-          <label style="width:auto; min-width:60px; margin:0 8px 0 16px;">Type</label>
-          <input id="type" value="S" style="max-width:100px; flex:0 0 auto;">
+        <div class="form-row">
+          <label>Del Date</label>
+          <div class="inline">
+            <input type="date" id="delDate" style="flex:1;">
+            <label style="width:auto; min-width:60px; margin:0 8px 0 16px;">Type</label>
+            <input id="type" value="S" style="max-width:100px; flex:0 0 auto;">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Narration</label>
+          <textarea id="narration"></textarea>
         </div>
       </div>
 
-      <div class="form-row">
-        <label>Narration</label>
-        <textarea id="narration"></textarea>
+      <!-- RIGHT: History -->
+      <div class="window-right">
+        <div class="history-section">
+          <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:2px solid #d1d6de; padding-bottom:8px;">
+            <h3 style="margin:0; border:none; padding:0;">Rate Book History</h3>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button id="btnCalcDiff" onclick="calculateComparison()"
+                style="background:#6c757d; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; display:none;">Calculate
+                Diff</button>
+              <div id="compareDisplay" style="font-size:14px; font-weight:600; color:#007aff;">
+                Diff: <span id="compareVal">0.00</span>
+              </div>
+            </div>
+            <button onclick="addHistoryRow()"
+              style="background:#28a745; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">+
+              Add New Row</button>
+          </div>
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th style="width:40px; text-align:center;">Compare</th>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Metal</th>
+                <th>Stamp</th>
+                <th>Remark</th>
+                <th style="text-align:right;">Weight</th>
+                <th style="text-align:right;">Rate</th>
+                <th style="text-align:right;">Bal Wt.</th>
+                <th style="text-align:right;">Adj Wt.</th>
+                <th style="text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="rateBookHistoryBody">
+              <!-- Rate book entries will be loaded here -->
+            </tbody>
+          </table>
+          <div id="compareDisplayFooter"
+            style="text-align:right; margin-top:10px; font-size:14px; font-weight:600; color:#007aff;">
+            Diff: <span id="compareValFooter">0.00</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT: History -->
-    <div class="window-right">
-      <div class="history-section">
-        <h3>Rate Book History</h3>
-        <table class="history-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Stamp</th>
-              <th style="text-align:right;">Weight</th>
-              <th style="text-align:right;">Rate</th>
-              <th style="text-align:right;">Amount</th>
-            </tr>
-          </thead>
-          <tbody id="rateBookHistoryBody">
-            <!-- Rate book entries will be loaded here -->
-          </tbody>
-        </table>
-      </div>
+    <div class="footer">
+      <button type="button" onclick="saveRate()" style="display:none;">Save</button>
+      <button type="button" id="cancelBtn" onclick="closeSelf()">Close</button>
     </div>
+
   </div>
 
-  <div class="footer">
-    <button type="button" id="cancelBtn" onclick="closeSelf()">Close</button>
-  </div>
+  <script>
+    // Get element references
+    let stamp, weight, rate, amount, delDate, type, narration;
 
-</div>
+    const RATEBOOK_CUSTOMER_BALANCES_KEY = "rateBookCustomerBalances";
 
-<script>
-// Get element references
-let stamp, weight, rate, amount, delDate, type, narration;
+    function safeNumber(val, fallback = 0) {
+      const n = Number(val);
+      return Number.isFinite(n) ? n : fallback;
+    }
 
-const RATEBOOK_CUSTOMER_BALANCES_KEY = "rateBookCustomerBalances";
-
-function safeNumber(val, fallback = 0){
-  const n = Number(val);
-  return Number.isFinite(n) ? n : fallback;
-}
-
-function getActiveCustomerContext(){
-  try {
-    const customerId = localStorage.getItem("ratebookCustomerId") || "";
-    const customerName = localStorage.getItem("ratebookCustomerName") || "";
-    const billNo = localStorage.getItem("ratebookBillNo") || "";
-    return { customerId, customerName, billNo };
-  } catch(e) {
-    return { customerId: "", customerName: "", billNo: "" };
-  }
-}
-
-function readCustomerRatebookBalances(){
-  try {
-    return JSON.parse(localStorage.getItem(RATEBOOK_CUSTOMER_BALANCES_KEY) || "{}") || {};
-  } catch(e) {
-    return {};
-  }
-}
-
-function writeCustomerRatebookBalances(balances){
-  try {
-    localStorage.setItem(RATEBOOK_CUSTOMER_BALANCES_KEY, JSON.stringify(balances || {}));
-  } catch(e) {}
-}
-
-function upsertCustomerRatebookFromCalculation(rateNum, weightNum){
-  const { customerId, customerName } = getActiveCustomerContext();
-  if(!customerId) return;
-  if(!(rateNum > 0) || !(weightNum >= 0)) return;
-
-  const balances = readCustomerRatebookBalances();
-  const existing = balances[customerId] || {};
-
-  const next = {
-    customerId,
-    customer: customerName || existing.customer || "",
-    rate: rateNum,
-    bookedWeight: weightNum,
-    // Rate Book sets the current starting weight; orders/deliveries will adjust it later.
-    currentWeight: weightNum,
-    updatedAt: new Date().toISOString()
-  };
-
-  balances[customerId] = next;
-  writeCustomerRatebookBalances(balances);
-}
-
-function initElements(){
-  stamp = document.getElementById("stamp");
-  weight = document.getElementById("weight");
-  rate = document.getElementById("rate");
-  amount = document.getElementById("amount");
-  delDate = document.getElementById("delDate");
-  type = document.getElementById("type");
-  narration = document.getElementById("narration");
-  
-  return stamp && weight && rate && amount && delDate && type && narration;
-}
-
-function normalizeStampValue(s){
-  return String(s || "").trim().toUpperCase();
-}
-
-function upsertRateBookEntry(){
-  if(!initElements()) return;
-  const stampVal = normalizeStampValue(stamp.value);
-  const rateNum = safeNumber(rate.value, 0);
-  const amountNum = safeNumber(amount.value, 0);
-  const weightNum = safeNumber(weight.value, 0);
-  if(!stampVal || !(rateNum > 0)) return;
-
-  try {
-    const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
-    const nowIso = new Date().toISOString();
-    const today = nowIso.split("T")[0];
-
-    // Update most recent entry for this stamp if it exists, else add new.
-    let idx = -1;
-    for(let i = rates.length - 1; i >= 0; i--){
-      const key = normalizeStampValue(rates[i] && rates[i].stamp);
-      if(key === stampVal){
-        idx = i;
-        break;
+    function getActiveCustomerContext() {
+      try {
+        const customerId = localStorage.getItem("ratebookCustomerId") || "";
+        const customerName = localStorage.getItem("ratebookCustomerName") || "";
+        const billNo = localStorage.getItem("ratebookBillNo") || "";
+        return { customerId, customerName, billNo };
+      } catch (e) {
+        return { customerId: "", customerName: "", billNo: "" };
       }
     }
 
-    const payload = {
-      stamp: stampVal,
-      weight: weightNum.toFixed(3),
-      rate: rateNum.toFixed(2),
-      amount: amountNum.toFixed(2),
-      delDate: delDate ? delDate.value : "",
-      type: type ? type.value : "S",
-      narration: narration ? narration.value : "",
-      date: today,
-      timestamp: nowIso
-    };
-
-    if(idx >= 0){
-      const prev = rates[idx] || {};
-      rates[idx] = { ...prev, ...payload, id: prev.id || Date.now() };
-    } else {
-      rates.push({ id: Date.now(), ...payload });
+    function readCustomerRatebookBalances() {
+      try {
+        return JSON.parse(localStorage.getItem(RATEBOOK_CUSTOMER_BALANCES_KEY) || "{}") || {};
+      } catch (e) {
+        return {};
+      }
     }
 
-    localStorage.setItem("rateBook", JSON.stringify(rates));
-
-    // Notify any listening pages
-    try {
-      window.dispatchEvent(new CustomEvent('ratebookUpdated'));
-      if(window.parent && window.parent !== window){
-        window.parent.dispatchEvent(new CustomEvent('ratebookUpdated'));
-      }
-      if(window.top && window.top !== window){
-        window.top.dispatchEvent(new CustomEvent('ratebookUpdated'));
-      }
-    } catch(e) {}
-  } catch(e) {
-    console.error("Error auto-saving ratebook entry:", e);
-  }
-}
-
-function calcAmount(){
-  if(!initElements()) return;
-  
-  // Weight = Amount Difference ÷ Rate (always)
-  const r = safeNumber(rate.value, 0);
-  const a = safeNumber(amount.value, 0);
-  const w = (r > 0) ? (a / r) : 0;
-  weight.value = (r > 0 && Number.isFinite(w)) ? w.toFixed(3) : "0.000";
-  
-  // Persist customer context (rate + booked weight) and auto-save latest stamp rate entry
-  upsertCustomerRatebookFromCalculation(r, safeNumber(weight.value, 0));
-  upsertRateBookEntry();
-
-  // Auto-save form data after calculation
-  saveFormData();
-}
-
-/* SAVE RATE - Same logic as before */
-function saveRate(){
-  // Backward-compatible: manual save triggers same auto-save + closes
-  calcAmount();
-  closeSelf();
-}
-
-/* LOAD RATE BOOK HISTORY - Same logic as before */
-function loadRateBookHistory(){
-  try {
-    const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
-    const tbody = document.getElementById("rateBookHistoryBody");
-    
-    if(!tbody) {
-      console.error("History table body not found");
-      return;
+    function writeCustomerRatebookBalances(balances) {
+      try {
+        localStorage.setItem(RATEBOOK_CUSTOMER_BALANCES_KEY, JSON.stringify(balances || {}));
+      } catch (e) { }
     }
-    
-    if(rates.length === 0){
-      tbody.innerHTML = `
+
+    function upsertCustomerRatebookFromCalculation(rateNum, weightNum) {
+      const { customerId, customerName } = getActiveCustomerContext();
+      if (!customerId) return;
+      if (!(rateNum > 0) || !(weightNum >= 0)) return;
+
+      const balances = readCustomerRatebookBalances();
+      const existing = balances[customerId] || {};
+
+      const next = {
+        customerId,
+        customer: customerName || existing.customer || "",
+        rate: rateNum,
+        bookedWeight: weightNum,
+        // Rate Book sets the current starting weight; orders/deliveries will adjust it later.
+        currentWeight: weightNum,
+        updatedAt: new Date().toISOString()
+      };
+
+      balances[customerId] = next;
+      writeCustomerRatebookBalances(balances);
+    }
+
+    function initElements() {
+      stamp = document.getElementById("stamp");
+      weight = document.getElementById("weight");
+      rate = document.getElementById("rate");
+      amount = document.getElementById("amount");
+      delDate = document.getElementById("delDate");
+      type = document.getElementById("type");
+      narration = document.getElementById("narration");
+
+      return stamp && weight && rate && amount && delDate && type && narration;
+    }
+
+    function normalizeStampValue(s) {
+      return String(s || "").trim().toUpperCase();
+    }
+
+    function upsertRateBookEntry() {
+      if (!initElements()) return;
+      const stampVal = normalizeStampValue(stamp.value);
+      const rateNum = safeNumber(rate.value, 0);
+      const amountNum = safeNumber(amount.value, 0);
+      const weightNum = safeNumber(weight.value, 0);
+      const currentRateNum = 0; // Removed global input
+
+      if (!stampVal || !(rateNum > 0)) return;
+
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        const nowIso = new Date().toISOString();
+        const today = nowIso.split("T")[0];
+
+        // Update most recent entry for this stamp if it exists, else add new.
+        let idx = -1;
+        for (let i = rates.length - 1; i >= 0; i--) {
+          const key = normalizeStampValue(rates[i] && rates[i].stamp);
+          if (key === stampVal) {
+            idx = i;
+            break;
+          }
+        }
+
+        const payload = {
+          stamp: stampVal,
+          weight: weightNum.toFixed(3),
+          rate: rateNum.toFixed(2), // Ratebook Rate
+          amount: amountNum.toFixed(2),
+          delDate: delDate ? delDate.value : "",
+          type: type ? type.value : "S",
+          narration: narration ? narration.value : "",
+          currentRate: currentRateNum.toFixed(2),
+          date: today,
+          timestamp: nowIso,
+          // New fillable fields default values
+          metal: "",
+          balWt: weightNum.toFixed(3),
+          adjWt: "0.000",
+          diffAmt: "0.00" // Will be calculated if not set, but helps to have key
+        };
+
+        if (idx >= 0) {
+          const prev = rates[idx] || {};
+          // Preserve existing fillable values if updating the same entry
+          const metal = prev.metal !== undefined ? prev.metal : "";
+          const balWt = prev.balWt !== undefined ? prev.balWt : weightNum.toFixed(3);
+          const adjWt = prev.adjWt !== undefined ? prev.adjWt : "0.000";
+          // We don't preserve diffAmt usually as it depends on rates, but if user edited it...
+          // For now, let's reset diffAmt if rate changes, or keep if independent?
+          // Simpler to just update the core values. Note: updateHistoryRow handles field updates.
+
+          rates[idx] = { ...prev, ...payload, metal, balWt, adjWt, id: prev.id || Date.now() };
+        } else {
+          rates.push({ id: Date.now(), ...payload });
+        }
+
+        localStorage.setItem("rateBook", JSON.stringify(rates));
+
+        // Notify any listening pages
+        try {
+          window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+          if (window.parent && window.parent !== window) {
+            window.parent.dispatchEvent(new CustomEvent('ratebookUpdated'));
+          }
+          if (window.top && window.top !== window) {
+            window.top.dispatchEvent(new CustomEvent('ratebookUpdated'));
+          }
+        } catch (e) { }
+      } catch (e) {
+        console.error("Error auto-saving ratebook entry:", e);
+      }
+    }
+
+    function calcAmount() {
+      if (!initElements()) return;
+
+      const r = safeNumber(rate.value, 0);
+
+      // Persist customer context (rate + booked weight) and auto-save latest stamp rate entry
+      upsertCustomerRatebookFromCalculation(r, safeNumber(weight.value, 0));
+      upsertRateBookEntry();
+
+      // UI Update
+      loadRateBookHistory();
+      saveFormData();
+    }
+
+    // Calculate difference amount based on Current Rate
+    // calcDiff function removed as per instructions.
+
+    /* SAVE RATE - Same logic as before */
+    function saveRate() {
+      // Backward-compatible: manual save triggers same auto-save + closes
+      calcAmount();
+      closeSelf();
+    }
+
+    /* LOAD RATE BOOK HISTORY (FILLABLE) */
+    function loadRateBookHistory() {
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        const tbody = document.getElementById("rateBookHistoryBody");
+
+        if (!tbody) {
+          console.error("History table body not found");
+          return;
+        }
+
+        if (rates.length === 0) {
+          tbody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align:center; padding:20px; color:#777;">
+          <td colspan="11" style="text-align:center; padding:20px; color:#777;">
             No rate book entries found
           </td>
         </tr>
       `;
-      return;
-    }
-    
-    // Sort by date (newest first) - same logic
-    const sortedRates = [...rates].sort((a, b) => {
-      const dateA = new Date(a.timestamp || a.date || 0);
-      const dateB = new Date(b.timestamp || b.date || 0);
-      return dateB - dateA;
-    });
-    
-    tbody.innerHTML = "";
-    sortedRates.forEach(rate => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${rate.date || "—"}</td>
-        <td>${rate.stamp || "—"}</td>
-        <td style="text-align:right;">${Number(rate.weight || 0).toFixed(3)}</td>
-        <td style="text-align:right;">₹${Number(rate.rate || 0).toFixed(2)}</td>
-        <td style="text-align:right;">₹${Number(rate.amount || 0).toFixed(2)}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch(e) {
-    console.error("Error loading history:", e);
-  }
-}
+          return;
+        }
 
-/* APPLY RATE TO ROW - Same logic as before */
-function applyRateToRow(rateId){
-  try {
-    const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
-    const rate = rates.find(r => r.id === rateId);
-    
-    if(!rate){
-      alert("Rate not found");
-      return;
+        // Sort by date (newest first)
+        const sortedRates = [...rates].sort((a, b) => {
+          const dateA = new Date(a.timestamp || a.date || 0);
+          const dateB = new Date(b.timestamp || b.date || 0);
+          return dateB - dateA;
+        });
+
+        tbody.innerHTML = "";
+
+        // Global Current Rate is removed, so default to 0
+        const globalCurrentRate = 0;
+
+        sortedRates.forEach((entry) => {
+          const tr = document.createElement("tr");
+          tr.dataset.id = entry.id;
+
+          // Data points
+          const entryWeight = safeNumber(entry.weight, 0);
+          const entryRate = safeNumber(entry.rate, 0);
+          const entryCurrentRate = safeNumber(entry.currentRate, 0);
+
+          // Bal Wt: use stored balWt if exists, else default to entryWeight
+          const balWt = entry.balWt !== undefined ? safeNumber(entry.balWt, 0) : entryWeight;
+
+          // Adj Wt: use stored adjWt if exists, else 0
+          const adjWt = entry.adjWt !== undefined ? safeNumber(entry.adjWt, 0) : 0;
+
+          // Effective Current Rate
+          const effectiveCurrentRate = entryCurrentRate || globalCurrentRate;
+
+          // Calculate Diff Amt dynamically
+          let diffAmt = 0;
+          if (effectiveCurrentRate > 0) {
+            diffAmt = (effectiveCurrentRate - entryRate) * balWt;
+          }
+          // If a diffAmt is stored and valid, we could use it, but dynamic calculation usually preferred for consistency unless overridden.
+          // We'll prioritize the calculated value if parameters exist, but if we stored a manual override we'd need a flag.
+          // For simplicity, we'll display the calculated value based on current inputs.
+
+          // Format Diff Amount for display
+          const displayDiff = effectiveCurrentRate > 0 ? diffAmt.toFixed(2) : "0.00";
+          const diffColor = diffAmt >= 0 ? "green" : "red";
+
+          tr.innerHTML = `
+            <td style="text-align:center;">
+              <input type="checkbox" onchange="handleCompare(this, ${entry.id})" class="compare-chk">
+            </td>
+            <td><input type="date" value="${entry.date || ""}" style="width:110px;" onchange="updateHistoryRow(this, 'date')"></td>
+            <td>
+              <select style="width:50px;" onchange="updateHistoryRow(this, 'type')">
+                <option value="S" ${entry.type === 'S' ? 'selected' : ''}>S</option>
+                <option value="P" ${entry.type === 'P' ? 'selected' : ''}>P</option>
+                <option value="O" ${entry.type === 'O' ? 'selected' : ''}>O</option>
+                <option value="R" ${entry.type === 'R' ? 'selected' : ''}>R</option>
+              </select>
+            </td>
+            <td><input value="${entry.metal || ""}" placeholder="Metal" style="width:60px;" onchange="updateHistoryRow(this, 'metal')"></td>
+            <td><input value="${entry.stamp || ""}" style="width:60px;" onchange="updateHistoryRow(this, 'stamp')"></td>
+            <td><input value="${entry.narration || ""}" style="width:100px;" onchange="updateHistoryRow(this, 'narration')"></td>
+            <td><input type="number" step="0.001" value="${entryWeight > 0 ? entryWeight.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'weight')"></td>
+            <td><input type="number" step="0.01" value="${entryRate > 0 ? entryRate.toFixed(2) : ''}" style="width:80px; text-align:right;" onchange="updateHistoryRow(this, 'rate')"></td>
+            
+            <td><input type="number" step="0.001" value="${balWt > 0 ? balWt.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'balWt')"></td>
+            <td><input type="number" step="0.001" value="${adjWt !== 0 ? adjWt.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'adjWt')"></td>
+            <td style="text-align:center;">
+              <button onclick="removeHistoryRow(${entry.id})" style="background:none; border:none; cursor:pointer; font-size:13px; color:red; font-weight:500;" title="Remove Entry">Delete</button>
+            </td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+      } catch (e) {
+        console.error("Error loading history:", e);
+      }
     }
-    
-    // Try to apply to parent window's order form
-    if(window.opener){
+
+    /* UPDATE HISTORY ROW */
+    window.updateHistoryRow = function (input, field) {
+      const tr = input.closest("tr");
+      if (!tr || !tr.dataset.id) return;
+
+      const id = parseInt(tr.dataset.id);
+      let val = input.value;
+
+      if (['weight', 'rate', 'balWt', 'adjWt'].includes(field)) {
+        val = parseFloat(val) || 0;
+      }
+
       try {
-        // Call the applyRateToRow function in the parent window
-        if(window.opener.applyRateToRow){
-          window.opener.applyRateToRow(rateId);
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        const idx = rates.findIndex(r => r.id === id);
+        if (idx >= 0) {
+          rates[idx][field] = val;
+          localStorage.setItem("rateBook", JSON.stringify(rates));
+
+          // Reload to update dependent calculations
+          loadRateBookHistory();
+          window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+        }
+      } catch (e) { console.error(e); }
+    };
+
+    /* CALCULATE INDIVIDUAL HISTORY ROW (UI Only) */
+
+
+    /* Orphaned code removed */
+
+    /* APPLY RATE TO ROW - Same logic as before */
+    function applyRateToRow(rateId) {
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        const rate = rates.find(r => r.id === rateId);
+
+        if (!rate) {
+          alert("Rate not found");
+          return;
+        }
+
+        // Try to apply to parent window's order form
+        if (window.opener) {
+          try {
+            // Call the applyRateToRow function in the parent window
+            if (window.opener.applyRateToRow) {
+              window.opener.applyRateToRow(rateId);
+              window.close();
+              return;
+            }
+          } catch (e) {
+            console.error("Error applying rate:", e);
+          }
+        }
+
+        // Dashboard workspace flow (loadPage): store rate id and return to order page
+        localStorage.setItem("ratebookApplyRateId", String(rateId));
+        // Helps order page force-restore state even if flags are cleared elsewhere
+        localStorage.setItem("newOrderForceRestore", "true");
+        closeSelf();
+      } catch (e) {
+        console.error("Error in applyRateToRow:", e);
+        alert("Error applying rate: " + (e.message || String(e)));
+      }
+    }
+
+    /* CLOSE — WORKS FOR BOTH popup & window.open & dashboard workspace */
+    function closeSelf() {
+      // Save form data before closing (so it persists)
+      saveFormData();
+
+      const returnTarget = localStorage.getItem("ratebookReturnTarget") || "pages/new-order.html";
+
+      try {
+        // Dashboard workspace navigation
+        let loadPageFunc = null;
+        if (typeof loadPage === 'function') {
+          loadPageFunc = loadPage;
+        } else if (window.parent && typeof window.parent.loadPage === 'function') {
+          loadPageFunc = window.parent.loadPage.bind(window.parent);
+        } else if (window.top && typeof window.top.loadPage === 'function') {
+          loadPageFunc = window.top.loadPage.bind(window.top);
+        }
+
+        if (loadPageFunc) {
+          loadPageFunc(returnTarget);
+          return;
+        }
+
+        // Popup mode
+        if (window.opener && window.close) {
           window.close();
           return;
         }
-      } catch(e) {
-        console.error("Error applying rate:", e);
+
+        // Fallback
+        if (window.history && window.history.length > 1) {
+          window.history.back();
+          return;
+        }
+
+        window.location.href = returnTarget;
+      } catch (e) {
+        console.error("Error in closeSelf:", e);
+        try {
+          window.location.href = returnTarget;
+        } catch (e2) {
+          alert("Unable to close. Please navigate back manually.");
+        }
       }
     }
-    
-    // Dashboard workspace flow (loadPage): store rate id and return to order page
-    localStorage.setItem("ratebookApplyRateId", String(rateId));
-    // Helps order page force-restore state even if flags are cleared elsewhere
-    localStorage.setItem("newOrderForceRestore", "true");
-    closeSelf();
-  } catch(e) {
-    console.error("Error in applyRateToRow:", e);
-    alert("Error applying rate: " + (e.message || String(e)));
-  }
-}
 
-/* CLOSE — WORKS FOR BOTH popup & window.open & dashboard workspace */
-function closeSelf(){
-  // Save form data before closing (so it persists)
-  saveFormData();
-  
-  const returnTarget = localStorage.getItem("ratebookReturnTarget") || "pages/new-order.html";
+    /* UPDATE HISTORY ROW */
+    window.updateHistoryRow = function (input, field) {
+      const tr = input.closest("tr");
+      if (!tr || !tr.dataset.id) return;
 
-  try {
-    // Dashboard workspace navigation
-    let loadPageFunc = null;
-    if(typeof loadPage === 'function'){
-      loadPageFunc = loadPage;
-    } else if(window.parent && typeof window.parent.loadPage === 'function'){
-      loadPageFunc = window.parent.loadPage.bind(window.parent);
-    } else if(window.top && typeof window.top.loadPage === 'function'){
-      loadPageFunc = window.top.loadPage.bind(window.top);
-    }
+      const id = parseFloat(tr.dataset.id); // id is number
+      let val = input.value;
 
-    if(loadPageFunc){
-      loadPageFunc(returnTarget);
-      return;
-    }
+      if (['weight', 'rate', 'currentRate', 'balWt', 'adjWt'].includes(field)) {
+        val = parseFloat(val) || 0;
+      }
 
-    // Popup mode
-    if(window.opener && window.close){
-      window.close();
-      return;
-    }
-
-    // Fallback
-    if(window.history && window.history.length > 1){
-      window.history.back();
-      return;
-    }
-
-    window.location.href = returnTarget;
-  } catch(e) {
-    console.error("Error in closeSelf:", e);
-    try {
-      window.location.href = returnTarget;
-    } catch(e2) {
-      alert("Unable to close. Please navigate back manually.");
-    }
-  }
-}
-
-// Make functions globally accessible
-window.saveRate = saveRate;
-window.closeSelf = closeSelf;
-window.calcAmount = calcAmount;
-window.applyRateToRow = applyRateToRow;
-window.loadRateBookHistory = loadRateBookHistory;
-
-/* SAVE FORM DATA TO LOCALSTORAGE (for persistence) */
-function saveFormData(){
-  if(!initElements()) return;
-  
-  try {
-    const formData = {
-      stamp: stamp ? stamp.value : "",
-      weight: weight ? weight.value : "",
-      rate: rate ? rate.value : "",
-      amount: amount ? amount.value : "",
-      delDate: delDate ? delDate.value : "",
-      type: type ? type.value : "",
-      narration: narration ? narration.value : "",
-      timestamp: new Date().toISOString()
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        // Use loose equality or parsing for ID matching as it might be stored as number but dataset string
+        const idx = rates.findIndex(r => r.id == id);
+        if (idx >= 0) {
+          rates[idx][field] = val;
+          localStorage.setItem("rateBook", JSON.stringify(rates));
+          loadRateBookHistory();
+          window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+        }
+      } catch (e) {
+        console.error("Error updating history:", e);
+      }
     };
-    
-    localStorage.setItem("rateBookFormData", JSON.stringify(formData));
-  } catch(e) {
-    console.error("Error saving form data:", e);
-  }
-}
 
-/* RESTORE FORM DATA FROM LOCALSTORAGE */
-function restoreFormData(){
-  if(!initElements()) return;
-  
-  try {
-    const savedData = localStorage.getItem("rateBookFormData");
-    if(savedData){
-      const formData = JSON.parse(savedData);
-      
-      if(stamp) stamp.value = formData.stamp || "";
-      if(weight) weight.value = formData.weight || "0.000";
-      if(rate) rate.value = formData.rate || "0.00";
-      if(amount) amount.value = formData.amount || "0.00";
-      if(delDate) delDate.value = formData.delDate || "";
-      if(type) type.value = formData.type || "S";
-      if(narration) narration.value = formData.narration || "";
+    /* CALCULATE INDIVIDUAL HISTORY ROW (UI Only) */
+    window.calcHistoryRow = function (input) {
+      const tr = input.closest("tr");
+      if (!tr) return;
+
+      // Ensure we find the inputs correctly. 
+      // Current columns: Date, Type, Metal(?), Stamp, Remark, Weight, Ratebook, BalWt, AdjWt, CurrentRate, Diff
+      // But user might have removed Metal column. I need to be robust.
+      // Easiest is to check cell headers or look for inputs with specific classes, but here we rely on structure.
+      // Let's assume standard structure or specific query selectors if possible.
+      // The current inputs don't have classes.
+      // Row structure:
+      // 0:Date, 1:Type, 2:Metal, 3:Stamp, 4:Rem, 5:Wt, 6:Rate, 7:Bal, 8:Adj, 9:Curr, 10:Diff
+
+      const entryWeightInput = tr.querySelector('input[onchange*="weight"]');
+      const entryRateInput = tr.querySelector('input[onchange*="rate"]'); // Matches 'rate' but careful not 'currentRate' 
+      // Actually 'rate' onchange is "updateHistoryRow(this, 'rate')"
+      // 'currentRate' is "updateHistoryRow(this, 'currentRate')"
+
+      // Let's use cell index logic but allow for Metal column existence check?
+      // Or just re-read the table structure?
+      // Dynamic column detection or safe querying
+      const currentRateInput = tr.querySelector('input[onchange*="currentRate"]');
+      const rateInput = tr.querySelector('input[onchange*="rate"]');
+      const weightInput = tr.querySelector('input[onchange*="weight"]');
+      const balInput = tr.querySelector('input[onchange*="balWt"]');
+      const adjInput = tr.querySelector('input[onchange*="adjWt"]');
+
+      const currentRate = parseFloat(input.value) || 0;
+      const bookedRate = parseFloat(rateInput ? rateInput.value : 0) || 0;
+      const balWt = parseFloat(balInput ? balInput.value : (weightInput ? weightInput.value : 0)) || 0;
+      const adjWt = parseFloat(adjInput ? adjInput.value : 0) || 0;
+
+      const effectiveWt = balWt - adjWt;
+
+      // Assume Diff cell is last
+      const diffCell = tr.cells[tr.cells.length - 1];
+
+      let diff = 0;
+      if (currentRate > 0) {
+        diff = (currentRate - bookedRate) * effectiveWt;
+        diffCell.textContent = diff.toFixed(2);
+        diffCell.style.color = diff >= 0 ? "green" : "red";
+      } else {
+        diffCell.textContent = "0.00";
+        diffCell.style.color = "";
+      }
+    };
+
+    // Make functions globally accessible (Ensure this block exists)
+    window.saveRate = saveRate;
+    window.closeSelf = closeSelf;
+    window.calcAmount = calcAmount;
+    window.applyRateToRow = applyRateToRow;
+    window.loadRateBookHistory = loadRateBookHistory;
+    window.updateHistoryRow = updateHistoryRow;
+    window.calcHistoryRow = calcHistoryRow;
+
+    /* SAVE FORM DATA TO LOCALSTORAGE (for persistence) */
+    function saveFormData() {
+      if (!initElements()) return;
+      try {
+        const formData = {
+          stamp: stamp ? stamp.value : "",
+          weight: weight ? weight.value : "", // Use value, not textContent
+          rate: rate ? rate.value : "",
+          amount: amount ? amount.value : "",
+          delDate: delDate ? delDate.value : "",
+          type: type ? type.value : "",
+          narration: narration ? narration.value : "",
+          currentRate: currentRate ? currentRate.value : "",
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem("rateBookFormData", JSON.stringify(formData));
+      } catch (e) {
+        console.error("Error saving form data:", e);
+      }
     }
-  } catch(e) {
-    console.error("Error restoring form data:", e);
-  }
-}
 
-/* CLEAR FORM DATA FROM LOCALSTORAGE */
-function clearFormData(){
-  try {
-    localStorage.removeItem("rateBookFormData");
-  } catch(e) {
-    console.error("Error clearing form data:", e);
-  }
-}
+    /* RESTORE FORM DATA FROM LOCALSTORAGE */
+    function restoreFormData() {
+      if (!initElements()) return;
+      try {
+        const json = localStorage.getItem("rateBookFormData");
+        if (!json) return;
+        const data = JSON.parse(json);
 
-// Initialize on page load
-function initializePage(){
-  initElements();
-  loadRateBookHistory();
-  restoreFormData(); // Restore saved form data
-  // Prefill Amount Difference from order context (if provided)
-  try {
-    const suggested = localStorage.getItem("ratebookAmountDifference");
-    if(amount && suggested !== null && suggested !== undefined && amount.value === "0.00"){
-      const n = safeNumber(suggested, 0);
-      amount.value = n.toFixed(2);
+        if (stamp) stamp.value = data.stamp || "";
+        if (weight) weight.value = data.weight || "";
+        if (rate) rate.value = data.rate || "";
+        if (amount) amount.value = data.amount || "";
+        if (delDate) delDate.value = data.delDate || "";
+        if (type) type.value = data.type || "S";
+        if (narration) narration.value = data.narration || "";
+        if (currentRate) currentRate.value = data.currentRate || "";
+
+      } catch (e) { console.error(e); }
     }
-  } catch(e) {}
-  // Prefill Rate from customer balance (if provided)
-  try {
-    const { customerId } = getActiveCustomerContext();
-    const currentRate = safeNumber(rate ? rate.value : 0, 0);
-    if(rate && customerId && !(currentRate > 0)){
-      const balances = readCustomerRatebookBalances();
-      const rec = balances[customerId];
-      const recRate = safeNumber(rec && rec.rate, 0);
-      if(recRate > 0) rate.value = recRate.toFixed(2);
-    }
-  } catch(e) {}
-  // Recalculate once (fills Weight)
-  setTimeout(() => calcAmount(), 0);
-  
-  // Save form data on input changes (auto-save)
-  if(stamp) stamp.addEventListener('input', saveFormData);
-  if(rate) rate.addEventListener('input', saveFormData);
-  if(amount) amount.addEventListener('input', saveFormData);
-  if(delDate) delDate.addEventListener('input', saveFormData);
-  if(type) type.addEventListener('input', saveFormData);
-  if(narration) narration.addEventListener('input', saveFormData);
-  
-  // Add event listeners as backup for buttons
-  const cancelBtn = document.getElementById("cancelBtn");
-  
-  if(cancelBtn){
-    cancelBtn.addEventListener('click', function(e){
-      e.preventDefault();
-      saveFormData(); // Save data before closing
-      closeSelf();
-    });
-  }
-}
 
-// Wait for DOM to be ready
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', initializePage);
-} else {
-  // DOM already ready
-  setTimeout(initializePage, 100);
-}
-</script>
+    /* CLEAR FORM DATA FROM LOCALSTORAGE */
+    function clearFormData() {
+      try {
+        localStorage.removeItem("rateBookFormData");
+      } catch (e) {
+        console.error("Error clearing form data:", e);
+      }
+    }
+
+    /* COMPARE RATES LOGIC */
+    let selectedForCompare = [];
+
+    window.handleCompare = function (chk, id) {
+      if (chk.checked) {
+        selectedForCompare.push(id);
+      } else {
+        selectedForCompare = selectedForCompare.filter(sid => sid !== id);
+      }
+      calculateComparison();
+    };
+
+    function calculateComparison() {
+      const display = document.getElementById("compareDisplay");
+      const valSpan = document.getElementById("compareVal");
+      const displayFooter = document.getElementById("compareDisplayFooter");
+      const valSpanFooter = document.getElementById("compareValFooter");
+
+      // Update Button Visibility
+      const btn = document.getElementById("btnCalcDiff");
+      if (btn) {
+        if (selectedForCompare.length >= 2) {
+          btn.style.display = "inline-block";
+          btn.style.background = "#007aff";
+          btn.innerText = `Calculate Diff (${selectedForCompare.length})`;
+        } else {
+          btn.style.display = "none";
+        }
+      }
+
+      if (selectedForCompare.length < 2) {
+        valSpan.innerText = "0.00";
+        if (valSpanFooter) valSpanFooter.innerText = "0.00";
+        localStorage.removeItem("rateComparingDiff");
+        notifyDiffUpdate();
+        return;
+      }
+
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+
+        // Get all selected objects with LOOSE comparison for IDs (String vs Number safety)
+        const selectedObjs = rates.filter(r => selectedForCompare.some(sid => String(sid) === String(r.id)));
+
+        console.log("Compare Debug:", { selectedForCompare, selectedObjs });
+
+        if (selectedObjs.length >= 2) {
+          // Sort by date (Newest first)
+          const sorted = selectedObjs.sort((a, b) => new Date(b.date) - new Date(a.date));
+          const newest = sorted[0];
+          const oldest = sorted[sorted.length - 1]; // Compare Newest vs Oldest
+
+          const rateDiff = (parseFloat(newest.rate) || 0) - (parseFloat(oldest.rate) || 0);
+          const weight = parseFloat(newest.weight) || 0;
+
+          const totalDiff = rateDiff * weight;
+
+          display.style.display = 'block';
+          valSpan.innerText = totalDiff.toFixed(2);
+
+          if (displayFooter) {
+            displayFooter.style.display = 'block';
+            valSpanFooter.innerText = totalDiff.toFixed(2);
+          }
+
+          localStorage.setItem("rateComparingDiff", totalDiff.toFixed(2));
+          notifyDiffUpdate();
+        } else {
+          console.warn("Could not find selected objects in rateBook", selectedForCompare);
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function notifyDiffUpdate() {
+      try {
+        window.dispatchEvent(new CustomEvent('rateDiffUpdated'));
+        if (window.opener) window.opener.dispatchEvent(new CustomEvent('rateDiffUpdated'));
+      } catch (e) { }
+    }
+
+    /* REMOVE ROW */
+    window.removeHistoryRow = function (id) {
+      if (!confirm("Are you sure you want to remove this entry?")) return;
+
+      try {
+        let rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        rates = rates.filter(r => r.id !== id);
+        localStorage.setItem("rateBook", JSON.stringify(rates));
+
+        loadRateBookHistory();
+
+        // Notify other windows
+        try {
+          window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+          if (window.opener) window.opener.dispatchEvent(new CustomEvent('ratebookUpdated'));
+        } catch (e) { }
+      } catch (e) { console.error(e); }
+    };
+
+    /* ADD NEW ROW */
+    window.addHistoryRow = function () {
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+
+        const newEntry = {
+          id: Date.now(),
+          date: new Date().toISOString().split('T')[0],
+          type: 'S',
+          metal: '',
+          stamp: '',
+          narration: '',
+          weight: 0,
+          rate: 0,
+          balWt: 0,
+          adjWt: 0,
+          // Extra fields (even if not shown in this view, good for compatibility)
+          curStamp: '',
+          curWt: 0,
+          curRate: 0,
+          delDate: '',
+          curNarration: ''
+        };
+
+        // Add to array
+        rates.push(newEntry);
+        localStorage.setItem("rateBook", JSON.stringify(rates));
+
+        loadRateBookHistory();
+
+        // Notify other windows
+        try {
+          window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+          if (window.opener) window.opener.dispatchEvent(new CustomEvent('ratebookUpdated'));
+        } catch (e) { }
+      } catch (e) { console.error(e); }
+    };
+
+    function initializePage() {
+      initElements();
+      loadRateBookHistory();
+      restoreFormData(); // Restore saved form data
+      // Prefill Amount Difference from order context (if provided)
+      try {
+        const suggested = localStorage.getItem("ratebookAmountDifference");
+        if (amount && suggested !== null && suggested !== undefined && amount.value === "0.00") {
+          const n = safeNumber(suggested, 0);
+          amount.value = n.toFixed(2);
+        }
+      } catch (e) { }
+      // Prefill Rate from customer balance (if provided)
+      try {
+        const { customerId } = getActiveCustomerContext();
+        const currentRateVal = safeNumber(rate ? rate.value : 0, 0);
+        if (rate && customerId && !(currentRateVal > 0)) {
+          const balances = readCustomerRatebookBalances();
+          const rec = balances[customerId];
+          const recRate = safeNumber(rec && rec.rate, 0);
+          if (recRate > 0) rate.value = recRate.toFixed(2);
+        }
+      } catch (e) { }
+      // Recalculate once (fills Weight)
+      setTimeout(() => calcAmount(), 0);
+
+      // Save form data on input changes (auto-save)
+      if (stamp) stamp.addEventListener('input', saveFormData);
+      if (rate) rate.addEventListener('input', saveFormData);
+      if (amount) amount.addEventListener('input', saveFormData);
+      if (delDate) delDate.addEventListener('input', saveFormData);
+      if (type) type.addEventListener('input', saveFormData);
+      if (narration) narration.addEventListener('input', saveFormData);
+      if (currentRate) currentRate.addEventListener('input', saveFormData);
+
+      // Add event listeners as backup for buttons
+      const cancelBtn = document.getElementById("cancelBtn");
+
+
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          saveFormData(); // Save data before closing
+          closeSelf();
+        });
+      }
+    }
+
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializePage);
+    } else {
+      // DOM already ready
+      setTimeout(initializePage, 100);
+    }
+  </script>
 
 </body>
+
 </html>

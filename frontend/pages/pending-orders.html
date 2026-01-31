@@ -1,530 +1,565 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Pending Orders</title>
 
-<style>
-/* =========================
+<head>
+  <meta charset="UTF-8">
+  <title>Pending Orders</title>
+
+  <style>
+    /* =========================
    BASE
 ========================= */
-*{
-  box-sizing:border-box;
-  font-family:Segoe UI, Arial, sans-serif;
-  font-size:13px;
-}
+    * {
+      box-sizing: border-box;
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 13px;
+    }
 
-body{
-  margin:0;
-  background:#e6ebf2;
-}
+    body {
+      margin: 0;
+      background: #e6ebf2;
+    }
 
-/* When loaded in workspace - body doesn't exist, content is in .workspace */
-.workspace{
-  background:linear-gradient(to bottom,#cde1ff,#e6f1ff) !important;
-}
+    /* When loaded in workspace - body doesn't exist, content is in .workspace */
+    .workspace {
+      background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
+    }
 
-/* =========================
+    /* =========================
    CONTAINER
 ========================= */
-.pending-orders-wrap{
-  margin:15px;
-  background:#fff !important;
-  border:1px solid #d1d6de;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  height:calc(100vh - 30px);
-  max-height:calc(100vh - 30px);
-  overflow:hidden;
-  box-sizing:border-box;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
+    .pending-orders-wrap {
+      margin: 15px;
+      background: #fff !important;
+      border: 1px solid #d1d6de;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 30px);
+      max-height: calc(100vh - 30px);
+      overflow: hidden;
+      box-sizing: border-box;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
 
-/* Workspace integration */
-.workspace .pending-orders-wrap{
-  margin:0 !important;
-  height:100% !important;
-  max-height:100% !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  background:#fff !important;
-  border:none !important;
-}
+    /* Workspace integration */
+    .workspace .pending-orders-wrap {
+      margin: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: #fff !important;
+      border: none !important;
+    }
 
-/* =========================
+    /* =========================
    TOOLBAR
 ========================= */
-.pending-toolbar{
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  gap:12px;
-  padding:16px;
-  border-bottom:1px solid #e5e7eb;
-  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
-  flex-shrink:0;
-  box-sizing:border-box;
-}
+    .pending-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
 
-/* Force toolbar colors in workspace */
-.workspace .pending-orders-wrap .pending-toolbar{
-  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
-}
+    /* Force toolbar colors in workspace */
+    .workspace .pending-orders-wrap .pending-toolbar {
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+    }
 
-.pending-toolbar h2{
-  margin:0;
-  font-size:18px;
-  font-weight:600;
-  color:#000 !important;
-  flex:1;
-}
+    .pending-toolbar h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #000 !important;
+      flex: 1;
+    }
 
-.btn{
-  padding:8px 16px;
-  border:1px solid #d1d6de;
-  background:#fff;
-  cursor:pointer;
-  border-radius:8px;
-  font-size:13px;
-  font-weight:500;
-  transition:all 0.2s;
-  color:#000 !important;
-  box-shadow:0 1px 2px rgba(0,0,0,0.05);
-}
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid #d1d6de;
+      background: #fff;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      color: #000 !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
 
-.btn:hover{ 
-  background:#007aff;
-  border-color:#007aff;
-  color:#fff;
-  transform:translateY(-1px);
-  box-shadow:0 2px 4px rgba(0,122,255,0.2);
-}
+    .btn:hover {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+    }
 
-.btn:active{
-  transform:translateY(0);
-  box-shadow:0 1px 2px rgba(0,0,0,0.1);
-}
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
 
-/* =========================
+    /* =========================
    TABLE
 ========================= */
-.table-wrap{
-  flex:1;
-  overflow:auto;
-  overflow-x:auto;
-  overflow-y:auto;
-  position:relative;
-  min-height:0;
-  box-sizing:border-box;
-  background:#fff !important;
-}
+    .table-wrap {
+      flex: 1;
+      overflow: auto;
+      overflow-x: auto;
+      overflow-y: auto;
+      position: relative;
+      min-height: 0;
+      box-sizing: border-box;
+      background: #fff !important;
+    }
 
-/* Force colors in workspace */
-.workspace .pending-orders-wrap .table-wrap{
-  background:#fff !important;
-}
+    /* Force colors in workspace */
+    .workspace .pending-orders-wrap .table-wrap {
+      background: #fff !important;
+    }
 
-table{
-  width:100%;
-  min-width:1200px;
-  border-collapse:separate;
-  border-spacing:0;
-  table-layout:auto;
-  background:#fff !important;
-}
+    table {
+      width: 100%;
+      min-width: 1200px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: auto;
+      background: #fff !important;
+    }
 
-/* Force table colors in workspace */
-.workspace .pending-orders-wrap table{
-  background:#fff !important;
-}
+    /* Force table colors in workspace */
+    .workspace .pending-orders-wrap table {
+      background: #fff !important;
+    }
 
-thead{
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:#fff !important;
-}
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff !important;
+    }
 
-/* Force thead colors in workspace */
-.workspace .pending-orders-wrap thead{
-  background:#fff !important;
-}
+    /* Force thead colors in workspace */
+    .workspace .pending-orders-wrap thead {
+      background: #fff !important;
+    }
 
-thead th{
-  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
-  border-bottom:2px solid #d1d6de;
-  padding:14px 12px;
-  white-space:nowrap;
-  position:sticky;
-  top:0;
-  z-index:10;
-  font-weight:600;
-  font-size:12px;
-  text-align:left;
-  color:#000 !important;
-  text-transform:uppercase;
-  letter-spacing:0.3px;
-}
+    thead th {
+      background: linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
+      border-bottom: 2px solid #d1d6de;
+      padding: 14px 12px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-weight: 600;
+      font-size: 12px;
+      text-align: left;
+      color: #000 !important;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
 
-/* Force th colors in workspace */
-.workspace .pending-orders-wrap thead th{
-  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
-  color:#000 !important;
-}
+    /* Force th colors in workspace */
+    .workspace .pending-orders-wrap thead th {
+      background: linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
+      color: #000 !important;
+    }
 
-thead th.center{
-  text-align:center;
-}
+    thead th.center {
+      text-align: center;
+    }
 
-thead th.right{
-  text-align:right;
-}
+    thead th.right {
+      text-align: right;
+    }
 
-tbody td{
-  padding:12px;
-  border-bottom:1px solid #f0f0f0;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:200px;
-  font-size:13px;
-  vertical-align:middle;
-  color:#000 !important;
-  background:transparent !important;
-  transition:all 0.15s ease;
-}
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      font-size: 13px;
+      vertical-align: middle;
+      color: #000 !important;
+      background: transparent !important;
+      transition: all 0.15s ease;
+    }
 
-/* Force td colors in workspace */
-.workspace .pending-orders-wrap tbody td{
-  color:#000 !important;
-  background:transparent !important;
-}
+    /* Force td colors in workspace */
+    .workspace .pending-orders-wrap tbody td {
+      color: #000 !important;
+      background: transparent !important;
+    }
 
-/* Allow some columns to wrap if needed */
-tbody td:nth-child(3){
-  max-width:200px;
-  white-space:normal;
-  word-break:break-word;
-  line-height:1.4;
-}
+    /* Allow some columns to wrap if needed */
+    tbody td:nth-child(3) {
+      max-width: 200px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.4;
+    }
 
-tbody td:nth-child(2){
-  max-width:120px;
-}
+    tbody td:nth-child(2) {
+      max-width: 120px;
+    }
 
-tbody tr{
-  transition:all 0.2s ease;
-  background:#fff !important;
-}
+    tbody tr {
+      transition: all 0.2s ease;
+      background: #fff !important;
+    }
 
-tbody tr:nth-child(even){
-  background:#fafbfc !important;
-}
+    tbody tr:nth-child(even) {
+      background: #fafbfc !important;
+    }
 
-/* Force tr colors in workspace */
-.workspace .pending-orders-wrap tbody tr{
-  background:#fff !important;
-}
+    /* Force tr colors in workspace */
+    .workspace .pending-orders-wrap tbody tr {
+      background: #fff !important;
+    }
 
-.workspace .pending-orders-wrap tbody tr:nth-child(even){
-  background:#fafbfc !important;
-}
+    .workspace .pending-orders-wrap tbody tr:nth-child(even) {
+      background: #fafbfc !important;
+    }
 
-tbody tr:hover{ 
-  background:#e8f2ff !important;
-  transform:scale(1.001);
-  box-shadow:0 2px 4px rgba(0,0,0,0.05);
-}
+    tbody tr:hover {
+      background: #e8f2ff !important;
+      transform: scale(1.001);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
 
-tbody tr:hover td{
-  border-bottom-color:#d1e7ff;
-}
+    tbody tr:hover td {
+      border-bottom-color: #d1e7ff;
+    }
 
-tbody tr:last-child td{
-  border-bottom:none;
-}
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
 
-tbody tr td:first-child{
-  padding-left:16px;
-}
+    tbody tr td:first-child {
+      padding-left: 16px;
+    }
 
-tbody tr td:last-child{
-  padding-right:16px;
-}
+    tbody tr td:last-child {
+      padding-right: 16px;
+    }
 
-.center{ 
-  text-align:center;
-}
+    .center {
+      text-align: center;
+    }
 
-.right{ 
-  text-align:right;
-  font-weight:500;
-  color:#000 !important;
-  font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
-  font-variant-numeric:tabular-nums;
-}
+    .right {
+      text-align: right;
+      font-weight: 500;
+      color: #000 !important;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
 
-.badge{
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:12px;
-  font-weight:600;
-  display:inline-block;
-}
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
 
-.pending{
-  background:#fff4d6;
-  color:#9a6a00;
-}
+    .pending {
+      background: #fff4d6;
+      color: #9a6a00;
+    }
 
-button{
-  padding:6px 14px;
-  border-radius:8px;
-  border:none;
-  background:#0d6efd;
-  color:#fff;
-  font-size:12px;
-  cursor:pointer;
-  transition:all 0.2s;
-  font-weight:500;
-}
+    button {
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #0d6efd;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
 
-button:hover{
-  background:#0b5ed7;
-  transform:translateY(-1px);
-  box-shadow:0 2px 4px rgba(11,94,215,0.2);
-}
+    button:hover {
+      background: #0b5ed7;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(11, 94, 215, 0.2);
+    }
 
-button:active{
-  transform:translateY(0);
-}
+    button:active {
+      transform: translateY(0);
+    }
 
-/* =========================
+    /* =========================
    FOOTER
 ========================= */
-.footer{
-  padding:12px 16px;
-  font-size:13px;
-  color:#000 !important;
-  border-top:1px solid #e5e7eb;
-  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
-  flex-shrink:0;
-  box-sizing:border-box;
-  font-weight:500;
-}
+    .footer {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #000 !important;
+      border-top: 1px solid #e5e7eb;
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      font-weight: 500;
+    }
 
-/* Force footer colors in workspace */
-.workspace .pending-orders-wrap .footer{
-  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
-  color:#000 !important;
-}
+    /* Force footer colors in workspace */
+    .workspace .pending-orders-wrap .footer {
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      color: #000 !important;
+    }
 
-/* =========================
+    /* =========================
    SCROLLBAR STYLING
 ========================= */
-.table-wrap::-webkit-scrollbar{
-  width:10px;
-  height:10px;
-}
+    .table-wrap::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
 
-.table-wrap::-webkit-scrollbar-track{
-  background:#f5f5f7;
-  border-radius:5px;
-}
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f5f5f7;
+      border-radius: 5px;
+    }
 
-.table-wrap::-webkit-scrollbar-thumb{
-  background:#c1c1c6;
-  border-radius:5px;
-  border:2px solid #f5f5f7;
-}
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #c1c1c6;
+      border-radius: 5px;
+      border: 2px solid #f5f5f7;
+    }
 
-.table-wrap::-webkit-scrollbar-thumb:hover{
-  background:#a1a1a6;
-}
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a6;
+    }
 
-/* =========================
+    /* =========================
    RESPONSIVE
 ========================= */
-@media (max-width: 768px) {
-  .pending-orders-wrap{
-    margin:8px;
-    height:calc(100vh - 16px);
-    max-height:calc(100vh - 16px);
-  }
-  
-  .workspace .pending-orders-wrap{
-    margin:0;
-    height:100%;
-    max-height:100%;
-  }
-  
-  .pending-toolbar{
-    padding:12px;
-    gap:8px;
-  }
-  
-  .pending-toolbar h2{
-    font-size:16px;
-  }
-  
-  .table-wrap{
-    overflow-x:scroll;
-    overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-  }
-  
-  table{
-    min-width:900px;
-  }
-  
-  tbody td{
-    max-width:150px;
-    font-size:12px;
-    padding:10px;
-  }
-  
-  thead th{
-    font-size:11px;
-    padding:12px 10px;
-  }
-}
-</style>
+    @media (max-width: 768px) {
+      .pending-orders-wrap {
+        margin: 8px;
+        height: calc(100vh - 16px);
+        max-height: calc(100vh - 16px);
+      }
+
+      .workspace .pending-orders-wrap {
+        margin: 0;
+        height: 100%;
+        max-height: 100%;
+      }
+
+      .pending-toolbar {
+        padding: 12px;
+        gap: 8px;
+      }
+
+      .pending-toolbar h2 {
+        font-size: 16px;
+      }
+
+      .table-wrap {
+        overflow-x: scroll;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      table {
+        min-width: 900px;
+      }
+
+      tbody td {
+        max-width: 150px;
+        font-size: 12px;
+        padding: 10px;
+      }
+
+      thead th {
+        font-size: 11px;
+        padding: 12px 10px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="pending-orders-wrap">
-  <!-- TOOLBAR -->
-  <div class="pending-toolbar">
-    <h2>Pending Orders</h2>
-    <button class="btn" onclick="loadPendingOrders()">🔄 Refresh</button>
+  <div class="pending-orders-wrap">
+    <!-- TOOLBAR -->
+    <div class="pending-toolbar">
+      <h2>Pending Orders</h2>
+      <button class="btn" onclick="loadPendingOrders()">🔄 Refresh</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Order No</th>
+            <th>Customer</th>
+            <th>Order Date</th>
+            <th>Due Date</th>
+            <th>Type</th>
+            <th class="right">Pc</th>
+            <th class="right">Gr.Wt</th>
+            <th class="right">Net (Rs)</th>
+            <th class="right">Advance (Rs)</th>
+            <th class="right">Balance</th>
+            <th class="center">Action</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="footer" id="footerText">
+      No pending orders available
+    </div>
   </div>
 
-  <!-- TABLE -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>Status</th>
-          <th>Order No</th>
-          <th>Customer</th>
-          <th>Order Date</th>
-          <th>Due Date</th>
-          <th>Type</th>
-          <th class="right">Pc</th>
-          <th class="right">Gr.Wt</th>
-          <th class="right">Net (Rs)</th>
-          <th class="right">Advance (Rs)</th>
-          <th class="right">Balance</th>
-          <th class="center">Action</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
+  <script>
+    /* =========================
+       ELEMENT REFERENCES
+    ========================= */
+    let tbody = null;
+    let footer = null;
 
-  <div class="footer" id="footerText">
-    No pending orders available
-  </div>
-</div>
+    /* =========================
+       INITIALIZE ELEMENTS
+    ========================= */
+    function initElements() {
+      // Try to find elements in workspace first (dashboard context)
+      const workspace = document.querySelector(".workspace");
 
-<script>
-/* =========================
-   ELEMENT REFERENCES
-========================= */
-let tbody = null;
-let footer = null;
+      if (workspace) {
+        // Look in workspace first
+        tbody = workspace.querySelector("#tableBody");
+        footer = workspace.querySelector("#footerText");
 
-/* =========================
-   INITIALIZE ELEMENTS
-========================= */
-function initElements(){
-  // Try to find elements in workspace first (dashboard context)
-  const workspace = document.querySelector(".workspace");
-  
-  if(workspace){
-    // Look in workspace first
-    tbody = workspace.querySelector("#tableBody");
-    footer = workspace.querySelector("#footerText");
-    
-    // If not found in workspace, try document
-    if(!tbody){
-      tbody = document.getElementById("tableBody");
+        // If not found in workspace, try document
+        if (!tbody) {
+          tbody = document.getElementById("tableBody");
+        }
+        if (!footer) {
+          footer = document.getElementById("footerText");
+        }
+      } else {
+        // Not in workspace, look in document
+        tbody = document.getElementById("tableBody");
+        footer = document.getElementById("footerText");
+      }
+
+      if (!tbody || !footer) {
+        return false;
+      }
+
+      return true;
     }
-    if(!footer){
-      footer = document.getElementById("footerText");
-    }
-  } else {
-    // Not in workspace, look in document
-    tbody = document.getElementById("tableBody");
-    footer = document.getElementById("footerText");
-  }
-  
-  if(!tbody || !footer){
-    return false;
-  }
-  
-  return true;
-}
 
-function loadPendingOrders(){
-  if(!tbody){
-    if(!initElements()){
-      console.warn("Pending orders table elements not found. Retrying...");
-      setTimeout(loadPendingOrders, 100);
-      return;
-    }
-  }
-  
-  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  tbody.innerHTML = "";
+    function loadPendingOrders() {
+      if (!tbody) {
+        if (!initElements()) {
+          console.warn("Pending orders table elements not found. Retrying...");
+          setTimeout(loadPendingOrders, 100);
+          return;
+        }
+      }
 
-  // Filter only PENDING orders
-  const pending = orders.filter(o => o.status === "PENDING");
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      tbody.innerHTML = "";
 
-  if(pending.length === 0){
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#777;padding:30px;">
+      // Filter only PENDING orders
+      const pending = orders.filter(o => o.status === "PENDING");
+
+      if (pending.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#777;padding:30px;">
       No pending orders</td></tr>`;
-    updateFooter();
-    return;
-  }
-
-  // Sort by date (newest first)
-  const sortedPending = [...pending].sort((a, b) => {
-    const dateA = new Date(a.orderDate || a.timestamp || 0);
-    const dateB = new Date(b.orderDate || b.timestamp || 0);
-    return dateB - dateA;
-  });
-
-  sortedPending.forEach(order => {
-    try {
-      // Calculate Pc and Gr.Wt from items if not directly stored
-      let totalPc = order.pc || 0;
-      let totalGrWt = parseFloat(order.grWt || 0);
-      
-      // If not in order data, calculate from items
-      if(!totalPc && order.items && order.items.length > 0){
-        order.items.forEach(item => {
-          // Support both old structure (Pc at index 7) and new structure (Pc at index 4)
-          const pc = parseFloat(item.values[4] || item.values[7] || 0);
-          // Support both old structure (Gr.Wt at index 8) and new structure (Gr.Wt at index 5)
-          const grWt = parseFloat(item.values[5] || item.values[8] || 0);
-          totalPc += pc;
-          totalGrWt += grWt;
-        });
+        updateFooter();
+        return;
       }
-      
-      // Get type from order or from first item
-      let orderType = order.type || "Order";
-      if(!orderType && order.items && order.items.length > 0){
-        const firstItemType = order.items[0].type;
-        if(firstItemType) orderType = firstItemType;
-      }
-      
-      const tr = document.createElement("tr");
-      tr.dataset.orderId = order.id;
-      tr.innerHTML = `
+
+      // Sort by date (newest first)
+      const sortedPending = [...pending].sort((a, b) => {
+        const dateA = new Date(a.orderDate || a.timestamp || 0);
+        const dateB = new Date(b.orderDate || b.timestamp || 0);
+        return dateB - dateA;
+      });
+
+      sortedPending.forEach(order => {
+        try {
+          // Calculate Pc and Gr.Wt from items if not directly stored
+          let totalPc = order.pc || 0;
+          let totalGrWt = parseFloat(order.grWt || 0);
+
+          // If not in order data, calculate from items
+          if (!totalPc && order.items && order.items.length > 0) {
+            order.items.forEach(item => {
+              // Support both old structure (Pc at index 7) and new structure (Pc at index 4)
+              const pc = parseFloat(item.values[4] || item.values[7] || 0);
+              // Support both old structure (Gr.Wt at index 8) and new structure (Gr.Wt at index 5)
+              const grWt = parseFloat(item.values[5] || item.values[8] || 0);
+              totalPc += pc;
+              totalGrWt += grWt;
+            });
+          }
+
+          // Recalculate Net Amount based on "Order - Purchase" Logic
+          // This ensures Pending Orders list reflects the new logic even for old orders
+          if (order.items && order.items.length > 0) {
+            let calculatedTotal = 0;
+            let hasItems = false;
+
+            order.items.forEach(item => {
+              if (item.values) {
+                hasItems = true;
+                // Index 0 is Type, Index 13 is Total
+                // Note: Depending on column changes, Total might be at a different index if columns were added/removed
+                // But traditionally: 0=Type ... 13=Total
+                // Let's rely on standard index 13 as per ready-extra-order.html
+
+                // Check if we have values at index 13
+                if (item.values.length > 13) {
+                  const type = item.values[0] || "Order";
+                  const amount = parseFloat(item.values[13] || 0);
+
+                  if (type === "Purchase") {
+                    calculatedTotal -= amount;
+                  } else {
+                    calculatedTotal += amount;
+                  }
+                }
+              }
+            });
+
+            if (hasItems) {
+              order.netAmount = calculatedTotal.toFixed(2);
+              order.balance = (calculatedTotal - (parseFloat(order.advance) || 0)).toFixed(2);
+            }
+          }
+
+          // Get type from order or from first item
+          let orderType = order.type || "Order";
+          if (!orderType && order.items && order.items.length > 0) {
+            const firstItemType = order.items[0].type;
+            if (firstItemType) orderType = firstItemType;
+          }
+
+          const tr = document.createElement("tr");
+          tr.dataset.orderId = order.id;
+          tr.innerHTML = `
         <td><span class="badge pending">PENDING</span></td>
         <td>${order.orderNo || order.billNo || "-"}</td>
         <td>${order.customer || "-"}</td>
@@ -540,183 +575,184 @@ function loadPendingOrders(){
           <button onclick="markReady(${order.id})">Mark Ready</button>
         </td>
       `;
-      tbody.appendChild(tr);
-    } catch(e) {
-      console.error("Error creating pending order row:", e);
-    }
-  });
-  
-  updateFooter();
-}
+          tbody.appendChild(tr);
+        } catch (e) {
+          console.error("Error creating pending order row:", e);
+        }
+      });
 
-/* =========================
-   FOOTER UPDATE
-========================= */
-function updateFooter(){
-  const footer = document.getElementById("footerText");
-  if(!footer) return;
-  
-  const tbody = document.getElementById("tableBody");
-  if(!tbody) return;
-  
-  const allRows = tbody.querySelectorAll("tr");
-  const visibleRows = Array.from(allRows).filter(row => row.style.display !== "none");
-  const count = visibleRows.length;
-  const total = allRows.length;
-  
-  if(count < total && total > 0){
-    footer.textContent = `Showing ${count} of ${total} pending orders`;
-  } else {
-    footer.textContent = count ? `Showing ${count} pending orders` : "No pending orders available";
-  }
-}
-
-function markReady(orderId){
-  try {
-    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-    const orderIndex = orders.findIndex(o => {
-      // Handle both number and string ID comparisons
-      return o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId);
-    });
-    
-    if(orderIndex === -1) {
-      alert("Order not found");
-      return;
+      updateFooter();
     }
 
-    const order = orders[orderIndex];
-    
-    // Confirm action
-    if(!confirm(`Mark order ${order.orderNo || order.billNo || orderId} as READY? This will remove it from pending orders permanently.`)){
-      return;
+    /* =========================
+       FOOTER UPDATE
+    ========================= */
+    function updateFooter() {
+      const footer = document.getElementById("footerText");
+      if (!footer) return;
+
+      const tbody = document.getElementById("tableBody");
+      if (!tbody) return;
+
+      const allRows = tbody.querySelectorAll("tr");
+      const visibleRows = Array.from(allRows).filter(row => row.style.display !== "none");
+      const count = visibleRows.length;
+      const total = allRows.length;
+
+      if (count < total && total > 0) {
+        footer.textContent = `Showing ${count} of ${total} pending orders`;
+      } else {
+        footer.textContent = count ? `Showing ${count} pending orders` : "No pending orders available";
+      }
     }
 
-    // Update status to READY (do NOT delete the order, just change status)
-    order.status = "READY";
-    order.readyDate = new Date().toISOString().split("T")[0];
-    
-    // Update the order in the array (preserve all other data)
-    orders[orderIndex] = order;
-    
-    // Save updated orders back to localStorage
-    localStorage.setItem("orders", JSON.stringify(orders));
-    
-    // Immediately reload pending orders to remove it from the list
-    loadPendingOrders();
-    
-    // Dispatch event to refresh ready orders page if it's open
-    const refreshEvent = new CustomEvent('orderStatusChanged', {
-      detail: { orderId: orderId, status: "READY" }
-    });
-    window.dispatchEvent(refreshEvent);
-    if(window.parent && window.parent !== window){
-      window.parent.dispatchEvent(refreshEvent);
+    function markReady(orderId) {
+      try {
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const orderIndex = orders.findIndex(o => {
+          // Handle both number and string ID comparisons
+          return o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId);
+        });
+
+        if (orderIndex === -1) {
+          alert("Order not found");
+          return;
+        }
+
+        const order = orders[orderIndex];
+
+        // Confirm action
+        if (!confirm(`Mark order ${order.orderNo || order.billNo || orderId} as READY? This will remove it from pending orders permanently.`)) {
+          return;
+        }
+
+        // Update status to READY (do NOT delete the order, just change status)
+        order.status = "READY";
+        order.readyDate = new Date().toISOString().split("T")[0];
+
+        // Update the order in the array (preserve all other data)
+        orders[orderIndex] = order;
+
+        // Save updated orders back to localStorage
+        localStorage.setItem("orders", JSON.stringify(orders));
+
+        // Immediately reload pending orders to remove it from the list
+        loadPendingOrders();
+
+        // Dispatch event to refresh ready orders page if it's open
+        const refreshEvent = new CustomEvent('orderStatusChanged', {
+          detail: { orderId: orderId, status: "READY" }
+        });
+        window.dispatchEvent(refreshEvent);
+        if (window.parent && window.parent !== window) {
+          window.parent.dispatchEvent(refreshEvent);
+        }
+        if (window.top && window.top !== window) {
+          window.top.dispatchEvent(refreshEvent);
+        }
+
+        alert("Order marked as READY and removed from pending orders");
+
+      } catch (e) {
+        console.error("Error marking order as ready:", e);
+        alert("Error updating order status: " + e.message);
+      }
     }
-    if(window.top && window.top !== window){
-      window.top.dispatchEvent(refreshEvent);
+
+    /* =========================
+       INITIALIZE PAGE
+    ========================= */
+    function initPendingOrdersPage() {
+      // Wait for elements to be ready
+      if (!initElements()) {
+        // Retry after a short delay
+        setTimeout(initPendingOrdersPage, 100);
+        return;
+      }
+
+      loadPendingOrders();
+      ensureFunctionsGlobal();
     }
-    
-    alert("Order marked as READY and removed from pending orders");
-    
-  } catch(e) {
-    console.error("Error marking order as ready:", e);
-    alert("Error updating order status: " + e.message);
-  }
-}
 
-/* =========================
-   INITIALIZE PAGE
-========================= */
-function initPendingOrdersPage(){
-  // Wait for elements to be ready
-  if(!initElements()){
-    // Retry after a short delay
-    setTimeout(initPendingOrdersPage, 100);
-    return;
-  }
-  
-  loadPendingOrders();
-  ensureFunctionsGlobal();
-}
+    /* =========================
+       INITIALIZE
+    ========================= */
+    // Check if we're in workspace context
+    function isInWorkspace() {
+      return !!document.querySelector(".workspace");
+    }
 
-/* =========================
-   INITIALIZE
-========================= */
-// Check if we're in workspace context
-function isInWorkspace(){
-  return !!document.querySelector(".workspace");
-}
-
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() {
-    // If in workspace, wait a bit longer for content to be inserted
-    if(isInWorkspace()){
-      setTimeout(initPendingOrdersPage, 200);
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        // If in workspace, wait a bit longer for content to be inserted
+        if (isInWorkspace()) {
+          setTimeout(initPendingOrdersPage, 200);
+        } else {
+          initPendingOrdersPage();
+        }
+      });
     } else {
-      initPendingOrdersPage();
+      // DOM already ready, but might be in workspace
+      if (isInWorkspace()) {
+        // In workspace, wait for content to be inserted
+        setTimeout(initPendingOrdersPage, 200);
+      } else {
+        setTimeout(initPendingOrdersPage, 50);
+      }
     }
-  });
-} else {
-  // DOM already ready, but might be in workspace
-  if(isInWorkspace()){
-    // In workspace, wait for content to be inserted
-    setTimeout(initPendingOrdersPage, 200);
-  } else {
-    setTimeout(initPendingOrdersPage, 50);
-  }
-}
 
-// Listen for page refresh event from dashboard
-window.addEventListener('pageRefresh', function() {
-  setTimeout(initPendingOrdersPage, 150);
-});
+    // Listen for page refresh event from dashboard
+    window.addEventListener('pageRefresh', function () {
+      setTimeout(initPendingOrdersPage, 150);
+    });
 
-// Listen for order status changes
-window.addEventListener('orderStatusChanged', function() {
-  loadPendingOrders();
-});
+    // Listen for order status changes
+    window.addEventListener('orderStatusChanged', function () {
+      loadPendingOrders();
+    });
 
-// Listen for order saved event
-window.addEventListener('orderSaved', function() {
-  loadPendingOrders();
-});
+    // Listen for order saved event
+    window.addEventListener('orderSaved', function () {
+      loadPendingOrders();
+    });
 
-// Listen for storage changes
-window.addEventListener('storage', function(e) {
-  if(e.key === 'orders'){
-    loadPendingOrders();
-  }
-});
+    // Listen for storage changes
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'orders') {
+        loadPendingOrders();
+      }
+    });
 
-// Poll for changes (for same-window updates)
-let lastPendingOrderCount = 0;
-setInterval(function() {
-  if(!tbody){
-    if(!initElements()) return;
-  }
-  
-  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const pendingOrders = orders.filter(o => o.status === "PENDING");
-  if(pendingOrders.length !== lastPendingOrderCount){
-    lastPendingOrderCount = pendingOrders.length;
-    loadPendingOrders();
-  }
-}, 1000);
+    // Poll for changes (for same-window updates)
+    let lastPendingOrderCount = 0;
+    setInterval(function () {
+      if (!tbody) {
+        if (!initElements()) return;
+      }
 
-/* =========================
-   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
-========================= */
-function ensureFunctionsGlobal(){
-  window.loadPendingOrders = loadPendingOrders;
-  window.markReady = markReady;
-  window.updateFooter = updateFooter;
-  window.initPendingOrdersPage = initPendingOrdersPage;
-  window.initElements = initElements;
-}
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      const pendingOrders = orders.filter(o => o.status === "PENDING");
+      if (pendingOrders.length !== lastPendingOrderCount) {
+        lastPendingOrderCount = pendingOrders.length;
+        loadPendingOrders();
+      }
+    }, 1000);
 
-ensureFunctionsGlobal();
-</script>
+    /* =========================
+       ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+    ========================= */
+    function ensureFunctionsGlobal() {
+      window.loadPendingOrders = loadPendingOrders;
+      window.markReady = markReady;
+      window.updateFooter = updateFooter;
+      window.initPendingOrdersPage = initPendingOrdersPage;
+      window.initElements = initElements;
+    }
+
+    ensureFunctionsGlobal();
+  </script>
 
 </body>
+
 </html>

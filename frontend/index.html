@@ -1,99 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Ledger Management System</title>
-<link rel="stylesheet" href="style.css">
 
-<style>
-/* (empty – keep main theme from style.css) */
-</style>
+<head>
+    <meta charset="UTF-8">
+    <title>Ledger Management System</title>
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* (empty – keep main theme from style.css) */
+    </style>
 </head>
 
 <body>
-<script src="auth.js"></script>
-<script>
-  // Block dashboard access if not logged in
-  if(!window.ledgerAuth){
-    window.location.replace("login.html");
-  } else {
-    window.ledgerAuth.requireAuth("login.html");
-  }
-</script>
-<!-- navigation bar -->
-<nav class="menu-bar">
-<ul class="menu-root">
+    <script src="auth.js"></script>
+    <script>
+        // Block dashboard access if not logged in
+        if (!window.ledgerAuth) {
+            window.location.replace("login.html");
+        } else {
+            window.ledgerAuth.requireAuth("login.html");
+        }
+    </script>
+    <!-- navigation bar -->
+    <nav class="menu-bar">
+        <ul class="menu-root">
 
-<li class="menu-item has-submenu">
-    Master
-    <ul class="submenu">
+            <li class="menu-item has-submenu">
+                Master
+                <ul class="submenu">
 
-        <li class="submenu-item has-submenu">
-            🚉 Stations
-            <ul class="submenu right">
-                <li onclick="openStation()">Add Station</li>
-                <li onclick="openStation()">List Stations</li>
-            </ul>
-        </li>
+                    <li class="submenu-item has-submenu">
+                        🚉 Stations
+                        <ul class="submenu right">
+                            <li onclick="openStation()">Add Station</li>
+                            <li onclick="listStations()">List Stations</li>
+                        </ul>
+                    </li>
 
-        <li onclick="loadPage('pages/customer.html')">👥 Customers</li>
-        <li onclick="loadPage('pages/jobworker-entry.html')">👷 Job Workers</li>
+                    <li class="submenu-item has-submenu">
+                        👥 Customers
+                        <ul class="submenu right">
+                            <li onclick="loadPage('pages/customer.html')">Add Customer</li>
+                            <li
+                                onclick="localStorage.setItem('showCustomerList', 'true'); loadPage('pages/customer.html')">
+                                Customer List</li>
+                        </ul>
+                    </li>
+                    <li onclick="loadPage('pages/jobworker-entry.html')">👷 Job Workers</li>
 
-        <li class="divider"></li>
-        <li onclick="window.ledgerAuth && (window.ledgerAuth.logout(), window.location.replace('login.html'))">Logout</li>
-    </ul>
-</li>
+                    <li class="divider"></li>
+                    <li
+                        onclick="window.ledgerAuth && (window.ledgerAuth.logout(), window.location.replace('login.html'))">
+                        Logout</li>
+                </ul>
+            </li>
 
-<li class="menu-item" onclick="showInfo('Transactions module coming soon')">Transactions</li>
-<li class="menu-item" onclick="showInfo('Reports module coming soon')">Reports</li>
-<li class="menu-item" onclick="showInfo('Tools module coming soon')">Tools</li>
-<li class="menu-item" onclick="showInfo('Settings module coming soon')">Settings</li>
-<li class="menu-item" onclick="showInfo('Help module coming soon')">Help</li>
+            <li class="menu-item" onclick="showInfo('Transactions module coming soon')">Transactions</li>
+            <li class="menu-item" onclick="showInfo('Reports module coming soon')">Reports</li>
+            <li class="menu-item" onclick="showInfo('Tools module coming soon')">Tools</li>
+            <li class="menu-item" onclick="showInfo('Settings module coming soon')">Settings</li>
+            <li class="menu-item" onclick="showInfo('Help module coming soon')">Help</li>
 
-</ul>
-</nav>
-
-
-<div class="app-container">
-
-<main class="workspace" id="workspace"></main>
+        </ul>
+    </nav>
 
 
-<!-- side bar  -->
-<aside class="sidebar">
-    <button>Add Customer</button> 
-    <button>Add Item</button>
-    <button>Agents</button>
-    <button>Customer Balance</button>
+    <div class="app-container">
 
-    <button class="section-gap">Direct Bill</button>
-    <button>All Bill</button>
+        <main class="workspace" id="workspace"></main>
 
-    <button class="section-gap">New Order</button>
-    <button>Orders</button>
-    <button>Pending Orders</button>
-    <button>Ready Orders</button>
-    <button>Pending Items</button>
 
-    <button class="section-gap">Add Jobworker</button>
-    <button>Jobworker Entry</button>
-    <button>Jobworker Balance</button>
+        <!-- side bar  -->
+        <aside class="sidebar">
+            <button>Add Customer</button>
+            <button>Add Item</button>
+            <button>Agents</button>
+            <button>Customer Balance</button>
 
-    <button class="section-gap">New Loan</button>
-    <button>Pending Loans</button>
+            <button class="section-gap">Direct Bill</button>
+            <button>All Bill</button>
 
-    <button class="section-gap">Day Book</button>
-    <button class="logout">Logout</button>
-</aside>
+            <button class="section-gap">New Order</button>
+            <button>Orders</button>
+            <button>Pending Orders</button>
+            <button>Ready Orders</button>
+            <button>Pending Items</button>
 
-</div>
+            <button class="section-gap">Add Jobworker</button>
+            <button>Jobworker Entry</button>
+            <button>Jobworker Balance</button>
 
-<script>
-/* =========================
-   OPEN STATION FORM
-========================= */
-function openStation(){
-    document.getElementById("workspace").innerHTML = `
+            <button class="section-gap">New Loan</button>
+            <button>Pending Loans</button>
+
+            <button class="section-gap">Day Book</button>
+            <button class="logout">Logout</button>
+        </aside>
+
+    </div>
+
+    <script>
+        /* =========================
+           OPEN STATION FORM
+        ========================= */
+        function openStation() {
+            document.getElementById("workspace").innerHTML = `
     <div class="station-window">
         <div class="station-titlebar">Station</div>
 
@@ -173,101 +184,166 @@ function openStation(){
             <button class="btn" onclick="closeStation()">Close</button>
         </div>
     </div>`;
-}
+        }
 
-/* =========================
-   SAVE STATION
-========================= */
-function saveStation(closeAfterSave){
-    const nameEl  = document.getElementById("stationName");
-    const stateEl = document.getElementById("stationState");
-    const cityEl  = document.getElementById("stationCity");
-    const pinEl   = document.getElementById("stationPin");
-    
-    if(!nameEl || !stateEl || !cityEl || !pinEl){
-        alert("Form elements not found. Please refresh the page.");
-        return;
-    }
-    
-    const name  = nameEl.value.trim();
-    const state = stateEl.value;
-    const city  = cityEl.value.trim();
-    const pin   = pinEl.value.trim();
+        /* =========================
+           SAVE STATION
+        ========================= */
+        function saveStation(closeAfterSave) {
+            const nameEl = document.getElementById("stationName");
+            const stateEl = document.getElementById("stationState");
+            const cityEl = document.getElementById("stationCity");
+            const pinEl = document.getElementById("stationPin");
 
-    // Validation
-    if(name === ""){
-        alert("Station name is required");
-        return;
-    }
-    if(state === ""){
-        alert("Please select state");
-        return;
-    }
-    if(pin !== "" && !/^[0-9]{6}$/.test(pin)){
-        alert("Pin code must be 6 digits");
-        return;
-    }
+            if (!nameEl || !stateEl || !cityEl || !pinEl) {
+                alert("Form elements not found. Please refresh the page.");
+                return;
+            }
 
-    // Load existing data
-    let stations = JSON.parse(localStorage.getItem("stations")) || [];
+            const name = nameEl.value.trim();
+            const state = stateEl.value;
+            const city = cityEl.value.trim();
+            const pin = pinEl.value.trim();
 
-    // Duplicate check
-    if(stations.some(s => s.name.toLowerCase() === name.toLowerCase())){
-        alert("Station already exists");
-        return;
-    }
+            // Validation
+            if (name === "") {
+                alert("Station name is required");
+                return;
+            }
+            if (state === "") {
+                alert("Please select state");
+                return;
+            }
+            if (pin !== "" && !/^[0-9]{6}$/.test(pin)) {
+                alert("Pin code must be 6 digits");
+                return;
+            }
 
-    // Save
-    stations.push({
-        name: name,
-        country: "India",
-        state: state,
-        city: city,
-        pin: pin
-    });
+            // Load existing data
+            let stations = JSON.parse(localStorage.getItem("stations")) || [];
 
-    localStorage.setItem("stations", JSON.stringify(stations));
+            // Duplicate check
+            if (stations.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+                alert("Station already exists");
+                return;
+            }
 
-    alert("Station saved successfully");
+            // Save
+            stations.push({
+                name: name,
+                country: "India",
+                state: state,
+                city: city,
+                pin: pin
+            });
 
-    if(closeAfterSave){
-        closeStation();
-    } else {
-        resetStation();
-    }
-}
+            localStorage.setItem("stations", JSON.stringify(stations));
 
-/* =========================
-   RESET FORM
-========================= */
-function resetStation(){
-    const nameEl = document.getElementById("stationName");
-    const stateEl = document.getElementById("stationState");
-    const cityEl = document.getElementById("stationCity");
-    const pinEl = document.getElementById("stationPin");
-    
-    if(nameEl) nameEl.value = "";
-    if(stateEl) stateEl.value = "";
-    if(cityEl) cityEl.value = "";
-    if(pinEl) pinEl.value = "";
-}
+            alert("Station saved successfully");
 
+            if (closeAfterSave) {
+                closeStation();
+            } else {
+                resetStation();
+            }
+        }
 
-/* =========================
-   CLOSE FORM
-========================= */
-function closeStation(){
-    document.getElementById("workspace").innerHTML = "";
-}
+        /* =========================
+           RESET FORM
+        ========================= */
+        function resetStation() {
+            const nameEl = document.getElementById("stationName");
+            const stateEl = document.getElementById("stationState");
+            const cityEl = document.getElementById("stationCity");
+            const pinEl = document.getElementById("stationPin");
 
-/* =========================
-   EXIT APP (Handled by script.js)
-========================= */
-// exitApp function is defined in script.js
+            if (nameEl) nameEl.value = "";
+            if (stateEl) stateEl.value = "";
+            if (cityEl) cityEl.value = "";
+            if (pinEl) pinEl.value = "";
+        }
 
 
-</script>
-<script src="script.js"></script>
+        /* =========================
+           CLOSE FORM
+        ========================= */
+        function closeStation() {
+            document.getElementById("workspace").innerHTML = "";
+        }
+
+        /* =========================
+           EXIT APP (Handled by script.js)
+        ========================= */
+        // exitApp function is defined in script.js
+
+        /* =========================
+           LIST STATIONS
+        ========================= */
+        function listStations() {
+            const stations = JSON.parse(localStorage.getItem("stations") || "[]");
+
+            let html = `
+            <div class="station-window" style="max-width:800px">
+                <div class="station-titlebar">Station List</div>
+                <div class="station-body" style="padding:0">
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#f2f2f7; text-align:left;">
+                                <th style="padding:10px; border-bottom:1px solid #ddd">Station</th>
+                                <th style="padding:10px; border-bottom:1px solid #ddd">State</th>
+                                <th style="padding:10px; border-bottom:1px solid #ddd">City</th>
+                                <th style="padding:10px; border-bottom:1px solid #ddd">Pin</th>
+                                <th style="padding:10px; border-bottom:1px solid #ddd">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+            if (stations.length === 0) {
+                html += `<tr><td colspan="5" style="padding:20px; text-align:center; color:#888;">No stations found</td></tr>`;
+            } else {
+                stations.forEach(s => {
+                    html += `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:10px;">${s.name}</td>
+                        <td style="padding:10px;">${s.state}</td>
+                        <td style="padding:10px;">${s.city || '-'}</td>
+                        <td style="padding:10px;">${s.pin || '-'}</td>
+                        <td style="padding:10px;">
+                            <button onclick="deleteStation('${s.name}')" style="padding:4px 8px; font-size:12px; background:#ff3b30; color:white; border:none; border-radius:4px; cursor:pointer;">Delete</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            html += `   </tbody>
+                    </table>
+                </div>
+                <div class="station-footer">
+                    <button class="btn" onclick="openStation()">Add New Station</button>
+                    <button class="btn" onclick="closeStation()">Close</button>
+                </div>
+            </div>`;
+
+            document.getElementById("workspace").innerHTML = html;
+        }
+
+        /* =========================
+           DELETE STATION
+        ========================= */
+        function deleteStation(name) {
+            if (!confirm("Delete station: " + name + "?")) return;
+
+            let stations = JSON.parse(localStorage.getItem("stations") || "[]");
+            stations = stations.filter(s => s.name !== name);
+            localStorage.setItem("stations", JSON.stringify(stations));
+
+            listStations(); // Refresh list
+        }
+
+
+    </script>
+    <script src="script.js"></script>
 
 </body>
+
 </html>

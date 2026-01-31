@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rate Book History</title>
+
+    <style>
+        /* =========================
+   RESET & BASE
+========================= */
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+
+        /* Hide number input arrows */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(to bottom, #cde1ff, #e6f1ff);
+            min-height: 100vh;
+        }
+
+        /* =========================
+   WINDOW - BIGGER
+========================= */
+        .window {
+            background: #ffffff;
+            border-radius: 18px;
+            border: 1px solid #d1d6de;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, .25);
+            max-width: 95%;
+            width: 95%;
+            margin: 20px auto;
+        }
+
+        .window-content {
+            display: flex;
+            gap: 30px;
+            padding: 30px 40px;
+            background: #f9fbfe;
+        }
+
+        /* Full width for history */
+        .window-full {
+            flex: 1;
+            min-width: 100%;
+        }
+
+        /* TITLE BAR - BIGGER */
+        .title-bar {
+            background: linear-gradient(#f4f6fa, #e6eaf0);
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 18px;
+            text-align: center;
+            color: #1d1d1f;
+            border-bottom: 1px solid #d1d6de;
+            border-radius: 18px 18px 0 0;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #ff3b30;
+            color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            line-height: 1;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            background: #ff2d20;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+        }
+
+        .close-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        /* HISTORY SECTION - BIGGER */
+        .history-section {
+            margin-top: 0;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #d1d6de;
+            border-radius: 12px;
+            max-height: 80vh;
+            /* Taller since it's the only thing */
+            min-height: 600px;
+            overflow: auto;
+            /* Allow both X and Y scroll */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+        }
+
+        .history-section h3 {
+            margin: 0 0 16px 0;
+            font-size: 16px;
+            color: #1d1d1f;
+            font-weight: 600;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #d1d6de;
+        }
+
+        /* HISTORY TABLE - PREMIUM */
+        .history-table {
+            width: 100%;
+            min-width: 1800px;
+            /* Increased to fit new columns */
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 13px;
+        }
+
+        .history-table th {
+            background: #f8f9fa;
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 2px solid #e9ecef;
+            border-right: 1px solid #e9ecef;
+            /* Added vertical line */
+            font-weight: 600;
+            font-size: 12px;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .history-table th:last-child {
+            border-right: none;
+        }
+
+        .history-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #f1f3f5;
+            border-right: 1px solid #f1f3f5;
+            /* Added vertical line */
+            font-size: 13.5px;
+            color: #343a40;
+            vertical-align: middle;
+        }
+
+        .history-table td:last-child {
+            border-right: none;
+        }
+
+        .history-table tr:hover {
+            background: #f1f8ff;
+        }
+
+        /* PREMIUM INPUTS IN TABLE */
+        .history-table input,
+        .history-table select {
+            border: none;
+            border-bottom: 1px solid transparent;
+            background: transparent;
+            padding: 6px 4px;
+            font-family: inherit;
+            width: 100%;
+            transition: all 0.2s ease;
+            color: inherit;
+        }
+
+        .history-table input:hover,
+        .history-table select:hover {
+            border-bottom-color: #dee2e6;
+            background: #ffffff;
+        }
+
+        .history-table input:focus,
+        .history-table select:focus {
+            outline: none;
+            border-bottom: 2px solid #007aff;
+            background: #ffffff;
+        }
+
+        /* FOOTER - BIGGER */
+        .footer {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 20px;
+            background: #f2f5f9;
+            border-top: 1px solid #d1d6de;
+            border-radius: 0 0 18px 18px;
+        }
+
+        .footer button {
+            min-width: 140px;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 500;
+            border-radius: 12px;
+            border: 1px solid #d1d6de;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1d1d1f;
+        }
+
+        .footer button:hover {
+            background: #e6f0ff;
+            border-color: #007aff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:900px) {
+            .window-content {
+                padding: 20px;
+            }
+
+            .title-bar {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+
+            .close-btn {
+                right: 16px;
+                width: 28px;
+                height: 28px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="window">
+
+        <div class="title-bar">
+            Rate Book History
+            <button class="close-btn" onclick="closeSelf()" title="Close">×</button>
+        </div>
+
+        <div class="window-content">
+            <!-- Full Width History -->
+            <div class="window-full">
+                <div class="history-section">
+                    <div
+                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:2px solid #d1d6de; padding-bottom:8px;">
+                        <h3 style="margin:0; border:none; padding:0;">All Entries</h3>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button id="btnCalcDiff" onclick="calculateComparison()"
+                                style="background:#6c757d; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; display:none;">Calculate
+                                Diff</button>
+                            <div id="compareDisplay" style="font-size:14px; font-weight:600; color:#007aff;">
+                                Diff: <span id="compareVal">0.00</span>
+                            </div>
+                        </div>
+                        <button onclick="addHistoryRow()"
+                            style="background:#28a745; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">+
+                            Add New Row</button>
+                    </div>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px; text-align:center;">Compare</th>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Metal</th>
+                                <th>Stamp</th>
+                                <th>Remark</th>
+                                <th style="text-align:right;">Weight</th>
+                                <th style="text-align:right;">Rate</th>
+                                <th style="text-align:right;">Bal Wt.</th>
+                                <th style="text-align:right;">Adj Wt.</th>
+                                <th>Cur Stamp</th>
+                                <th style="text-align:right;">Cur Wt</th>
+                                <th style="text-align:right;">Cur Rate</th>
+                                <th style="text-align:right;">Amt Diff</th>
+                                <th>Del Date</th>
+                                <th>Narration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rateBookHistoryBody">
+                            <!-- Rate book entries will be loaded here -->
+                        </tbody>
+                    </table>
+                    <div id="compareDisplayFooter"
+                        style="text-align:right; margin-top:10px; font-size:14px; font-weight:600; color:#007aff;">
+                        Diff: <span id="compareValFooter">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button type="button" onclick="closeSelf()">Close</button>
+        </div>
+
+    </div>
+
+    <script>
+        function safeNumber(val, fallback = 0) {
+            const n = Number(val);
+            return Number.isFinite(n) ? n : fallback;
+        }
+
+        /* LOAD RATE BOOK HISTORY (FILLABLE) */
+        function loadRateBookHistory() {
+            try {
+                const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+                const tbody = document.getElementById("rateBookHistoryBody");
+
+                if (!tbody) {
+                    console.error("History table body not found");
+                    return;
+                }
+
+                if (rates.length === 0) {
+                    tbody.innerHTML = `
+        <tr>
+          <td colspan="11" style="text-align:center; padding:20px; color:#777;">
+            No rate book entries found
+          </td>
+        </tr>
+      `;
+                    return;
+                }
+
+                // Sort by date (newest first)
+                const sortedRates = [...rates].sort((a, b) => {
+                    const dateA = new Date(a.timestamp || a.date || 0);
+                    const dateB = new Date(b.timestamp || b.date || 0);
+                    return dateB - dateA;
+                });
+
+                tbody.innerHTML = "";
+
+                // Global Current Rate is removed, so default to 0
+                const globalCurrentRate = 0;
+
+                sortedRates.forEach((entry) => {
+                    const tr = document.createElement("tr");
+                    tr.dataset.id = entry.id;
+
+                    // Data points
+                    const entryWeight = safeNumber(entry.weight, 0);
+                    const entryRate = safeNumber(entry.rate, 0);
+                    const entryCurrentRate = safeNumber(entry.currentRate, 0);
+
+                    // Bal Wt: use stored balWt if exists, else default to entryWeight
+                    const balWt = entry.balWt !== undefined ? safeNumber(entry.balWt, 0) : entryWeight;
+
+                    // Adj Wt: use stored adjWt if exists, else 0
+                    const adjWt = entry.adjWt !== undefined ? safeNumber(entry.adjWt, 0) : 0;
+
+                    // Effective Current Rate
+                    const effectiveCurrentRate = entryCurrentRate || globalCurrentRate;
+
+                    // Calculate Diff Amt dynamically
+                    let diffAmt = 0;
+                    if (effectiveCurrentRate > 0) {
+                        diffAmt = (effectiveCurrentRate - entryRate) * balWt;
+                    }
+
+                    // Format Diff Amount for display
+                    const displayDiff = effectiveCurrentRate > 0 ? diffAmt.toFixed(2) : "0.00";
+                    const diffColor = diffAmt >= 0 ? "green" : "red";
+
+                    tr.innerHTML = `
+            <td style="text-align:center;">
+              <input type="checkbox" onchange="handleCompare(this, ${entry.id})" class="compare-chk">
+            </td>
+            <td><input type="date" value="${entry.date || ""}" style="width:110px;" onchange="updateHistoryRow(this, 'date')"></td>
+            <td>
+              <select style="width:50px;" onchange="updateHistoryRow(this, 'type')">
+                <option value="S" ${entry.type === 'S' ? 'selected' : ''}>S</option>
+                <option value="P" ${entry.type === 'P' ? 'selected' : ''}>P</option>
+                <option value="O" ${entry.type === 'O' ? 'selected' : ''}>O</option>
+                <option value="R" ${entry.type === 'R' ? 'selected' : ''}>R</option>
+              </select>
+            </td>
+            <td><input value="${entry.metal || ""}" placeholder="Metal" style="width:60px;" onchange="updateHistoryRow(this, 'metal')"></td>
+            <td><input value="${entry.stamp || ""}" style="width:60px;" onchange="updateHistoryRow(this, 'stamp')"></td>
+            <td><input value="${entry.narration || ""}" style="width:100px;" onchange="updateHistoryRow(this, 'narration')"></td>
+            <td><input type="number" step="0.001" value="${entryWeight > 0 ? entryWeight.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'weight')"></td>
+            <td><input type="number" step="0.01" value="${entryRate > 0 ? entryRate.toFixed(2) : ''}" style="width:80px; text-align:right;" onchange="updateHistoryRow(this, 'rate')"></td>
+            
+            <td><input type="number" step="0.001" value="${balWt > 0 ? balWt.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'balWt')"></td>
+            <td><input type="number" step="0.001" value="${adjWt !== 0 ? adjWt.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'adjWt')"></td>
+
+            <!-- New Columns -->
+            <td><input value="${entry.curStamp || ""}" style="width:60px;" onchange="updateHistoryRow(this, 'curStamp')"></td>
+            <td><input type="number" step="0.001" value="${safeNumber(entry.curWt, 0) > 0 ? safeNumber(entry.curWt, 0).toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'curWt')" oninput="calcDiff(this)"></td>
+            <td><input type="number" step="0.01" value="${safeNumber(entry.curRate, 0) > 0 ? safeNumber(entry.curRate, 0).toFixed(2) : ''}" style="width:80px; text-align:right;" onchange="updateHistoryRow(this, 'curRate')" oninput="calcDiff(this)"></td>
+            <td>
+                <input type="text" readonly 
+                       value="${calculateDiff(entry, balWt, entryRate)}" 
+                       style="width:90px; text-align:right; font-weight:bold; color:${getDiffColor(entry, balWt, entryRate)};">
+            </td>
+            <td><input type="date" value="${entry.delDate || ""}" style="width:110px;" onchange="updateHistoryRow(this, 'delDate')"></td>
+            <td><input value="${entry.curNarration || ""}" style="width:120px;" onchange="updateHistoryRow(this, 'curNarration')"></td>
+            <td style="text-align:center;">
+                <button onclick="removeHistoryRow(${entry.id})" style="background:none; border:none; cursor:pointer; font-size:13px; color:red; font-weight:500;" title="Remove Entry">Delete</button>
+            </td>
+          `;
+                    // Wait, I overwrote the tr.innerHTML assignment above which was incomplete. 
+                    // Let's do a full replacement of the tr.innerHTML block in next chunk to be safe.
+
+
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.error("Error loading history:", e);
+            }
+        }
+
+        /* UPDATE HISTORY ROW */
+        window.updateHistoryRow = function (input, field) {
+            const tr = input.closest("tr");
+            if (!tr || !tr.dataset.id) return;
+
+            const id = parseInt(tr.dataset.id);
+            let val = input.value;
+
+            if (['weight', 'rate', 'balWt', 'adjWt', 'curWt', 'curRate'].includes(field)) {
+                val = parseFloat(val) || 0;
+            }
+
+            try {
+                const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+                const idx = rates.findIndex(r => r.id === id);
+                if (idx >= 0) {
+                    rates[idx][field] = val;
+                    localStorage.setItem("rateBook", JSON.stringify(rates));
+
+                    // If simple text update, no need to reload entire table, just calc diff if needed
+                    if (['curWt', 'curRate', 'balWt', 'rate'].includes(field)) {
+                        // We could reload specific row or just all. Loading all is safer for now.
+                        loadRateBookHistory();
+                    } else {
+                        // For non-calc fields, maybe we don't need full reload? 
+                        // But let's keep it simple and consistent.
+                        // loadRateBookHistory(); // Removed auto-reload for text fields to improve performance typing?
+                        // Actually, let's keep reloading to be safe, or just notification.
+                        // User might be typing. If we reload on every char logic (onchange is blur mostly), it's fine.
+                        // Wait, onchange fires on blur. oninput fires on type.
+                        // updateHistoryRow is attached to onchange. So it's fine.
+                        loadRateBookHistory();
+                    }
+
+                    // Notify other windows
+                    try {
+                        window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+                        if (window.opener) window.opener.dispatchEvent(new CustomEvent('ratebookUpdated'));
+                    } catch (e) { }
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        /* Helper to calc diff value string */
+        function calculateDiff(entry, balWt, bookedRate) {
+            const curWt = entry.curWt !== undefined ? safeNumber(entry.curWt) : balWt; // Default to balWt if not set
+            const curRate = safeNumber(entry.curRate, 0);
+
+            // Formula: (Cur Wt * Cur Rate) - (Bal Wt * Booked Rate)
+            const curAmt = curWt * curRate;
+            const bookedAmt = balWt * bookedRate;
+            const diff = curAmt - bookedAmt;
+
+            return diff.toFixed(2);
+        }
+
+        function getDiffColor(entry, balWt, bookedRate) {
+            const diff = parseFloat(calculateDiff(entry, balWt, bookedRate));
+            if (diff > 0) return 'green';
+            if (diff < 0) return 'red';
+            return 'inherit';
+        }
+
+        /* LIVE CALC ON INPUT */
+        window.calcDiff = function (input) {
+            const tr = input.closest('tr');
+            if (!tr) return;
+
+            // Get live values from DOM
+            const balWt = parseFloat(tr.cells[7].querySelector('input').value) || 0;
+            const bookedRate = parseFloat(tr.cells[6].querySelector('input').value) || 0;
+
+            const curWtInput = tr.cells[10].querySelector('input');
+            const curRateInput = tr.cells[11].querySelector('input');
+            const diffInput = tr.cells[12].querySelector('input');
+
+            const curWt = parseFloat(curWtInput.value) || 0;
+            const curRate = parseFloat(curRateInput.value) || 0;
+
+            const curAmt = curWt * curRate;
+            const bookedAmt = balWt * bookedRate;
+            const diff = curAmt - bookedAmt;
+
+            diffInput.value = diff.toFixed(2);
+            diffInput.style.color = diff > 0 ? 'green' : (diff < 0 ? 'red' : '');
+        };
+
+        /* COMPARE RATES LOGIC */
+        let selectedForCompare = [];
+
+        window.handleCompare = function (chk, id) {
+            if (chk.checked) {
+                selectedForCompare.push(id);
+            } else {
+                selectedForCompare = selectedForCompare.filter(sid => sid !== id);
+            }
+            calculateComparison();
+        };
+
+        function calculateComparison() {
+            const display = document.getElementById("compareDisplay");
+            const ValSpan = document.getElementById("compareVal");
+            const displayFooter = document.getElementById("compareDisplayFooter");
+            const valSpanFooter = document.getElementById("compareValFooter");
+
+            // Update Button Visibility
+            const btn = document.getElementById("btnCalcDiff");
+            if (btn) {
+                if (selectedForCompare.length >= 2) {
+                    btn.style.display = "inline-block";
+                    btn.style.background = "#007aff";
+                    btn.innerText = `Calculate Diff (${selectedForCompare.length})`;
+                } else {
+                    btn.style.display = "none";
+                }
+            }
+
+            if (selectedForCompare.length < 2) {
+                ValSpan.innerText = "0.00";
+                if (valSpanFooter) valSpanFooter.innerText = "0.00";
+                localStorage.removeItem("rateComparingDiff");
+                notifyDiffUpdate();
+                return;
+            }
+
+            try {
+                const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+
+                // Get all selected objects with LOOSE comparison
+                const selectedObjs = rates.filter(r => selectedForCompare.some(sid => String(sid) === String(r.id)));
+
+                if (selectedObjs.length >= 2) {
+                    // Sort by date (Newest first)
+                    const sorted = selectedObjs.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    const newest = sorted[0];
+                    const oldest = sorted[sorted.length - 1]; // Compare Newest vs Oldest
+
+                    const rateDiff = (parseFloat(newest.rate) || 0) - (parseFloat(oldest.rate) || 0);
+                    const weight = parseFloat(newest.weight) || 0;
+
+                    const totalDiff = rateDiff * weight;
+
+                    display.style.display = 'block';
+                    ValSpan.innerText = totalDiff.toFixed(2);
+
+                    if (displayFooter) {
+                        displayFooter.style.display = 'block';
+                        valSpanFooter.innerText = totalDiff.toFixed(2);
+                    }
+
+                    localStorage.setItem("rateComparingDiff", totalDiff.toFixed(2));
+                    notifyDiffUpdate();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function notifyDiffUpdate() {
+            try {
+                window.dispatchEvent(new CustomEvent('rateDiffUpdated'));
+                if (window.opener) window.opener.dispatchEvent(new CustomEvent('rateDiffUpdated'));
+            } catch (e) { }
+        }
+
+        /* REMOVE ROW */
+        window.removeHistoryRow = function (id) {
+            if (!confirm("Are you sure you want to remove this entry?")) return;
+
+            try {
+                let rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+                rates = rates.filter(r => r.id !== id);
+                localStorage.setItem("rateBook", JSON.stringify(rates));
+
+                loadRateBookHistory();
+
+                // Notify other windows
+                try {
+                    window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+                    if (window.opener) window.opener.dispatchEvent(new CustomEvent('ratebookUpdated'));
+                } catch (e) { }
+            } catch (e) { console.error(e); }
+        };
+
+        /* ADD NEW ROW */
+        window.addHistoryRow = function () {
+            try {
+                const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+
+                const newEntry = {
+                    id: Date.now(),
+                    date: new Date().toISOString().split('T')[0],
+                    type: 'S',
+                    metal: '',
+                    stamp: '',
+                    narration: '',
+                    weight: 0,
+                    rate: 0,
+                    balWt: 0,
+                    adjWt: 0,
+                    curStamp: '',
+                    curWt: 0,
+                    curRate: 0,
+                    delDate: '',
+                    curNarration: ''
+                };
+
+                // Add to array
+                rates.push(newEntry);
+                localStorage.setItem("rateBook", JSON.stringify(rates));
+
+                loadRateBookHistory();
+
+                // Notify other windows
+                try {
+                    window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+                    if (window.opener) window.opener.dispatchEvent(new CustomEvent('ratebookUpdated'));
+                } catch (e) { }
+            } catch (e) { console.error(e); }
+        };
+
+
+
+        function closeSelf() {
+            const returnTarget = localStorage.getItem("ratebookReturnTarget") || "pages/new-order.html";
+
+            try {
+                // Dashboard workspace navigation
+                let loadPageFunc = null;
+                if (typeof loadPage === 'function') {
+                    loadPageFunc = loadPage;
+                } else if (window.parent && typeof window.parent.loadPage === 'function') {
+                    loadPageFunc = window.parent.loadPage.bind(window.parent);
+                } else if (window.top && typeof window.top.loadPage === 'function') {
+                    loadPageFunc = window.top.loadPage.bind(window.top);
+                }
+
+                if (loadPageFunc) {
+                    loadPageFunc(returnTarget);
+                    return;
+                }
+
+                if (window.opener && window.close) {
+                    window.close();
+                }
+            } catch (e) {
+                console.error(e);
+                window.close();
+            }
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            loadRateBookHistory();
+        });
+
+        // Listen for updates from other windows
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'rateBook') {
+                loadRateBookHistory();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
