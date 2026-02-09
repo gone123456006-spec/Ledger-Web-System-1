@@ -2057,6 +2057,17 @@
         }
         localStorage.setItem('bills', JSON.stringify(bills));
 
+        // Calculate total Pc and GR.Wt from all items
+        let totalPc = 0;
+        let totalGrWt = 0;
+        rows.forEach(row => {
+          // Pc is at index 7, Gr.Wt (Est. Total Wt) is at index 9
+          const pc = parseFloat(row.values[7] || 0);
+          const grWt = parseFloat(row.values[9] || 0);
+          totalPc += pc;
+          totalGrWt += grWt;
+        });
+
         // Save to orders
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         const orderData = {
@@ -2067,6 +2078,8 @@
           orderDate: AppState.elements.orderDate.value,
           dueDate: AppState.elements.dueDate?.value || '',
           type: rows[0]?.type || 'Order',
+          pc: totalPc,
+          grWt: totalGrWt,
           netAmount: billTotal.toFixed(2),
           advance: getPaidAmount(AppState.elements.billNo.value).toFixed(2),
           balance: (billTotal - getPaidAmount(AppState.elements.billNo.value)).toFixed(2),
