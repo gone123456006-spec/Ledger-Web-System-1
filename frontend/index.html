@@ -111,7 +111,7 @@
         <div class="station-body">
             <div class="station-group">
                 <label>Station <span>*</span></label>
-                <input id="stationName">
+                <input id="stationName" name="stationName">
             </div>
 
             <div class="station-group">
@@ -121,7 +121,7 @@
 
             <div class="station-group">
                 <label>State <span>*</span></label>
-                <select id="stationState">
+                <select id="stationState" name="stationState">
                     <option value="">-- Select State --</option>
 
 <option>Andhra Pradesh</option>
@@ -168,12 +168,12 @@
 
             <div class="station-group">
                 <label>City</label>
-                <input id="stationCity">
+                <input id="stationCity" name="stationCity">
             </div>
 
             <div class="station-group">
                 <label>Pin code</label>
-                <input id="stationPin" maxlength="6">
+                <input id="stationPin" maxlength="6" name="stationPin">
             </div>
         </div>
 
@@ -184,6 +184,13 @@
             <button class="btn" onclick="closeStation()">Close</button>
         </div>
     </div>`;
+
+            // [PERSISTENCE] Set context and restore
+            if (window.FormPersistence) {
+                const p = window.FormPersistence.getInstance();
+                p.setContext('station');
+                setTimeout(() => p.restore(), 50);
+            }
         }
 
         /* =========================
@@ -241,6 +248,9 @@
 
             alert("Station saved successfully");
 
+            // [PERSISTENCE] Clear saved form data on success
+            if (window.FormPersistence) window.FormPersistence.getInstance().clear('station');
+
             if (closeAfterSave) {
                 closeStation();
             } else {
@@ -261,6 +271,9 @@
             if (stateEl) stateEl.value = "";
             if (cityEl) cityEl.value = "";
             if (pinEl) pinEl.value = "";
+
+            // [PERSISTENCE] Explicit clear
+            if (window.FormPersistence) window.FormPersistence.getInstance().clear('station');
         }
 
 
@@ -342,6 +355,7 @@
 
 
     </script>
+    <script src="js/form-persistence.js"></script>
     <script src="script.js"></script>
 
 </body>

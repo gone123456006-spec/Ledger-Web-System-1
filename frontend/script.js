@@ -4,115 +4,115 @@
 ====================================================== */
 
 // Wait for DOM to be ready
-function initSidebarButtons(){
+function initSidebarButtons() {
     const sidebarButtons = document.querySelectorAll(".sidebar button");
-    
-    if(sidebarButtons.length === 0){
+
+    if (sidebarButtons.length === 0) {
         console.warn("Sidebar buttons not found. Retrying...");
         // Retry after a short delay if DOM not ready
         setTimeout(initSidebarButtons, 100);
         return;
     }
-    
+
     sidebarButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
+        btn.addEventListener("click", () => {
 
-        // LOGOUT
-        if (btn.classList.contains("logout")) {
-            try {
-                if (window.ledgerAuth) window.ledgerAuth.logout();
-            } catch(e) {}
-            // Always go to login page
-            try { window.location.replace("login.html"); } catch(e) { window.location.href = "login.html"; }
-            return;
-        }
+            // LOGOUT
+            if (btn.classList.contains("logout")) {
+                try {
+                    if (window.ledgerAuth) window.ledgerAuth.logout();
+                } catch (e) { }
+                // Always go to login page
+                try { window.location.replace("login.html"); } catch (e) { window.location.href = "login.html"; }
+                return;
+            }
 
-        // EXIT
-        if (btn.classList.contains("exit")) {
-            exitApp();
-            return;
-        }
+            // EXIT
+            if (btn.classList.contains("exit")) {
+                exitApp();
+                return;
+            }
 
-        // ACTIVE STATE
-        setActiveSidebar(btn);
+            // ACTIVE STATE
+            setActiveSidebar(btn);
 
-        // ROUTE BY BUTTON TEXT
-        const action = btn.innerText.trim().toLowerCase();
+            // ROUTE BY BUTTON TEXT
+            const action = btn.innerText.trim().toLowerCase();
 
-        switch (action) {
+            switch (action) {
 
-            case "add customer":
-                loadPage("pages/customer.html");   
-                break;
+                case "add customer":
+                    loadPage("pages/customer.html");
+                    break;
 
-            case "add item":
-                loadPage("pages/add-item.html");
-                break;
+                case "add item":
+                    loadPage("pages/add-item.html");
+                    break;
 
-            case "agents":
-                loadPage("pages/agents.html");
-                break;
+                case "agents":
+                    loadPage("pages/agents.html");
+                    break;
 
-            case "customer balance":
-                loadPage("pages/customer-balance.html");
-                break;
+                case "customer balance":
+                    loadPage("pages/customer-balance.html");
+                    break;
 
-            case "direct bill":
-                loadPage("pages/direct-bill.html");
-                break;
+                case "direct bill":
+                    loadPage("pages/direct-bill.html");
+                    break;
 
-            case "all bill":
-                loadPage("pages/all-bill.html");
-                break;
+                case "all bill":
+                    loadPage("pages/all-bill.html");
+                    break;
 
-            case "new order":
-                loadPage("pages/new-order.html");
-                break;
+                case "new order":
+                    loadPage("pages/new-order.html");
+                    break;
 
-            case "orders":
-                loadPage("pages/orders.html");
-                break;
+                case "orders":
+                    loadPage("pages/orders.html");
+                    break;
 
-            case "pending orders":
-                loadPage("pages/pending-orders.html");
-                break;
+                case "pending orders":
+                    loadPage("pages/pending-orders.html");
+                    break;
 
-            case "ready orders":
-                loadPage("pages/ready-orders.html");
-                break;
+                case "ready orders":
+                    loadPage("pages/ready-orders.html");
+                    break;
 
-            case "pending items":
-                loadPage("pages/pending-items.html");
-                break;
+                case "pending items":
+                    loadPage("pages/pending-items.html");
+                    break;
 
-            case "add jobworker":
-                loadPage("pages/add-jobworker.html");
-                break;
+                case "add jobworker":
+                    loadPage("pages/add-jobworker.html");
+                    break;
 
-            case "jobworker entry":
-                loadPage("pages/jobworker-entry.html");
-                break;
+                case "jobworker entry":
+                    loadPage("pages/jobworker-entry.html");
+                    break;
 
-            case "jobworker balance":
-                loadPage("pages/jobworker-balance.html");
-                break;
+                case "jobworker balance":
+                    loadPage("pages/jobworker-balance.html");
+                    break;
 
-            case "new loan":
-                loadPage("pages/new-loan.html");
-                break;
+                case "new loan":
+                    loadPage("pages/new-loan.html");
+                    break;
 
-            case "pending loans":
-                loadPage("pages/pending-loans.html");
-                break;
+                case "pending loans":
+                    loadPage("pages/pending-loans.html");
+                    break;
 
-            case "day book":
-                loadPage("pages/day-book.html");
-                break;
+                case "day book":
+                    loadPage("pages/day-book.html");
+                    break;
 
-            default:
-                showInfo(`"${btn.innerText}" module not connected yet`);
-        }
-    });
+                default:
+                    showInfo(`"${btn.innerText}" module not connected yet`);
+            }
+        });
     });
 }
 
@@ -148,14 +148,14 @@ function ensureElementReady(selector, maxRetries = 10, delay = 50) {
 ====================================================== */
 function loadPage(pageUrl) {
     const workspace = document.querySelector(".workspace");
-    
-    if(!workspace){
+
+    if (!workspace) {
         console.error("Workspace element not found");
         alert("Dashboard workspace not found. Please refresh the page.");
         return;
     }
-    
-    if(!pageUrl){
+
+    if (!pageUrl) {
         console.error("Page URL is required");
         return;
     }
@@ -163,21 +163,21 @@ function loadPage(pageUrl) {
     // Block module loading unless logged in (fail closed)
     try {
         if (!window.ledgerAuth) {
-            try { window.location.replace("login.html"); } catch(e) { window.location.href = "login.html"; }
+            try { window.location.replace("login.html"); } catch (e) { window.location.href = "login.html"; }
             return;
         }
         if (!window.ledgerAuth.isLoggedIn()) {
             window.ledgerAuth.requireAuth("login.html");
             return;
         }
-    } catch (e) {}
+    } catch (e) { }
 
     // Normalize legacy paths from older deployments
     try {
         pageUrl = String(pageUrl || "");
         pageUrl = pageUrl.replace(/^(\.\.\/)+pages\//i, "pages/");
         pageUrl = pageUrl.replace(/^(\.\.\/)+public\//i, "");
-    } catch (e) {}
+    } catch (e) { }
 
     // Normalize/encode URL (handles spaces like "ready extra order.html")
     let fetchUrl = pageUrl;
@@ -211,29 +211,46 @@ function loadPage(pageUrl) {
             // Parse HTML to extract and remove scripts before inserting
             const temp = document.createElement('div');
             temp.innerHTML = html;
-            
+
             // Extract all scripts (both inline and external)
             const scripts = Array.from(temp.querySelectorAll('script'));
             scripts.forEach(script => script.remove());
-            
+
             // Extract style tags to preserve CSS
             const styles = Array.from(temp.querySelectorAll('style'));
             const styleContents = styles.map(style => style.textContent).join('\n');
             styles.forEach(style => style.remove());
-            
-        // Insert HTML content (without scripts and styles)
-        workspace.innerHTML = temp.innerHTML;
-        
-        // Inject styles into workspace if any
-        if (styleContents) {
-            const styleTag = document.createElement('style');
-            styleTag.textContent = styleContents;   
-            workspace.appendChild(styleTag);
-        }
-        
-        // Force a reflow to ensure DOM is fully updated
-        void workspace.offsetHeight;
-            
+
+            // Insert HTML content (without scripts and styles)
+            workspace.innerHTML = temp.innerHTML;
+
+            // ============================================
+            // [PERSISTENCE] Restore Form Data
+            // ============================================
+            if (window.FormPersistence) {
+                try {
+                    const persistence = window.FormPersistence.getInstance();
+                    // Use the page URL as the unique context key
+                    persistence.setContext(pageUrl);
+                    // Restore immediately after HTML injection so users see data
+                    // even before scripts might fully run (though scripts often need to run to populate dropdowns first)
+                    // We'll also call it again after scripts run just in case dropdowns were empty
+                    persistence.restore();
+                } catch (e) {
+                    console.error("[FormPersistence] Error restoring data:", e);
+                }
+            }
+
+            // Inject styles into workspace if any
+            if (styleContents) {
+                const styleTag = document.createElement('style');
+                styleTag.textContent = styleContents;
+                workspace.appendChild(styleTag);
+            }
+
+            // Force a reflow to ensure DOM is fully updated
+            void workspace.offsetHeight;
+
             // Execute scripts AFTER DOM is inserted
             // This ensures getElementById can find elements
             // Use a longer delay to ensure DOM is fully ready
@@ -245,13 +262,18 @@ function loadPage(pageUrl) {
                             // All scripts executed, now refresh
                             setTimeout(() => {
                                 refreshPageData(workspace);
+
+                                // [PERSISTENCE] Second pass restoration to catch dynamically populated fields
+                                if (window.FormPersistence) {
+                                    try { window.FormPersistence.getInstance().restore(); } catch (e) { }
+                                }
                             }, 200);
                             return;
                         }
-                        
+
                         const oldScript = scripts[scriptIndex];
                         const script = document.createElement('script');
-                        
+
                         if (oldScript.src) {
                             // External script: check if already loaded to avoid duplicates
                             const existingScript = document.querySelector(`script[src="${oldScript.src}"]`);
@@ -277,7 +299,7 @@ function loadPage(pageUrl) {
                             // Inline script: execute in workspace context
                             try {
                                 const scriptContent = oldScript.textContent;
-                                
+
                                 // Wrap script to handle errors gracefully and ensure proper scope
                                 const wrappedScript = `
                                     (function() {
@@ -290,10 +312,10 @@ function loadPage(pageUrl) {
                                         }
                                     })();
                                 `;
-                                
+
                                 script.textContent = wrappedScript;
                                 document.body.appendChild(script);
-                                
+
                                 // Remove after execution and move to next script
                                 setTimeout(() => {
                                     if (script.parentNode) {
@@ -309,10 +331,10 @@ function loadPage(pageUrl) {
                             }
                         }
                     };
-                    
+
                     // Start executing scripts sequentially
                     executeNextScript();
-                    
+
                 } catch (e) {
                     console.error('Error executing scripts from loaded page', e);
                     // Still try to refresh even if script execution had errors
@@ -345,7 +367,7 @@ function loadPage(pageUrl) {
 /* ======================================================
    ACTIVE BUTTON UI
 ====================================================== */
-function setActiveSidebar(activeBtn){
+function setActiveSidebar(activeBtn) {
     document.querySelectorAll(".sidebar button")
         .forEach(b => b.classList.remove("active"));
     activeBtn.classList.add("active");
@@ -354,10 +376,10 @@ function setActiveSidebar(activeBtn){
 /* ======================================================
    EXIT
 ====================================================== */
-function exitApp(){
-    if(confirm("Exit application?")){
+function exitApp() {
+    if (confirm("Exit application?")) {
         // Try to close window, fallback to redirect
-        if(window.opener){
+        if (window.opener) {
             window.close();
         } else {
             window.location.href = "about:blank";
@@ -368,7 +390,7 @@ function exitApp(){
 /* ======================================================
    SHOW INFO MESSAGE
 ====================================================== */
-function showInfo(message){
+function showInfo(message) {
     // Simple alert for now, can be replaced with toast notification
     console.log(message);
     // Optional: Show a toast notification instead of console.log
@@ -380,7 +402,7 @@ function showInfo(message){
 ====================================================== */
 function refreshPageData(workspace) {
     if (!workspace) return;
-    
+
     // Wait a bit for DOM to be fully inserted and scripts executed
     setTimeout(() => {
         // First, try to re-initialize any const declarations that might have failed
@@ -393,13 +415,13 @@ function refreshPageData(workspace) {
                 'itemTable', 'rows', 'orderApp', 'invoice',
                 'customer', 'billDate', 'historyBody'
             ];
-            
+
             // This helps pages that have const declarations that failed
             // by ensuring elements exist before functions try to use them
         } catch (e) {
             console.debug('Error in element re-initialization:', e);
         }
-        
+
         // List of common refresh/load functions to call
         const refreshFunctions = [
             'loadCustomers',
@@ -413,7 +435,7 @@ function refreshPageData(workspace) {
             'loadData',
             'reloadData'
         ];
-        
+
         // Try to call refresh functions if they exist
         refreshFunctions.forEach(funcName => {
             try {
@@ -431,7 +453,7 @@ function refreshPageData(workspace) {
                 console.debug(`Refresh function ${funcName} not available:`, e);
             }
         });
-        
+
         // Dispatch a custom event that pages can listen to for refresh
         const refreshEvent = new CustomEvent('pageRefresh', {
             detail: { source: 'dashboard', workspace: workspace }
@@ -439,7 +461,7 @@ function refreshPageData(workspace) {
         workspace.dispatchEvent(refreshEvent);
         window.dispatchEvent(refreshEvent);
         document.dispatchEvent(refreshEvent);
-        
+
         // For pages that check document.readyState, manually trigger their init
         // This handles cases like new-order.html which checks readyState
         try {
@@ -458,7 +480,7 @@ function refreshPageData(workspace) {
         } catch (e) {
             console.debug('Error calling init functions:', e);
         }
-        
+
         // For pages with immediate initialization code (like orders.html)
         // Look for common initialization patterns and ensure they run
         try {
@@ -467,7 +489,7 @@ function refreshPageData(workspace) {
             if (custNameEl && typeof window.loadCustomers === 'function') {
                 setTimeout(() => window.loadCustomers(), 100);
             }
-            
+
             const rowsEl = workspace.querySelector('#rows') || document.getElementById('rows');
             if (rowsEl && typeof window.addRow === 'function') {
                 // Check if rows are empty, if so add a row
@@ -475,25 +497,25 @@ function refreshPageData(workspace) {
                     setTimeout(() => window.addRow(), 150);
                 }
             }
-            
+
             const itemTableEl = workspace.querySelector('#itemTable tbody') || document.querySelector('#itemTable tbody');
             if (itemTableEl && typeof window.addRow === 'function') {
                 if (!itemTableEl.querySelector('tr')) {
                     setTimeout(() => window.addRow(), 150);
                 }
             }
-            
+
             // Check for order date and set it if not set
             const orderDateEl = workspace.querySelector('#orderDate') || document.getElementById('orderDate');
             if (orderDateEl && !orderDateEl.value) {
                 orderDateEl.valueAsDate = new Date();
             }
-            
+
             const billDateEl = workspace.querySelector('#billDate') || document.getElementById('billDate');
             if (billDateEl && !billDateEl.value) {
                 billDateEl.valueAsDate = new Date();
             }
-            
+
             // Generate bill number if needed
             const billNoEl = workspace.querySelector('#billNo') || document.getElementById('billNo');
             if (billNoEl && !billNoEl.value && typeof window.generateBillNo === 'function') {

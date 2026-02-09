@@ -6,9 +6,26 @@
     <title>Rate Book History</title>
 
     <style>
-        /* =========================
-   RESET & BASE
-========================= */
+        /* =====================================================
+           PREMIUM APPLE-STYLE ERP UI
+        ===================================================== */
+        :root {
+            --bg: #f8f9fc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --primary-soft: rgba(59, 130, 246, 0.1);
+            --danger: #ef4444;
+            --success: #10b981;
+            --radius: 12px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+
         * {
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -29,65 +46,49 @@
         body {
             margin: 0;
             padding: 20px;
-            background: linear-gradient(to bottom, #cde1ff, #e6f1ff);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
         }
 
-        /* =========================
-   WINDOW - BIGGER
-========================= */
+        /* WINDOW CONTAINER */
         .window {
-            background: #ffffff;
+            background: var(--card);
             border-radius: 18px;
-            border: 1px solid #d1d6de;
-            box-shadow: 0 25px 45px rgba(0, 0, 0, .25);
-            max-width: 95%;
-            width: 95%;
-            margin: 20px auto;
-        }
-
-        .window-content {
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 98%;
+            width: 98%;
+            margin: 0 auto;
+            overflow: hidden;
             display: flex;
-            gap: 30px;
-            padding: 30px 40px;
-            background: #f9fbfe;
+            flex-direction: column;
+            height: 90vh;
         }
 
-        /* Full width for history */
-        .window-full {
-            flex: 1;
-            min-width: 100%;
-        }
-
-        /* TITLE BAR - BIGGER */
+        /* TITLE BAR */
         .title-bar {
-            background: linear-gradient(#f4f6fa, #e6eaf0);
-            padding: 16px 20px;
+            background: #fff;
+            padding: 16px 24px;
             font-weight: 600;
             font-size: 18px;
             text-align: center;
-            color: #1d1d1f;
-            border-bottom: 1px solid #d1d6de;
-            border-radius: 18px 18px 0 0;
-            position: relative;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
         }
 
         .close-btn {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
             width: 32px;
             height: 32px;
             border: none;
-            background: #ff3b30;
-            color: #fff;
+            background: #ffe5e5;
+            color: var(--danger);
             border-radius: 8px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -98,162 +99,192 @@
         }
 
         .close-btn:hover {
-            background: #ff2d20;
-            transform: translateY(-50%) scale(1.1);
-            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+            background: var(--danger);
+            color: white;
+            transform: scale(1.05);
         }
 
-        .close-btn:active {
-            transform: translateY(-50%) scale(0.95);
+        /* CONTENT AREA */
+        .window-content {
+            flex: 1;
+            padding: 0;
+            background: var(--bg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* HISTORY SECTION - BIGGER */
-        .history-section {
-            margin-top: 0;
-            padding: 20px;
+        /* TOOLBAR */
+        .toolbar {
+            padding: 16px 24px;
             background: #fff;
-            border: 1px solid #d1d6de;
-            border-radius: 12px;
-            max-height: 80vh;
-            /* Taller since it's the only thing */
-            min-height: 600px;
-            overflow: auto;
-            /* Allow both X and Y scroll */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
         }
 
-        .history-section h3 {
-            margin: 0 0 16px 0;
-            font-size: 16px;
-            color: #1d1d1f;
+        .toolbar-left,
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            font-size: 13px;
             font-weight: 600;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #d1d6de;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        /* HISTORY TABLE - PREMIUM */
+        .btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .diff-badge {
+            background: #eff6ff;
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+
+        /* TABLE CONTAINER */
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            padding: 0;
+        }
+
+        /* PREMIUM TABLE */
+        /* TABLE STYLES - Matched to Order Details */
         .history-table {
             width: 100%;
-            min-width: 1800px;
-            /* Increased to fit new columns */
+            min-width: 1600px;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: 13px;
+            font-size: 13.5px;
         }
 
         .history-table th {
-            background: #f8f9fa;
-            padding: 14px 12px;
+            background: #f5f6fa;
+            padding: 8px 10px;
             text-align: left;
-            border-bottom: 2px solid #e9ecef;
-            border-right: 1px solid #e9ecef;
-            /* Added vertical line */
+            border-bottom: 1px solid var(--border);
             font-weight: 600;
-            font-size: 12px;
-            color: #495057;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: var(--text);
+            font-size: 13.5px;
+            text-transform: none;
             position: sticky;
             top: 0;
             z-index: 10;
         }
 
-        .history-table th:last-child {
-            border-right: none;
-        }
-
         .history-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #f1f3f5;
-            border-right: 1px solid #f1f3f5;
-            /* Added vertical line */
-            font-size: 13.5px;
-            color: #343a40;
+            border-bottom: 1px solid var(--border);
+            padding: 8px 10px;
+            white-space: nowrap;
+            background: #fff;
             vertical-align: middle;
         }
 
-        .history-table td:last-child {
-            border-right: none;
+        .history-table tr:hover td {
+            background: #f8faff;
         }
 
-        .history-table tr:hover {
-            background: #f1f8ff;
-        }
-
-        /* PREMIUM INPUTS IN TABLE */
+        /* INPUTS IN TABLE - Matched EXACTLY to Order Details */
         .history-table input,
         .history-table select {
-            border: none;
-            border-bottom: 1px solid transparent;
-            background: transparent;
-            padding: 6px 4px;
-            font-family: inherit;
             width: 100%;
-            transition: all 0.2s ease;
-            color: inherit;
-        }
-
-        .history-table input:hover,
-        .history-table select:hover {
-            border-bottom-color: #dee2e6;
-            background: #ffffff;
+            height: 30px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 4px 6px;
+            font-size: 13px;
+            background: #fff;
+            color: var(--text);
+            font-family: inherit;
+            transition: .2s;
         }
 
         .history-table input:focus,
         .history-table select:focus {
             outline: none;
-            border-bottom: 2px solid #007aff;
-            background: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-soft);
         }
 
-        /* FOOTER - BIGGER */
-        .footer {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            padding: 20px;
-            background: #f2f5f9;
-            border-top: 1px solid #d1d6de;
-            border-radius: 0 0 18px 18px;
-        }
-
-        .footer button {
-            min-width: 140px;
-            padding: 12px 24px;
-            font-size: 15px;
-            font-weight: 500;
-            border-radius: 12px;
-            border: 1px solid #d1d6de;
-            background: #ffffff;
+        .history-table select {
             cursor: pointer;
-            transition: all 0.2s;
-            color: #1d1d1f;
         }
 
-        .footer button:hover {
-            background: #e6f0ff;
-            border-color: #007aff;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+        /* FOOTER */
+        .footer {
+            padding: 16px 24px;
+            background: #fff;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
         }
 
-        /* RESPONSIVE */
-        @media(max-width:900px) {
-            .window-content {
-                padding: 20px;
-            }
+        /* Utility classes */
+        .text-right {
+            text-align: right;
+        }
 
-            .title-bar {
-                padding: 14px 16px;
-                font-size: 16px;
-            }
+        .text-center {
+            text-align: center;
+        }
 
-            .close-btn {
-                right: 16px;
-                width: 28px;
-                height: 28px;
-                font-size: 16px;
-            }
+        .font-bold {
+            font-weight: 600;
+        }
+
+        /* New Type Colors */
+        .type-badge-order {
+            color: #3b82f6;
+            font-weight: 600;
+        }
+
+        .type-badge-repair {
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        .type-badge-sale {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .type-badge-purchase {
+            color: #ef4444;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -263,64 +294,66 @@
     <div class="window">
 
         <div class="title-bar">
-            Rate Book History
+            <span>Rate Book History</span>
             <button class="close-btn" onclick="closeSelf()" title="Close">×</button>
         </div>
 
         <div class="window-content">
-            <!-- Full Width History -->
-            <div class="window-full">
-                <div class="history-section">
-                    <div
-                        style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:2px solid #d1d6de; padding-bottom:8px;">
-                        <h3 style="margin:0; border:none; padding:0;">All Entries</h3>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <button id="btnCalcDiff" onclick="calculateComparison()"
-                                style="background:#6c757d; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; display:none;">Calculate
-                                Diff</button>
-                            <div id="compareDisplay" style="font-size:14px; font-weight:600; color:#007aff;">
-                                Diff: <span id="compareVal">0.00</span>
-                            </div>
-                        </div>
-                        <button onclick="addHistoryRow()"
-                            style="background:#28a745; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:600; font-size:13px;">+
-                            Add New Row</button>
-                    </div>
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px; text-align:center;">Compare</th>
-                                <th>Date</th>
-                                <th>Type</th>
-                                <th>Metal</th>
-                                <th>Stamp</th>
-                                <th>Remark</th>
-                                <th style="text-align:right;">Weight</th>
-                                <th style="text-align:right;">Rate</th>
-                                <th style="text-align:right;">Bal Wt.</th>
-                                <th style="text-align:right;">Adj Wt.</th>
-                                <th>Cur Stamp</th>
-                                <th style="text-align:right;">Cur Wt</th>
-                                <th style="text-align:right;">Cur Rate</th>
-                                <th style="text-align:right;">Amt Diff</th>
-                                <th>Del Date</th>
-                                <th>Narration</th>
-                            </tr>
-                        </thead>
-                        <tbody id="rateBookHistoryBody">
-                            <!-- Rate book entries will be loaded here -->
-                        </tbody>
-                    </table>
-                    <div id="compareDisplayFooter"
-                        style="text-align:right; margin-top:10px; font-size:14px; font-weight:600; color:#007aff;">
-                        Diff: <span id="compareValFooter">0.00</span>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <button id="btnCalcDiff" onclick="calculateComparison()" class="btn btn-primary"
+                        style="display:none;">
+                        Calculate Diff
+                    </button>
+                    <div class="diff-badge" id="compareDisplay">
+                        Diff: <span id="compareVal">0.00</span>
                     </div>
                 </div>
+                <div class="toolbar-right">
+                    <button onclick="addHistoryRow()" class="btn btn-primary">
+                        + Add New Row
+                    </button>
+                </div>
             </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width:40px; text-align:center;">
+                                <input type="checkbox" disabled style="width:16px;">
+                            </th>
+                            <th style="width:130px;">Date</th>
+                            <th style="width:110px;">Type</th>
+                            <th style="width:100px;">Metal</th>
+                            <th style="width:100px;">Stamp</th>
+                            <th style="width:150px;">Remark</th>
+                            <th class="text-right" style="width:100px;">Weight</th>
+                            <th class="text-right" style="width:100px;">Rate</th>
+                            <th class="text-right" style="width:100px;">Bal Wt.</th>
+                            <th class="text-right" style="width:100px;">Adj Wt.</th>
+                            <th style="width:100px;">Cur Stamp</th>
+                            <th class="text-right" style="width:100px;">Cur Wt</th>
+                            <th class="text-right" style="width:100px;">Cur Rate</th>
+                            <th class="text-right" style="width:110px;">Amt Diff</th>
+                            <th style="width:130px;">Del Date</th>
+                            <th style="width:150px;">Narration</th>
+                            <th style="width:80px; text-align:center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rateBookHistoryBody">
+                        <!-- Rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+
         </div>
 
         <div class="footer">
-            <button type="button" onclick="closeSelf()">Close</button>
+            <button class="btn" onclick="closeSelf()">Close</button>
         </div>
 
     </div>
@@ -344,12 +377,12 @@
 
                 if (rates.length === 0) {
                     tbody.innerHTML = `
-        <tr>
-          <td colspan="11" style="text-align:center; padding:20px; color:#777;">
-            No rate book entries found
-          </td>
-        </tr>
-      `;
+                        <tr>
+                            <td colspan="17" style="text-align:center; padding:40px; color:var(--muted); font-size:14px;">
+                                No rate book entries found. Click "Add New Row" to start.
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
 
@@ -391,54 +424,71 @@
 
                     // Format Diff Amount for display
                     const displayDiff = effectiveCurrentRate > 0 ? diffAmt.toFixed(2) : "0.00";
-                    const diffColor = diffAmt >= 0 ? "green" : "red";
+                    const diffColor = diffAmt >= 0 ? "var(--success)" : "var(--danger)";
+
+                    // Determine if using Legacy Type (S,P,O,R) or New Type (order, repair...)
+                    // Mapping for legacy display
+                    const type = entry.type || "Order";
+
+                    // Helper to check selection
+                    const isSel = (val) => (type === val || type === val[0]) ? 'selected' : '';
 
                     tr.innerHTML = `
-            <td style="text-align:center;">
-              <input type="checkbox" onchange="handleCompare(this, ${entry.id})" class="compare-chk">
-            </td>
-            <td><input type="date" value="${entry.date || ""}" style="width:110px;" onchange="updateHistoryRow(this, 'date')"></td>
-            <td>
-              <select style="width:50px;" onchange="updateHistoryRow(this, 'type')">
-                <option value="S" ${entry.type === 'S' ? 'selected' : ''}>S</option>
-                <option value="P" ${entry.type === 'P' ? 'selected' : ''}>P</option>
-                <option value="O" ${entry.type === 'O' ? 'selected' : ''}>O</option>
-                <option value="R" ${entry.type === 'R' ? 'selected' : ''}>R</option>
-              </select>
-            </td>
-            <td><input value="${entry.metal || ""}" placeholder="Metal" style="width:60px;" onchange="updateHistoryRow(this, 'metal')"></td>
-            <td><input value="${entry.stamp || ""}" style="width:60px;" onchange="updateHistoryRow(this, 'stamp')"></td>
-            <td><input value="${entry.narration || ""}" style="width:100px;" onchange="updateHistoryRow(this, 'narration')"></td>
-            <td><input type="number" step="0.001" value="${entryWeight > 0 ? entryWeight.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'weight')"></td>
-            <td><input type="number" step="0.01" value="${entryRate > 0 ? entryRate.toFixed(2) : ''}" style="width:80px; text-align:right;" onchange="updateHistoryRow(this, 'rate')"></td>
-            
-            <td><input type="number" step="0.001" value="${balWt > 0 ? balWt.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'balWt')"></td>
-            <td><input type="number" step="0.001" value="${adjWt !== 0 ? adjWt.toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'adjWt')"></td>
+                        <td style="text-align:center;">
+                            <input type="checkbox" onchange="handleCompare(this, ${entry.id})" class="compare-chk" style="width:16px; height:16px;">
+                        </td>
+                        <td><input type="date" value="${entry.date || ""}" onchange="updateHistoryRow(this, 'date')"></td>
+                        <td>
+                            <select onchange="updateHistoryRow(this, 'type')" class="${getTypeClass(type)}">
+                                <option value="Order" ${type === 'Order' || type === 'O' ? 'selected' : ''}>Order</option>
+                                <option value="Repair" ${type === 'Repair' || type === 'R' ? 'selected' : ''}>Repair</option>
+                                <option value="Sale" ${type === 'Sale' || type === 'S' ? 'selected' : ''}>Sale</option>
+                                <option value="Purchase" ${type === 'Purchase' || type === 'P' ? 'selected' : ''}>Purchase</option>
+                            </select>
+                        </td>
+                        <td><input value="${entry.metal || ""}" placeholder="Gold/Silver" onchange="updateHistoryRow(this, 'metal')"></td>
+                        <td><input value="${entry.stamp || ""}" placeholder="916" onchange="updateHistoryRow(this, 'stamp')"></td>
+                        <td><input value="${entry.narration || ""}" placeholder="-" onchange="updateHistoryRow(this, 'narration')"></td>
+                        <td><input type="number" step="0.001" value="${entryWeight > 0 ? entryWeight.toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'weight')"></td>
+                        <td><input type="number" step="0.01" value="${entryRate > 0 ? entryRate.toFixed(2) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'rate')" oninput="calcDiff(this)"></td>
+                        
+                        <td><input type="number" step="0.001" value="${balWt > 0 ? balWt.toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'balWt')"></td>
+                        <td><input type="number" step="0.001" value="${adjWt !== 0 ? adjWt.toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'adjWt')" oninput="calcDiff(this)"></td>
 
-            <!-- New Columns -->
-            <td><input value="${entry.curStamp || ""}" style="width:60px;" onchange="updateHistoryRow(this, 'curStamp')"></td>
-            <td><input type="number" step="0.001" value="${safeNumber(entry.curWt, 0) > 0 ? safeNumber(entry.curWt, 0).toFixed(3) : ''}" style="width:70px; text-align:right;" onchange="updateHistoryRow(this, 'curWt')" oninput="calcDiff(this)"></td>
-            <td><input type="number" step="0.01" value="${safeNumber(entry.curRate, 0) > 0 ? safeNumber(entry.curRate, 0).toFixed(2) : ''}" style="width:80px; text-align:right;" onchange="updateHistoryRow(this, 'curRate')" oninput="calcDiff(this)"></td>
-            <td>
-                <input type="text" readonly 
-                       value="${calculateDiff(entry, balWt, entryRate)}" 
-                       style="width:90px; text-align:right; font-weight:bold; color:${getDiffColor(entry, balWt, entryRate)};">
-            </td>
-            <td><input type="date" value="${entry.delDate || ""}" style="width:110px;" onchange="updateHistoryRow(this, 'delDate')"></td>
-            <td><input value="${entry.curNarration || ""}" style="width:120px;" onchange="updateHistoryRow(this, 'curNarration')"></td>
-            <td style="text-align:center;">
-                <button onclick="removeHistoryRow(${entry.id})" style="background:none; border:none; cursor:pointer; font-size:13px; color:red; font-weight:500;" title="Remove Entry">Delete</button>
-            </td>
-          `;
-                    // Wait, I overwrote the tr.innerHTML assignment above which was incomplete. 
-                    // Let's do a full replacement of the tr.innerHTML block in next chunk to be safe.
-
-
+                        <!-- New Columns -->
+                        <td><input value="${entry.curStamp || ""}" placeholder="Stamp" onchange="updateHistoryRow(this, 'curStamp')"></td>
+                        <td><input type="number" step="0.001" value="${safeNumber(entry.curWt, 0) > 0 ? safeNumber(entry.curWt, 0).toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'curWt')" oninput="calcDiff(this)"></td>
+                        <td><input type="number" step="0.01" value="${safeNumber(entry.curRate, 0) > 0 ? safeNumber(entry.curRate, 0).toFixed(2) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'curRate')" oninput="calcDiff(this)"></td>
+                        <td>
+                            <input type="text" readonly 
+                                   value="${calculateDiff(entry, balWt, entryRate)}" 
+                                   style="text-align:right; font-weight:bold; color:${getDiffColor(entry, balWt, entryRate)}; cursor:default; border:none; background:transparent;">
+                        </td>
+                        <td><input type="date" value="${entry.delDate || ""}" onchange="updateHistoryRow(this, 'delDate')"></td>
+                        <td><input value="${entry.curNarration || ""}" onchange="updateHistoryRow(this, 'curNarration')"></td>
+                        <td style="text-align:center;">
+                            <button onclick="removeHistoryRow(${entry.id})" 
+                                    style="background:none; border:none; cursor:pointer; color:var(--text); opacity:0.5; font-size:16px; transition:0.2s;" 
+                                    title="Remove Entry"
+                                    onmouseover="this.style.opacity=1; this.style.color=var(--danger)"
+                                    onmouseout="this.style.opacity=0.5; this.style.color=var(--text)">
+                                🗑️
+                            </button>
+                        </td>
+                    `;
                     tbody.appendChild(tr);
                 });
             } catch (e) {
                 console.error("Error loading history:", e);
             }
+        }
+
+        function getTypeClass(type) {
+            if (type === 'Order' || type === 'O') return 'type-badge-order';
+            if (type === 'Repair' || type === 'R') return 'type-badge-repair';
+            if (type === 'Sale' || type === 'S') return 'type-badge-sale';
+            if (type === 'Purchase' || type === 'P') return 'type-badge-purchase';
+            return '';
         }
 
         /* UPDATE HISTORY ROW */
@@ -462,16 +512,13 @@
 
                     // If simple text update, no need to reload entire table, just calc diff if needed
                     if (['curWt', 'curRate', 'balWt', 'rate'].includes(field)) {
-                        // We could reload specific row or just all. Loading all is safer for now.
+                        loadRateBookHistory();
+                    } else if (field === 'type') {
+                        // Reload to update color
                         loadRateBookHistory();
                     } else {
-                        // For non-calc fields, maybe we don't need full reload? 
-                        // But let's keep it simple and consistent.
-                        // loadRateBookHistory(); // Removed auto-reload for text fields to improve performance typing?
-                        // Actually, let's keep reloading to be safe, or just notification.
-                        // User might be typing. If we reload on every char logic (onchange is blur mostly), it's fine.
-                        // Wait, onchange fires on blur. oninput fires on type.
-                        // updateHistoryRow is attached to onchange. So it's fine.
+                        // For non-calc fields, also reload to ensure consistency/saving logic is robust
+                        // (User won't mind a quick blink for data safety)
                         loadRateBookHistory();
                     }
 
@@ -486,21 +533,20 @@
 
         /* Helper to calc diff value string */
         function calculateDiff(entry, balWt, bookedRate) {
-            const curWt = entry.curWt !== undefined ? safeNumber(entry.curWt) : balWt; // Default to balWt if not set
             const curRate = safeNumber(entry.curRate, 0);
+            const adjWt = safeNumber(entry.adjWt, 0);
 
-            // Formula: (Cur Wt * Cur Rate) - (Bal Wt * Booked Rate)
-            const curAmt = curWt * curRate;
-            const bookedAmt = balWt * bookedRate;
-            const diff = curAmt - bookedAmt;
+            // NEW Formula: (Current Rate - Rate Book Rate) × Adj Wt
+            const rateDiff = curRate - bookedRate;
+            const diff = rateDiff * adjWt;
 
             return diff.toFixed(2);
         }
 
         function getDiffColor(entry, balWt, bookedRate) {
             const diff = parseFloat(calculateDiff(entry, balWt, bookedRate));
-            if (diff > 0) return 'green';
-            if (diff < 0) return 'red';
+            if (diff > 0) return 'var(--success)'; // Green
+            if (diff < 0) return 'var(--danger)';  // Red
             return 'inherit';
         }
 
@@ -510,22 +556,22 @@
             if (!tr) return;
 
             // Get live values from DOM
-            const balWt = parseFloat(tr.cells[7].querySelector('input').value) || 0;
-            const bookedRate = parseFloat(tr.cells[6].querySelector('input').value) || 0;
+            const bookedRate = parseFloat(tr.cells[7].querySelector('input').value) || 0; // Index 7 is Rate
+            const adjWtInput = tr.cells[9].querySelector('input'); // Index 9 is Adj Wt
+            const curRateInput = tr.cells[12].querySelector('input'); // Index 12 is Cur Rate
+            const diffInput = tr.cells[13].querySelector('input'); // Index 13 is Diff
 
-            const curWtInput = tr.cells[10].querySelector('input');
-            const curRateInput = tr.cells[11].querySelector('input');
-            const diffInput = tr.cells[12].querySelector('input');
-
-            const curWt = parseFloat(curWtInput.value) || 0;
+            const adjWt = parseFloat(adjWtInput.value) || 0;
             const curRate = parseFloat(curRateInput.value) || 0;
 
-            const curAmt = curWt * curRate;
-            const bookedAmt = balWt * bookedRate;
-            const diff = curAmt - bookedAmt;
+            // NEW Formula: (Current Rate - Rate Book Rate) × Adj Wt
+            const rateDiff = curRate - bookedRate;
+            const diff = rateDiff * adjWt;
 
             diffInput.value = diff.toFixed(2);
-            diffInput.style.color = diff > 0 ? 'green' : (diff < 0 ? 'red' : '');
+            if (diff > 0) diffInput.style.color = 'var(--success)';
+            else if (diff < 0) diffInput.style.color = 'var(--danger)';
+            else diffInput.style.color = 'inherit';
         };
 
         /* COMPARE RATES LOGIC */
@@ -543,16 +589,13 @@
         function calculateComparison() {
             const display = document.getElementById("compareDisplay");
             const ValSpan = document.getElementById("compareVal");
-            const displayFooter = document.getElementById("compareDisplayFooter");
-            const valSpanFooter = document.getElementById("compareValFooter");
 
             // Update Button Visibility
             const btn = document.getElementById("btnCalcDiff");
             if (btn) {
                 if (selectedForCompare.length >= 2) {
-                    btn.style.display = "inline-block";
-                    btn.style.background = "#007aff";
-                    btn.innerText = `Calculate Diff (${selectedForCompare.length})`;
+                    btn.style.display = "inline-flex";
+                    btn.innerHTML = `Calculate Diff <span style="background:rgba(255,255,255,0.2); px-2; border-radius:4px; font-size:11px; padding:2px 6px;">${selectedForCompare.length}</span>`;
                 } else {
                     btn.style.display = "none";
                 }
@@ -560,7 +603,6 @@
 
             if (selectedForCompare.length < 2) {
                 ValSpan.innerText = "0.00";
-                if (valSpanFooter) valSpanFooter.innerText = "0.00";
                 localStorage.removeItem("rateComparingDiff");
                 notifyDiffUpdate();
                 return;
@@ -578,17 +620,22 @@
                     const newest = sorted[0];
                     const oldest = sorted[sorted.length - 1]; // Compare Newest vs Oldest
 
+                    // New Logic: (New Rate - Old Rate) * New Weight
+                    // Wait, logic in original was:
+                    // const rateDiff = (parseFloat(newest.rate) || 0) - (parseFloat(oldest.rate) || 0);
+                    // const weight = parseFloat(newest.weight) || 0;
+                    // const totalDiff = rateDiff * weight;
+
                     const rateDiff = (parseFloat(newest.rate) || 0) - (parseFloat(oldest.rate) || 0);
                     const weight = parseFloat(newest.weight) || 0;
 
                     const totalDiff = rateDiff * weight;
 
-                    display.style.display = 'block';
                     ValSpan.innerText = totalDiff.toFixed(2);
-
-                    if (displayFooter) {
-                        displayFooter.style.display = 'block';
-                        valSpanFooter.innerText = totalDiff.toFixed(2);
+                    if (totalDiff >= 0) {
+                        ValSpan.style.color = 'var(--success)';
+                    } else {
+                        ValSpan.style.color = 'var(--danger)';
                     }
 
                     localStorage.setItem("rateComparingDiff", totalDiff.toFixed(2));
@@ -613,6 +660,12 @@
                 rates = rates.filter(r => r.id !== id);
                 localStorage.setItem("rateBook", JSON.stringify(rates));
 
+                // If removed item was in compare list
+                if (selectedForCompare.includes(id)) {
+                    selectedForCompare = selectedForCompare.filter(sid => sid !== id);
+                    calculateComparison();
+                }
+
                 loadRateBookHistory();
 
                 // Notify other windows
@@ -631,7 +684,7 @@
                 const newEntry = {
                     id: Date.now(),
                     date: new Date().toISOString().split('T')[0],
-                    type: 'S',
+                    type: 'Order', // Default to Order
                     metal: '',
                     stamp: '',
                     narration: '',
@@ -659,8 +712,6 @@
                 } catch (e) { }
             } catch (e) { console.error(e); }
         };
-
-
 
         function closeSelf() {
             const returnTarget = localStorage.getItem("ratebookReturnTarget") || "pages/new-order.html";

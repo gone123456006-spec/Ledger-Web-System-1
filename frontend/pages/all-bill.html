@@ -267,6 +267,23 @@
     .table-wrap::-webkit-scrollbar-thumb:hover {
       background: #a1a1a6;
     }
+
+    /* =========================
+       ACTION BUTTONS
+    ========================= */
+    .action-buttons {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+      /* Prevent overflow on small screens */
+    }
+
+    .action-buttons button {
+      padding: 4px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 
@@ -290,15 +307,18 @@
       <table id="balanceTable">
         <thead>
           <tr>
+            <th>Type</th>
             <th>Date</th>
-            <th>Order No</th>
-            <th>Customer</th>
+            <th>Mark (CID)</th>
+            <th>LF No.</th>
+            <th>Bill No</th>
+            <th>Name</th>
+            <th>Relation</th>
+            <th>Relation Name</th>
+            <th>Station</th>
+            <th>Phone No.</th>
+            <th>Mobile Number</th>
             <th class="right">Amount (₹)</th>
-            <th class="right">Ready Wt</th>
-            <th class="right">Neg</th>
-            <th>Ready Metal</th>
-            <th>Payment</th>
-            <th>Narration</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -383,20 +403,24 @@
           row.dataset.orderNo = balance.orderNo || "";
 
           row.innerHTML = `
+        <td>${(balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order")}</td>
         <td>${balance.date || "—"}</td>
+        <td>${balance.cid || "—"}</td>
+        <td>${balance.lfno || "—"}</td>
         <td>${balance.orderNo || "—"}</td>
         <td>${balance.customer || "—"}</td>
+        <td>${balance.relation || "—"}</td>
+        <td>${balance.relationName || "—"}</td>
+        <td>${balance.station || "—"}</td>
+        <td>${balance.phone || "—"}</td>
+        <td>${balance.mobile || "—"}</td>
         <td class="right">${parseFloat(balance.amount || 0).toFixed(2)}</td>
-        <td class="right">${parseFloat(balance.readyWeight || 0).toFixed(3)}</td>
-        <td class="right">${parseFloat(balance.neg || 0).toFixed(3)}</td>
-        <td>${balance.readyMetal || "—"}</td>
-        <td>${balance.payment || "—"}</td>
-        <td style="max-width:200px;white-space:normal;word-break:break-word;">${balance.narration || "—"}</td>
+        <td class="center">
           <div class="action-buttons">
             <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:6px 14px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Edit</button>
             ${balance.transferred ?
-              `<button disabled style="padding:6px 14px;border-radius:8px;border:none;background:#6c757d;color:#fff;font-size:12px;cursor:not-allowed;font-weight:500;">Transferred</button>` :
-              `<button onclick="transferBill(${index})" style="padding:6px 14px;border-radius:8px;border:none;background:#198754;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Transfer</button>`
+              `<button disabled style="padding:6px 14px;border-radius:8px;border:none;background:#6c757d;color:#fff;font-size:12px;cursor:not-allowed;font-weight:500;">Saved</button>` :
+              `<button onclick="transferBill(${index})" style="padding:6px 14px;border-radius:8px;border:none;background:#198754;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Save</button>`
             }
             <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${(balance.customer || '').replace(/'/g, "\\'")}')" style="padding:6px 14px;border-radius:8px;border:none;background:#dc3545;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Remove</button>
           </div>
@@ -458,7 +482,7 @@
       rows.forEach(row => {
         const rowText = row.innerText.toLowerCase();
         const cells = row.querySelectorAll("td");
-        const customerCell = cells[2] ? cells[2].textContent.toLowerCase() : "";
+        const customerCell = cells[5] ? cells[5].textContent.toLowerCase() : "";
 
         let show = true;
 
@@ -514,6 +538,19 @@
       }
 
       loadBalances();
+
+      // Check for auto-filter (from Customer Balance page)
+      const filterName = localStorage.getItem("filterCustomerName");
+      if (filterName) {
+        const filterInput = document.getElementById("customerFilter");
+        if (filterInput) {
+          filterInput.value = filterName;
+          localStorage.removeItem("filterCustomerName");
+          // Apply filter after a brief delay to ensure DOM is ready
+          setTimeout(filterTable, 50);
+        }
+      }
+
       ensureFunctionsGlobal();
     }
 
@@ -733,18 +770,27 @@
           return;
         }
 
+        // 1. LOOKUP FULL ORDER/BILL DETAILS
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+
+        // Try to find the full order or bill record
+        const fullOrder = orders.find(o => o.orderNo === bill.orderNo || o.id === bill.orderNo);
+        const fullBill = bills.find(b => b.billNo === bill.orderNo);
+
+        // Extract all available details (prefer order, fallback to bill, then defaults)
+        const phone = fullOrder?.customerId || fullBill?.customerId || bill.phone || "—";
+        const mobile = fullOrder?.mobile || fullBill?.mobile || bill.mobile || phone;
+        const station = fullOrder?.station || fullBill?.station || bill.station || "—";
+        const relation = fullOrder?.relation || fullBill?.relation || bill.relation || "—";
+        const relationName = fullOrder?.relationName || fullBill?.relationName || bill.relationName || "—";
+        const lfno = fullOrder?.lfno || fullBill?.lfno || bill.lfno || "—";
+        const cid = fullOrder?.cid || fullBill?.cid || bill.cid || "—";
+
+        // 2. FIND OR CREATE CUSTOMER
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
         const custNameNorm = (bill.customer || "").trim().toLowerCase();
-
-        // Find existing customer
         let customer = customers.find(c => (c.name || "").trim().toLowerCase() === custNameNorm);
-
-        // Bill Amount logic:
-        // If it's stored as signed net amount (e.g. -500 for Purchase, +1000 for Order), we just ADD it.
-        // If it's absolute, we need to check Type.
-        // In ready-extra-order, we store 'amount' as 'billTotal'. 'billTotal' = Order - Purchase.
-        // So 'amount' is ALREADY SIGNED. Positive = Debit (Owe us), Negative = Credit (We owe them).
-        // We simply ADD this amount to the Opening Balance.
 
         const amountVal = parseFloat(bill.amount || 0);
 
@@ -753,56 +799,75 @@
           if (!customer.transferredBills) customer.transferredBills = [];
           if (customer.transferredBills.includes(bill.orderNo)) {
             alert("This Bill No (" + bill.orderNo + ") has already been transferred to this customer.");
-            // Mark as transferred in LocalStorage to fix sync if needed?
-            // For now, just abort to be safe using the rigorous check.
             return;
           }
 
-          // Update existing
+          // Update existing customer
           const currentBal = parseFloat(customer.openingBalance || 0);
           customer.openingBalance = (currentBal + amountVal).toFixed(2);
           customer.transferredBills.push(bill.orderNo);
+          customer.timestamp = new Date().toISOString();
 
-          // Update referencing info
-          customer.timestamp = new Date().toISOString(); // Update "Date" column to now
+          // Update missing fields with data from this transfer
+          if ((!customer.phone || customer.phone === "—") && phone !== "—") customer.phone = phone;
+          if ((!customer.mobile || customer.mobile === "—") && mobile !== "—") customer.mobile = mobile;
+          if ((!customer.station || customer.station === "—") && station !== "—") customer.station = station;
+          if ((!customer.relation || customer.relation === "—") && relation !== "—") customer.relation = relation;
+          if ((!customer.relationName || customer.relationName === "—") && relationName !== "—") customer.relationName = relationName;
+          if ((!customer.lfno || customer.lfno === "—") && lfno !== "—") customer.lfno = lfno;
+          if ((!customer.cid || customer.cid === "—") && cid !== "—") customer.cid = cid;
 
           alert(`Updated existing customer "${customer.name}".\nNew Balance: ₹ ${customer.openingBalance}`);
         } else {
-          // Create new
+          // Create new customer with all available data
           customer = {
-            cid: "—",
+            cid: cid,
             name: bill.customer,
             openingBalance: amountVal.toFixed(2),
-            phone: "—",
-            mobile: "—",
-            station: "—",
-            relation: "—",
-            relationName: "—",
-            lfno: "—",
+            phone: phone,
+            mobile: mobile,
+            station: station,
+            relation: relation,
+            relationName: relationName,
+            lfno: lfno,
             timestamp: new Date().toISOString(),
+            openingDate: bill.date || new Date().toISOString().split('T')[0],
             transferredBills: [bill.orderNo]
           };
           customers.push(customer);
           alert(`Created new customer "${customer.name}" with Balance: ₹ ${customer.openingBalance}`);
         }
 
-        // Save Customers
+        // 3. SAVE DATA
         localStorage.setItem("customers", JSON.stringify(customers));
 
         // Mark Bill as Transferred
         bill.transferred = true;
-        balances[index] = bill; // Update in array
+        balances[index] = bill;
         localStorage.setItem("customerBalances", JSON.stringify(balances));
 
-        // Update UI (Reload current table to show disabled button)
-        loadBalances();
-
-        // Dispatch Custom Event to notify other pages
+        // 4. DISPATCH EVENTS
         const event = new CustomEvent('customersUpdated');
         window.dispatchEvent(event);
+        if (window.parent && window.parent !== window) {
+          window.parent.dispatchEvent(event);
+        }
         if (window.top && window.top !== window) {
           window.top.dispatchEvent(event);
         }
+
+        // 5. NAVIGATE TO CUSTOMER BALANCE PAGE
+        setTimeout(() => {
+          if (typeof loadPage === 'function') {
+            loadPage("pages/customer-balance.html");
+          } else if (window.parent && typeof window.parent.loadPage === 'function') {
+            window.parent.loadPage("pages/customer-balance.html");
+          } else if (window.top && typeof window.top.loadPage === 'function') {
+            window.top.loadPage("pages/customer-balance.html");
+          } else {
+            window.location.href = "customer-balance.html";
+          }
+        }, 500);
 
       } catch (e) {
         console.error("Transfer failed:", e);

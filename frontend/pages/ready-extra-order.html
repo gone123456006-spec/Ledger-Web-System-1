@@ -134,7 +134,14 @@
       border: 1px solid var(--border);
       font-size: 14px;
       background: #fff;
+      color: var(--text);
       transition: .2s;
+    }
+
+    .row select option {
+      background: #fff;
+      color: var(--text);
+      padding: 8px;
     }
 
     .row input:focus,
@@ -911,9 +918,6 @@
               <th>Rate</th>
               <th>Lbr.%</th>
               <th class="total">Total</th>
-              <th>Ready Weight</th>
-              <th>Neg</th>
-              <th>Ready Metals</th>
               <th>❌</th>
             </tr>
           </thead>
@@ -1050,10 +1054,6 @@
       <div class="summary-row" id="iRateDiffRow">
         <span><strong>Difference (Bill - Ratebook):</strong></span>
         <span><strong><span id="iRateDiffSign">+</span> ₹ <span id="iRateDiff">0.00</span></strong></span>
-      </div>
-      <div class="summary-row" id="iCompDiffRow" style="color:#e83e8c;">
-        <span><strong>Compare Diff:</strong></span>
-        <span><strong>₹ <span id="iCompDiff">0.00</span></strong></span>
       </div>
       <div class="summary-row" style="color:#6f42c1;">
         <span><strong>Ratebook Rate:</strong></span>
@@ -1240,6 +1240,72 @@
     </div>
   </div>
 
+  <!-- RATEBOOK DETAILS POPUP -->
+  <div id="ratebookDetailsPopup" class="popup-bg" style="display:none;"
+    onclick="if(event.target===this) closeRatebookDetailsPopup()">
+    <div class="payment-window" style="max-width:95%; width:1400px;">
+      <div class="payment-title-bar">Rate Booking</div>
+      <div class="payment-content" style="padding:20px; background:#fff;">
+        <div style="overflow-x:auto; max-height:500px; border:1px solid #dee2e6;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+              <tr style="background:#e8f0fe; position:sticky; top:0; z-index:10;">
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:left; font-weight:600; min-width:100px; white-space:nowrap;">
+                  Date
+                </th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:center; font-weight:600; min-width:60px; white-space:nowrap;">
+                  Type
+                </th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:left; font-weight:600; min-width:120px; white-space:nowrap;">
+                  Remarks</th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:left; font-weight:600; min-width:80px; white-space:nowrap;">
+                  Stamp
+                </th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:90px; white-space:nowrap;">
+                  Weight</th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:110px; white-space:nowrap;">
+                  Rate
+                  Book</th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:90px; white-space:nowrap;">
+                  Bal
+                  Wt</th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:110px; white-space:nowrap;">
+                  [F3]
+                  Adj Wt</th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:100px; white-space:nowrap;">
+                  Cur.Rate</th>
+                <th
+                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:120px; white-space:nowrap;">
+                  Diff
+                  Amount</th>
+              </tr>
+            </thead>
+            <tbody id="ratebookDetailsTable">
+              <!-- Details will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="payment-footer"
+        style="background:#f8f9fa; border-top:1px solid #dee2e6; padding:15px; display:flex; justify-content:flex-end; gap:12px;">
+        <button onclick="addRatebookRow()"
+          style="background:#007aff; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">+
+          Add Row</button>
+        <button onclick="closeRatebookDetailsPopup()"
+          style="background:#6c757d; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* =====================
        DOM REFERENCES
@@ -1405,12 +1471,6 @@
       updateInfoPanel();
 
       // Global event listeners (attach once; initOrderPage can run multiple times)
-      window.addEventListener('ratebookUpdated', updateInfoPanel);
-      window.addEventListener('rateDiffUpdated', loadCompareDiff);
-
-      // Load initial compare diff
-      loadCompareDiff();
-
       if (!window.__newOrderGlobalListenersAttached) {
         window.__newOrderGlobalListenersAttached = true;
 
@@ -1553,17 +1613,27 @@
 
     /* CUSTOMER */
     function loadCustomers() {
-      if (!custName) return;
+      if (!custName) {
+        console.error('[LOAD CUSTOMERS] custName element not found');
+        return;
+      }
 
       const list = JSON.parse(localStorage.getItem("customers") || "[]");
-      custName.innerHTML = `<option value="">-- Select --</option>`;
+      console.log('[LOAD CUSTOMERS] Found', list.length, 'customers in localStorage');
+
+      custName.innerHTML = `<option value="" style="color: #1e293b;">-- Select --</option>`;
+
       list.forEach(c => {
         const o = document.createElement("option");
         o.value = c.id;
         o.textContent = c.name;
+        o.style.color = "#1e293b";
+        o.style.background = "#fff";
         o.dataset.data = JSON.stringify(c);
         custName.appendChild(o);
       });
+
+      console.log('[LOAD CUSTOMERS] Added', list.length, 'options to dropdown');
 
       // Set up change handler
       custName.onchange = function () {
@@ -1571,6 +1641,7 @@
         const o = custName.selectedOptions[0];
         if (!o || !o.dataset.data) return;
         const c = JSON.parse(o.dataset.data);
+        console.log('[CUSTOMER SELECTED]', c.name);
         if (currentBal) currentBal.value = c.openingBalance || 0;
         if (relation) relation.value = (c.relation || "") + " " + (c.relationName || "");
         if (station) station.value = c.station || "";
@@ -1635,36 +1706,9 @@
 <td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
 <td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
-<td><input type="number" step="0.001" placeholder="Wt"></td>
-<td><input type="number" step="0.001" placeholder="Neg"></td>
-<td><input type="number" step="0.001" readonly placeholder="Metals"></td>
 <td><button onclick="this.closest('tr').remove()">X</button></td>
 `;
       itemBody.appendChild(tr);
-
-      // Ready Weight / Neg / Ready Metals Logic
-      // Columns: 13=ReadyWeight, 14=Neg, 15=ReadyMetals (Shifted due to removal of Less column)
-      if (tr.cells[13] && tr.cells[14] && tr.cells[15]) {
-        const rwInput = tr.cells[13].querySelector('input');
-        const negInput = tr.cells[14].querySelector('input');
-        const rmInput = tr.cells[15].querySelector('input');
-
-        function updateReadyMetals() {
-          const rw = parseFloat(rwInput.value) || 0;
-          const neg = parseFloat(negInput.value) || 0;
-          // Only show calculation if we have inputs
-          if (rw !== 0 || neg !== 0) {
-            const val = rw - neg;
-            rmInput.value = val.toFixed(3);
-          } else {
-            rmInput.value = "";
-          }
-        }
-
-        rwInput.addEventListener('input', updateReadyMetals);
-        negInput.addEventListener('input', updateReadyMetals);
-      }
-
       // Set Job No same as Order No (Bill No)
       if (billNo && tr.cells[1] && tr.cells[1].children[0]) {
         tr.cells[1].children[0].value = billNo.value || generateBillNo();
@@ -1765,6 +1809,7 @@
     }
 
     /* CALCULATION - AUTO CALCULATE ALL FIELDS */
+    /* CALCULATION - AUTO CALCULATE ALL FIELDS */
     function calc(el) {
       if (!el || !el.closest) return;
 
@@ -1773,6 +1818,7 @@
 
       try {
         // Get input values
+        // Note: Indices shifted due to removal of Less column
         const pc = parseFloat(r.cells[7].children[0].value) || 0;
         const utWt = parseFloat(r.cells[8].children[0].value) || 0; // Ut. Wt.
 
@@ -1781,10 +1827,13 @@
 
         // Always update the Est. Total Wt. input (Cell 9)
         if (r.cells[9] && r.cells[9].children[0]) {
-          r.cells[9].children[0].value = estTotalWt.toFixed(3);
+          r.cells[9].children[0].value = estTotalWt.toFixed(3); // 3 decimal places for weight
         }
 
-        // Use the value from cell 9 (Est. Total Wt) for further calculations
+        // If calculation wasn't performed (e.g. cleared inputs), read the value from input (allow manual)
+        // OR strictly enforce. Let's read the value from cell 9 for the cost calculation.
+        // This allows manual override if someone types in cell 9 directly (though calc(this) on cell 9 will just re-read it).
+
         const net = parseFloat(r.cells[9].children[0].value) || 0; // Est. Total Wt
         const rate = parseFloat(r.cells[10].children[0].value) || 0; // Was 11
         const lbr = parseFloat(r.cells[11].children[0].value) || 0; // Was 12
@@ -1800,7 +1849,7 @@
           }
         } else {
           // Clear total if no valid calculation
-          if (r.cells[12] && r.cells[12].children[0]) {
+          if (r.cells[12] && r.cells[12].children[0]) { // Was 13
             r.cells[12].children[0].value = "0.00";
           }
         }
@@ -2091,6 +2140,133 @@
       }
       localStorage.setItem("orders", JSON.stringify(orders));
 
+      // Also save to "bills" for All Bills page
+      const allBills = JSON.parse(localStorage.getItem("bills") || "[]");
+      const billIndex = allBills.findIndex(b => b.billNo === billNo.value);
+
+      const newBillData = {
+        billNo: billNo.value,
+        customer: getCustomerName(),
+        customerId: custName.value,
+        date: orderDate.value,
+        dueDate: dueDate.value || "",
+        amount: billTotal.toFixed(2),
+        paid: advanceTotal.toFixed(2),
+        balance: (billTotal - advanceTotal).toFixed(2),
+        status: orderData.status,
+        timestamp: orderTimestamp,
+        items: rows
+      };
+
+      if (billIndex >= 0) {
+        allBills[billIndex] = newBillData;
+      } else {
+        allBills.push(newBillData);
+      }
+      localStorage.setItem("bills", JSON.stringify(allBills));
+
+      // AUTO-SAVE TO CUSTOMER BALANCES (ALL BILL PAGE)
+      // This creates an entry in customerBalances so the order appears in All Bill page
+      // AUTOMATION: Automatically transfer to Customer Balance
+      const customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      const balanceIndex = customerBalances.findIndex(b => b.orderNo === billNo.value);
+
+      // 1. REVERT PREVIOUS TRANSFER IF NEEDED
+      // If we are editing an order that was already transferred, we must revert the old amount
+      // from the OLD customer's balance before applying the new amount to the NEW customer.
+      if (balanceIndex >= 0) {
+        const oldEntry = customerBalances[balanceIndex];
+        if (oldEntry.transferred) {
+          const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+          // Find the customer who received the transfer (by name)
+          const oldCustNameNorm = (oldEntry.customer || "").trim().toLowerCase();
+          const oldCustomer = customers.find(c => (c.name || "").trim().toLowerCase() === oldCustNameNorm);
+
+          if (oldCustomer) {
+            const oldAmount = parseFloat(oldEntry.amount || 0);
+            const currentBal = parseFloat(oldCustomer.openingBalance || 0);
+            oldCustomer.openingBalance = (currentBal - oldAmount).toFixed(2);
+
+            // Remove bill from transferredBills list if present
+            if (oldCustomer.transferredBills) {
+              oldCustomer.transferredBills = oldCustomer.transferredBills.filter(tb => tb !== billNo.value);
+            }
+
+            // Save updated customers immediately to ensure integrity
+            localStorage.setItem("customers", JSON.stringify(customers));
+          }
+        }
+      }
+
+      // 2. PREPARE NEW ENTRY
+      // Get customer details for transfer
+      const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+      const targetCustomerName = getCustomerName();
+      const targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+
+      const balanceEntry = {
+        orderNo: billNo.value,
+        customer: targetCustomerName,
+        amount: billTotal.toFixed(2),
+        date: orderDate.value,
+        timestamp: orderTimestamp,
+        readyWeight: totalGrWt.toFixed(3),
+        neg: 0,
+        readyMetal: orderType === "Order" ? "Gold" : orderType,
+        payment: advanceTotal > 0 ? "Partial" : "Pending",
+        narration: `${orderType} - ${totalPc} pcs`,
+        transferred: true, // AUTOMATICALLY MARK AS TRANSFERRED
+        // Store additional fields
+        phone: targetCust?.phone || custName.value || "—",
+        mobile: targetCust?.mobile || targetCust?.phone || "—",
+        station: targetCust?.station || station?.value || "—",
+        relation: targetCust?.relation || relation?.value || "—",
+        relationName: targetCust?.relationName || "—",
+        lfno: targetCust?.lfno || "—",
+        cid: targetCust?.cid || "—"
+      };
+
+      if (balanceIndex >= 0) {
+        customerBalances[balanceIndex] = balanceEntry;
+      } else {
+        customerBalances.push(balanceEntry);
+      }
+      localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
+
+      // 3. APPLY NEW TRANSFER TO CUSTOMER
+      if (targetCust) {
+        const amountVal = parseFloat(balanceEntry.amount || 0);
+        const currentBal = parseFloat(targetCust.openingBalance || 0);
+        targetCust.openingBalance = (currentBal + amountVal).toFixed(2);
+        targetCust.timestamp = new Date().toISOString();
+
+        // Track transferred bill to prevent future duplicates (though our logic handles it)
+        if (!targetCust.transferredBills) targetCust.transferredBills = [];
+        if (!targetCust.transferredBills.includes(billNo.value)) {
+          targetCust.transferredBills.push(billNo.value);
+        }
+
+        // Update missing fields
+        if ((!targetCust.phone || targetCust.phone === "—") && balanceEntry.phone !== "—") targetCust.phone = balanceEntry.phone;
+        if ((!targetCust.mobile || targetCust.mobile === "—") && balanceEntry.mobile !== "—") targetCust.mobile = balanceEntry.mobile;
+
+        localStorage.setItem("customers", JSON.stringify(customers));
+
+        // Dispatch customer update event
+        window.dispatchEvent(new CustomEvent('customersUpdated'));
+        if (window.parent) window.parent.dispatchEvent(new CustomEvent('customersUpdated'));
+      }
+
+      // Dispatch event to refresh All Bill page if open
+      const balanceEvent = new CustomEvent('customerBalancesUpdated');
+      window.dispatchEvent(balanceEvent);
+      if (window.parent && window.parent !== window) {
+        window.parent.dispatchEvent(balanceEvent);
+      }
+      if (window.top && window.top !== window) {
+        window.top.dispatchEvent(balanceEvent);
+      }
+
       // Clear edit flags and re-enable fields
       if (editOrderId) {
         localStorage.removeItem("editOrderId");
@@ -2121,61 +2297,8 @@
         window.top.dispatchEvent(refreshEvent);
       }
 
-      // ===== SAVE TO ALL BILLS (Customer Balances) =====
-      try {
-        const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-
-        // Calculate totals for Ready Weight cols
-        let totalReadyWeight = 0;
-        let totalNeg = 0;
-        let totalReadyMetal = 0;
-
-        rows.forEach(row => {
-          // values array indices: 
-          // 14 = Ready Weight, 15 = Neg, 16 = Ready Metals
-          // (Assuming added after col 13 Total)
-          if (row.values) {
-            totalReadyWeight += parseFloat(row.values[14] || 0);
-            totalNeg += parseFloat(row.values[15] || 0);
-            totalReadyMetal += parseFloat(row.values[16] || 0);
-          }
-        });
-
-        // Use calculateBillTotal logic for Net Amount (Order - Purchase)
-        // Already calculated as 'billTotal' at start of function
-
-        const balanceEntry = {
-          date: orderDate.value,
-          orderNo: billNo.value,
-          customer: getCustomerName(),
-          amount: billTotal.toFixed(2),
-          readyWeight: totalReadyWeight.toFixed(3),
-          neg: totalNeg.toFixed(3),
-          readyMetal: totalReadyMetal.toFixed(3),
-          payment: advanceTotal.toFixed(2), // Advance/Paid so far
-          narration: "Bill Generated",
-          timestamp: orderTimestamp,
-          rows: rows // Store rows so we can edit later
-        };
-
-        const existingBalanceIndex = balances.findIndex(b => b.orderNo === billNo.value);
-        if (existingBalanceIndex >= 0) {
-          balances[existingBalanceIndex] = balanceEntry;
-        } else {
-          balances.push(balanceEntry);
-        }
-
-        localStorage.setItem("customerBalances", JSON.stringify(balances));
-
-        // Dispatch event for all-bill.html
-        window.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
-        if (window.parent && window.parent !== window) {
-          window.parent.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
-        }
-
-      } catch (e) {
-        console.error("Error saving to customerBalances:", e);
-      }
+      // Save ratebook entries from rows
+      saveRatebookFromRows();
 
       alert("Order saved successfully");
 
@@ -2184,6 +2307,75 @@
 
       if (resetAfterSave) {
         resetOrder(true); // Skip confirmation since data is already saved
+      }
+    }
+
+    /* SAVE RATEBOOK FROM ROWS */
+    function saveRatebookFromRows() {
+      if (!itemBody || !billNo || !custName) return;
+
+      const currentBillNo = billNo.value;
+      const currentCustomerId = custName.value;
+      const currentCustomerName = getCustomerName();
+
+      if (!currentBillNo) return;
+
+      // Get existing rates
+      let rates = [];
+      try {
+        rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+      } catch (e) { rates = []; }
+
+      // Remove old entries for this bill (to avoid duplicates when re-saving)
+      rates = rates.filter(r => r.billNo !== currentBillNo);
+
+      const now = new Date();
+      const baseTimestamp = now.getTime();
+
+      // Extract rate data from each row
+      const rows = itemBody.querySelectorAll("tr");
+      rows.forEach((row, index) => {
+        // Column indices: 2=Item Name, 3=Stamp, 8=Ut.Wt, 10=Rate
+        const itemNameInput = row.cells[2] && row.cells[2].children[0];
+        const stampInput = row.cells[3] && row.cells[3].children[0];
+        const weightInput = row.cells[8] && row.cells[8].children[0];
+        const rateInput = row.cells[10] && row.cells[10].children[0];
+
+        const itemName = itemNameInput ? itemNameInput.value.trim() : "";
+        const stamp = stampInput ? stampInput.value.trim() : "";
+        const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
+        const rate = rateInput ? parseFloat(rateInput.value) || 0 : 0;
+
+        // Only save if we have valid rate data
+        if (rate > 0 && weight > 0 && stamp) {
+          const entry = {
+            id: baseTimestamp + index, // Unique ID for each row
+            date: now.toISOString().split('T')[0],
+            timestamp: new Date(baseTimestamp + index).toISOString(),
+            customerId: currentCustomerId,
+            customer: currentCustomerName,
+            billNo: currentBillNo,
+            itemName: itemName,
+            stamp: stamp,
+            rate: rate,
+            weight: weight,
+            amount: rate * weight,
+            narration: `From order row ${index + 1}`,
+            type: "S",
+            delDate: ""
+          };
+          rates.push(entry);
+        }
+      });
+
+      // Save back to localStorage
+      try {
+        localStorage.setItem("rateBook", JSON.stringify(rates));
+
+        // Trigger update event
+        window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+      } catch (e) {
+        console.error("Error saving ratebook from rows:", e);
       }
     }
 
@@ -3050,9 +3242,9 @@
     }
 
     function closePaymentPopup() {
-      if (paymentPopup) paymentPopup.style.display = "none";
-      if (document.getElementById("amount")) document.getElementById("amount").value = "";
-      if (document.getElementById("narration")) document.getElementById("narration").value = "";
+      paymentPopup.style.display = "none";
+      document.getElementById("amount").value = "";
+      document.getElementById("narration").value = "";
     }
 
     function savePaymentFromPopup() {
@@ -3065,15 +3257,13 @@
       const apCodeEl = document.getElementById("apCode");
       const ptypeEl = document.querySelector('input[name="ptype"]:checked');
 
-      if (!amountEl) return;
-
       const amt = Number(amountEl.value || 0);
       if (!amt || amt <= 0) {
         alert("Enter valid amount");
         return;
       }
 
-      if (!billNo || !billNo.value) {
+      if (!billNo.value) {
         alert("Bill number is required");
         return;
       }
@@ -3083,14 +3273,14 @@
       payments.push({
         billNo: billNo.value,
         customer: getCustomerName(),
-        customerId: custName ? custName.value : "",
+        customerId: custName.value,
         amount: amt,
-        mode: modeEl ? modeEl.value : "Cash",
-        narration: narrationEl ? narrationEl.value : "",
-        batch: batchEl ? batchEl.value : "",
-        type: typeEl ? typeEl.value : "",
-        expDate: expDateEl ? expDateEl.value : "",
-        apCode: apCodeEl ? apCodeEl.value : "",
+        mode: modeEl.value,
+        narration: narrationEl.value,
+        batch: batchEl.value,
+        type: typeEl.value,
+        expDate: expDateEl.value,
+        apCode: apCodeEl.value,
         ptype: ptypeEl ? ptypeEl.value : "Cash",
         date: new Date().toISOString().split("T")[0],
         timestamp: new Date().toISOString()
@@ -3674,22 +3864,20 @@
 
       if (itemBody) {
         itemBody.querySelectorAll("tr").forEach(r => {
-          if (r.cells[13] && r.cells[13].children[0]) {
-            const t = parseFloat(r.cells[13].children[0].value) || 0;
+          if (r.cells[12] && r.cells[12].children[0]) {
+            const t = +r.cells[12].children[0].value || 0;
             const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
             const type = typeSelect ? typeSelect.value : "Order";
 
             if (type === "Purchase") {
               purchaseTotal += t;
             } else {
-              // Order, Sale, Repair are treated as positive additions to the order side
               orderTotal += t;
             }
           }
         });
       }
 
-      // Final Logic: Order Total - Purchase Total
       const netTotal = orderTotal - purchaseTotal;
       const paid = getPaidAmount(billNo.value);
       const balance = netTotal - paid;
@@ -3702,7 +3890,6 @@
       const paymentListEl = document.getElementById("paymentList");
 
       if (orderTotalEl) orderTotalEl.textContent = `₹ ${orderTotal.toFixed(2)}`;
-      // Show Purchase Total as positive number in the breakdown (it's subtracted from net)
       if (purchaseTotalEl) purchaseTotalEl.textContent = `₹ ${purchaseTotal.toFixed(2)}`;
       if (billTotalEl) billTotalEl.textContent = `₹ ${netTotal.toFixed(2)}`;
       if (paidEl) paidEl.textContent = `₹ ${paid.toFixed(2)}`;
@@ -3739,54 +3926,251 @@
       const ratebookListEl = document.getElementById("ratebookList");
       if (!ratebookListEl) return;
 
-      // Only show rates that are actually applied/used in the current order
-      const appliedRates = [];
-      if (itemBody) {
-        itemBody.querySelectorAll("tr").forEach(tr => {
-          const rateInput = tr.cells[11] && tr.cells[11].children[0];
-          if (rateInput && rateInput.value && parseFloat(rateInput.value) > 0) {
-            const stampInput = tr.cells[3] && tr.cells[3].children[0];
-            const itemNameInput = tr.cells[2] && tr.cells[2].children[0];
-            const weightInput = tr.cells[10] && tr.cells[10].children[0];
+      // Get saved rates from localStorage
+      let rates = [];
+      try {
+        rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+      } catch (e) { rates = []; }
 
-            // Create a unique key for this rate combination
-            const rateKey = `${rateInput.value}_${stampInput ? stampInput.value : ''}_${itemNameInput ? itemNameInput.value : ''}`;
+      const billVal = billNo ? billNo.value : "";
 
-            // Check if we already added this rate
-            const exists = appliedRates.some(r => r.key === rateKey);
-            if (!exists) {
-              appliedRates.push({
-                key: rateKey,
-                rate: rateInput.value,
-                stamp: stampInput ? stampInput.value : "",
-                itemName: itemNameInput ? itemNameInput.value : "",
-                weight: weightInput ? weightInput.value : "",
-                date: new Date().toLocaleDateString()
-              });
-            }
-          }
-        });
-      }
+      // Strict Filter: Only show rates for THIS bill number
+      const displayRates = rates.filter(r => r.billNo === billVal);
 
-      if (appliedRates.length === 0) {
-        ratebookListEl.innerHTML = '<div class="empty-state">No rates applied to this order</div>';
+      // Sort by newest first
+      displayRates.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+
+      if (displayRates.length === 0) {
+        ratebookListEl.innerHTML = '<div class="empty-state">No rates saved for this order</div>';
       } else {
         let html = '';
-        appliedRates.forEach(r => {
+        displayRates.forEach(r => {
           const itemName = (r.itemName || '—').substring(0, 25);
+          const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+
           html += `
-        <div class="panel-item">
+        <div class="panel-item" style="cursor:pointer;" onclick="showRateDetails('${r.id}')" title="Click to view details">
           <div class="panel-item-header">
             <span>₹ ${(Number(r.rate) || 0).toFixed(2)}</span>
             <span>${r.stamp || '—'}</span>
+            <button class="delete-rate-btn" onclick="event.stopPropagation(); deleteRate('${r.id}')" style="background:#ff3b30; color:#fff; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:10px; margin-left:auto;">❌</button>
           </div>
-          <div class="panel-item-detail">${itemName}${r.weight ? ' - Wt: ' + r.weight : ''}</div>
+          <div class="panel-item-detail">
+            <span>${itemName}${r.weight ? ' - ' + r.weight + 'g' : ''}</span>
+            <span style="float:right; opacity:0.7;">${dateStr}</span>
+          </div>
         </div>
       `;
         });
         ratebookListEl.innerHTML = html;
       }
     }
+
+    function deleteRate(rateId) {
+      if (!confirm("Delete this rate?")) return;
+
+      let rates = [];
+      try {
+        rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+      } catch (e) { rates = []; }
+
+      // Filter out the deleted rate
+      // Handle both number and string IDs safely
+      const updatedRates = rates.filter(r => String(r.id) !== String(rateId));
+
+      localStorage.setItem("rateBook", JSON.stringify(updatedRates));
+
+      // Update local panel
+      updateRatebookPanel();
+
+      // Notify others
+      window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+    }
+
+    function addRatebookRow() {
+      if (!billNo.value) {
+        alert("Bill number is required to add a row");
+        return;
+      }
+
+      const newRate = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        billNo: billNo.value,
+        customer: getCustomerName(),
+        customerId: custName.value,
+        type: 'S',
+        stamp: '',
+        weight: 0,
+        rate: 0,
+        balWt: 0,
+        adjWt: 0,
+        curRate: 0,
+        narration: '',
+        timestamp: new Date().toISOString()
+      };
+
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        rates.push(newRate);
+        localStorage.setItem("rateBook", JSON.stringify(rates));
+
+        // Refresh table
+        showRateDetails(newRate.id);
+
+        // Notify
+        updateRatebookPanel();
+      } catch (e) {
+        console.error(e);
+        alert("Error adding row");
+      }
+    }
+
+    /* SHOW RATE DETAILS IN POPUP */
+    function showRateDetails(rateId) {
+      const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+      const clickedRate = rates.find(r => String(r.id) === String(rateId));
+
+      // If clicked rate not found, try to find any rate for this bill to show the popup
+      // This allows adding rows even if the specific clicked rate is gone (or when adding first row)
+      let billVal = billNo.value;
+
+      if (!billVal && clickedRate) {
+        billVal = clickedRate.billNo;
+      }
+
+      const popup = document.getElementById("ratebookDetailsPopup");
+      const table = document.getElementById("ratebookDetailsTable");
+
+      if (!popup || !table) return;
+
+      // Get all rates for this bill number
+      const billRates = rates.filter(r => r.billNo === billVal);
+
+      // Sort by date (newest first)
+      billRates.sort((a, b) => new Date(b.timestamp || b.date || 0) - new Date(a.timestamp || a.date || 0));
+
+      let html = '';
+      let totalWeight = 0;
+      let totalBalWt = 0;
+      let totalDiff = 0;
+
+      if (billRates.length === 0) {
+        html = '<tr><td colspan="11" style="text-align:center; padding:20px; color:#666;">No rates found. Click "Add Row" to create one.</td></tr>';
+      } else {
+        billRates.forEach(rate => {
+          const weight = Number(rate.weight) || 0;
+          const rateBook = Number(rate.rate) || 0;
+          const balWt = Number(rate.balWt !== undefined ? rate.balWt : rate.weight) || 0;
+          const adjWt = Number(rate.adjWt) || 0;
+          const curRate = Number(rate.curRate) || 0;
+          const dateStr = rate.date ? new Date(rate.date).toLocaleDateString() : '—';
+
+          // Calculate Diff Amount: (Cur.Rate - Rate Book) * Adj Wt
+          const diffAmount = (curRate - rateBook) * adjWt;
+          const diffColor = diffAmount >= 0 ? '#28a745' : '#dc3545';
+
+          totalWeight += weight;
+          totalBalWt += balWt;
+          totalDiff += diffAmount;
+
+          // Highlight the clicked row
+          const isClicked = String(rate.id) === String(rateId);
+          const rowStyle = isClicked ? 'background:#f0f7ff;' : 'background:#fff;';
+          const cellStyle = 'padding:10px 12px; border-bottom:1px solid #eee; border-right:1px solid #eee; font-size:13px; color:#333;';
+
+          html += `
+            <tr style="${rowStyle}">
+              <td style="${cellStyle} white-space:nowrap;">${dateStr}</td>
+              <td style="${cellStyle} text-align:center;">${rate.type || 'S'}</td>
+              <td style="${cellStyle}">${rate.narration || ''}</td>
+              <td style="${cellStyle}">${rate.stamp || ''}</td>
+              <td style="${cellStyle} text-align:right;">${weight.toFixed(3)}</td>
+              <td style="${cellStyle} text-align:right;">
+                  <button onclick="updateRateBookingRow({value: prompt('Edit Rate', '${rateBook}')}, '${rate.id}', 'rate')" 
+                          style="background:none; border:none; cursor:pointer; text-decoration:underline; font-family:inherit; font-size:inherit;">
+                    ${rateBook.toFixed(2)}
+                  </button>
+              </td>
+              <td style="${cellStyle} text-align:right;">${balWt.toFixed(3)}</td>
+              <td style="${cellStyle} text-align:center;">
+                <input type="number" step="0.001" value="${adjWt.toFixed(3)}" 
+                       oninput="updateRateBookingRow(this, '${rate.id}', 'adjWt')"
+                       onclick="event.stopPropagation()"
+                       style="width:80px; text-align:right; padding:6px; border:1px solid #d1d6de; border-radius:6px; font-family:inherit; outline:none; transition:border 0.2s;">
+              </td>
+              <td style="${cellStyle} text-align:center;">
+                <input type="number" step="0.01" value="${curRate.toFixed(2)}"
+                       oninput="updateRateBookingRow(this, '${rate.id}', 'curRate')"
+                       onclick="event.stopPropagation()"
+                       style="width:90px; text-align:right; padding:6px; border:1px solid #d1d6de; border-radius:6px; font-family:inherit; outline:none; transition:border 0.2s;">
+              </td>
+              <td class="diff-amount-cell" style="${cellStyle} text-align:right; color:${diffColor}; font-weight:600;">${diffAmount.toFixed(0)}</td>
+              <td style="${cellStyle} text-align:center;">
+                <button onclick="event.stopPropagation(); deleteRate('${rate.id}')" style="background:none; border:none; cursor:pointer; font-size:14px; opacity:0.6; padding:4px;">❌</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      table.innerHTML = html;
+      popup.style.display = "flex";
+    }
+
+    function updateRateBookingRow(input, rateId, field) {
+      const val = parseFloat(input.value) || 0;
+
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        const idx = rates.findIndex(r => String(r.id) === String(rateId));
+
+        if (idx >= 0) {
+          // Update value
+          rates[idx][field] = val;
+          localStorage.setItem("rateBook", JSON.stringify(rates));
+
+          // Recalculate Row Diff Amount
+          const rate = rates[idx];
+          const rateBook = Number(rate.rate) || 0;
+          const adjWt = Number(rate.adjWt) || 0;
+          const curRate = Number(rate.curRate) || 0;
+
+          // Formula: (Cur.Rate - Rate Book) * Adj Wt
+          const diffAmount = (curRate - rateBook) * adjWt;
+          const diffColor = diffAmount >= 0 ? 'green' : 'red';
+
+          // Update DOM
+          const tr = input.closest('tr');
+          if (tr) {
+            const diffCell = tr.querySelector('.diff-amount-cell');
+            if (diffCell) {
+              diffCell.textContent = diffAmount.toFixed(0);
+              diffCell.style.color = diffColor;
+            }
+          }
+
+          // Notify others - COMMENTED OUT to prevent unwanted side effects
+          // window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function closeRatebookDetailsPopup() {
+      const popup = document.getElementById("ratebookDetailsPopup");
+      if (popup) {
+        popup.style.display = "none";
+      }
+      // Explicitly prevent any side effects - do NOT modify table rows
+      // Do NOT trigger any updates that might affect the order table
+      return false;
+    }
+
+    // Listen for ratebook updates from other windows/popups
+    window.addEventListener('ratebookUpdated', function () {
+      updateRatebookPanel();
+      // Also maybe calculate bill totals if rates affect them?
+    });
 
     function updateReceiptPanel() {
       const receiptListEl = document.getElementById("receiptList");
@@ -4019,6 +4403,12 @@
       window.updateReceiptPanel = updateReceiptPanel;
       window.refreshInvoiceReceiptTable = refreshInvoiceReceiptTable;
       window.deleteReceipt = deleteReceipt;
+      window.deleteRate = deleteRate;
+      window.showRateDetails = showRateDetails;
+      window.closeRatebookDetailsPopup = closeRatebookDetailsPopup;
+      window.saveRatebookFromRows = saveRatebookFromRows;
+      window.addRatebookRow = addRatebookRow;
+      window.updateRateBookingRow = updateRateBookingRow;
       window.closeDashboard = closeDashboard;
     }
 

@@ -192,6 +192,21 @@
       color: #6b7280;
       font-size: 14px;
     }
+
+    /* =========================
+       HIGHLIGHT ANIMATION
+    ========================= */
+    @keyframes highlight {
+      0% {
+        background-color: #4caf50;
+        transform: scale(1.01);
+      }
+
+      100% {
+        background-color: transparent;
+        transform: scale(1);
+      }
+    }
   </style>
 </head>
 
@@ -262,6 +277,19 @@
     // ============================
     function loadCustomers() {
       const tableBody = document.getElementById('tableBody');
+      const tableHead = document.querySelector('#balanceTable thead tr');
+
+      // Ensure Action header exists
+      if (tableHead && !tableHead.querySelector('.col-action')) {
+        const th = document.createElement('th');
+        th.className = 'col-action';
+        th.textContent = 'Action';
+        // Add before Amount or at end? Plan said "Action" column to header.
+        // Current headers: Date, Mark, LF, Bill, Name, Relation, RelName, Station, Phone, Mobile, Amount
+        // Let's add Action at the end
+        tableHead.appendChild(th);
+      }
+
       tableBody.innerHTML = '';
 
       try {
@@ -269,31 +297,67 @@
         const balances = JSON.parse(localStorage.getItem('customerBalances') || "[]");
 
         if (customers.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="11" class="empty-state">No customers found.</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="12" class="empty-state">No customers found.</td></tr>`;
           return;
         }
 
-        // Sort by Name alphabetically by default
-        customers.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+        // Helper to normalize name
+        const norm = name => (name || "").toLowerCase().trim();
 
-        customers.forEach(cust => {
+        // Calculate data for each customer
+        const customerData = customers.map(cust => {
+          const custName = norm(cust.name);
+
+          // Find all pending bills for this customer
+          const pendingBills = balances.filter(b => norm(b.customer) === custName && !b.transferred);
+
+          // Calculate total pending amount
+          const pendingAmount = pendingBills.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
+
+          // Total Balance = Opening Balance + Pending Bills Amount
+          const openingBal = parseFloat(cust.openingBalance || 0);
+          const totalBalance = openingBal + pendingAmount;
+
+          // Find latest activity (bill)
+          // Sort bills by date descending
+          pendingBills.sort((a, b) => new Date(b.date || b.timestamp || 0) - new Date(a.date || a.timestamp || 0));
+          const latestBill = pendingBills[0];
+
+          // Activity Timestamp for sorting the customer list
+          // Use latest bill timestamp, or customer update timestamp, or opening date
+          let activityTimestamp = 0;
+          if (latestBill && latestBill.timestamp) activityTimestamp = new Date(latestBill.timestamp).getTime();
+          else if (cust.timestamp) activityTimestamp = new Date(cust.timestamp).getTime();
+          else if (cust.openingDate) activityTimestamp = new Date(cust.openingDate).getTime();
+
+          return {
+            ...cust,
+            totalBalance,
+            latestBill,
+            activityTimestamp
+          };
+        });
+
+        // Sort by activity timestamp (newest first)
+        customerData.sort((a, b) => b.activityTimestamp - a.activityTimestamp);
+
+        // Check for recently updated (within last 5 seconds)
+        const now = Date.now();
+        const recentThreshold = 5000;
+
+        customerData.forEach(cust => {
           const row = document.createElement('tr');
 
-          // Find latest bill for this customer
-          const custNameNormalized = (cust.name || "").toLowerCase().trim();
-          const latestBill = balances
-            .filter(b => (b.customer || "").toLowerCase().trim() === custNameNormalized)
-            .sort((a, b) => new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date))[0];
-
-          const billNo = latestBill ? latestBill.orderNo : "—";
-
-          // Date determination
+          // Date: Latest Bill Date > Opening Date
           let displayDate = "—";
-          if (cust.openingDate) {
+          if (cust.latestBill && cust.latestBill.date) {
+            displayDate = cust.latestBill.date;
+          } else if (cust.openingDate) {
             displayDate = new Date(cust.openingDate).toLocaleDateString();
-          } else if (cust.timestamp) {
-            displayDate = new Date(cust.timestamp).toLocaleDateString();
           }
+
+          // Bill No: Latest Bill No
+          const billNo = cust.latestBill ? cust.latestBill.orderNo : "—";
 
           // Data Mapping
           const mark = cust.cid || "—";
@@ -304,21 +368,36 @@
           const station = cust.station || "—";
           const phone = cust.phone || "—";
           const mobile = cust.mobile || "—";
-          const amount = parseFloat(cust.openingBalance || 0).toFixed(2);
+          const amount = cust.totalBalance.toFixed(2);
+
+          // Check if recently updated
+          const isRecent = (now - cust.activityTimestamp) < recentThreshold;
+          const rowStyle = isRecent ? 'background-color: #e8f5e9; animation: highlight 2s ease-out;' : '';
 
           row.innerHTML = `
             <td>${displayDate}</td>
             <td class="col-mark">${mark}</td>
             <td>${lfNo}</td>
             <td>${billNo}</td>
-            <td>${name}</td>
+            <td><strong>${name}</strong></td>
             <td>${relation}</td>
             <td>${relationName}</td>
             <td>${station}</td>
             <td>${phone}</td>
             <td>${mobile}</td>
             <td class="col-amount">₹ ${amount}</td>
+            <td>
+                <div class="action-buttons">
+                  <button class="btn" style="padding:4px 8px; font-size:11px; background:#0d6efd;" onclick="viewCustomerBills('${name.replace(/'/g, "\\'")}')">View</button>
+                  <button class="btn" style="padding:4px 8px; font-size:11px; background:#ffc107; color:#000;" onclick="editCustomer(${cust.id})">Edit</button>
+                  <button class="btn" style="padding:4px 8px; font-size:11px; background:#dc3545;" onclick="deleteCustomer(${cust.id}, '${name.replace(/'/g, "\\'")}')">Delete</button>
+                </div>
+            </td>
           `;
+
+          if (isRecent) {
+            row.style.cssText = rowStyle;
+          }
 
           tableBody.appendChild(row);
         });
@@ -328,7 +407,66 @@
 
       } catch (e) {
         console.error("Error loading customers:", e);
-        tableBody.innerHTML = `<tr><td colspan="11" class="empty-state">Error loading data.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="12" class="empty-state">Error loading data.</td></tr>`;
+      }
+    }
+
+    // ============================
+    // ACTIONS
+    // ============================
+    function viewCustomerBills(customerName) {
+      localStorage.setItem("filterCustomerName", customerName);
+
+      // Navigate
+      if (window.parent && window.parent.loadPage) {
+        window.parent.loadPage("pages/all-bill.html");
+      } else {
+        window.location.href = "all-bill.html";
+      }
+    }
+
+    function editCustomer(id) {
+      if (!id) return;
+      localStorage.setItem('editCustomerId', id);
+
+      // Navigate to customer.html
+      if (window.parent && window.parent.loadPage) {
+        window.parent.loadPage("pages/customer.html");
+      } else {
+        window.location.href = "customer.html";
+      }
+    }
+
+    function deleteCustomer(id, name) {
+      if (!confirm(`Are you sure you want to delete customer "${name}"?`)) {
+        return;
+      }
+
+      try {
+        let customers = JSON.parse(localStorage.getItem('customers') || "[]");
+        const initialLength = customers.length;
+
+        // Filter out the customer
+        customers = customers.filter(c => String(c.id) !== String(id));
+
+        if (customers.length === initialLength) {
+          alert("Customer not found.");
+          return;
+        }
+
+        localStorage.setItem('customers', JSON.stringify(customers));
+
+        // Dispatch event for other pages
+        const event = new CustomEvent('customersUpdated');
+        window.dispatchEvent(event);
+        if (window.parent) window.parent.dispatchEvent(event);
+
+        loadCustomers();
+        alert("Customer deleted successfully.");
+
+      } catch (e) {
+        console.error("Error deleting customer:", e);
+        alert("Error deleting customer.");
       }
     }
 
