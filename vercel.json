@@ -1,28 +1,41 @@
 {
-  "version": 2,
-  "routes": [
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": ".",
+  "rewrites": [
     {
-      "handle": "filesystem"
+      "source": "/pages/(.*)",
+      "destination": "/frontend/pages/$1"
     },
     {
-      "src": "^/pages/(.*)$",
-      "dest": "/frontend/pages/$1"
+      "source": "/assets/(.*)",
+      "destination": "/frontend/assets/$1"
     },
     {
-      "src": "^/assets/(.*)$",
-      "dest": "/frontend/assets/$1"
+      "source": "/js/(.*)",
+      "destination": "/frontend/js/$1"
     },
     {
-      "src": "^/public/(.*)$",
-      "dest": "/frontend/$1"
+      "source": "/(.*\\.(css|js|html))",
+      "destination": "/frontend/$1"
     },
     {
-      "src": "^/$",
-      "dest": "/frontend/index.html"
+      "source": "/",
+      "destination": "/frontend/index.html"
     },
     {
-      "src": "^/(?!frontend/)(.*)$",
-      "dest": "/frontend/$1"
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ]
 }
