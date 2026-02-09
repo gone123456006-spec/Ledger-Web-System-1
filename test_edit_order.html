@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Order Edit</title>
+</head>
+
+<body>
+    <h1>Order Edit Test</h1>
+    <button onclick="testOrderData()">Check Order Data</button>
+    <button onclick="testCustomerData()">Check Customer Data</button>
+    <pre id="output"></pre>
+
+    <script>
+        function testOrderData() {
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            const output = document.getElementById('output');
+            output.textContent = 'Orders:\n' + JSON.stringify(orders, null, 2);
+
+            if (orders.length > 0) {
+                console.log('First order:', orders[0]);
+                console.log('Customer ID:', orders[0].customerId);
+                console.log('Customer Name:', orders[0].customer);
+            }
+        }
+
+        function testCustomerData() {
+            const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+            const output = document.getElementById('output');
+            output.textContent = 'Customers:\n' + JSON.stringify(customers, null, 2);
+
+            if (customers.length > 0) {
+                console.log('First customer:', customers[0]);
+                console.log('Customer ID:', customers[0].id);
+                console.log('Customer Name:', customers[0].name);
+            }
+        }
+    </script>
+</body>
+
+</html>

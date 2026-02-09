@@ -2226,10 +2226,68 @@
         AppState.editMode = true;
         AppState.editOrderId = order.id;
 
-        // Load customer
+        // Load customer information
         if (order.customerId && AppState.elements.custName) {
-          AppState.elements.custName.value = order.customerId;
-          AppState.elements.custName.dispatchEvent(new Event('change'));
+          console.log('=== Loading Customer for Edit ===');
+          console.log('Order customer ID:', order.customerId, 'Type:', typeof order.customerId);
+          console.log('Dropdown has', AppState.elements.custName.options.length, 'options');
+
+          // Find and select the customer in dropdown
+          let customerSelected = false;
+          for (let i = 0; i < AppState.elements.custName.options.length; i++) {
+            const option = AppState.elements.custName.options[i];
+            // Compare as both string and number to handle type mismatches
+            if (option.value == order.customerId || String(option.value) === String(order.customerId)) {
+              AppState.elements.custName.selectedIndex = i;
+              customerSelected = true;
+              console.log('✓ Customer selected:', option.textContent, 'at index', i);
+              break;
+            }
+          }
+
+          if (!customerSelected) {
+            console.warn('✗ Customer ID not found in dropdown:', order.customerId);
+          }
+
+          // Manually load customer data from localStorage
+          const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+          console.log('Total customers in storage:', customers.length);
+
+          const customer = customers.find(c =>
+            c.id == order.customerId ||
+            String(c.id) === String(order.customerId)
+          );
+
+          if (customer) {
+            console.log('✓ Customer found:', customer.name);
+
+            // Populate customer information fields
+            if (AppState.elements.currentBal) {
+              const balance = safeNumber(customer.openingBalance).toFixed(2);
+              AppState.elements.currentBal.value = balance;
+              console.log('  Current Bal:', balance);
+            }
+
+            if (AppState.elements.relation) {
+              const rel = customer.relation || '';
+              const relName = customer.relationName || '';
+              const relationValue = rel && relName ? `${rel} ${relName}` : (rel || relName);
+              AppState.elements.relation.value = relationValue;
+              console.log('  Relation:', relationValue);
+            }
+
+            if (AppState.elements.station) {
+              AppState.elements.station.value = customer.station || '';
+              console.log('  Station:', customer.station || '(empty)');
+            }
+          } else {
+            console.warn('✗ Customer not found in customers array for ID:', order.customerId);
+          }
+
+          // Trigger change event
+          setTimeout(() => {
+            AppState.elements.custName.dispatchEvent(new Event('change'));
+          }, 50);
         }
 
         // Load bill info
