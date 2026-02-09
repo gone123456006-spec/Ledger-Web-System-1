@@ -2203,6 +2203,88 @@
     }
 
     // =====================================================
+    // LOAD ORDER FOR EDITING
+    // =====================================================
+
+    function loadOrderForEdit() {
+      try {
+        // Check if we're in edit mode
+        const editOrderId = localStorage.getItem('editOrderId');
+        if (!editOrderId) return false;
+
+        // Load orders from storage
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const order = orders.find(o => o.id == editOrderId);
+
+        if (!order) {
+          console.warn('Order not found for editing:', editOrderId);
+          localStorage.removeItem('editOrderId');
+          return false;
+        }
+
+        // Set edit mode
+        AppState.editMode = true;
+        AppState.editOrderId = order.id;
+
+        // Load customer
+        if (order.customerId && AppState.elements.custName) {
+          AppState.elements.custName.value = order.customerId;
+          AppState.elements.custName.dispatchEvent(new Event('change'));
+        }
+
+        // Load bill info
+        if (order.orderNo) AppState.elements.billNo.value = order.orderNo;
+        if (order.orderDate) AppState.elements.orderDate.value = order.orderDate;
+        if (order.dueDate && AppState.elements.dueDate) AppState.elements.dueDate.value = order.dueDate;
+
+        // Load items/rows
+        AppState.elements.itemBody.innerHTML = '';
+        if (order.items && order.items.length > 0) {
+          order.items.forEach(item => {
+            addRow();
+            const tr = AppState.elements.itemBody.lastElementChild;
+
+            // Restore all input/select values
+            tr.querySelectorAll('input,select').forEach((el, i) => {
+              if (item.values && item.values[i] !== undefined) {
+                el.value = item.values[i];
+              }
+            });
+
+            // Restore type
+            if (item.type) {
+              const typeSelect = tr.cells[0]?.querySelector('select');
+              if (typeSelect) typeSelect.value = item.type;
+            }
+
+            // Restore metadata
+            if (item.delivery) tr.dataset.delivery = item.delivery;
+            if (item.sample) tr.dataset.sample = item.sample;
+            if (item.orderFilled) tr.dataset.orderFilled = item.orderFilled;
+
+            // Recalculate row
+            setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
+          });
+        } else {
+          addRow();
+        }
+
+        // Update panels
+        updateInfoPanel();
+
+        // Clear the edit flag
+        localStorage.removeItem('editOrderId');
+
+        console.log('Order loaded for editing:', order.orderNo);
+        return true;
+      } catch (e) {
+        console.error('Error loading order for edit:', e);
+        localStorage.removeItem('editOrderId');
+        return false;
+      }
+    }
+
+    // =====================================================
     // RESET & NAVIGATION
     // =====================================================
 
@@ -2409,8 +2491,11 @@
         };
       }
 
-      // Try to restore auto-saved state
-      const restored = restoreFormState();
+      // Check if we're editing an existing order
+      const editLoaded = loadOrderForEdit();
+
+      // If not editing, try to restore auto-saved state
+      const restored = editLoaded ? true : restoreFormState();
 
       // If nothing restored, add one empty row
       if (!restored && AppState.elements.itemBody.querySelectorAll('tr').length === 0) {
