@@ -266,8 +266,14 @@
     window.addEventListener('customersUpdated', () => {
       loadCustomers();
     });
+    window.addEventListener('customerBalancesUpdated', () => {
+      loadCustomers();
+    });
     if (window.top && window.top !== window) {
       window.top.addEventListener('customersUpdated', () => {
+        loadCustomers();
+      });
+      window.top.addEventListener('customerBalancesUpdated', () => {
         loadCustomers();
       });
     }
@@ -296,15 +302,11 @@
         const customers = JSON.parse(localStorage.getItem('customers') || "[]");
         const balances = JSON.parse(localStorage.getItem('customerBalances') || "[]");
 
-        if (customers.length === 0) {
-          tableBody.innerHTML = `<tr><td colspan="12" class="empty-state">No customers found.</td></tr>`;
-          return;
-        }
-
         // Helper to normalize name
         const norm = name => (name || "").toLowerCase().trim();
+        const customerNames = new Set(customers.map(c => norm(c.name)));
 
-        // Calculate data for each customer
+        // 1) Rows from customers (with total balance = opening + pending bills)
         const customerData = customers.map(cust => {
           const custName = norm(cust.name);
 
@@ -401,6 +403,38 @@
 
           tableBody.appendChild(row);
         });
+
+        // 2) Rows from customerBalances that have no matching customer (saved from All Bill / Add new entry)
+        const orphanBalances = balances.filter(b => !customerNames.has(norm(b.customer)));
+        orphanBalances.sort((a, b) => new Date(b.date || b.timestamp || 0) - new Date(a.date || a.timestamp || 0));
+        orphanBalances.forEach(b => {
+          const row = document.createElement('tr');
+          const name = (b.customer || "—").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+          const nameEsc = (b.customer || "").replace(/'/g, "\\'");
+          row.innerHTML = `
+            <td>${b.date || "—"}</td>
+            <td class="col-mark">${b.cid || "—"}</td>
+            <td>${b.lfno || "—"}</td>
+            <td>${b.orderNo || "—"}</td>
+            <td><strong>${name}</strong></td>
+            <td>${(b.relation || "—").replace(/</g, "&lt;")}</td>
+            <td>${(b.relationName || "—").replace(/</g, "&lt;")}</td>
+            <td>${(b.station || "—").replace(/</g, "&lt;")}</td>
+            <td>${(b.phone || "—").replace(/</g, "&lt;")}</td>
+            <td>${(b.mobile || "—").replace(/</g, "&lt;")}</td>
+            <td class="col-amount">₹ ${parseFloat(b.amount || 0).toFixed(2)}</td>
+            <td>
+                <div class="action-buttons">
+                  <button class="btn" style="padding:4px 8px; font-size:11px; background:#0d6efd;" onclick="viewCustomerBills('${nameEsc}')">View</button>
+                </div>
+            </td>
+          `;
+          tableBody.appendChild(row);
+        });
+
+        if (customerData.length === 0 && orphanBalances.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="12" class="empty-state">No customers or balance entries found. Add an entry from All Bill (Add new entry) or add a customer.</td></tr>`;
+        }
 
         // Re-apply filter if search box has text
         filterTable();

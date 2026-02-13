@@ -284,6 +284,38 @@
       font-size: 11px;
       white-space: nowrap;
     }
+
+    /* Add new entry form */
+    .add-entry-form {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(to bottom, #f0f7ff, #e8f2ff);
+      flex-shrink: 0;
+    }
+    .add-entry-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 10px;
+    }
+    .add-entry-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .add-entry-row label { min-width: 0; }
+    .add-entry-row input { min-width: 90px; }
+    .add-entry-row .btn-save {
+      background: #198754;
+      border-color: #198754;
+      color: #fff;
+    }
+    .add-entry-row .btn-save:hover {
+      background: #157347;
+      border-color: #157347;
+      color: #fff;
+    }
   </style>
 </head>
 
@@ -300,18 +332,49 @@
 
       <label>Search</label>
       <input type="text" id="searchBox" placeholder="Search..." onkeyup="searchTable()">
+
+      <button class="btn" type="button" onclick="toggleAddForm()" id="btnToggleAdd">+ Add new entry</button>
     </div>
 
-    <!-- TABLE -->
+    <!-- ADD NEW ENTRY FORM (saves to Customer Balance) -->
+    <div id="addEntryForm" class="add-entry-form" style="display:none;">
+      <div class="add-entry-title">New entry — save to Customer Balance</div>
+      <div class="add-entry-row">
+        <label>Date</label>
+        <input type="date" id="newDate" title="Date">
+        <label>Mark (CID)</label>
+        <input type="text" id="newCid" placeholder="Mark (CID)">
+        <label>LF No.</label>
+        <input type="text" id="newLfno" placeholder="LF No.">
+        <label>Bill No.</label>
+        <input type="text" id="newBillNo" placeholder="Bill No.">
+        <label>Name</label>
+        <input type="text" id="newName" placeholder="Name">
+        <label>Relation</label>
+        <input type="text" id="newRelation" placeholder="Relation">
+        <label>Relation Name</label>
+        <input type="text" id="newRelationName" placeholder="Relation Name">
+        <label>Station</label>
+        <input type="text" id="newStation" placeholder="Station">
+        <label>Phone No.</label>
+        <input type="text" id="newPhone" placeholder="Phone No.">
+        <label>Mobile Number</label>
+        <input type="text" id="newMobile" placeholder="Mobile Number">
+        <label>Amount (₹)</label>
+        <input type="number" id="newAmount" step="0.01" placeholder="0.00">
+        <button class="btn btn-save" type="button" onclick="saveNewToCustomerBalance()">Save</button>
+      </div>
+    </div>
+
+    <!-- TABLE: Date, Mark (CID), LF No., Bill No., Name, Relation, Relation Name, Station, Phone No., Mobile Number, Amount -->
     <div class="table-wrap">
       <table id="balanceTable">
         <thead>
           <tr>
-            <th>Type</th>
             <th>Date</th>
             <th>Mark (CID)</th>
             <th>LF No.</th>
-            <th>Bill No</th>
+            <th>Bill No.</th>
             <th>Name</th>
             <th>Relation</th>
             <th>Relation Name</th>
@@ -319,6 +382,7 @@
             <th>Phone No.</th>
             <th>Mobile Number</th>
             <th class="right">Amount (₹)</th>
+            <th>Type</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -397,13 +461,13 @@
       sortedBalances.forEach((balance, index) => {
         try {
           const row = document.createElement("tr");
-          // Store balance data in row for editing
           row.dataset.balanceIndex = index;
           row.dataset.balanceTimestamp = balance.timestamp || "";
           row.dataset.orderNo = balance.orderNo || "";
+          const typeVal = (balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order");
+          const custEsc = (balance.customer || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
           row.innerHTML = `
-        <td>${(balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order")}</td>
         <td>${balance.date || "—"}</td>
         <td>${balance.cid || "—"}</td>
         <td>${balance.lfno || "—"}</td>
@@ -415,6 +479,7 @@
         <td>${balance.phone || "—"}</td>
         <td>${balance.mobile || "—"}</td>
         <td class="right">${parseFloat(balance.amount || 0).toFixed(2)}</td>
+        <td>${typeVal}</td>
         <td class="center">
           <div class="action-buttons">
             <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:6px 14px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Edit</button>
@@ -422,7 +487,7 @@
               `<button disabled style="padding:6px 14px;border-radius:8px;border:none;background:#6c757d;color:#fff;font-size:12px;cursor:not-allowed;font-weight:500;">Saved</button>` :
               `<button onclick="transferBill(${index})" style="padding:6px 14px;border-radius:8px;border:none;background:#198754;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Save</button>`
             }
-            <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${(balance.customer || '').replace(/'/g, "\\'")}')" style="padding:6px 14px;border-radius:8px;border:none;background:#dc3545;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Remove</button>
+            <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${custEsc}')" style="padding:6px 14px;border-radius:8px;border:none;background:#dc3545;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Remove</button>
           </div>
         </td>
       `;
@@ -482,7 +547,7 @@
       rows.forEach(row => {
         const rowText = row.innerText.toLowerCase();
         const cells = row.querySelectorAll("td");
-        const customerCell = cells[5] ? cells[5].textContent.toLowerCase() : "";
+        const customerCell = cells[4] ? cells[4].textContent.toLowerCase() : "";
 
         let show = true;
 
@@ -876,6 +941,112 @@
     }
 
     /* =========================
+       ADD NEW ENTRY (save to Customer Balance)
+    ========================= */
+    function toggleAddForm() {
+      const workspace = document.querySelector(".workspace");
+      const root = workspace || document;
+      const form = root.querySelector("#addEntryForm");
+      const btn = root.querySelector("#btnToggleAdd");
+      if (!form || !btn) return;
+      const isVisible = form.style.display !== "none";
+      form.style.display = isVisible ? "none" : "block";
+      btn.textContent = isVisible ? "+ Add new entry" : "− Hide form";
+      if (!isVisible) {
+        const dateInput = root.querySelector("#newDate");
+        if (dateInput) dateInput.value = new Date().toISOString().split("T")[0];
+      }
+    }
+
+    function saveNewToCustomerBalance() {
+      const workspace = document.querySelector(".workspace");
+      const root = workspace || document;
+      const dateEl = root.querySelector("#newDate");
+      const cidEl = root.querySelector("#newCid");
+      const lfnoEl = root.querySelector("#newLfno");
+      const billNoEl = root.querySelector("#newBillNo");
+      const nameEl = root.querySelector("#newName");
+      const relationEl = root.querySelector("#newRelation");
+      const relationNameEl = root.querySelector("#newRelationName");
+      const stationEl = root.querySelector("#newStation");
+      const phoneEl = root.querySelector("#newPhone");
+      const mobileEl = root.querySelector("#newMobile");
+      const amountEl = root.querySelector("#newAmount");
+
+      if (!billNoEl || !nameEl || !amountEl) {
+        alert("Form elements not found.");
+        return;
+      }
+
+      const date = dateEl ? dateEl.value : "";
+      const billNo = (billNoEl.value || "").trim();
+      const name = (nameEl.value || "").trim();
+      const amount = parseFloat(amountEl.value) || 0;
+
+      if (!name) {
+        alert("Name is required.");
+        nameEl.focus();
+        return;
+      }
+      if (!date) {
+        alert("Date is required.");
+        if (dateEl) dateEl.focus();
+        return;
+      }
+
+      const entry = {
+        date: date,
+        cid: cidEl ? (cidEl.value || "—").trim() : "—",
+        lfno: lfnoEl ? (lfnoEl.value || "—").trim() : "—",
+        orderNo: billNo || "—",
+        customer: name,
+        relation: relationEl ? (relationEl.value || "—").trim() : "—",
+        relationName: relationNameEl ? (relationNameEl.value || "—").trim() : "—",
+        station: stationEl ? (stationEl.value || "—").trim() : "—",
+        phone: phoneEl ? (phoneEl.value || "—").trim() : "—",
+        mobile: mobileEl ? (mobileEl.value || "—").trim() : "—",
+        amount: amount.toFixed(2),
+        timestamp: new Date().toISOString(),
+        transferred: false,
+        readyMetal: "Order"
+      };
+
+      const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      balances.push(entry);
+      localStorage.setItem("customerBalances", JSON.stringify(balances));
+
+      if (dateEl) dateEl.value = "";
+      if (cidEl) cidEl.value = "";
+      if (lfnoEl) lfnoEl.value = "";
+      if (billNoEl) billNoEl.value = "";
+      if (nameEl) nameEl.value = "";
+      if (relationEl) relationEl.value = "";
+      if (relationNameEl) relationNameEl.value = "";
+      if (stationEl) stationEl.value = "";
+      if (phoneEl) phoneEl.value = "";
+      if (mobileEl) mobileEl.value = "";
+      if (amountEl) amountEl.value = "";
+
+      loadBalances();
+      window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      alert("Saved to Customer Balance. Opening Customer Balance sheet...");
+      // Navigate to Customer Balance page so user sees the saved data
+      setTimeout(() => {
+        if (typeof loadPage === "function") {
+          loadPage("pages/customer-balance.html");
+        } else if (window.parent && typeof window.parent.loadPage === "function") {
+          window.parent.loadPage("pages/customer-balance.html");
+        } else if (window.top && typeof window.top.loadPage === "function") {
+          window.top.loadPage("pages/customer-balance.html");
+        } else {
+          window.location.href = "customer-balance.html";
+        }
+      }, 300);
+    }
+
+    /* =========================
        ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
     ========================= */
     function ensureFunctionsGlobal() {
@@ -888,6 +1059,8 @@
       window.editBill = editBill;
       window.transferBill = transferBill;
       window.removeBill = removeBill;
+      window.toggleAddForm = toggleAddForm;
+      window.saveNewToCustomerBalance = saveNewToCustomerBalance;
     }
 
     ensureFunctionsGlobal();

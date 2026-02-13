@@ -196,6 +196,9 @@
       overflow-x: auto;
       margin-top: 10px;
     }
+    .order-details-table-wrap {
+      overflow: visible;
+    }
 
     table {
       width: 100%;
@@ -240,6 +243,30 @@
       border-radius: 8px;
       border: 1px solid var(--border);
       padding: 4px 6px;
+    }
+
+    /* Order Details table: no scroll, fit in container */
+    .order-details-table-wrap #itemTable {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+    }
+    .order-details-table-wrap #itemTable th,
+    .order-details-table-wrap #itemTable td {
+      padding: 6px 2px;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .order-details-table-wrap #itemTable input,
+    .order-details-table-wrap #itemTable select {
+      width: 100%;
+      min-width: 0;
+      height: 32px;
+      padding: 4px 4px;
+      font-size: 13px;
+      box-sizing: border-box;
     }
 
     /* =====================
@@ -901,11 +928,14 @@
     <div class="order-details">
       <div class="box-title">Order Details</div>
 
-      <div class="table-wrap">
+      <div class="table-wrap order-details-table-wrap">
         <table id="itemTable">
+          <colgroup>
+            <col style="width:5%"><col style="width:6%"><col style="width:8%"><col style="width:4%"><col style="width:5%"><col style="width:4%"><col style="width:3%"><col style="width:3%"><col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:3%"><col style="width:6%"><col style="width:5%"><col style="width:3%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:2%">
+          </colgroup>
           <thead>
             <tr>
-              <th style="min-width: 100px;">Type</th>
+              <th>Type</th>
               <th>Bill No.</th>
               <th>Item Name</th>
               <th>Stamp</th>
@@ -917,6 +947,12 @@
               <th>Est. Total Wt.</th>
               <th>Rate</th>
               <th>Lbr.%</th>
+              <th class="total">Total</th>
+              <th>Ready metal</th>
+              <th>Neg</th>
+              <th>Ready Weight</th>
+              <th>Rate</th>
+              <th>Making</th>
               <th class="total">Total</th>
               <th>❌</th>
             </tr>
@@ -1074,6 +1110,30 @@
       <div class="summary-row" style="color:#6f42c1;">
         <span><strong>Weight Amount:</strong></span>
         <span><strong>₹ <span id="iRbWtAmt">0.00</span></strong></span>
+      </div>
+      <div class="summary-row" style="margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">
+        <span><strong>Ready metal:</strong></span>
+        <span><strong><span id="iReadyMetal">—</span></strong></span>
+      </div>
+      <div class="summary-row">
+        <span><strong>Neg:</strong></span>
+        <span><strong><span id="iNeg">—</span></strong></span>
+      </div>
+      <div class="summary-row">
+        <span><strong>Ready Weight:</strong></span>
+        <span><strong><span id="iReadyWeight">0.000</span></strong></span>
+      </div>
+      <div class="summary-row">
+        <span><strong>Rate:</strong></span>
+        <span><strong>₹ <span id="iReadyRate">0.00</span></strong></span>
+      </div>
+      <div class="summary-row">
+        <span><strong>Making:</strong></span>
+        <span><strong>₹ <span id="iMaking">0.00</span></strong></span>
+      </div>
+      <div class="summary-row" style="border-top:1px solid #ddd; padding-top:8px; margin-top:6px;">
+        <span><strong>Total:</strong></span>
+        <span><strong>₹ <span id="iReadyTotal">0.00</span></strong></span>
       </div>
     </div>
 
@@ -1474,6 +1534,52 @@
       if (!window.__newOrderGlobalListenersAttached) {
         window.__newOrderGlobalListenersAttached = true;
 
+        // Arrow-key navigation in Order Details table
+        document.addEventListener('keydown', function (e) {
+          if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+          const target = e.target;
+          if (!target.matches('input, select')) return;
+          const tbody = target.closest('#itemTable tbody');
+          if (!tbody) return;
+          const tr = target.closest('tr');
+          if (!tr || !tr.cells) return;
+          const cells = tr.cells;
+          let colIndex = -1;
+          for (let i = 0; i < cells.length; i++) {
+            const focusable = cells[i].querySelector('input, select');
+            if (focusable === target) { colIndex = i; break; }
+          }
+          if (colIndex < 0) return;
+          let nextFocus = null;
+          if (e.key === 'ArrowRight') {
+            for (let i = colIndex + 1; i < cells.length; i++) {
+              const focusable = cells[i].querySelector('input, select');
+              if (focusable) { nextFocus = focusable; break; }
+            }
+          } else if (e.key === 'ArrowLeft') {
+            for (let i = colIndex - 1; i >= 0; i--) {
+              const focusable = cells[i].querySelector('input, select');
+              if (focusable) { nextFocus = focusable; break; }
+            }
+          } else if (e.key === 'ArrowDown') {
+            const nextRow = tr.nextElementSibling;
+            if (nextRow && nextRow.cells[colIndex]) {
+              const focusable = nextRow.cells[colIndex].querySelector('input, select');
+              if (focusable) nextFocus = focusable;
+            }
+          } else if (e.key === 'ArrowUp') {
+            const prevRow = tr.previousElementSibling;
+            if (prevRow && prevRow.cells[colIndex]) {
+              const focusable = prevRow.cells[colIndex].querySelector('input, select');
+              if (focusable) nextFocus = focusable;
+            }
+          }
+          if (nextFocus) {
+            e.preventDefault();
+            nextFocus.focus();
+          }
+        });
+
         // Listen for payment saved event
         window.addEventListener('paymentSaved', function () {
           updateInfoPanel();
@@ -1706,6 +1812,12 @@
 <td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
 <td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
+<td><input type="text" placeholder="—" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
 <td><button onclick="this.closest('tr').remove()">X</button></td>
 `;
       itemBody.appendChild(tr);
@@ -1847,10 +1959,15 @@
           if (r.cells[12] && r.cells[12].children[0]) { // Was 13
             r.cells[12].children[0].value = total.toFixed(2);
           }
+          // Keep second Total in sync: same as first Total, then add ready portion via calcReadyTotal
+          syncSecondTotalFromRow(r);
         } else {
           // Clear total if no valid calculation
           if (r.cells[12] && r.cells[12].children[0]) { // Was 13
             r.cells[12].children[0].value = "0.00";
+          }
+          if (r.cells[18] && r.cells[18].children[0]) {
+            r.cells[18].children[0].value = "0.00";
           }
         }
 
@@ -1862,6 +1979,34 @@
       setTimeout(() => {
         updateInfoPanel();
       }, 100);
+    }
+
+    /* Sync second Total = first Total + (Ready Weight * Rate + Making - Neg); call from calc() or calcReadyTotal() */
+    function syncSecondTotalFromRow(r) {
+      if (!r || !r.cells) return;
+      try {
+        const firstTotal = parseFloat(r.cells[12].children[0].value) || 0;
+        const readyWeight = parseFloat(r.cells[15].children[0].value) || 0;
+        const rate = parseFloat(r.cells[16].children[0].value) || 0;
+        const making = parseFloat(r.cells[17].children[0].value) || 0;
+        const neg = parseFloat(r.cells[14].children[0].value) || 0;
+        const readyPart = (readyWeight * rate) + making - neg;
+        const secondTotal = firstTotal + readyPart;
+        if (r.cells[18] && r.cells[18].children[0]) {
+          r.cells[18].children[0].value = secondTotal.toFixed(2);
+        }
+      } catch (e) {
+        console.error("Error in syncSecondTotalFromRow:", e);
+      }
+    }
+
+    /* CALCULATE SECOND TOTAL = first Total + (Ready Weight * Rate + Making - Neg) */
+    function calcReadyTotal(el) {
+      if (!el || !el.closest) return;
+      const r = el.closest("tr");
+      if (!r || !r.cells) return;
+      syncSecondTotalFromRow(r);
+      setTimeout(() => updateInfoPanel(), 100);
     }
 
     /* CALCULATE BILL TOTAL */
@@ -2673,8 +2818,8 @@
       if (iItems) iItems.innerHTML = "";
       let g = 0;
       itemBody.querySelectorAll("tr").forEach(r => {
-        if (r.cells[13] && r.cells[13].children[0]) {
-          const t = +r.cells[13].children[0].value || 0;
+        if (r.cells[12] && r.cells[12].children[0]) {
+          const t = +r.cells[12].children[0].value || 0;
           g += t;
           const delivery = r.dataset.delivery || "";
           const sample = r.dataset.sample || "";
@@ -3521,13 +3666,13 @@
                   tr.dataset.orderFilled = rowData.orderFilled || "";
                 }
 
-                // Preserve saved total (column 13) after calc()
-                const savedTotal = rowData.values && rowData.values.length > 13 ? (rowData.values[13] || "") : "";
+                // Preserve saved total (column 12) after calc()
+                const savedTotal = rowData.values && rowData.values.length > 12 ? (rowData.values[12] || "") : "";
                 setTimeout(() => {
                   if (tr.cells[7] && tr.cells[7].children[0]) {
                     calc(tr.cells[7].children[0]);
-                    if (savedTotal && tr.cells[13] && tr.cells[13].children[0]) {
-                      tr.cells[13].children[0].value = savedTotal;
+                    if (savedTotal && tr.cells[12] && tr.cells[12].children[0]) {
+                      tr.cells[12].children[0].value = savedTotal;
                     }
                   }
                 }, 10);
