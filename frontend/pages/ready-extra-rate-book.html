@@ -353,6 +353,9 @@
         </div>
 
         <div class="footer">
+            <button id="btnSaveRates" class="btn btn-primary" onclick="saveRateBookFromTable()">
+                Save
+            </button>
             <button class="btn" onclick="closeSelf()">Close</button>
         </div>
 
@@ -712,6 +715,72 @@
                 } catch (e) { }
             } catch (e) { console.error(e); }
         };
+
+        /* SAVE RATE BOOK FROM TABLE (explicit save) */
+        window.saveRateBookFromTable = function () {
+            const tbody = document.getElementById("rateBookHistoryBody");
+            if (!tbody) return;
+
+            const rows = tbody.querySelectorAll("tr[data-id]");
+            if (rows.length === 0) {
+                localStorage.setItem("rateBook", "[]");
+                showSaveFeedback("Saved");
+                return;
+            }
+
+            const rates = [];
+            rows.forEach((tr) => {
+                const id = parseInt(tr.dataset.id, 10);
+                const cells = tr.cells;
+                const getVal = (idx, num) => {
+                    const input = cells[idx] && cells[idx].querySelector("input, select");
+                    if (!input) return num ? 0 : "";
+                    const v = input.value.trim();
+                    return num ? (parseFloat(v) || 0) : v;
+                };
+                rates.push({
+                    id,
+                    date: getVal(1, false),
+                    type: (cells[2] && cells[2].querySelector("select")) ? cells[2].querySelector("select").value : "Order",
+                    metal: getVal(3, false),
+                    stamp: getVal(4, false),
+                    narration: getVal(5, false),
+                    weight: getVal(6, true),
+                    rate: getVal(7, true),
+                    balWt: getVal(8, true),
+                    adjWt: getVal(9, true),
+                    curStamp: getVal(10, false),
+                    curWt: getVal(11, true),
+                    curRate: getVal(12, true),
+                    delDate: getVal(14, false),
+                    curNarration: getVal(15, false)
+                });
+            });
+
+            try {
+                localStorage.setItem("rateBook", JSON.stringify(rates));
+                showSaveFeedback("Saved");
+                try {
+                    window.dispatchEvent(new CustomEvent("ratebookUpdated"));
+                    if (window.opener) window.opener.dispatchEvent(new CustomEvent("ratebookUpdated"));
+                } catch (e) {}
+            } catch (e) {
+                console.error(e);
+                showSaveFeedback("Save failed", true);
+            }
+        };
+
+        function showSaveFeedback(message, isError) {
+            const btn = document.getElementById("btnSaveRates");
+            if (!btn) return;
+            const origText = btn.textContent;
+            btn.textContent = message;
+            if (isError) btn.style.background = "var(--danger)";
+            setTimeout(() => {
+                btn.textContent = origText;
+                btn.style.background = "";
+            }, 1500);
+        }
 
         function closeSelf() {
             const returnTarget = localStorage.getItem("ratebookReturnTarget") || "pages/new-order.html";

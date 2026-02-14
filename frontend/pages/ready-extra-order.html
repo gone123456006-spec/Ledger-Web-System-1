@@ -44,6 +44,7 @@
 
     input[type=number] {
       -moz-appearance: textfield;
+      appearance: textfield;
     }
 
     body {
@@ -1360,6 +1361,8 @@
         <button onclick="addRatebookRow()"
           style="background:#007aff; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">+
           Add Row</button>
+        <button id="ratebookDetailsSaveBtn" onclick="saveRatebookDetailsFromPopup()"
+          style="background:#28a745; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Save</button>
         <button onclick="closeRatebookDetailsPopup()"
           style="background:#6c757d; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Close</button>
       </div>
@@ -1484,20 +1487,20 @@
         };
       }
 
-      // If we have a saved state (Ratebook/Receipt flow), restore it first.
-      // This prevents Customer/Bill/Payment info from getting cleared when returning.
-      const savedState = localStorage.getItem("newOrderState");
-      if (savedState) {
+      // Edit mode must take priority over saved return-state restoration.
+      // This ensures customer/order data always loads when opening from Edit.
+      const editOrderId = localStorage.getItem("editOrderId");
+      if (editOrderId) {
+        // Wait a bit for DOM to be ready, then load order
         setTimeout(() => {
-          restoreOrderState();
+          loadOrderForEdit(editOrderId);
         }, 200);
       } else {
-        // Check if editing an existing order
-        const editOrderId = localStorage.getItem("editOrderId");
-        if (editOrderId) {
-          // Wait a bit for DOM to be ready, then load order
+        // If we have a saved state (Ratebook/Receipt flow), restore it.
+        const savedState = localStorage.getItem("newOrderState");
+        if (savedState) {
           setTimeout(() => {
-            loadOrderForEdit(editOrderId);
+            restoreOrderState();
           }, 200);
         } else {
           // Check if there's a selected customer from customer page
@@ -2615,11 +2618,22 @@
       }
 
       const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-      const order = orders.find(o => o.id === Number(orderId));
+      let order = orders.find(o => o && (o.id == orderId || String(o.id) === String(orderId)));
+
+      // Fallback: cached payload from orders page edit action
+      if (!order) {
+        try {
+          const payload = JSON.parse(localStorage.getItem("editOrderPayload") || "null");
+          if (payload && (payload.id == orderId || String(payload.id) === String(orderId))) {
+            order = payload;
+          }
+        } catch (e) { }
+      }
 
       if (!order) {
         alert("Order not found");
         localStorage.removeItem("editOrderId");
+        localStorage.removeItem("editOrderPayload");
         return;
       }
 
@@ -2668,6 +2682,11 @@
         custName.style.backgroundColor = "#f5f5f7";
         custName.style.cursor = "not-allowed";
       }
+
+      // Clear stale return-state flags that can overwrite edit data
+      localStorage.removeItem("ratebookOpened");
+      localStorage.removeItem("receiptOpened");
+      localStorage.removeItem("newOrderState");
 
       // Clear existing rows
       if (itemBody) itemBody.innerHTML = "";
@@ -4225,7 +4244,7 @@
           const cellStyle = 'padding:10px 12px; border-bottom:1px solid #eee; border-right:1px solid #eee; font-size:13px; color:#333;';
 
           html += `
-            <tr style="${rowStyle}">
+            <tr data-rate-id="${rate.id}" style="${rowStyle}">
               <td style="${cellStyle} white-space:nowrap;">${dateStr}</td>
               <td style="${cellStyle} text-align:center;">${rate.type || 'S'}</td>
               <td style="${cellStyle}">${rate.narration || ''}</td>
@@ -4299,6 +4318,46 @@
           // window.dispatchEvent(new CustomEvent('ratebookUpdated'));
         }
       } catch (e) { console.error(e); }
+    }
+
+    function saveRatebookDetailsFromPopup() {
+      const table = document.getElementById("ratebookDetailsTable");
+      if (!table) return;
+
+      const rows = table.querySelectorAll("tr[data-rate-id]");
+      if (rows.length === 0) return;
+
+      try {
+        const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+
+        rows.forEach(tr => {
+          const rateId = tr.getAttribute("data-rate-id");
+          if (!rateId) return;
+
+          const idx = rates.findIndex(r => String(r.id) === String(rateId));
+          if (idx < 0) return;
+
+          const inputs = tr.querySelectorAll("input[type='number']");
+          // First number input in row: Rate Book is a button, so order is: adjWt (index 0), curRate (index 1)
+          const adjWtInput = inputs[0];
+          const curRateInput = inputs[1];
+          if (adjWtInput) rates[idx].adjWt = parseFloat(adjWtInput.value) || 0;
+          if (curRateInput) rates[idx].curRate = parseFloat(curRateInput.value) || 0;
+        });
+
+        localStorage.setItem("rateBook", JSON.stringify(rates));
+
+        const btn = document.getElementById("ratebookDetailsSaveBtn");
+        if (btn) {
+          const origText = btn.textContent;
+          btn.textContent = "Saved!";
+          setTimeout(() => { btn.textContent = origText; }, 1500);
+        }
+        window.dispatchEvent(new CustomEvent("ratebookUpdated"));
+      } catch (e) {
+        console.error(e);
+        alert("Error saving rates");
+      }
     }
 
     function closeRatebookDetailsPopup() {
@@ -4553,6 +4612,7 @@
       window.closeRatebookDetailsPopup = closeRatebookDetailsPopup;
       window.saveRatebookFromRows = saveRatebookFromRows;
       window.addRatebookRow = addRatebookRow;
+      window.saveRatebookDetailsFromPopup = saveRatebookDetailsFromPopup;
       window.updateRateBookingRow = updateRateBookingRow;
       window.closeDashboard = closeDashboard;
     }

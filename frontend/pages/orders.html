@@ -303,29 +303,6 @@
     }
 
     /* =========================
-   SCROLLBAR STYLING
-========================= */
-    .table-wrap::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
-    }
-
-    .table-wrap::-webkit-scrollbar-track {
-      background: #f5f5f7;
-      border-radius: 5px;
-    }
-
-    .table-wrap::-webkit-scrollbar-thumb {
-      background: #c1c1c6;
-      border-radius: 5px;
-      border: 2px solid #f5f5f7;
-    }
-
-    .table-wrap::-webkit-scrollbar-thumb:hover {
-      background: #a1a1a6;
-    }
-
-    /* =========================
    RESPONSIVE
 ========================= */
     @media (max-width: 768px) {
@@ -500,9 +477,6 @@
         return;
       }
 
-      // Show ALL orders (including READY, PENDING, and any other status)
-      // Do NOT filter out READY orders - they should remain visible in orders.html
-
       // Sort by date (newest first)
       const sortedOrders = [...orders].sort((a, b) => {
         const dateA = new Date(a.orderDate || a.timestamp || 0);
@@ -543,7 +517,7 @@
           row.innerHTML = `
         <td class="center"><input type="checkbox" ${isPending ? 'checked' : ''} onclick="toggleOrderStatus(this, ${order.id}); event.stopPropagation();"></td>
         <td>${order.orderNo || order.billNo || "-"}</td>
-        <td>${order.customer || "-"}</td>
+        <td>${order.customer || order.customerName || "-"}</td>
         <td>${order.orderDate || "-"}</td>
         <td>${order.dueDate || "-"}</td>
         <td>${orderType}</td>
@@ -577,16 +551,188 @@
     }
 
     /* =========================
-       EDIT ORDER
+       GET CUSTOMER DATA FROM CUSTOMERS LIST
+    ========================= */
+    function getCustomerData(customerName) {
+      if (!customerName) return null;
+      
+      try {
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        
+        // Try to find customer by exact name match
+        let customer = customers.find(c => 
+          c && (c.name === customerName || c.customerName === customerName)
+        );
+        
+        // If not found, try case-insensitive match
+        if (!customer) {
+          const lowerName = customerName.toLowerCase().trim();
+          customer = customers.find(c => 
+            c && (
+              (c.name || "").toLowerCase().trim() === lowerName ||
+              (c.customerName || "").toLowerCase().trim() === lowerName
+            )
+          );
+        }
+        
+        if (customer) {
+          return {
+            name: customer.name || customer.customerName || customerName,
+            currentBal: customer.currentBal || customer.balance || "",
+            relation: customer.relation || "",
+            station: customer.station || customer.city || customer.location || ""
+          };
+        }
+      } catch (e) {
+        console.error("Error fetching customer data:", e);
+      }
+      
+      return null;
+    }
+
+    /* =========================
+       EDIT ORDER - IMPROVED WITH CUSTOMER DATA FETCHING
     ========================= */
     function editOrder(orderId) {
-      // Store order ID for editing
-      localStorage.setItem("editOrderId", orderId);
+      try {
+        console.log("=== EDIT ORDER START ===");
+        console.log("Order ID:", orderId);
+        
+        // Clear ALL previous state flags first to prevent conflicts
+        const keysToRemove = [
+          "editOrderId",
+          "editOrderPayload",
+          "ratebookOpened",
+          "receiptOpened",
+          "newOrderState",
+          "editCustomerReadOnly",
+          "returnToOrders",
+          "selectedCustomerData"
+        ];
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      // Set flag to make customer name read-only when editing from orders page
-      localStorage.setItem("editCustomerReadOnly", "true");
+        // Get the order data
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const order = orders.find(o => o && (o.id == orderId || String(o.id) === String(orderId)));
 
-      // Navigate to new-order page
+        if (!order) {
+          console.error("Order not found:", orderId);
+          alert("Order not found. Please try again.");
+          return;
+        }
+
+        console.log("Found order:", order);
+
+        // Get customer name from order
+        const customerName = order.customer || order.customerName || "";
+        console.log("Customer name:", customerName);
+
+        // Fetch complete customer data from customers list
+        const customerData = getCustomerData(customerName);
+        console.log("Fetched customer data:", customerData);
+
+        // Create customer information object
+        const customerInfo = customerData || {
+          name: customerName,
+          currentBal: order.currentBal || order.customerBalance || "",
+          relation: order.relation || order.customerRelation || "",
+          station: order.station || order.customerStation || ""
+        };
+
+        // Create a complete snapshot of the order with ALL fields preserved
+        const orderSnapshot = {
+          // ===== EDIT MODE FLAG =====
+          isEditMode: true,
+          
+          // ===== CORE IDENTIFIERS =====
+          id: order.id,
+          orderNo: order.orderNo || order.billNo || "",
+          billNo: order.billNo || order.orderNo || "",
+          
+          // ===== CUSTOMER INFORMATION =====
+          customer: customerInfo.name,
+          customerName: customerInfo.name,
+          currentBal: customerInfo.currentBal,
+          relation: customerInfo.relation,
+          station: customerInfo.station,
+          
+          // Additional customer fields (if they exist in your form)
+          customerPhone: order.customerPhone || "",
+          customerEmail: order.customerEmail || "",
+          customerAddress: order.customerAddress || "",
+          
+          // ===== BILL INFORMATION =====
+          orderDate: order.orderDate || "",
+          dueDate: order.dueDate || "",
+          hallmark: order.hallmark || "",
+          type: order.type || "Order",
+          
+          // ===== ORDER DETAILS - ITEMS ARRAY =====
+          items: order.items || [],
+          
+          // ===== FINANCIAL INFORMATION =====
+          netAmount: order.netAmount || 0,
+          advance: order.advance || 0,
+          balance: order.balance || 0,
+          
+          // ===== CALCULATED TOTALS =====
+          pc: order.pc || 0,
+          grWt: order.grWt || 0,
+          
+          // ===== STATUS AND METADATA =====
+          status: order.status || "",
+          timestamp: order.timestamp || new Date().toISOString(),
+          
+          // ===== ANY OTHER CUSTOM FIELDS =====
+          ...order
+        };
+
+        console.log("=== ORDER SNAPSHOT CREATED ===");
+        console.log("Customer Info:", {
+          name: orderSnapshot.customerName,
+          currentBal: orderSnapshot.currentBal,
+          relation: orderSnapshot.relation,
+          station: orderSnapshot.station
+        });
+        console.log("Items count:", orderSnapshot.items ? orderSnapshot.items.length : 0);
+
+        // Store order ID for the edit mode
+        localStorage.setItem("editOrderId", String(orderId));
+        
+        // Store complete order snapshot
+        localStorage.setItem("editOrderPayload", JSON.stringify(orderSnapshot));
+        
+        // Store customer data separately for easy access
+        localStorage.setItem("selectedCustomerData", JSON.stringify(customerInfo));
+        
+        // Set customer field as read-only when editing from orders page
+        localStorage.setItem("editCustomerReadOnly", "true");
+        
+        // Set flag to indicate we're coming from orders page
+        localStorage.setItem("returnToOrders", "true");
+
+        console.log("=== STORAGE COMPLETE ===");
+        console.log("Stored editOrderId:", localStorage.getItem("editOrderId"));
+        console.log("Stored selectedCustomerData:", localStorage.getItem("selectedCustomerData"));
+        console.log("=== NAVIGATING TO NEW ORDER PAGE ===");
+
+        // Navigate to new-order page
+        navigateToNewOrder();
+
+      } catch (e) {
+        console.error("=== ERROR IN EDIT ORDER ===");
+        console.error("Error preparing order edit:", e);
+        console.error("Stack trace:", e.stack);
+        alert("Error loading order for editing. Please try again.");
+      }
+    }
+
+    /* =========================
+       NAVIGATE TO NEW ORDER PAGE
+    ========================= */
+    function navigateToNewOrder() {
+      // Try to use loadPage if available (workspace context)
       if (typeof loadPage === 'function') {
         loadPage("pages/new-order.html");
         return;
@@ -617,33 +763,17 @@
        NEW ORDER
     ========================= */
     function newOrder() {
-      // Try to use loadPage if available (workspace context)
-      if (typeof loadPage === 'function') {
-        loadPage("pages/new-order.html");
-        return;
-      }
+      // Clear edit state when creating new order
+      localStorage.removeItem("editOrderId");
+      localStorage.removeItem("editOrderPayload");
+      localStorage.removeItem("editCustomerReadOnly");
+      localStorage.removeItem("returnToOrders");
+      localStorage.removeItem("selectedCustomerData");
+      // Signal new-order page to open with fresh form: new Bill No., all data cleared
+      localStorage.setItem("newOrderClearForm", "true");
 
-      // Try parent window
-      if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
-        window.parent.loadPage("pages/new-order.html");
-        return;
-      }
-
-      // Try top window
-      if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
-        window.top.loadPage("pages/new-order.html");
-        return;
-      }
-
-      // Fallback: direct navigation
-      const currentPath = window.location.pathname;
-      if (currentPath.includes('/pages/')) {
-        window.location.href = "new-order.html";
-      } else {
-        window.location.href = "/pages/new-order.html";
-      }
+      navigateToNewOrder();
     }
-
 
     /* =========================
        SELECT ROW
@@ -666,34 +796,29 @@
         }
 
         const order = orders[orderIndex];
-        const row = cb.closest("tr");
 
         if (cb.checked) {
-          // Mark as PENDING (order will appear in pending-orders.html)
+          // Mark as PENDING
           order.status = "PENDING";
-
-          // Save updated orders
-          localStorage.setItem("orders", JSON.stringify(orders));
-
-          // Keep row visible - don't remove it
-          // The order will now appear in pending-orders.html as well
         } else {
-          // Unmark - set status to null or empty string
-          // This makes it a regular order that's not pending
+          // Unmark - set status to null
           order.status = null;
-
-          // Save updated orders
-          localStorage.setItem("orders", JSON.stringify(orders));
         }
+
+        // Save updated orders
+        localStorage.setItem("orders", JSON.stringify(orders));
 
         // Dispatch event to refresh pending orders page if it's open
         const refreshEvent = new CustomEvent('orderStatusChanged', {
           detail: { orderId: orderId, status: order.status || "UNMARKED" }
         });
+        
         window.dispatchEvent(refreshEvent);
+        
         if (window.parent && window.parent !== window) {
           window.parent.dispatchEvent(refreshEvent);
         }
+        
         if (window.top && window.top !== window) {
           window.top.dispatchEvent(refreshEvent);
         }
@@ -712,7 +837,6 @@
         if (!initElements()) return;
       }
 
-      // Try to find searchBox in workspace or document
       const workspace = document.querySelector(".workspace");
       let searchBox = null;
 
@@ -776,7 +900,7 @@
         const rowText = row.innerText.toLowerCase();
         const cells = row.querySelectorAll("td");
 
-        // Get customer name from row (usually column 2 or 3)
+        // Get customer name from row (column 2)
         const customerCell = cells[2] ? cells[2].textContent.toLowerCase() : "";
 
         let show = true;
@@ -805,15 +929,7 @@
         if (show) visibleCount++;
       });
 
-      // Update footer with filtered count
-      if (footer) {
-        const totalRows = rows.length;
-        if (visibleCount < totalRows) {
-          footer.textContent = `Showing ${visibleCount} of ${totalRows} orders`;
-        } else {
-          footer.textContent = visibleCount ? `Showing ${visibleCount} orders` : "No orders available";
-        }
-      }
+      updateFooter();
     }
 
     /* =========================
@@ -842,7 +958,6 @@
     function initOrdersPage() {
       // Wait for elements to be ready
       if (!initElements()) {
-        // Retry after a short delay
         setTimeout(initOrdersPage, 100);
         return;
       }
@@ -857,7 +972,6 @@
     /* =========================
        INITIALIZE
     ========================= */
-    // Check if we're in workspace context
     function isInWorkspace() {
       return !!document.querySelector(".workspace");
     }
@@ -865,7 +979,6 @@
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function () {
-        // If in workspace, wait a bit longer for content to be inserted
         if (isInWorkspace()) {
           setTimeout(initOrdersPage, 200);
         } else {
@@ -873,9 +986,7 @@
         }
       });
     } else {
-      // DOM already ready, but might be in workspace
       if (isInWorkspace()) {
-        // In workspace, wait for content to be inserted
         setTimeout(initOrdersPage, 200);
       } else {
         setTimeout(initOrdersPage, 50);
@@ -887,7 +998,6 @@
       setTimeout(initOrdersPage, 150);
     });
 
-    // Also listen on workspace if it exists
     const workspace = document.querySelector(".workspace");
     if (workspace) {
       workspace.addEventListener('pageRefresh', function () {
@@ -905,14 +1015,14 @@
       loadOrders();
     });
 
-    // Also listen for storage changes (when orders are saved from other pages)
+    // Listen for storage changes
     window.addEventListener('storage', function (e) {
       if (e.key === 'orders') {
         loadOrders();
       }
     });
 
-    // Poll for changes (for same-window updates)
+    // Poll for changes
     let lastOrderCount = 0;
     setInterval(function () {
       if (!tbody) {
@@ -928,10 +1038,8 @@
 
     /* =========================
        ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
-       (For onclick handlers and dashboard integration)
     ========================= */
     function ensureFunctionsGlobal() {
-      // Make all functions available globally
       window.loadOrders = loadOrders;
       window.newOrder = newOrder;
       window.editOrder = editOrder;
@@ -942,6 +1050,8 @@
       window.updateFooter = updateFooter;
       window.initOrdersPage = initOrdersPage;
       window.initElements = initElements;
+      window.navigateToNewOrder = navigateToNewOrder;
+      window.getCustomerData = getCustomerData;
     }
 
     // Make functions globally accessible immediately

@@ -19,7 +19,6 @@ body{
   background:#e6ebf2;
 }
 
-/* When loaded in workspace - body doesn't exist, content is in .workspace */
 .workspace{
   background:linear-gradient(to bottom,#cde1ff,#e6f1ff) !important;
 }
@@ -41,7 +40,6 @@ body{
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
-/* Workspace integration */
 .workspace .ready-orders-wrap{
   margin:0 !important;
   height:100% !important;
@@ -67,7 +65,6 @@ body{
   box-sizing:border-box;
 }
 
-/* Force toolbar colors in workspace */
 .workspace .ready-orders-wrap .ready-toolbar{
   background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
 }
@@ -76,7 +73,7 @@ body{
   margin:0;
   font-size:18px;
   font-weight:600;
-  color:#000 !important;
+  color:#1d1d1f !important;
   flex:1;
 }
 
@@ -89,14 +86,14 @@ body{
   font-size:13px;
   font-weight:500;
   transition:all 0.2s;
-  color:#000 !important;
+  color:#1d1d1f !important;
   box-shadow:0 1px 2px rgba(0,0,0,0.05);
 }
 
 .btn:hover{ 
   background:#007aff;
   border-color:#007aff;
-  color:#fff;
+  color:#fff !important;
   transform:translateY(-1px);
   box-shadow:0 2px 4px rgba(0,122,255,0.2);
 }
@@ -106,21 +103,39 @@ body{
   box-shadow:0 1px 2px rgba(0,0,0,0.1);
 }
 
+input{
+  height:36px;
+  padding:6px 12px;
+  border:1px solid #d1d6de;
+  border-radius:8px;
+  font-size:13px;
+  background:#fff;
+  transition:all 0.2s;
+  min-width:200px;
+}
+
+input:focus{
+  outline:none;
+  border-color:#007aff;
+  box-shadow:0 0 0 3px rgba(0,122,255,.12);
+}
+
+input::placeholder{
+  color:#8e8e93;
+}
+
 /* =========================
    TABLE
 ========================= */
 .table-wrap{
   flex:1;
   overflow:auto;
-  overflow-x:auto;
-  overflow-y:auto;
   position:relative;
   min-height:0;
   box-sizing:border-box;
   background:#fff !important;
 }
 
-/* Force colors in workspace */
 .workspace .ready-orders-wrap .table-wrap{
   background:#fff !important;
 }
@@ -134,7 +149,6 @@ table{
   background:#fff !important;
 }
 
-/* Force table colors in workspace */
 .workspace .ready-orders-wrap table{
   background:#fff !important;
 }
@@ -146,7 +160,6 @@ thead{
   background:#fff !important;
 }
 
-/* Force thead colors in workspace */
 .workspace .ready-orders-wrap thead{
   background:#fff !important;
 }
@@ -162,15 +175,14 @@ thead th{
   font-weight:600;
   font-size:12px;
   text-align:left;
-  color:#000 !important;
+  color:#1d1d1f !important;
   text-transform:uppercase;
   letter-spacing:0.3px;
 }
 
-/* Force th colors in workspace */
 .workspace .ready-orders-wrap thead th{
   background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
-  color:#000 !important;
+  color:#1d1d1f !important;
 }
 
 thead th.center{
@@ -190,18 +202,16 @@ tbody td{
   max-width:200px;
   font-size:13px;
   vertical-align:middle;
-  color:#000 !important;
+  color:#333 !important;
   background:transparent !important;
   transition:all 0.15s ease;
 }
 
-/* Force td colors in workspace */
 .workspace .ready-orders-wrap tbody td{
-  color:#000 !important;
+  color:#333 !important;
   background:transparent !important;
 }
 
-/* Allow some columns to wrap if needed */
 tbody td:nth-child(5){
   max-width:250px;
   white-space:normal;
@@ -212,13 +222,13 @@ tbody td:nth-child(5){
 tbody tr{
   transition:all 0.2s ease;
   background:#fff !important;
+  cursor:pointer;
 }
 
 tbody tr:nth-child(even){
   background:#fafbfc !important;
 }
 
-/* Force tr colors in workspace */
 .workspace .ready-orders-wrap tbody tr{
   background:#fff !important;
 }
@@ -256,7 +266,7 @@ tbody tr td:last-child{
 .right{ 
   text-align:right;
   font-weight:500;
-  color:#000 !important;
+  color:#1d1d1f !important;
   font-family:'Segoe UI', system-ui, -apple-system, sans-serif;
   font-variant-numeric:tabular-nums;
 }
@@ -270,15 +280,16 @@ tbody tr td:last-child{
 }
 
 .ready{
-  background:#e7f8ee;
-  color:#1f7a3f;
+  background:#d1f2eb;
+  color:#0f5132;
+  border:1px solid #a3cfbb;
 }
 
-button{
+.action-btn{
   padding:6px 14px;
   border-radius:8px;
   border:none;
-  background:#0d6efd;
+  background:#007aff;
   color:#fff;
   font-size:12px;
   cursor:pointer;
@@ -286,14 +297,38 @@ button{
   font-weight:500;
 }
 
-button:hover{
-  background:#0b5ed7;
+.action-btn:hover{
+  background:#0056b3;
   transform:translateY(-1px);
-  box-shadow:0 2px 4px rgba(11,94,215,0.2);
+  box-shadow:0 2px 4px rgba(0,122,255,0.3);
 }
 
-button:active{
+.action-btn:active{
   transform:translateY(0);
+}
+
+/* Empty state */
+.empty-state{
+  text-align:center;
+  padding:60px 20px;
+  color:#6c757d;
+}
+
+.empty-state-icon{
+  font-size:48px;
+  margin-bottom:16px;
+  opacity:0.5;
+}
+
+.empty-state-text{
+  font-size:16px;
+  font-weight:500;
+  margin-bottom:8px;
+}
+
+.empty-state-subtext{
+  font-size:13px;
+  color:#8e8e93;
 }
 
 /* =========================
@@ -302,7 +337,7 @@ button:active{
 .footer{
   padding:12px 16px;
   font-size:13px;
-  color:#000 !important;
+  color:#6e6e73 !important;
   border-top:1px solid #e5e7eb;
   background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
   flex-shrink:0;
@@ -310,10 +345,9 @@ button:active{
   font-weight:500;
 }
 
-/* Force footer colors in workspace */
 .workspace .ready-orders-wrap .footer{
   background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
-  color:#000 !important;
+  color:#6e6e73 !important;
 }
 
 /* =========================
@@ -384,6 +418,10 @@ button:active{
     font-size:11px;
     padding:12px 10px;
   }
+  
+  input{
+    min-width:150px;
+  }
 }
 </style>
 </head>
@@ -393,7 +431,8 @@ button:active{
 <div class="ready-orders-wrap">
   <!-- TOOLBAR -->
   <div class="ready-toolbar">
-    <h2>Ready Orders</h2>
+    <h2>📦 Ready Orders</h2>
+    <input type="text" id="searchBox" placeholder="🔍 Search ready orders..." onkeyup="searchOrders()">
     <button class="btn" onclick="loadReadyOrders()">🔄 Refresh</button>
   </div>
 
@@ -403,12 +442,13 @@ button:active{
       <thead>
         <tr>
           <th>Status</th>
-          <th>Date</th>
+          <th>Order Date</th>
           <th>Bill No</th>
-          <th>Total Qty</th>
+          <th>Customer</th>
           <th>Items</th>
-          <th>Metal</th>
-          <th>Total Amount</th>
+          <th class="right">Total Qty</th>
+          <th class="right">Weight (g)</th>
+          <th class="right">Amount (₹)</th>
           <th class="center">Action</th>
         </tr>
       </thead>
@@ -417,230 +457,361 @@ button:active{
   </div>
 
   <div class="footer" id="footerText">
-    No ready orders available
+    Loading ready orders...
   </div>
 </div>
 
 <script>
 /* =========================
-   ELEMENT REFERENCES
+   GLOBAL STATE
 ========================= */
 let tbody = null;
 let footer = null;
+let searchBox = null;
 
 /* =========================
    INITIALIZE ELEMENTS
 ========================= */
 function initElements(){
-  // Try to find elements in workspace first (dashboard context)
+  console.log("🔧 Initializing elements...");
+  
   const workspace = document.querySelector(".workspace");
   
   if(workspace){
-    // Look in workspace first
     tbody = workspace.querySelector("#tableBody");
     footer = workspace.querySelector("#footerText");
+    searchBox = workspace.querySelector("#searchBox");
     
-    // If not found in workspace, try document
-    if(!tbody){
-      tbody = document.getElementById("tableBody");
-    }
-    if(!footer){
-      footer = document.getElementById("footerText");
-    }
+    if(!tbody) tbody = document.getElementById("tableBody");
+    if(!footer) footer = document.getElementById("footerText");
+    if(!searchBox) searchBox = document.getElementById("searchBox");
   } else {
-    // Not in workspace, look in document
     tbody = document.getElementById("tableBody");
     footer = document.getElementById("footerText");
+    searchBox = document.getElementById("searchBox");
   }
   
   if(!tbody || !footer){
+    console.warn("⚠️ Elements not found yet");
     return false;
   }
   
+  console.log("✅ Elements initialized");
   return true;
 }
 
+/* =========================
+   LOAD READY ORDERS
+========================= */
 function loadReadyOrders(){
-  if(!tbody){
-    if(!initElements()){
-      console.warn("Ready orders table elements not found. Retrying...");
-      setTimeout(loadReadyOrders, 100);
-      return;
-    }
-  }
+  console.log("📋 Loading ready orders...");
   
-  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  tbody.innerHTML = "";
-
-  // Filter orders with READY status
-  const readyOrders = orders.filter(o => o.status === "READY");
-
-  if(readyOrders.length === 0){
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="8" style="text-align:center;color:#777;padding:30px;">
-          No ready orders
-        </td>
-      </tr>`;
-    updateFooter();
+  if(!tbody && !initElements()){
+    console.warn("⚠️ Table elements not ready, retrying...");
+    setTimeout(loadReadyOrders, 100);
     return;
   }
-
-  // Sort by date (newest first)
-  const sortedReadyOrders = [...readyOrders].sort((a, b) => {
-    const dateA = new Date(a.orderDate || a.timestamp || 0);
-    const dateB = new Date(b.orderDate || b.timestamp || 0);
-    return dateB - dateA;
-  });
-
-  sortedReadyOrders.forEach(order => {
-    try {
-      // Calculate totals from items
-      let totalPc = order.pc || 0;
-      let totalGrWt = parseFloat(order.grWt || 0);
-      let itemNames = [];
-      
-      if(order.items && order.items.length > 0){
-        order.items.forEach(item => {
-          // Get item name - support both old structure (index 2) and new structure (index 1)
-          const itemName = item.values && (item.values[1] || item.values[2]) ? (item.values[1] || item.values[2]) : "";
-          if(itemName) itemNames.push(itemName);
-          
-          // Calculate Pc and Gr.Wt if not already stored
-          // Support both old structure (Pc at index 7) and new structure (Pc at index 4)
-          if(!totalPc){
-            const pc = parseFloat(item.values[4] || item.values[7] || 0);
-            totalPc += pc;
-          }
-          // Support both old structure (Gr.Wt at index 8) and new structure (Gr.Wt at index 5)
-          if(!totalGrWt){
-            const grWt = parseFloat(item.values[5] || item.values[8] || 0);
-            totalGrWt += grWt;
-          }
-        });
-      }
-      
-      const itemNamesStr = itemNames.length > 0 ? itemNames.join(", ") : "—";
-      const displayItemNames = itemNames.length > 3 
-        ? itemNames.slice(0, 3).join(", ") + ` (+${itemNames.length - 3} more)`
-        : itemNamesStr;
-      
-      const tr = document.createElement("tr");
-      tr.dataset.orderId = order.id;
-      tr.innerHTML = `
-        <td><span class="badge ready">READY</span></td>
-        <td>${order.orderDate || order.date || "—"}</td>
-        <td>${order.orderNo || order.billNo || "—"}</td>
-        <td>${totalPc.toFixed(0)}</td>
-        <td title="${itemNamesStr}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${displayItemNames}</td>
-        <td>—</td>
-        <td class="right">₹${parseFloat(order.netAmount || 0).toFixed(2)}</td>
-        <td class="center">
-          <button onclick="editOrder(${order.id})">Edit</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    } catch(e) {
-      console.error("Error creating ready order row:", e);
-    }
-  });
   
-  updateFooter();
+  try{
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    console.log("📊 Total orders:", orders.length);
+    
+    tbody.innerHTML = "";
+
+    // Filter orders with READY status
+    const readyOrders = orders.filter(o => o && o.status === "READY");
+    console.log("✅ Ready orders:", readyOrders.length);
+
+    if(readyOrders.length === 0){
+      showEmptyState();
+      updateFooter(0);
+      return;
+    }
+
+    // Sort by date (newest first)
+    const sortedReadyOrders = [...readyOrders].sort((a, b) => {
+      const dateA = new Date(a.orderDate || a.timestamp || 0);
+      const dateB = new Date(b.orderDate || b.timestamp || 0);
+      return dateB - dateA;
+    });
+
+    sortedReadyOrders.forEach((order, index) => {
+      try {
+        renderOrderRow(order, index);
+      } catch(e) {
+        console.error("❌ Error rendering order row:", e, order);
+      }
+    });
+    
+    updateFooter(sortedReadyOrders.length);
+    console.log("✅ Ready orders loaded successfully");
+    
+  } catch(e){
+    console.error("❌ Error loading ready orders:", e);
+    showErrorState(e.message);
+  }
 }
 
 /* =========================
-   FOOTER UPDATE
+   RENDER ORDER ROW
 ========================= */
-function updateFooter(){
-  if(!tbody || !footer){
-    if(!initElements()) return;
+function renderOrderRow(order, index){
+  if(!order || !order.id){
+    console.warn("⚠️ Invalid order data:", order);
+    return;
   }
   
-  const allRows = tbody.querySelectorAll("tr");
-  const visibleRows = Array.from(allRows).filter(row => row.style.display !== "none");
-  const count = visibleRows.length;
-  const total = allRows.length;
+  // Calculate totals from items
+  let totalPc = order.pc || 0;
+  let totalGrWt = parseFloat(order.grWt || 0);
+  let itemNames = [];
   
-  if(count < total && total > 0){
-    footer.textContent = `Showing ${count} of ${total} ready orders`;
-  } else {
-    footer.textContent = count ? `Showing ${count} ready orders` : "No ready orders available";
+  if(order.items && Array.isArray(order.items) && order.items.length > 0){
+    order.items.forEach(item => {
+      if(!item || !item.values) return;
+      
+      // Get item name - support multiple structures
+      const itemName = item.values[1] || item.values[2] || "";
+      if(itemName && itemName.trim()) itemNames.push(itemName.trim());
+      
+      // Calculate totals if not already stored
+      if(!order.pc){
+        const pc = parseFloat(item.values[4] || item.values[7] || 0);
+        totalPc += pc;
+      }
+      if(!order.grWt){
+        const grWt = parseFloat(item.values[5] || item.values[8] || 0);
+        totalGrWt += grWt;
+      }
+    });
+  }
+  
+  // Format item names
+  const itemNamesStr = itemNames.length > 0 ? itemNames.join(", ") : "—";
+  const displayItemNames = itemNames.length > 3 
+    ? itemNames.slice(0, 3).join(", ") + ` <strong>(+${itemNames.length - 3} more)</strong>`
+    : itemNamesStr;
+  
+  // Get customer name
+  const customerName = order.customer || order.customerName || "—";
+  
+  // Create row
+  const tr = document.createElement("tr");
+  tr.dataset.orderId = order.id;
+  tr.dataset.orderNo = order.orderNo || order.billNo || "";
+  tr.dataset.customer = customerName;
+  tr.dataset.items = itemNamesStr;
+  
+  tr.innerHTML = `
+    <td><span class="badge ready">✓ READY</span></td>
+    <td>${formatDate(order.orderDate || order.date)}</td>
+    <td><strong>${order.orderNo || order.billNo || "—"}</strong></td>
+    <td>${customerName}</td>
+    <td title="${itemNamesStr}" style="max-width:250px;overflow:hidden;text-overflow:ellipsis;">${displayItemNames}</td>
+    <td class="right">${totalPc.toFixed(0)}</td>
+    <td class="right">${totalGrWt.toFixed(3)}</td>
+    <td class="right"><strong>₹${parseFloat(order.netAmount || 0).toFixed(2)}</strong></td>
+    <td class="center">
+      <button class="action-btn" onclick="editOrder(${order.id}); event.stopPropagation();">✏️ Edit</button>
+    </td>
+  `;
+  
+  // Make row clickable
+  tr.onclick = function(e){
+    if(e.target && e.target.tagName === 'BUTTON') return;
+    editOrder(order.id);
+  };
+  
+  tbody.appendChild(tr);
+}
+
+/* =========================
+   FORMAT DATE
+========================= */
+function formatDate(dateStr){
+  if(!dateStr) return "—";
+  
+  try{
+    const date = new Date(dateStr);
+    if(isNaN(date.getTime())) return dateStr;
+    
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-IN', options);
+  } catch(e){
+    return dateStr;
   }
 }
 
-/* ===============================
-   NAVIGATION HELPER
-================================ */
-function navigateToNewOrder(){
-  // Try to use loadPage if available (workspace context)
+/* =========================
+   SHOW EMPTY STATE
+========================= */
+function showEmptyState(){
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" style="border:none;">
+        <div class="empty-state">
+          <div class="empty-state-icon">📦</div>
+          <div class="empty-state-text">No Ready Orders</div>
+          <div class="empty-state-subtext">Orders marked as "READY" will appear here</div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+/* =========================
+   SHOW ERROR STATE
+========================= */
+function showErrorState(errorMsg){
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" style="border:none;">
+        <div class="empty-state">
+          <div class="empty-state-icon">⚠️</div>
+          <div class="empty-state-text">Error Loading Orders</div>
+          <div class="empty-state-subtext">${errorMsg || 'Please try refreshing'}</div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+/* =========================
+   SEARCH ORDERS
+========================= */
+function searchOrders(){
+  if(!tbody || !searchBox) return;
+  
+  const searchValue = searchBox.value.toLowerCase().trim();
+  const rows = tbody.querySelectorAll("tr");
+  
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    // Skip empty state rows
+    if(row.querySelector(".empty-state")){
+      return;
+    }
+    
+    const orderNo = (row.dataset.orderNo || "").toLowerCase();
+    const customer = (row.dataset.customer || "").toLowerCase();
+    const items = (row.dataset.items || "").toLowerCase();
+    const rowText = row.innerText.toLowerCase();
+    
+    const matches = !searchValue || 
+                    orderNo.includes(searchValue) ||
+                    customer.includes(searchValue) ||
+                    items.includes(searchValue) ||
+                    rowText.includes(searchValue);
+    
+    row.style.display = matches ? "" : "none";
+    if(matches) visibleCount++;
+  });
+  
+  updateFooter(visibleCount);
+}
+
+/* =========================
+   UPDATE FOOTER
+========================= */
+function updateFooter(count){
+  if(!footer) return;
+  
+  if(count === undefined){
+    if(!tbody) return;
+    const allRows = tbody.querySelectorAll("tr");
+    const visibleRows = Array.from(allRows).filter(row => 
+      row.style.display !== "none" && !row.querySelector(".empty-state")
+    );
+    count = visibleRows.length;
+  }
+  
+  if(count === 0){
+    footer.textContent = "No ready orders available";
+  } else {
+    footer.textContent = `Showing ${count} ready order${count === 1 ? '' : 's'}`;
+  }
+}
+
+/* =========================
+   EDIT ORDER
+========================= */
+function editOrder(orderId){
+  try {
+    console.log("✏️ Editing ready order:", orderId);
+    
+    // Verify order exists
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const order = orders.find(o => {
+      return o && (o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId));
+    });
+    
+    if(!order){
+      alert("❌ Order not found!");
+      console.error("Order not found:", orderId);
+      return;
+    }
+    
+    if(order.status !== "READY"){
+      console.warn("⚠️ Order status is not READY:", order.status);
+    }
+    
+    console.log("📝 Order found:", order);
+    
+    // Clear any existing edit state
+    localStorage.removeItem("editOrderId");
+    localStorage.removeItem("editOrderPayload");
+    localStorage.removeItem("editCustomerReadOnly");
+    localStorage.removeItem("selectedCustomerData");
+    
+    // Store order ID for ready-extra-order.html
+    localStorage.setItem("editOrderId", String(orderId));
+    
+    console.log("✅ Edit state prepared, navigating to ready-extra-order.html");
+    
+    // Navigate to ready-extra-order.html
+    navigateToReadyExtraOrder();
+    
+  } catch(e) {
+    console.error("❌ Error editing order:", e);
+    alert("Error opening order for editing: " + e.message);
+  }
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+function navigateToReadyExtraOrder(){
+  console.log("🔄 Navigating to ready-extra-order.html");
+  
+  // Try to use loadPage if available (workspace/dashboard context)
   if(typeof loadPage === 'function'){
-    loadPage("pages/new-order.html");
+    console.log("Using loadPage function");
+    loadPage("pages/ready-extra-order.html");
     return;
   }
   
   // Try parent window
   if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-    window.parent.loadPage("pages/new-order.html");
+    console.log("Using parent.loadPage");
+    window.parent.loadPage("pages/ready-extra-order.html");
     return;
   }
   
   // Try top window
   if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-    window.top.loadPage("pages/new-order.html");
+    console.log("Using top.loadPage");
+    window.top.loadPage("pages/ready-extra-order.html");
     return;
   }
   
   // Fallback: direct navigation
+  console.log("Using direct navigation");
   const currentPath = window.location.pathname;
   if(currentPath.includes('/pages/')){
-    window.location.href = "new-order.html";
+    window.location.href = "ready-extra-order.html";
   } else {
-    window.location.href = "/pages/new-order.html";
-  }
-}
-
-function editOrder(orderId){
-  try {
-    // Verify order exists
-    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-    const order = orders.find(o => {
-      // Handle both number and string ID comparisons
-      return o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId);
-    });
-    
-    if(!order){
-      alert("Order not found");
-      return;
-    }
-    
-    // Store order ID for ready extra order.html (uses editOrderId)
-    // DO NOT change the status - keep it as READY while editing
-    localStorage.setItem("editOrderId", orderId);
-    
-    // Open ready-extra-order for editing
-    if(typeof loadPage === 'function'){
-      loadPage("pages/ready-extra-order.html");
-      return;
-    }
-    
-    // Try parent window
-    if(window.parent && window.parent !== window && typeof window.parent.loadPage === 'function'){
-      window.parent.loadPage("pages/ready-extra-order.html");
-      return;
-    }
-    
-    // Try top window
-    if(window.top && window.top !== window && typeof window.top.loadPage === 'function'){
-      window.top.loadPage("pages/ready-extra-order.html");
-      return;
-    }
-    
-    // Fallback: open in new window
-    window.open("/pages/ready-extra-order.html", "ReadyExtraOrder", "width=1400,height=800");
-    
-  } catch(e) {
-    console.error("Error editing order:", e);
-    alert("Error opening order for editing");
+    window.location.href = "/pages/ready-extra-order.html";
   }
 }
 
@@ -648,95 +819,106 @@ function editOrder(orderId){
    INITIALIZE PAGE
 ========================= */
 function initReadyOrdersPage(){
-  // Wait for elements to be ready
+  console.log("🚀 Initializing Ready Orders page...");
+  
   if(!initElements()){
-    // Retry after a short delay
+    console.warn("⚠️ Elements not ready, retrying in 100ms...");
     setTimeout(initReadyOrdersPage, 100);
     return;
   }
   
   loadReadyOrders();
   ensureFunctionsGlobal();
+  
+  console.log("✅ Ready Orders page initialized");
 }
 
 /* =========================
-   INITIALIZE
+   CHECK WORKSPACE
 ========================= */
-// Check if we're in workspace context
 function isInWorkspace(){
   return !!document.querySelector(".workspace");
 }
 
+/* =========================
+   EVENT LISTENERS
+========================= */
 // Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
-    // If in workspace, wait a bit longer for content to be inserted
-    if(isInWorkspace()){
-      setTimeout(initReadyOrdersPage, 200);
-    } else {
-      initReadyOrdersPage();
-    }
+    setTimeout(initReadyOrdersPage, isInWorkspace() ? 200 : 0);
   });
 } else {
-  // DOM already ready, but might be in workspace
-  if(isInWorkspace()){
-    // In workspace, wait for content to be inserted
-    setTimeout(initReadyOrdersPage, 200);
-  } else {
-    setTimeout(initReadyOrdersPage, 50);
-  }
+  setTimeout(initReadyOrdersPage, isInWorkspace() ? 200 : 50);
 }
 
 // Listen for page refresh event from dashboard
 window.addEventListener('pageRefresh', function() {
+  console.log("📡 Page refresh event received");
   setTimeout(initReadyOrdersPage, 150);
 });
 
 // Listen for order status changes
-window.addEventListener('orderStatusChanged', function() {
+window.addEventListener('orderStatusChanged', function(e) {
+  console.log("📡 Order status changed:", e.detail);
   loadReadyOrders();
 });
 
 // Listen for order saved event
 window.addEventListener('orderSaved', function() {
+  console.log("📡 Order saved event received");
   loadReadyOrders();
 });
 
-// Listen for storage changes
+// Listen for storage changes (cross-tab updates)
 window.addEventListener('storage', function(e) {
   if(e.key === 'orders'){
+    console.log("📡 Storage changed: orders");
     loadReadyOrders();
   }
 });
 
-// Poll for changes (for same-window updates)
+// Poll for changes (same-window updates)
 let lastReadyOrderCount = 0;
 setInterval(function() {
-  if(!tbody){
-    if(!initElements()) return;
-  }
+  if(!tbody && !initElements()) return;
   
-  const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-  const readyOrders = orders.filter(o => o.status === "READY");
-  if(readyOrders.length !== lastReadyOrderCount){
-    lastReadyOrderCount = readyOrders.length;
-    loadReadyOrders();
+  try{
+    const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const readyOrders = orders.filter(o => o && o.status === "READY");
+    
+    if(readyOrders.length !== lastReadyOrderCount){
+      console.log(`🔄 Ready orders count changed: ${lastReadyOrderCount} → ${readyOrders.length}`);
+      lastReadyOrderCount = readyOrders.length;
+      loadReadyOrders();
+    }
+  } catch(e){
+    console.error("❌ Error in polling:", e);
   }
-}, 1000);
+}, 2000);
 
 /* =========================
-   ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
+   ENSURE GLOBAL FUNCTIONS
 ========================= */
 function ensureFunctionsGlobal(){
-  window.loadReadyOrders = loadReadyOrders;
-  window.editOrder = editOrder;
-  window.navigateToNewOrder = navigateToNewOrder;
-  window.updateFooter = updateFooter;
-  window.initReadyOrdersPage = initReadyOrdersPage;
-  window.initElements = initElements;
+  Object.assign(window, {
+    loadReadyOrders,
+    editOrder,
+    navigateToReadyExtraOrder,
+    searchOrders,
+    updateFooter,
+    initReadyOrdersPage,
+    initElements,
+    renderOrderRow,
+    formatDate,
+    showEmptyState,
+    showErrorState
+  });
 }
 
 ensureFunctionsGlobal();
+
+console.log("✅ Ready Orders script loaded");
 </script>
 
 </body>
