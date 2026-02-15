@@ -1085,29 +1085,6 @@
     </div>
   </div>
 
-  <!-- ORDER DETAILS POPUP -->
-  <div id="orderPopup" class="popup-bg" onclick="if(event.target===this) closePopup()">
-    <div class="popup-box">
-      <h3>Order Details</h3>
-      <div class="popup-row">
-        <label>Days to Delivery</label>
-        <input type="number" id="popupDays" min="1" placeholder="Enter days">
-      </div>
-      <div class="popup-row">
-        <label>Delivery Date</label>
-        <input type="date" id="popupDelivery">
-      </div>
-      <div class="popup-row">
-        <label>Sample Details</label>
-        <textarea id="popupSample" placeholder="Enter sample details..."></textarea>
-      </div>
-      <div class="popup-actions">
-        <button onclick="saveOrderPopup()">Save Details</button>
-        <button onclick="closePopup()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <!-- PAYMENT POPUP -->
   <div id="paymentPopup" class="popup-bg" onclick="if(event.target===this) closePaymentPopup()">
     <div class="popup-box">
@@ -1470,15 +1447,7 @@
     }
 
     function handleTypeChange(select) {
-      const row = select.closest('tr');
       const type = select.value;
-
-      // Show order popup for certain types
-      if (['Order', 'Repair'].includes(type)) {
-        AppState.activeRow = row;
-        openOrderPopup();
-      }
-
       // Recalculate totals (Purchase subtracts from total)
       updateInfoPanel();
       scheduleAutoSave();
@@ -1570,69 +1539,6 @@
       return payments
         .filter(p => p.billNo === billNo)
         .reduce((sum, p) => sum + safeNumber(p.amount), 0);
-    }
-
-    // =====================================================
-    // ORDER POPUP
-    // =====================================================
-
-    function openOrderPopup() {
-      const popup = document.getElementById('orderPopup');
-      const deliveryInput = document.getElementById('popupDelivery');
-      const sampleInput = document.getElementById('popupSample');
-      const daysInput = document.getElementById('popupDays');
-
-      if (!popup) return;
-
-      // Pre-fill with existing data
-      if (AppState.activeRow) {
-        deliveryInput.value = AppState.activeRow.dataset.delivery || '';
-        sampleInput.value = AppState.activeRow.dataset.sample || '';
-      } else {
-        deliveryInput.value = '';
-        sampleInput.value = '';
-      }
-
-      daysInput.value = '';
-      popup.style.display = 'flex';
-    }
-
-    function closePopup() {
-      const popup = document.getElementById('orderPopup');
-      if (popup) popup.style.display = 'none';
-      AppState.activeRow = null;
-    }
-
-    function calculateDeliveryDate() {
-      const daysInput = document.getElementById('popupDays');
-      const deliveryInput = document.getElementById('popupDelivery');
-      const orderDate = AppState.elements.orderDate;
-
-      const days = parseInt(daysInput.value);
-      if (days > 0 && orderDate?.value) {
-        const date = new Date(orderDate.value);
-        date.setDate(date.getDate() + days);
-        deliveryInput.value = date.toISOString().split('T')[0];
-      }
-    }
-
-    function saveOrderPopup() {
-      const deliveryInput = document.getElementById('popupDelivery');
-      const sampleInput = document.getElementById('popupSample');
-
-      if (!deliveryInput.value) {
-        showError('Please select a delivery date');
-        return;
-      }
-
-      if (AppState.activeRow) {
-        AppState.activeRow.dataset.delivery = deliveryInput.value;
-        AppState.activeRow.dataset.sample = sampleInput.value;
-        AppState.activeRow.dataset.orderFilled = '1';
-      }
-
-      closePopup();
-      scheduleAutoSave();
     }
 
     // =====================================================
@@ -1891,8 +1797,6 @@
 
               setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
             });
-          } else {
-            addRow();
           }
         }
 
@@ -2274,8 +2178,6 @@
             if (rowData.sample) tr.dataset.sample = rowData.sample;
             setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
           });
-        } else {
-          addRow();
         }
 
         updateInfoPanel();
@@ -2485,8 +2387,6 @@
             // Recalculate row
             setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
           });
-        } else {
-          addRow();
         }
 
         // Update panels
@@ -2524,10 +2424,9 @@
 
       clearCustomerFields();
 
-      // Clear table
+      // Clear table (no initial row; user clicks "+ Add Row" to add)
       if (AppState.elements.itemBody) {
         AppState.elements.itemBody.innerHTML = '';
-        addRow();
       }
 
       // Clear auto-save
@@ -2701,7 +2600,6 @@
         if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
         if (AppState.elements.itemBody) {
           AppState.elements.itemBody.innerHTML = '';
-          addRow();
         }
         AppState.editMode = false;
         AppState.editOrderId = null;
@@ -2722,6 +2620,9 @@
           attachInitListeners();
           return;
         }
+
+        // Start with no rows (no extra row for any type); rows added only by restore or edit load
+        if (AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
 
         // Set initial date
         if (AppState.elements.orderDate && !AppState.elements.orderDate.value) {
@@ -2794,10 +2695,6 @@
       window.saveRatebookEntry = saveRatebookEntry;
       window.applyRateToRow = applyRateToRow;
       window.deleteRate = deleteRate;
-      window.openOrderPopup = openOrderPopup;
-      window.closePopup = closePopup;
-      window.calculateDeliveryDate = calculateDeliveryDate;
-      window.saveOrderPopup = saveOrderPopup;
       window.saveOrder = saveOrder;
       window.saveAndNew = saveAndNew;
       window.resetOrder = resetOrder;

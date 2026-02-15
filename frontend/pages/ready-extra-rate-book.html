@@ -318,6 +318,10 @@
                 </div>
             </div>
 
+            <!-- Applied formula: (Cur.Rate - Rate Book) × [F3] Adj Wt = Diff Amount -->
+            <div class="diff-formula-note" style="padding:8px 12px; margin-bottom:8px; background:var(--primary-soft); border-radius:var(--radius); font-size:13px; color:var(--text);">
+                <strong>Applied formula:</strong> (Cur.Rate − Rate Book) × [F3] Adj Wt = Diff Amount
+            </div>
             <!-- Table -->
             <div class="table-container">
                 <table class="history-table">
@@ -338,7 +342,7 @@
                             <th style="width:100px;">Cur Stamp</th>
                             <th class="text-right" style="width:100px;">Cur Wt</th>
                             <th class="text-right" style="width:100px;">Cur Rate</th>
-                            <th class="text-right" style="width:110px;">Amt Diff</th>
+                            <th class="text-right" style="width:110px;" title="(Cur.Rate − Rate Book) × [F3] Adj Wt = Diff Amount">Amt Diff</th>
                             <th style="width:130px;">Del Date</th>
                             <th style="width:150px;">Narration</th>
                             <th style="width:80px; text-align:center;">Action</th>
@@ -534,15 +538,13 @@
             } catch (e) { console.error(e); }
         };
 
-        /* Helper to calc diff value string */
+        /* Diff Amount = (Cur.Rate - Rate Book) × [F3] Adj Wt */
         function calculateDiff(entry, balWt, bookedRate) {
             const curRate = safeNumber(entry.curRate, 0);
             const adjWt = safeNumber(entry.adjWt, 0);
-
-            // NEW Formula: (Current Rate - Rate Book Rate) × Adj Wt
-            const rateDiff = curRate - bookedRate;
+            const rateBook = safeNumber(bookedRate, 0);
+            const rateDiff = curRate - rateBook;
             const diff = rateDiff * adjWt;
-
             return diff.toFixed(2);
         }
 
@@ -566,8 +568,7 @@
 
             const adjWt = parseFloat(adjWtInput.value) || 0;
             const curRate = parseFloat(curRateInput.value) || 0;
-
-            // NEW Formula: (Current Rate - Rate Book Rate) × Adj Wt
+            // (Cur.Rate - Rate Book) × [F3] Adj Wt = Diff Amount
             const rateDiff = curRate - bookedRate;
             const diff = rateDiff * adjWt;
 
@@ -728,6 +729,7 @@
                 return;
             }
 
+            const existingRates = JSON.parse(localStorage.getItem("rateBook") || "[]");
             const rates = [];
             rows.forEach((tr) => {
                 const id = parseInt(tr.dataset.id, 10);
@@ -738,7 +740,8 @@
                     const v = input.value.trim();
                     return num ? (parseFloat(v) || 0) : v;
                 };
-                rates.push({
+                const oldEntry = existingRates.find(e => Number(e.id) === Number(id));
+                const entry = {
                     id,
                     date: getVal(1, false),
                     type: (cells[2] && cells[2].querySelector("select")) ? cells[2].querySelector("select").value : "Order",
@@ -754,11 +757,24 @@
                     curRate: getVal(12, true),
                     delDate: getVal(14, false),
                     curNarration: getVal(15, false)
-                });
+                };
+                if (oldEntry && oldEntry.billNo) entry.billNo = oldEntry.billNo;
+                rates.push(entry);
             });
 
             try {
                 localStorage.setItem("rateBook", JSON.stringify(rates));
+                const ratebookBillNo = localStorage.getItem("ratebookBillNo") || "";
+                const forBill = rates.find(r => r.billNo === ratebookBillNo);
+                if (ratebookBillNo && forBill) {
+                    const weight = Number(forBill.weight) || 0;
+                    const rateBookVal = Number(forBill.rate) || 0;
+                    const curRate = Number(forBill.curRate) || 0;
+                    const adjWt = Number(forBill.adjWt) || 0;
+                    const diffAmount = (curRate - rateBookVal) * adjWt;
+                    const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${Math.round(diffAmount)}`;
+                    localStorage.setItem("rateBookDiffSummary_" + ratebookBillNo, line);
+                }
                 showSaveFeedback("Saved");
                 try {
                     window.dispatchEvent(new CustomEvent("ratebookUpdated"));

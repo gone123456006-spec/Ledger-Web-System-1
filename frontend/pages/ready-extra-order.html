@@ -1016,6 +1016,9 @@
                 <span class="summary-label">Paid:</span>
                 <span class="summary-value paid" id="panelPaid">₹ 0.00</span>
               </div>
+              <div class="summary-item" id="panelRateDiffWrap" style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
+                <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
+              </div>
               <div class="summary-item">
                 <span class="summary-label">Balance:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
@@ -1815,9 +1818,9 @@
 <td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
 <td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
-<td><input type="text" placeholder="—" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
-<td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td><input type="text" placeholder="Ready metal" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)"></td>
+<td><input type="number" step="0.01" placeholder="0" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Neg: subtracted from Ready Weight"></td>
+<td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Auto: Ready metal minus Neg"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
 <td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
@@ -1962,7 +1965,7 @@
           if (r.cells[12] && r.cells[12].children[0]) { // Was 13
             r.cells[12].children[0].value = total.toFixed(2);
           }
-          // Keep second Total in sync: same as first Total, then add ready portion via calcReadyTotal
+          // Update second Total = Ready weight × Rate × Making
           syncSecondTotalFromRow(r);
         } else {
           // Clear total if no valid calculation
@@ -1984,17 +1987,33 @@
       }, 100);
     }
 
-    /* Sync second Total = first Total + (Ready Weight * Rate + Making - Neg); call from calc() or calcReadyTotal() */
+    /* Ready Weight = Ready metal - Neg; call when Ready metal or Neg changes */
+    function syncReadyWeight(el) {
+      if (!el || !el.closest) return;
+      const r = el.closest("tr");
+      if (!r || !r.cells || !r.cells[13] || !r.cells[14] || !r.cells[15]) return;
+      try {
+        const readyMetal = parseFloat(r.cells[13].children[0].value) || 0;
+        const neg = parseFloat(r.cells[14].children[0].value) || 0;
+        const readyWeightInput = r.cells[15].children[0];
+        if (readyWeightInput) {
+          readyWeightInput.value = (readyMetal - neg).toFixed(3);
+        }
+        syncSecondTotalFromRow(r);
+        setTimeout(() => updateInfoPanel(), 100);
+      } catch (e) {
+        console.error("Error in syncReadyWeight:", e);
+      }
+    }
+
+    /* Second Total = Ready weight × Rate × Making */
     function syncSecondTotalFromRow(r) {
       if (!r || !r.cells) return;
       try {
-        const firstTotal = parseFloat(r.cells[12].children[0].value) || 0;
         const readyWeight = parseFloat(r.cells[15].children[0].value) || 0;
         const rate = parseFloat(r.cells[16].children[0].value) || 0;
         const making = parseFloat(r.cells[17].children[0].value) || 0;
-        const neg = parseFloat(r.cells[14].children[0].value) || 0;
-        const readyPart = (readyWeight * rate) + making - neg;
-        const secondTotal = firstTotal + readyPart;
+        const secondTotal = readyWeight * rate * making;
         if (r.cells[18] && r.cells[18].children[0]) {
           r.cells[18].children[0].value = secondTotal.toFixed(2);
         }
@@ -2003,7 +2022,7 @@
       }
     }
 
-    /* CALCULATE SECOND TOTAL = first Total + (Ready Weight * Rate + Making - Neg) */
+    /* Update second Total: Ready weight × Rate × Making */
     function calcReadyTotal(el) {
       if (!el || !el.closest) return;
       const r = el.closest("tr");
@@ -4059,6 +4078,19 @@
       if (paidEl) paidEl.textContent = `₹ ${paid.toFixed(2)}`;
       if (balanceEl) balanceEl.textContent = `₹ ${balance.toFixed(2)}`;
 
+      // Rate Difference: only when saved for this bill — display "Rate Difference : 2.500 @(12000.00 - 13000.00) = 3000"
+      const rateDiffWrap = document.getElementById("panelRateDiffWrap");
+      const rateDiffEl = document.getElementById("panelRateDiffSummary");
+      const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
+      if (rateDiffWrap && rateDiffEl) {
+        if (rateDiffStored) {
+          rateDiffWrap.style.display = "";
+          rateDiffEl.textContent = "Rate Difference : " + rateDiffStored;
+        } else {
+          rateDiffWrap.style.display = "none";
+        }
+      }
+
       // Get payments for this bill
       const payments = JSON.parse(localStorage.getItem("payments") || "[]");
       const billPayments = payments.filter(p => p.billNo === billNo.value);
@@ -4347,6 +4379,22 @@
 
         localStorage.setItem("rateBook", JSON.stringify(rates));
 
+        const currentBillNo = (billNo && billNo.value) ? billNo.value : "";
+        if (currentBillNo && rows.length > 0) {
+          const firstRow = rows[0];
+          const rateId = firstRow.getAttribute("data-rate-id");
+          const rate = rateId ? rates.find(r => String(r.id) === String(rateId)) : rates[0];
+          if (rate) {
+            const weight = Number(rate.weight) || 0;
+            const rateBookVal = Number(rate.rate) || 0;
+            const curRate = Number(rate.curRate) || 0;
+            const adjWt = Number(rate.adjWt) || 0;
+            const diffAmount = (curRate - rateBookVal) * adjWt;
+            const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${Math.round(diffAmount)}`;
+            localStorage.setItem("rateBookDiffSummary_" + currentBillNo, line);
+          }
+        }
+
         const btn = document.getElementById("ratebookDetailsSaveBtn");
         if (btn) {
           const origText = btn.textContent;
@@ -4373,7 +4421,7 @@
     // Listen for ratebook updates from other windows/popups
     window.addEventListener('ratebookUpdated', function () {
       updateRatebookPanel();
-      // Also maybe calculate bill totals if rates affect them?
+      if (typeof updatePaymentPanel === 'function') updatePaymentPanel();
     });
 
     function updateReceiptPanel() {
@@ -4568,6 +4616,8 @@
       window.loadCustomers = loadCustomers;
       window.addRow = addRow;
       window.calc = calc;
+      window.syncReadyWeight = syncReadyWeight;
+      window.calcReadyTotal = calcReadyTotal;
       window.saveOrder = saveOrder;
       window.saveAndNew = saveAndNew;
       window.resetOrder = resetOrder;
