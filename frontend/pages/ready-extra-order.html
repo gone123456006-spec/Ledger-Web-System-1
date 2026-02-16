@@ -249,6 +249,21 @@
       font-size: 14px;
     }
 
+    /* Order row: Stamp, Remarks, Design, Size, Pc, Ut. Wt., Est. Total Wt., Rate, Lbr.%, Total – non-editable */
+    td input.order-detail-readonly {
+      cursor: not-allowed;
+      background: #f5f5f7;
+      border-color: #e2e8f0;
+    }
+    /* Purchase row: Remarks, Design, Size not editable – no text cursor, no colour/border */
+    td input.purchase-field-disabled {
+      cursor: not-allowed;
+      pointer-events: none;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
     /* Order Details table: no scroll, fit in container */
     .order-details-table-wrap #itemTable {
       width: 100%;
@@ -908,7 +923,7 @@
         <div class="box-title">Bill Information</div>
 
         <div class="row">
-          <label>Bill No</label>
+          <label>Order No</label>
           <input id="billNo">
         </div>
 
@@ -941,7 +956,7 @@
           <thead>
             <tr>
               <th>Type</th>
-              <th>Bill No.</th>
+              <th>Order No.</th>
               <th>Item Name</th>
               <th>Stamp</th>
               <th>Remarks</th>
@@ -1057,7 +1072,7 @@
       <div class="invoice-header-left">
         <p style="margin:5px 0;"><strong>Customer:</strong> <span id="iCustomer"></span></p>
         <p style="margin:5px 0;"><strong>Order Date:</strong> <span id="iOrderDate"></span></p>
-        <p style="margin:5px 0;"><strong>Bill No:</strong> <span id="iBillNo"></span></p>
+        <p style="margin:5px 0;"><strong>Order No:</strong> <span id="iBillNo"></span></p>
       </div>
       <div class="invoice-header-right" style="text-align:right;">
         <p style="margin:5px 0;"><strong>Invoice Date:</strong> <span id="iInvoiceDate"></span></p>
@@ -1195,7 +1210,7 @@
         <thead>
           <tr>
             <th style="width:10%;">Date</th>
-            <th style="width:10%;">Bill No</th>
+            <th style="width:10%;">Order No</th>
             <th style="width:10%;">Amount</th>
             <th style="width:10%;">Mode</th>
             <th style="width:10%;">Type</th>
@@ -1461,10 +1476,13 @@
         return;
       }
 
+      // Signal that we're on ready-extra so New Order page can start fresh (no restore of new-order state)
+      try { localStorage.setItem('lastOrderPage', 'ready-extra'); } catch (e) {}
+
       // Initialize date and bill number
       // IMPORTANT: If we are returning from Ratebook/Receipt (workspace navigation),
       // do NOT generate new Bill No / Date — restoreOrderState will restore them.
-      const savedStateAtInit = localStorage.getItem("newOrderState");
+      const savedStateAtInit = localStorage.getItem("readyExtraOrderState");
       // If saved state exists (Ratebook/Receipt flow), do not generate new values.
       if (!savedStateAtInit) {
         if (orderDate && !orderDate.value) {
@@ -1503,8 +1521,8 @@
           loadOrderForEdit(editOrderId);
         }, 200);
       } else {
-        // If we have a saved state (Ratebook/Receipt flow), restore it.
-        const savedState = localStorage.getItem("newOrderState");
+        // If we have a saved state (Ratebook/Receipt flow), restore it. Use readyExtraOrderState so new-order data never shows here.
+        const savedState = localStorage.getItem("readyExtraOrderState");
         if (savedState) {
           setTimeout(() => {
             restoreOrderState();
@@ -1626,7 +1644,7 @@
             }, 100);
           }
           // If ratebook was closed and we have saved state, restore it
-          if (e.key === 'newOrderState' && e.newValue) {
+          if (e.key === 'readyExtraOrderState' && e.newValue) {
             setTimeout(() => {
               restoreOrderState();
             }, 200);
@@ -1647,7 +1665,7 @@
               updateReceiptPanel();
             }, 200);
             // Check if we need to restore state
-            const savedState = localStorage.getItem("newOrderState");
+            const savedState = localStorage.getItem("readyExtraOrderState");
             if (savedState) {
               setTimeout(() => {
                 restoreOrderState();
@@ -1663,7 +1681,7 @@
             updateInfoPanel();
             updateReceiptPanel();
           }, 100);
-          const savedState = localStorage.getItem("newOrderState");
+          const savedState = localStorage.getItem("readyExtraOrderState");
           if (savedState) {
             setTimeout(() => {
               restoreOrderState();
@@ -1812,16 +1830,16 @@
 </td>
 <td><input readonly></td>
 <td><input placeholder="Item Name"></td>
-<td><input placeholder="Stamp"></td>
-<td><input placeholder="Remarks"></td>
-<td><input placeholder="Design"></td>
-<td><input placeholder="Size"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calc(this)" onchange="calc(this)"></td>
-<td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
+<td><input readonly placeholder="Stamp" class="order-detail-readonly"></td>
+<td><input readonly placeholder="Remarks" class="order-detail-readonly"></td>
+<td><input readonly placeholder="Design" class="order-detail-readonly"></td>
+<td><input readonly placeholder="Size" class="order-detail-readonly"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
+<td class="total"><input type="number" step="0.01" readonly placeholder="0.00" class="order-detail-readonly"></td>
 <td><input type="text" placeholder="Ready metal" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Neg: subtracted from Ready Weight"></td>
 <td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Auto: Ready metal minus Neg"></td>
@@ -1856,6 +1874,31 @@
       }, 10);
     }
 
+    var _optionalPlaceholders = ["Remarks", "Design", "Size"];
+
+    function setPurchaseOptionalFieldsState(row, isPurchase) {
+      if (!row) return;
+      [4, 5, 6].forEach(function (cellIdx) {
+        var cell = row.cells[cellIdx];
+        if (!cell) return;
+        var input = cell.querySelector("input");
+        if (!input) return;
+        var placeholderName = _optionalPlaceholders[cellIdx - 4];
+        if (isPurchase) {
+          input.value = "";
+          input.placeholder = "";
+          input.setAttribute("readonly", "readonly");
+          input.classList.add("purchase-field-disabled");
+          input.tabIndex = -1;
+        } else {
+          input.removeAttribute("readonly");
+          input.classList.remove("purchase-field-disabled");
+          input.tabIndex = 0;
+          input.placeholder = placeholderName || "";
+        }
+      });
+    }
+
     /* TYPE → POPUP */
     function handleTypeChange(sel) {
       if (!orderPopup || !popupDelivery || !popupSample || !popupDays) {
@@ -1863,13 +1906,13 @@
       }
 
       const row = sel.closest("tr");
-      // Trigger for Order, Repair, Sale, Purchase
       const allowedTypes = ["Order", "Repair", "Sale", "Purchase"];
 
-      if (allowedTypes.includes(sel.value)) {
+      setPurchaseOptionalFieldsState(row, sel.value === "Purchase");
+
+      if (allowedTypes.includes(sel.value) && sel.value === "Order") {
         activeRow = row;
 
-        // Pre-fill with existing values if available
         if (row.dataset.delivery) {
           popupDelivery.value = row.dataset.delivery;
         } else {
@@ -1887,7 +1930,6 @@
         if (orderPopup) orderPopup.style.display = "flex";
       }
 
-      // Update totals immediately when type changes (to handle Purchase subtraction)
       updateInfoPanel();
     }
 
@@ -2116,7 +2158,7 @@
       }
 
       if (!custName.value) { alert("Select customer"); return; }
-      if (!billNo.value) { alert("Bill number is required"); return; }
+      if (!billNo.value) { alert("Order number is required"); return; }
 
       const billTotal = calculateBillTotal();
       const rows = [...itemBody.querySelectorAll("tr")].map(tr => {
@@ -2595,7 +2637,7 @@
       localStorage.removeItem("editCustomerReadOnly");
 
       // Clear saved state that might interfere
-      localStorage.removeItem("newOrderState");
+      localStorage.removeItem("readyExtraOrderState");
       localStorage.removeItem("ratebookOpened");
       localStorage.removeItem("receiptOpened");
 
@@ -2709,7 +2751,7 @@
       // Clear stale return-state flags that can overwrite edit data
       localStorage.removeItem("ratebookOpened");
       localStorage.removeItem("receiptOpened");
-      localStorage.removeItem("newOrderState");
+      localStorage.removeItem("readyExtraOrderState");
 
       // Clear existing rows
       if (itemBody) itemBody.innerHTML = "";
@@ -2743,6 +2785,13 @@
             }
           }, 10);
         });
+
+        if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+          itemBody.querySelectorAll("tr").forEach(function (tr) {
+            var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
+            if (typeSel && typeSel.value === "Purchase") setPurchaseOptionalFieldsState(tr, true);
+          });
+        }
       } else {
         addRow();
       }
@@ -2821,6 +2870,13 @@
           }
         }, 10);
       });
+
+      if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+        itemBody.querySelectorAll("tr").forEach(function (tr) {
+          var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
+          if (typeSel && typeSel.value === "Purchase") setPurchaseOptionalFieldsState(tr, true);
+        });
+      }
     }
 
     /* INVOICE */
@@ -3351,7 +3407,7 @@
       }
 
       if (!custName.value) { alert("Select customer first"); return; }
-      if (!billNo.value) { alert("Bill number is required"); return; }
+      if (!billNo.value) { alert("Order number is required"); return; }
 
       // Calculate and show bill total
       const total = calculateBillTotal();
@@ -3451,7 +3507,7 @@
       }
 
       if (!billNo.value) {
-        alert("Bill number is required");
+        alert("Order number is required");
         return;
       }
 
@@ -3512,14 +3568,14 @@
       }
 
       if (!billNo.value) {
-        alert("Bill number is required");
+        alert("Order number is required");
         return;
       }
 
       // Return target for Receipt → back to this page
       localStorage.setItem("receiptReturnTarget", "pages/new-order.html");
       // Force restore even if flags get cleared elsewhere
-      localStorage.setItem("newOrderForceRestore", "true");
+      localStorage.setItem("readyExtraForceRestore", "true");
 
       // Save current new-order page state before opening receipt
       // This allows us to restore it when receipt closes
@@ -3580,7 +3636,7 @@
         localStorage.setItem("ratebookTargetRowIndex", "-1");
       }
       // Force restore even if flags get cleared elsewhere
-      localStorage.setItem("newOrderForceRestore", "true");
+      localStorage.setItem("readyExtraForceRestore", "true");
 
       // Save current new-order page state before opening ratebook
       // This allows us to restore it when ratebook closes
@@ -3631,7 +3687,7 @@
           });
         }
 
-        localStorage.setItem("newOrderState", JSON.stringify(orderState));
+        localStorage.setItem("readyExtraOrderState", JSON.stringify(orderState));
       } catch (e) {
         console.error("Error saving order state:", e);
       }
@@ -3648,7 +3704,7 @@
       }
 
       try {
-        const savedState = localStorage.getItem("newOrderState");
+        const savedState = localStorage.getItem("readyExtraOrderState");
         if (!savedState) {
           // No saved state, but check if we have existing data - preserve it
           if (itemBody && itemBody.querySelectorAll("tr").length === 0) {
@@ -3666,7 +3722,7 @@
         setTimeout(() => {
           // If we opened Ratebook/Receipt, we MUST restore exactly (overwriting generated fields)
           const forceRestore =
-            localStorage.getItem("newOrderForceRestore") === "true" ||
+            localStorage.getItem("readyExtraForceRestore") === "true" ||
             localStorage.getItem("ratebookOpened") === "true" ||
             localStorage.getItem("receiptOpened") === "true";
 
@@ -3719,16 +3775,23 @@
                   }
                 }, 10);
               });
+
+              if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+                itemBody.querySelectorAll("tr").forEach(function (tr) {
+                  var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
+                  if (typeSel && typeSel.value === "Purchase") setPurchaseOptionalFieldsState(tr, true);
+                });
+              }
             } else {
               // Ensure at least one row
               addRow();
             }
 
             // Clear flags/state now that we restored
-            localStorage.removeItem("newOrderState");
+            localStorage.removeItem("readyExtraOrderState");
             localStorage.removeItem("ratebookOpened");
             localStorage.removeItem("receiptOpened");
-            localStorage.removeItem("newOrderForceRestore");
+            localStorage.removeItem("readyExtraForceRestore");
 
             // Refresh panels (paid amount depends on billNo)
             setTimeout(() => {
@@ -3866,7 +3929,7 @@
           }
 
           // Clear saved state after restoring (or deciding not to restore)
-          localStorage.removeItem("newOrderState");
+          localStorage.removeItem("readyExtraOrderState");
           // Clear return flags as well (prevents repeated restore attempts)
           localStorage.removeItem("ratebookOpened");
           localStorage.removeItem("receiptOpened");
@@ -3878,7 +3941,7 @@
       } catch (e) {
         console.error("Error restoring order state:", e);
         // Clear saved state on error, but preserve existing data
-        localStorage.removeItem("newOrderState");
+        localStorage.removeItem("readyExtraOrderState");
         // Make sure we have at least one row
         if (itemBody && itemBody.querySelectorAll("tr").length === 0) {
           addRow();
@@ -4189,7 +4252,7 @@
 
     function addRatebookRow() {
       if (!billNo.value) {
-        alert("Bill number is required to add a row");
+        alert("Order number is required to add a row");
         return;
       }
 
@@ -4672,17 +4735,27 @@
     }
 
     function closeDashboard() {
-      // Reset form data before closing
-      if (typeof resetOrder === 'function') {
-        resetOrder(true);
-      }
+      // Completely clear all order state so New Order never sees Ready Order data or extra rows
+      try {
+        localStorage.removeItem('readyExtraOrderState');
+        localStorage.removeItem('readyExtraForceRestore');
+        localStorage.removeItem('ratebookOpened');
+        localStorage.removeItem('receiptOpened');
+        localStorage.removeItem('orderAutoSave');
+        localStorage.removeItem('newOrderState');
+        localStorage.removeItem('editOrderId');
+        localStorage.removeItem('editOrderPayload');
+        localStorage.removeItem('editCustomerReadOnly');
+        localStorage.removeItem('returnToOrders');
+        localStorage.removeItem('selectedCustomerData');
+        localStorage.setItem('lastOrderPage', 'ready-extra');
+      } catch (e) {}
 
       if (typeof loadPage === 'function') {
         loadPage('dashboard.html');
       } else if (window.parent && typeof window.parent.loadPage === 'function') {
         window.parent.loadPage('dashboard.html');
       } else {
-        // Fallback to index if no loadPage system
         window.location.href = '../index.html';
       }
     }

@@ -329,6 +329,15 @@
       border-color: var(--danger);
     }
 
+    /* Purchase row: Remarks, Design, Size not editable – no text cursor, no colour/border */
+    td input.purchase-field-disabled {
+      cursor: not-allowed;
+      pointer-events: none;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
     /* =====================
    ACTION BUTTONS
 ===================== */
@@ -919,7 +928,7 @@
         <div class="box-title">Bill Information</div>
 
         <div class="row">
-          <label>Bill No *</label>
+          <label>Order No *</label>
           <input id="billNo" required>
         </div>
 
@@ -950,7 +959,7 @@
           <thead>
             <tr>
               <th style="min-width: 100px;">Type</th>
-              <th>Bill No.</th>
+              <th>Order No.</th>
               <th>Item Name</th>
               <th>Stamp</th>
               <th>Remarks</th>
@@ -1050,7 +1059,7 @@
       <div class="invoice-header-left">
         <p><strong>Customer:</strong> <span id="iCustomer"></span></p>
         <p><strong>Order Date:</strong> <span id="iOrderDate"></span></p>
-        <p><strong>Bill No:</strong> <span id="iBillNo"></span></p>
+        <p><strong>Order No:</strong> <span id="iBillNo"></span></p>
       </div>
       <div class="invoice-header-right" style="text-align:right;">
         <p><strong>Invoice Date:</strong> <span id="iInvoiceDate"></span></p>
@@ -1159,6 +1168,29 @@
     </div>
   </div>
 
+  <!-- ORDER DETAILS POPUP (when Type = Order) -->
+  <div id="orderDetailsPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this) closeOrderDetailsPopup()">
+    <div class="popup-box" style="max-width: 420px;">
+      <h3>Order Details</h3>
+      <div class="popup-row">
+        <label>Days to Delivery</label>
+        <input type="number" id="orderDetailsDays" min="0" placeholder="0" style="width:100px;" oninput="calculateOrderDetailsDeliveryDate()">
+      </div>
+      <div class="popup-row">
+        <label>Delivery Date</label>
+        <input type="date" id="orderDetailsDeliveryDate">
+      </div>
+      <div class="popup-row">
+        <label>Sample Details</label>
+        <textarea id="orderDetailsSample" placeholder="Sample details..." rows="2"></textarea>
+      </div>
+      <div class="popup-actions">
+        <button onclick="saveOrderDetailsPopup()">Save</button>
+        <button onclick="closeOrderDetailsPopup()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // =====================================================
     // ENHANCED GST ORDER APPLICATION
@@ -1179,7 +1211,7 @@
     // =====================================================
 
     function showError(message) {
-      const errorEl = document.getElementById('errorMessage');
+      const errorEl = getSearchRoot().querySelector('#errorMessage');
       if (errorEl) {
         errorEl.textContent = message;
         errorEl.classList.add('show');
@@ -1190,14 +1222,14 @@
     }
 
     function showLoading(show = true) {
-      const loadingEl = document.getElementById('loadingOverlay');
+      const loadingEl = getSearchRoot().querySelector('#loadingOverlay');
       if (loadingEl) {
         loadingEl.classList.toggle('show', show);
       }
     }
 
     function showSaveIndicator() {
-      const indicator = document.getElementById('saveIndicator');
+      const indicator = getSearchRoot().querySelector('.save-indicator');
       if (indicator) {
         indicator.classList.add('show');
         setTimeout(() => indicator.classList.remove('show'), 2000);
@@ -1226,9 +1258,13 @@
     // ELEMENT INITIALIZATION
     // =====================================================
 
+    function getSearchRoot() {
+      return document.querySelector('.workspace') || document;
+    }
+
     function initElements() {
       const els = AppState.elements;
-      const searchRoot = document.querySelector('.workspace') || document;
+      const searchRoot = getSearchRoot();
 
       // Customer fields
       els.custName = searchRoot.querySelector('#custName');
@@ -1375,10 +1411,11 @@
       tr.innerHTML = `
         <td>
           <select onchange="handleTypeChange(this)">
-            <option>Order</option>
-            <option>Repair</option>
-            <option>Sale</option>
-            <option>Purchase</option>
+            <option value="" selected>-- Select --</option>
+            <option value="Order">Order</option>
+            <option value="Repair">Repair</option>
+            <option value="Sale">Sale</option>
+            <option value="Purchase">Purchase</option>
           </select>
         </td>
         <td><input readonly value="${AppState.elements.billNo?.value || ''}"></td>
@@ -1448,9 +1485,103 @@
       }
     }
 
+    let _orderDetailsRow = null;
+
+    var _optionalPlaceholders = ['Remarks', 'Design', 'Size'];
+
+    function setPurchaseOptionalFieldsState(row, isPurchase) {
+      if (!row) return;
+      [4, 5, 6].forEach(function (cellIdx) {
+        var cell = row.cells[cellIdx];
+        if (!cell) return;
+        var input = cell.querySelector('input');
+        if (!input) return;
+        var placeholderName = _optionalPlaceholders[cellIdx - 4];
+        if (isPurchase) {
+          input.value = '';
+          input.placeholder = '';
+          input.setAttribute('readonly', 'readonly');
+          input.classList.add('purchase-field-disabled');
+          input.tabIndex = -1;
+        } else {
+          input.removeAttribute('readonly');
+          input.classList.remove('purchase-field-disabled');
+          input.tabIndex = 0;
+          input.placeholder = placeholderName || '';
+        }
+      });
+    }
+
     function handleTypeChange(select) {
       const type = select.value;
-      // Recalculate totals (Purchase subtracts from total)
+      const row = select.closest('tr');
+      if (type === 'Order') {
+        openOrderDetailsPopup(select);
+      }
+      if (row) {
+        setPurchaseOptionalFieldsState(row, type === 'Purchase');
+      }
+      updateInfoPanel();
+      scheduleAutoSave();
+    }
+
+    function openOrderDetailsPopup(select) {
+      const row = select ? select.closest('tr') : null;
+      if (!row) return;
+      _orderDetailsRow = row;
+      const popup = document.getElementById('orderDetailsPopup');
+      if (!popup) return;
+      const daysEl = document.getElementById('orderDetailsDays');
+      const dateEl = document.getElementById('orderDetailsDeliveryDate');
+      const sampleEl = document.getElementById('orderDetailsSample');
+      if (daysEl) daysEl.value = row.dataset.daysToDelivery || '';
+      if (dateEl) {
+        dateEl.value = row.dataset.deliveryDate || row.dataset.delivery || '';
+        if (!dateEl.value && daysEl && daysEl.value) calculateOrderDetailsDeliveryDate();
+        else if (!dateEl.value) dateEl.value = new Date().toISOString().slice(0, 10);
+      }
+      if (sampleEl) sampleEl.value = row.dataset.sample || '';
+      popup.style.display = 'flex';
+      if (daysEl) daysEl.focus();
+    }
+
+    function calculateOrderDetailsDeliveryDate() {
+      const daysEl = document.getElementById('orderDetailsDays');
+      const dateEl = document.getElementById('orderDetailsDeliveryDate');
+      if (!daysEl || !dateEl) return;
+      const days = parseInt(daysEl.value, 10);
+      const today = new Date();
+      if (!isNaN(days) && days >= 0) {
+        const delivery = new Date(today);
+        delivery.setDate(today.getDate() + days);
+        dateEl.value = delivery.toISOString().slice(0, 10);
+      }
+    }
+
+    function closeOrderDetailsPopup() {
+      _orderDetailsRow = null;
+      const popup = document.getElementById('orderDetailsPopup');
+      if (popup) popup.style.display = 'none';
+    }
+
+    function saveOrderDetailsPopup() {
+      if (!_orderDetailsRow) {
+        closeOrderDetailsPopup();
+        return;
+      }
+      const daysEl = document.getElementById('orderDetailsDays');
+      const dateEl = document.getElementById('orderDetailsDeliveryDate');
+      const sampleEl = document.getElementById('orderDetailsSample');
+      const days = daysEl ? daysEl.value.trim() : '';
+      const deliveryDate = dateEl ? dateEl.value : '';
+      const sample = sampleEl ? sampleEl.value.trim() : '';
+      if (days) _orderDetailsRow.dataset.daysToDelivery = days;
+      else delete _orderDetailsRow.dataset.daysToDelivery;
+      if (deliveryDate) _orderDetailsRow.dataset.deliveryDate = deliveryDate;
+      _orderDetailsRow.dataset.delivery = deliveryDate || days ? (deliveryDate || `In ${days} days`) : '';
+      if (sample) _orderDetailsRow.dataset.sample = sample;
+      else delete _orderDetailsRow.dataset.sample;
+      closeOrderDetailsPopup();
       updateInfoPanel();
       scheduleAutoSave();
     }
@@ -1550,41 +1681,54 @@
     function openPayment() {
       if (!validateBeforeAction()) return;
 
-      const popup = document.getElementById('paymentPopup');
-      const totalEl = document.getElementById('popupBillTotal');
-      const balanceEl = document.getElementById('popupBalance');
-      const amountInput = document.getElementById('paymentAmount');
+      const root = getSearchRoot();
+      const popup = root.querySelector('#paymentPopup');
+      const totalEl = root.querySelector('#popupBillTotal');
+      const balanceEl = root.querySelector('#popupBalance');
+      const amountInput = root.querySelector('#paymentAmount');
+      const modeSelect = root.querySelector('#paymentMode');
+      const narrationInput = root.querySelector('#paymentNarration');
 
-      if (!popup) return;
+      if (!popup || !amountInput) return;
 
       const total = calculateBillTotal();
       const paid = getPaidAmount(AppState.elements.billNo.value);
       const balance = total - paid;
 
-      totalEl.textContent = total.toFixed(2);
-      balanceEl.textContent = balance.toFixed(2);
+      if (totalEl) totalEl.textContent = total.toFixed(2);
+      if (balanceEl) {
+        balanceEl.textContent = balance.toFixed(2);
+        balanceEl.style.color = balance <= 0 ? '#28a745' : '#dc3545';
+      }
       amountInput.value = '';
+      if (modeSelect) modeSelect.selectedIndex = 0;
+      if (narrationInput) narrationInput.value = '';
 
-      // Setup amount change listener
-      amountInput.oninput = () => {
+      amountInput.oninput = function () {
         const newBalance = balance - safeNumber(amountInput.value);
-        balanceEl.textContent = newBalance.toFixed(2);
-        balanceEl.style.color = newBalance <= 0 ? '#28a745' : '#dc3545';
+        if (balanceEl) {
+          balanceEl.textContent = newBalance.toFixed(2);
+          balanceEl.style.color = newBalance <= 0 ? '#28a745' : '#dc3545';
+        }
       };
 
       popup.style.display = 'flex';
+      popup.style.alignItems = 'center';
+      popup.style.justifyContent = 'center';
     }
 
     function closePaymentPopup() {
-      const popup = document.getElementById('paymentPopup');
+      const popup = getSearchRoot().querySelector('#paymentPopup');
       if (popup) popup.style.display = 'none';
     }
 
     function savePayment() {
-      const amountInput = document.getElementById('paymentAmount');
-      const modeSelect = document.getElementById('paymentMode');
-      const narrationInput = document.getElementById('paymentNarration');
+      const root = getSearchRoot();
+      const amountInput = root.querySelector('#paymentAmount');
+      const modeSelect = root.querySelector('#paymentMode');
+      const narrationInput = root.querySelector('#paymentNarration');
 
+      if (!amountInput) return;
       const amount = safeNumber(amountInput.value);
       if (amount <= 0) {
         showError('Please enter a valid amount');
@@ -1597,8 +1741,8 @@
         customer: getCustomerName(),
         customerId: AppState.elements.custName.value,
         amount: amount,
-        mode: modeSelect.value,
-        narration: narrationInput.value,
+        mode: modeSelect ? modeSelect.value : 'Cash',
+        narration: narrationInput ? narrationInput.value : '',
         date: new Date().toISOString().split('T')[0],
         timestamp: new Date().toISOString()
       };
@@ -1609,7 +1753,8 @@
 
       closePaymentPopup();
       updateInfoPanel();
-      alert('Payment saved successfully');
+      if (typeof showSaveIndicator === 'function') showSaveIndicator();
+      else alert('Payment saved successfully');
     }
 
     // =====================================================
@@ -1619,68 +1764,75 @@
     function openRateBook() {
       if (!validateBeforeAction()) return;
 
-      const popup = document.getElementById('ratebookPopup');
+      const root = getSearchRoot();
+      const popup = root.querySelector('#ratebookPopup');
       if (!popup) return;
 
-      // Clear form
-      document.getElementById('rbStamp').value = '';
-      document.getElementById('rbWeight').value = '';
-      document.getElementById('rbRate').value = '';
-      document.getElementById('rbAmount').value = '';
-      document.getElementById('rbDelDate').value = '';
-      document.getElementById('rbType').value = 'S';
-      document.getElementById('rbNarration').value = '';
+      const setVal = (id, val) => {
+        const el = root.querySelector(id);
+        if (el) el.value = val;
+      };
+      setVal('#rbStamp', '');
+      setVal('#rbWeight', '');
+      setVal('#rbRate', '');
+      setVal('#rbAmount', '');
+      setVal('#rbDelDate', '');
+      setVal('#rbType', 'S');
+      setVal('#rbNarration', '');
 
       popup.style.display = 'flex';
+      popup.style.alignItems = 'center';
+      popup.style.justifyContent = 'center';
     }
 
     function closeRatebookPopup() {
-      const popup = document.getElementById('ratebookPopup');
+      const popup = getSearchRoot().querySelector('#ratebookPopup');
       if (popup) popup.style.display = 'none';
     }
 
     function calcRatebookAmount() {
-      const weightInput = document.getElementById('rbWeight');
-      const rateInput = document.getElementById('rbRate');
-      const amountInput = document.getElementById('rbAmount');
+      const root = getSearchRoot();
+      const weightInput = root.querySelector('#rbWeight');
+      const rateInput = root.querySelector('#rbRate');
+      const amountInput = root.querySelector('#rbAmount');
+      if (!weightInput || !rateInput || !amountInput) return;
 
       const weight = safeNumber(weightInput.value);
       const rate = safeNumber(rateInput.value);
       const amount = safeNumber(amountInput.value);
 
-      // 1. If Rate changes:
-      //    - If Amount is set and Weight is empty/zero -> Calculate Weight (Amount / Rate)
-      //    - Else -> Calculate Amount (Weight * Rate)
       if (document.activeElement === rateInput) {
-        if (amount > 0 && weight === 0) {
-          if (rate > 0) weightInput.value = (amount / rate).toFixed(3);
+        if (amount > 0 && weight === 0 && rate > 0) {
+          weightInput.value = (amount / rate).toFixed(3);
         } else {
           amountInput.value = (weight * rate).toFixed(2);
         }
-      }
-
-      // 2. If Amount changes -> Calculate Weight (Amount / Rate)
-      else if (document.activeElement === amountInput) {
-        if (rate > 0) {
-          weightInput.value = (amount / rate).toFixed(3);
-        }
-      }
-
-      // 3. If Weight changes -> Calculate Amount (Weight * Rate)
-      else if (document.activeElement === weightInput) {
+      } else if (document.activeElement === amountInput) {
+        if (rate > 0) weightInput.value = (amount / rate).toFixed(3);
+      } else if (document.activeElement === weightInput) {
         amountInput.value = (weight * rate).toFixed(2);
       }
     }
 
     function saveRatebookEntry() {
       try {
-        const stamp = document.getElementById('rbStamp').value.trim();
-        const weight = safeNumber(document.getElementById('rbWeight').value);
-        const rate = safeNumber(document.getElementById('rbRate').value);
-        const amount = safeNumber(document.getElementById('rbAmount').value);
-        const delDate = document.getElementById('rbDelDate').value;
-        const type = document.getElementById('rbType').value.trim();
-        const narration = document.getElementById('rbNarration').value.trim();
+        const root = getSearchRoot();
+        const stampEl = root.querySelector('#rbStamp');
+        const weightEl = root.querySelector('#rbWeight');
+        const rateEl = root.querySelector('#rbRate');
+        const amountEl = root.querySelector('#rbAmount');
+        const delDateEl = root.querySelector('#rbDelDate');
+        const typeEl = root.querySelector('#rbType');
+        const narrationEl = root.querySelector('#rbNarration');
+        if (!stampEl) return;
+
+        const stamp = stampEl.value.trim();
+        const weight = safeNumber(weightEl ? weightEl.value : 0);
+        const rate = safeNumber(rateEl ? rateEl.value : 0);
+        const amount = safeNumber(amountEl ? amountEl.value : 0);
+        const delDate = delDateEl ? delDateEl.value : '';
+        const type = typeEl ? typeEl.value.trim() : 'S';
+        const narration = narrationEl ? narrationEl.value.trim() : '';
 
         if (!stamp) {
           showError('Stamp is required');
@@ -1692,9 +1844,6 @@
           return;
         }
 
-        const customerName = getCustomerName();
-        const customerId = AppState.elements.custName.value;
-
         const rateEntry = {
           id: Date.now(),
           stamp: stamp,
@@ -1704,8 +1853,8 @@
           delDate: delDate,
           type: type,
           narration: narration,
-          customer: customerName,
-          customerId: customerId,
+          customer: getCustomerName(),
+          customerId: AppState.elements.custName.value,
           billNo: AppState.elements.billNo.value,
           date: new Date().toISOString().split('T')[0],
           timestamp: new Date().toISOString()
@@ -1717,10 +1866,10 @@
 
         closeRatebookPopup();
         updateRatebookPanel();
-        showSaveIndicator();
+        if (typeof showSaveIndicator === 'function') showSaveIndicator();
       } catch (e) {
         console.error('Error saving rate:', e);
-        showError('Error saving rate: ' + e.message);
+        showError('Error saving rate: ' + (e && e.message ? e.message : String(e)));
       }
     }
 
@@ -1893,17 +2042,20 @@
       const paid = getPaidAmount(AppState.elements.billNo.value);
       const balance = netTotal - paid;
 
-      // Update summary
-      document.getElementById('panelOrderTotal').textContent = formatCurrency(orderTotal);
-      document.getElementById('panelPurchaseTotal').textContent = formatCurrency(purchaseTotal);
-      document.getElementById('panelBillTotal').textContent = formatCurrency(netTotal);
-      document.getElementById('panelPaid').textContent = formatCurrency(paid);
-      document.getElementById('panelBalance').textContent = formatCurrency(balance);
+      const root = getSearchRoot();
+      const setPanel = (id, text) => {
+        const el = root.querySelector(id);
+        if (el) el.textContent = text;
+      };
+      setPanel('#panelOrderTotal', formatCurrency(orderTotal));
+      setPanel('#panelPurchaseTotal', formatCurrency(purchaseTotal));
+      setPanel('#panelBillTotal', formatCurrency(netTotal));
+      setPanel('#panelPaid', formatCurrency(paid));
+      setPanel('#panelBalance', formatCurrency(balance));
 
-      // Update payment list
       const payments = JSON.parse(localStorage.getItem('payments') || '[]');
       const billPayments = payments.filter(p => p.billNo === AppState.elements.billNo.value);
-      const listEl = document.getElementById('paymentList');
+      const listEl = root.querySelector('#paymentList');
 
       if (!listEl) return;
 
@@ -1928,7 +2080,7 @@
     }
 
     function updateRatebookPanel() {
-      const listEl = document.getElementById('ratebookList');
+      const listEl = getSearchRoot().querySelector('#ratebookList');
       if (!listEl) return;
 
       const rates = JSON.parse(localStorage.getItem('rateBook') || '[]');
@@ -1975,7 +2127,7 @@
       }
 
       if (!AppState.elements.billNo?.value) {
-        showError('Bill number is required');
+        showError('Order number is required');
         return false;
       }
 
@@ -2144,6 +2296,11 @@
 
     function restoreFormState() {
       try {
+        // Never restore when user just came from Ready Order – no shared state
+        if (localStorage.getItem('lastOrderPage') === 'ready-extra') {
+          localStorage.removeItem('orderAutoSave');
+          return false;
+        }
         const saved = localStorage.getItem('orderAutoSave');
         if (!saved) return false;
 
@@ -2366,6 +2523,12 @@
           setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10 + idx * 5);
         }
 
+        // For restored Purchase rows, disable Remarks/Design/Size (no value, not-allowed cursor)
+        AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
+          const sel = tr.cells[0]?.querySelector('select');
+          if (sel && sel.value === 'Purchase') setPurchaseOptionalFieldsState(tr, true);
+        });
+
         // Update panels
         updateInfoPanel();
 
@@ -2412,12 +2575,14 @@
         AppState.elements.itemBody.innerHTML = '';
       }
 
-      // Remove all temporary order data from frontend state / local storage
+      // Remove only new-order state (do not touch readyExtraOrderState – keeps new-order and ready-extra-order data separate)
       localStorage.removeItem('orderAutoSave');
       localStorage.removeItem('newOrderState');
       localStorage.removeItem('editOrderId');
       localStorage.removeItem('editOrderPayload');
       localStorage.removeItem('editCustomerReadOnly');
+      localStorage.removeItem('ratebookOpened');
+      localStorage.removeItem('receiptOpened');
 
       // Reset edit mode
       AppState.editMode = false;
@@ -2554,13 +2719,40 @@
       const newOrderClearForm = localStorage.getItem('newOrderClearForm');
       if (newOrderClearForm === 'true' && !pendingEditOrderId) {
         localStorage.removeItem('newOrderClearForm');
+        localStorage.setItem('lastOrderPage', 'new-order');
         clearOrderFormAndState();
+        addRow(); // exactly one empty row for new order
+        updateInfoPanel();
+        setupBillNoHandler();
+        setupTableArrowKeys();
         // Skip edit load and auto-save restore below
       } else {
-        // Check if returning from ratebook (only when not editing)
+        // If user just came from Ready (extra) order, never show Ready order data or extra rows – clear new-order state and start fresh
+        const cameFromReadyExtraPage = localStorage.getItem('lastOrderPage') === 'ready-extra';
+        if (cameFromReadyExtraPage) {
+          localStorage.removeItem('orderAutoSave');
+          localStorage.removeItem('newOrderState');
+          localStorage.removeItem('editOrderId');
+          localStorage.removeItem('editOrderPayload');
+          localStorage.removeItem('editCustomerReadOnly');
+          localStorage.setItem('lastOrderPage', 'new-order');
+          if (AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
+          addRow(); // exactly one empty row; no restore
+        }
+
+        // Only restore from ratebook/receipt if WE (new-order) saved the state. If ratebook was opened from ready-extra-order, newOrderState is empty – do not restore, show empty form.
         const ratebookOpened = localStorage.getItem('ratebookOpened');
-        if (ratebookOpened === 'true' && !pendingEditOrderId) {
-          // Restore state from before opening ratebook
+        const receiptOpened = localStorage.getItem('receiptOpened');
+        const hasNewOrderState = !!localStorage.getItem('newOrderState');
+        const cameFromReadyExtra = (ratebookOpened === 'true' || receiptOpened === 'true') && !hasNewOrderState;
+
+        if (cameFromReadyExtra) {
+          localStorage.removeItem('ratebookOpened');
+          localStorage.removeItem('receiptOpened');
+        }
+
+        if (ratebookOpened === 'true' && !pendingEditOrderId && hasNewOrderState) {
+          // Truly returning from new-order's ratebook – restore our state
           setTimeout(() => {
             restoreOrderState();
           }, 200);
@@ -2571,8 +2763,8 @@
           return;
         }
 
-        // Start with no rows (no extra row for any type); rows added only by restore or edit load
-        if (AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
+        // Start with no rows unless we already set one (cameFromReadyExtraPage); rows added only by restore or edit load
+        if (!cameFromReadyExtraPage && AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
 
         // When editing an order, don't pre-fill date/bill no – loadOrderForEdit will set them from the order
         if (!pendingEditOrderId) {
@@ -2590,8 +2782,8 @@
         // Check if we're editing an existing order – load all customer data and items from DB (orders) by order ID
         const editLoaded = loadOrderForEdit();
 
-        // If not editing, try to restore auto-saved state
-        const restored = editLoaded ? true : restoreFormState();
+        // If not editing, restore auto-saved state only when we did NOT just come from Ready order (avoid extra rows / Ready data)
+        const restored = editLoaded ? true : (cameFromReadyExtraPage ? false : restoreFormState());
       }
 
       function setupBillNoHandler() {
@@ -2641,6 +2833,10 @@
       window.savePayment = savePayment;
       window.openRateBook = openRateBook;
       window.closeRatebookPopup = closeRatebookPopup;
+      window.openOrderDetailsPopup = openOrderDetailsPopup;
+      window.closeOrderDetailsPopup = closeOrderDetailsPopup;
+      window.saveOrderDetailsPopup = saveOrderDetailsPopup;
+      window.calculateOrderDetailsDeliveryDate = calculateOrderDetailsDeliveryDate;
       window.calcRatebookAmount = calcRatebookAmount;
       window.saveRatebookEntry = saveRatebookEntry;
       window.applyRateToRow = applyRateToRow;

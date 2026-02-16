@@ -66,6 +66,15 @@ function initSidebarButtons() {
                     break;
 
                 case "new order":
+                    // Reset new-order state so form is empty; avoid showing Ready order data/rows
+                    localStorage.removeItem("orderAutoSave");
+                    localStorage.removeItem("newOrderState");
+                    localStorage.removeItem("ratebookOpened");
+                    localStorage.removeItem("receiptOpened");
+                    localStorage.removeItem("editOrderId");
+                    localStorage.removeItem("editOrderPayload");
+                    localStorage.removeItem("editCustomerReadOnly");
+                    localStorage.setItem("lastOrderPage", "new-order");
                     localStorage.setItem("newOrderClearForm", "true");
                     loadPage("pages/new-order.html");
                     break;
