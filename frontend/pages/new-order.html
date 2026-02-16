@@ -1118,9 +1118,10 @@
         <label>Narration</label>
         <textarea id="paymentNarration" placeholder="Enter narration..."></textarea>
       </div>
-      <div class="popup-row">
-        <label>Bill Total: ₹<span id="popupBillTotal">0.00</span></label>
-        <label style="color:#dc3545;">Balance: ₹<span id="popupBalance">0.00</span></label>
+      <div class="popup-row" style="display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--border);">
+        <div><strong>Order Total: ₹<span id="popupBillTotal">0.00</span></strong></div>
+        <div><strong>Amount: ₹<span id="popupAmountDisplay">0.00</span></strong></div>
+        <div><strong style="color:#dc3545;">Balance: ₹<span id="popupBalance">0.00</span></strong></div>
       </div>
       <div class="popup-actions">
         <button onclick="savePayment()">Save Payment</button>
@@ -1529,11 +1530,12 @@
       const row = select ? select.closest('tr') : null;
       if (!row) return;
       _orderDetailsRow = row;
-      const popup = document.getElementById('orderDetailsPopup');
+      const root = getSearchRoot();
+      const popup = root.querySelector('#orderDetailsPopup');
       if (!popup) return;
-      const daysEl = document.getElementById('orderDetailsDays');
-      const dateEl = document.getElementById('orderDetailsDeliveryDate');
-      const sampleEl = document.getElementById('orderDetailsSample');
+      const daysEl = root.querySelector('#orderDetailsDays');
+      const dateEl = root.querySelector('#orderDetailsDeliveryDate');
+      const sampleEl = root.querySelector('#orderDetailsSample');
       if (daysEl) daysEl.value = row.dataset.daysToDelivery || '';
       if (dateEl) {
         dateEl.value = row.dataset.deliveryDate || row.dataset.delivery || '';
@@ -1542,12 +1544,15 @@
       }
       if (sampleEl) sampleEl.value = row.dataset.sample || '';
       popup.style.display = 'flex';
+      popup.style.alignItems = 'center';
+      popup.style.justifyContent = 'center';
       if (daysEl) daysEl.focus();
     }
 
     function calculateOrderDetailsDeliveryDate() {
-      const daysEl = document.getElementById('orderDetailsDays');
-      const dateEl = document.getElementById('orderDetailsDeliveryDate');
+      const root = getSearchRoot();
+      const daysEl = root.querySelector('#orderDetailsDays');
+      const dateEl = root.querySelector('#orderDetailsDeliveryDate');
       if (!daysEl || !dateEl) return;
       const days = parseInt(daysEl.value, 10);
       const today = new Date();
@@ -1560,7 +1565,7 @@
 
     function closeOrderDetailsPopup() {
       _orderDetailsRow = null;
-      const popup = document.getElementById('orderDetailsPopup');
+      const popup = getSearchRoot().querySelector('#orderDetailsPopup');
       if (popup) popup.style.display = 'none';
     }
 
@@ -1569,9 +1574,10 @@
         closeOrderDetailsPopup();
         return;
       }
-      const daysEl = document.getElementById('orderDetailsDays');
-      const dateEl = document.getElementById('orderDetailsDeliveryDate');
-      const sampleEl = document.getElementById('orderDetailsSample');
+      const root = getSearchRoot();
+      const daysEl = root.querySelector('#orderDetailsDays');
+      const dateEl = root.querySelector('#orderDetailsDeliveryDate');
+      const sampleEl = root.querySelector('#orderDetailsSample');
       const days = daysEl ? daysEl.value.trim() : '';
       const deliveryDate = dateEl ? dateEl.value : '';
       const sample = sampleEl ? sampleEl.value.trim() : '';
@@ -1684,6 +1690,7 @@
       const root = getSearchRoot();
       const popup = root.querySelector('#paymentPopup');
       const totalEl = root.querySelector('#popupBillTotal');
+      const amountDisplayEl = root.querySelector('#popupAmountDisplay');
       const balanceEl = root.querySelector('#popupBalance');
       const amountInput = root.querySelector('#paymentAmount');
       const modeSelect = root.querySelector('#paymentMode');
@@ -1696,6 +1703,7 @@
       const balance = total - paid;
 
       if (totalEl) totalEl.textContent = total.toFixed(2);
+      if (amountDisplayEl) amountDisplayEl.textContent = '0.00';
       if (balanceEl) {
         balanceEl.textContent = balance.toFixed(2);
         balanceEl.style.color = balance <= 0 ? '#28a745' : '#dc3545';
@@ -1704,13 +1712,16 @@
       if (modeSelect) modeSelect.selectedIndex = 0;
       if (narrationInput) narrationInput.value = '';
 
-      amountInput.oninput = function () {
-        const newBalance = balance - safeNumber(amountInput.value);
+      function updatePaymentBalance() {
+        const amt = safeNumber(amountInput.value);
+        if (amountDisplayEl) amountDisplayEl.textContent = amt.toFixed(2);
+        const newBalance = balance - amt;
         if (balanceEl) {
           balanceEl.textContent = newBalance.toFixed(2);
           balanceEl.style.color = newBalance <= 0 ? '#28a745' : '#dc3545';
         }
-      };
+      }
+      amountInput.oninput = updatePaymentBalance;
 
       popup.style.display = 'flex';
       popup.style.alignItems = 'center';
@@ -1893,6 +1904,8 @@
               values: [...tr.querySelectorAll('input,select')].map(el => el.value),
               type: tr.cells[0]?.children[0]?.value || '',
               delivery: tr.dataset.delivery || '',
+              deliveryDate: tr.dataset.deliveryDate || '',
+              daysToDelivery: tr.dataset.daysToDelivery || '',
               sample: tr.dataset.sample || '',
               orderFilled: tr.dataset.orderFilled || ''
             };
@@ -1943,6 +1956,8 @@
               }
 
               if (rowData.delivery) tr.dataset.delivery = rowData.delivery;
+              if (rowData.deliveryDate) tr.dataset.deliveryDate = rowData.deliveryDate;
+              if (rowData.daysToDelivery) tr.dataset.daysToDelivery = rowData.daysToDelivery;
               if (rowData.sample) tr.dataset.sample = rowData.sample;
               if (rowData.orderFilled) tr.dataset.orderFilled = rowData.orderFilled;
 
@@ -1956,6 +1971,7 @@
         localStorage.removeItem('ratebookOpened');
 
         updateInfoPanel();
+        updateRatebookPanel(); // Recover ratebook list for current order after restore
         return true;
       } catch (e) {
         console.error('Error restoring order state:', e);
@@ -2165,6 +2181,8 @@
             values: Array.from(tr.querySelectorAll('input,select')).map(el => el.value),
             type: tr.cells[0]?.querySelector('select')?.value || 'Order',
             delivery: tr.dataset.delivery || '',
+            deliveryDate: tr.dataset.deliveryDate || '',
+            daysToDelivery: tr.dataset.daysToDelivery || '',
             sample: tr.dataset.sample || '',
             orderFilled: tr.dataset.orderFilled || ''
           });
@@ -2279,6 +2297,8 @@
           values: Array.from(tr.querySelectorAll('input,select')).map(el => el.value),
           type: tr.cells[0]?.querySelector('select')?.value,
           delivery: tr.dataset.delivery || '',
+          deliveryDate: tr.dataset.deliveryDate || '',
+          daysToDelivery: tr.dataset.daysToDelivery || '',
           sample: tr.dataset.sample || ''
         });
       });
@@ -2334,6 +2354,8 @@
               }
             });
             if (rowData.delivery) tr.dataset.delivery = rowData.delivery;
+            if (rowData.deliveryDate) tr.dataset.deliveryDate = rowData.deliveryDate;
+            if (rowData.daysToDelivery) tr.dataset.daysToDelivery = rowData.daysToDelivery;
             if (rowData.sample) tr.dataset.sample = rowData.sample;
             setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
           });
@@ -2514,8 +2536,10 @@
             if (typeSelect && [ 'Order', 'Repair', 'Sale', 'Purchase' ].includes(item.type)) typeSelect.value = item.type;
           }
 
-          // Restore row metadata
+          // Restore row metadata (Order Details – recover like old)
           if (item.delivery != null) tr.dataset.delivery = item.delivery;
+          if (item.deliveryDate != null) tr.dataset.deliveryDate = item.deliveryDate;
+          if (item.daysToDelivery != null) tr.dataset.daysToDelivery = item.daysToDelivery;
           if (item.sample != null) tr.dataset.sample = item.sample;
           if (item.orderFilled != null) tr.dataset.orderFilled = item.orderFilled;
 
@@ -2590,13 +2614,14 @@
       setCustomerEditLock(false);
 
       // Reset totals and panels so UI shows zero and empty lists
-      const panelOrderTotal = document.getElementById('panelOrderTotal');
-      const panelPurchaseTotal = document.getElementById('panelPurchaseTotal');
-      const panelBillTotal = document.getElementById('panelBillTotal');
-      const panelPaid = document.getElementById('panelPaid');
-      const panelBalance = document.getElementById('panelBalance');
-      const paymentList = document.getElementById('paymentList');
-      const ratebookList = document.getElementById('ratebookList');
+      const root = getSearchRoot();
+      const panelOrderTotal = root.querySelector('#panelOrderTotal');
+      const panelPurchaseTotal = root.querySelector('#panelPurchaseTotal');
+      const panelBillTotal = root.querySelector('#panelBillTotal');
+      const panelPaid = root.querySelector('#panelPaid');
+      const panelBalance = root.querySelector('#panelBalance');
+      const paymentList = root.querySelector('#paymentList');
+      const ratebookList = root.querySelector('#ratebookList');
 
       if (panelOrderTotal) panelOrderTotal.textContent = '₹ 0.00';
       if (panelPurchaseTotal) panelPurchaseTotal.textContent = '₹ 0.00';
@@ -2752,9 +2777,10 @@
         }
 
         if (ratebookOpened === 'true' && !pendingEditOrderId && hasNewOrderState) {
-          // Truly returning from new-order's ratebook – restore our state
+          // Truly returning from new-order's ratebook – restore form and recover ratebook list
           setTimeout(() => {
             restoreOrderState();
+            updateRatebookPanel(); // Recover ratebook panel for current order
           }, 200);
           updateInfoPanel();
           setupTableArrowKeys();
