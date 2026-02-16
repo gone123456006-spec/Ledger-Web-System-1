@@ -54,9 +54,10 @@
     }
 
     .app {
-      max-width: 1400px;
-      margin: auto;
-      padding: 16px;
+      max-width: none;
+      width: 100%;
+      margin: 0;
+      padding: 16px 12px;
     }
 
     /* =====================
@@ -206,7 +207,7 @@
       min-width: 1200px;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 13.5px;
+      font-size: 15px;
     }
 
     thead th {
@@ -214,12 +215,13 @@
       top: 0;
       background: #f5f6fa;
       z-index: 2;
+      font-size: 15px;
     }
 
     th,
     td {
       border-bottom: 1px solid var(--border);
-      padding: 8px 10px;
+      padding: 12px 14px;
       white-space: nowrap;
     }
 
@@ -240,10 +242,11 @@
     table input,
     table select {
       width: 100%;
-      height: 30px;
+      height: 36px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      padding: 4px 6px;
+      padding: 8px 10px;
+      font-size: 14px;
     }
 
     /* Order Details table: no scroll, fit in container */
@@ -254,19 +257,20 @@
     }
     .order-details-table-wrap #itemTable th,
     .order-details-table-wrap #itemTable td {
-      padding: 6px 2px;
+      padding: 10px 8px;
       vertical-align: middle;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 14px;
     }
     .order-details-table-wrap #itemTable input,
     .order-details-table-wrap #itemTable select {
       width: 100%;
       min-width: 0;
-      height: 32px;
-      padding: 4px 4px;
-      font-size: 13px;
+      height: 36px;
+      padding: 8px;
+      font-size: 14px;
       box-sizing: border-box;
     }
 

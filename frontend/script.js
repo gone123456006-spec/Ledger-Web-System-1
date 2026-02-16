@@ -66,6 +66,7 @@ function initSidebarButtons() {
                     break;
 
                 case "new order":
+                    localStorage.setItem("newOrderClearForm", "true");
                     loadPage("pages/new-order.html");
                     break;
 

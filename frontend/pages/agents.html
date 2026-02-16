@@ -1,301 +1,359 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Add Item</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Agent List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-  /* =========================
-   ADD ITEM WINDOW (ALIGNED)
-========================= */
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #000000;
+      --muted: #6e6e73;
+      --border: #e5e5ea;
+      --primary: #007aff;
+      --danger: #ff3b30;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; font-family: "Segoe UI", Roboto, Arial, sans-serif; }
+    html, body { margin: 0; padding: 0; height: 100%; background: transparent; color: var(--text); }
 
-.window{
-  background:#ffffff;
-  border-radius:16px;
-  border:1px solid #d1d6de;
-  box-shadow:0 25px 45px rgba(0,0,0,.25);
-  max-width:1000px;
-  margin:auto;
-}
+    .page {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      align-items: center;
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
 
-/* TITLE BAR */
-.title-bar{
-  background:linear-gradient(#f4f6fa,#e6eaf0);
-  padding:10px;
-  font-weight:600;
-  font-size:15px;
-  text-align:center;
-  border-bottom:1px solid #d1d6de;
-  border-radius:16px 16px 0 0;
-  color:#1d1d1f;
-}
+    h2 { font-weight: 600; margin: 0 0 15px 0; font-size: 20px; flex-shrink: 0; width: 100%; max-width: 1200px; }
 
-/* CONTENT AREA */
-.content{
-  display:flex;
-  gap:40px;
-  padding:22px 30px;
-  background:#f9fbfe;
-}
+    .erp-form {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+      border: 1px solid var(--border);
+      padding: 22px 28px;
+      max-width: 1200px;
+      width: 100%;
+      align-self: center;
+    }
+    label { font-size: 12px; color: var(--muted); margin-top: 4px; margin-bottom: 2px; display: block; font-weight: 500; }
+    input, textarea { width: 100%; max-width: 320px; padding: 6px 10px; margin-top: 2px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; box-sizing: border-box; }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+    textarea { resize: none; height: 55px; font-family: inherit; }
 
-/* LEFT / RIGHT PANELS */
-.left, .right{
-  flex:1;
-}
+    .form-actions {
+      position: sticky; bottom: 0; left: 0; right: 0;
+      background: rgba(255, 255, 255, .98);
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: center; gap: 10px; padding: 12px 15px; z-index: 100;
+      box-shadow: 0 -2px 8px rgba(0, 0, 0, .05); margin-top: auto; flex-shrink: 0; width: 100%;
+    }
+    button { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: #cae8ff; cursor: pointer; font-size: 13px; }
+    button:hover { background: #b0d9f0; }
+    button.primary { background: var(--primary); color: #fff; border: none; }
+    button.primary:hover { background: #0056cc; }
 
-/* HEADINGS */
-h3{
-  margin:0 0 16px 0;
-  font-size:15px;
-  color:#1d1d1f;
-}
+    /* Agent List - same as customer list */
+    #agentListSection {
+      display: none;
+      flex: 1;
+      width: 100%;
+      max-width: 1200px;
+      overflow: hidden;
+      flex-direction: column;
+      min-height: 0;
+      align-self: center;
+    }
+    #agentListSection[style*="flex"] { display: flex !important; }
+    #agentListSection .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    #agentListSection h2 { margin: 0; flex-shrink: 0; }
+    #agentListSection .back-btn { padding: 8px 16px; font-size: 13px; white-space: nowrap; }
+    #agentListSection input { margin-bottom: 12px; max-width: 300px; flex-shrink: 0; }
 
-/* FORM ROW */
-.form-row{
-  display:flex;
-  align-items:center;
-  margin-bottom:14px;
-}
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      border-radius: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+    table { width: 100%; min-width: 800px; border-collapse: collapse; background: #fff; border: 1px solid var(--border); }
+    th, td { padding: 12px 14px; font-size: 14px; text-align: left; border: 1px solid var(--border); white-space: nowrap; }
+    th { background: #f2f2f7; font-weight: 600; font-size: 15px; position: sticky; top: 0; z-index: 10; }
+    tbody tr:hover { background: #f9fafc; }
+    #agentListSection table button { padding: 6px 12px; font-size: 13px; margin: 0 2px; }
 
-.form-row label{
-  width:160px;
-  font-size:14px;
-  color:#3a3a3c;
-}
-
-/* INPUTS */
-.form-row input,
-.form-row select{
-  flex:1;
-  padding:8px 10px;
-  border-radius:10px;
-  border:1px solid #d1d6de;
-  font-size:14px;
-  background:#ffffff;
-}
-
-.form-row input:focus,
-.form-row select:focus{
-  outline:none;
-  border-color:#007aff;
-  box-shadow:0 0 0 3px rgba(0,122,255,.18);
-}
-
-/* PICTURE */
-.picture-box{
-  margin-bottom:18px;
-}
-
-.picture-box span{
-  display:block;
-  font-size:14px;
-  margin-bottom:6px;
-  color:#3a3a3c;
-}
-
-.picture-box input{
-  width:100%;
-  padding:6px;
-}
-
-/* DESCRIPTION */
-.desc-box textarea{
-  width:100%;
-  height:200px;
-  resize:none;
-  padding:10px;
-  border-radius:12px;
-  border:1px solid #d1d6de;
-  font-size:14px;
-}
-
-.desc-box textarea:focus{
-  outline:none;
-  border-color:#007aff;
-  box-shadow:0 0 0 3px rgba(0,122,255,.18);
-}
-
-/* FOOTER */
-.footer{
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  padding:16px;
-  background:#f2f5f9;
-  border-top:1px solid #d1d6de;
-  border-radius:0 0 16px 16px;
-}
-
-/* BUTTONS */
-.footer button{
-  min-width:120px;
-  padding:8px 12px;
-  font-size:13px;
-  border-radius:10px;
-  border:1px solid #d1d6de;
-  background:#ffffff;
-  cursor:pointer;
-  transition:.2s;
-}
-
-.footer button:hover{
-  background:#f1f5fb;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-@media(max-width:800px){
-  .content{
-    flex-direction:column;
-  }
-
-  .form-row{
-    flex-direction:column;
-    align-items:flex-start;
-  }
-
-  .form-row label{
-    width:100%;
-    margin-bottom:4px;
-  }
-}
-  
-
+    .erp-form[style*="none"] { display: none !important; }
+    @media (max-width: 900px) {
+      .page { padding: 12px; }
+      #agentListSection .list-header { flex-direction: column; align-items: flex-start; }
+      #agentListSection .back-btn { width: 100%; max-width: 200px; }
+      table { min-width: 100%; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="page">
+    <h2 id="pageTitle">Add Agent</h2>
 
-<div class="window">
-  <div class="title-bar">Add_item</div>
+    <form id="agentForm" class="erp-form">
+      <h4>Agent Details</h4>
+      <label>Agent ID</label>
+      <input id="agentId" placeholder="Auto Generated" readonly>
+      <label>Name *</label>
+      <input id="agentName" placeholder="Agent name">
+      <label>Mobile</label>
+      <input id="agentMobile" placeholder="10-digit mobile">
+      <label>Email</label>
+      <input type="email" id="agentEmail" placeholder="Email">
+      <label>Notes</label>
+      <textarea id="agentNotes" placeholder="Optional notes"></textarea>
+    </form>
 
-  <div class="content">
-
-    <!-- LEFT SIDE -->
-    <div class="left">
-      <h3>Add Item :-</h3>
-
-      <div class="form-row">
-        <label>Name :-</label>
-        <input type="text" id="name">
+    <!-- Agent List - same table structure as Customer List (CID, Name, Mobile, Station, Balance, Actions) -->
+    <div id="agentListSection">
+      <div class="list-header">
+        <h2 style="margin:0;">Agent List</h2>
+        <button type="button" class="primary back-btn" onclick="goBackToAddAgent()">← Add Agent</button>
       </div>
+      <input id="searchAgent" placeholder="Search Name / Mobile" onkeyup="renderAgentList()"
+        style="padding:8px 10px;width:300px;font-size:13px;margin-bottom:10px;">
 
-      <div class="form-row">
-        <label>Tag/Level :-</label>
-        <input type="text" id="tag">
-      </div>
-
-      <div class="form-row">
-        <label>Group :-</label>
-        <select id="group">
-          <option value="">Select</option>
-          <option>Gold</option>
-          <option>Silver</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label>Type :-</label>
-        <select id="type">
-          <option value="">Select</option>
-          <option>Ring</option>
-          <option>Chain</option>
-        </select>
-      </div>
-
-      <div class="form-row">
-        <label>Sale Purity(%) :-</label>
-        <input type="number" id="salePurity">
-      </div>
-
-      <div class="form-row">
-        <label>Sale Wastage(%) :-</label>
-        <input type="number" id="saleWastage">
-      </div>
-
-      <div class="form-row">
-        <label>Purchase Purity(%) :-</label>
-        <input type="number" id="purchasePurity">
-      </div>
-
-      <div class="form-row">
-        <label>Purchase Wastage(%) :-</label>
-        <input type="number" id="purchaseWastage">
-      </div>
-
-      <div class="form-row">
-        <label>Weight :-</label>
-        <input type="number" id="weight">
-      </div>
-
-      <div class="form-row">
-        <label>Quantity :-</label>
-        <input type="number" id="quantity">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>CID</th>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>Station</th>
+              <th>Balance</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="agentTableBody"></tbody>
+        </table>
       </div>
     </div>
-
-    <!-- RIGHT SIDE -->
-    <div class="right">
-      <h3>Details :-</h3>
-
-      <div class="picture-box">
-        <span>Picture :-</span>
-        <input type="file" id="picture">
-      </div>
-
-      <div class="desc-box">
-        <label>Description :-</label>
-        <textarea id="description"></textarea>
-      </div>
-    </div>
-
   </div>
 
-  <!-- BUTTON BAR -->
-  <div class="footer">
-    <button onclick="saveAndClose()">Save And Close</button>
-    <button onclick="saveAndNew()">Save And New</button>
-    <button onclick="resetForm()">Reset</button>
-    <button onclick="window.close()">Closed</button>
+  <div class="form-actions">
+    <button type="button" class="primary" onclick="submitForm(event)">Save & Close</button>
+    <button type="button" onclick="saveAndNew(event)">Save & New</button>
+    <button type="button" onclick="resetForm()">Reset</button>
+    <button type="button" onclick="openList()">Agent List</button>
   </div>
 
-</div>
+  <script>
+    const STORE_KEY = "agents";
+    const EDIT_KEY = "editAgentId";
+    const $ = id => document.getElementById(id);
+    let form = null;
+    let fields = {};
 
-<script>
-    function getFormData(){
-  return {
-    name: name.value,
-    tag: tag.value,
-    group: group.value,
-    type: type.value,
-    salePurity: salePurity.value,
-    saleWastage: saleWastage.value,
-    purchasePurity: purchasePurity.value,
-    purchaseWastage: purchaseWastage.value,
-    weight: weight.value,
-    quantity: quantity.value,
-    description: description.value
-  };
-}
+    function initElements() {
+      form = $("agentForm");
+      if (!form) return false;
+      fields = {
+        agentId: $("agentId"),
+        agentName: $("agentName"),
+        agentMobile: $("agentMobile"),
+        agentEmail: $("agentEmail"),
+        agentNotes: $("agentNotes")
+      };
+      return !!(fields.agentName && fields.agentMobile);
+    }
 
-function saveAndClose(){
-  const data = getFormData();
-  console.log("Saved Data:", data);
-  alert("Item saved successfully");
-  // backend API call can be added here
-}
+    function initAgentPage() {
+      if (!initElements()) { setTimeout(initAgentPage, 100); return; }
+      if (form) form.addEventListener("submit", e => e.preventDefault());
+      if (localStorage.getItem('showAgentList') === 'true') {
+        localStorage.removeItem('showAgentList');
+        setTimeout(openList, 100);
+      }
+      const editId = localStorage.getItem(EDIT_KEY);
+      if (editId) loadForEdit(editId);
+      else resetForm();
+    }
 
-function saveAndNew(){
-  saveAndClose();
-  resetForm();
-}
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAgentPage);
+    else setTimeout(initAgentPage, 50);
+    window.addEventListener('pageRefresh', () => setTimeout(initAgentPage, 100));
 
-function resetForm(){
-  document.querySelectorAll("input, textarea, select").forEach(el=>{
-    el.value = "";
-  });
-}
+    function validateForm() {
+      if (!fields.agentName.value.trim()) { alert("Agent name is required"); fields.agentName.focus(); return false; }
+      if (fields.agentMobile.value.trim() && !/^\d{10}$/.test(fields.agentMobile.value.trim())) {
+        alert("Enter valid 10-digit mobile number"); fields.agentMobile.focus(); return false;
+      }
+      return true;
+    }
 
-</script>
+    function submitForm(e) { if (e) e.preventDefault(); if (!form || !fields.agentName) return; if (!validateForm()) return; saveAgent(); openList(); }
+    function saveAndNew(e) { if (e) e.preventDefault(); if (!form || !fields.agentName) return; if (!validateForm()) return; saveAgent(); resetForm(true); }
+
+    function resetForm(focusName = false) {
+      if (!form) return;
+      form.reset();
+      localStorage.removeItem(EDIT_KEY);
+      if (fields.agentId) { fields.agentId.value = ""; fields.agentId.placeholder = "Auto Generated"; }
+      if (focusName && fields.agentName) fields.agentName.focus();
+    }
+
+    function saveAgent() {
+      if (!form || !fields.agentName) return;
+      let agents = getAgents();
+      const editId = localStorage.getItem(EDIT_KEY);
+      const isEdit = !!editId;
+      const id = isEdit ? Number(editId) : (agents.length ? Math.max(...agents.map(a => a.id)) + 1 : 1001);
+      const data = {
+        id,
+        agentId: isEdit ? (fields.agentId ? fields.agentId.value : "") : (fields.agentId.value.trim() || "AGT-" + id),
+        cid: isEdit ? (fields.agentId ? fields.agentId.value : "") : (fields.agentId.value.trim() || "AGT-" + id),
+        name: fields.agentName.value.trim(),
+        mobile: fields.agentMobile.value.trim(),
+        email: fields.agentEmail.value.trim(),
+        notes: (fields.agentNotes && fields.agentNotes.value) ? fields.agentNotes.value.trim() : "",
+        station: "",
+        openingBalance: 0
+      };
+      if (isEdit) {
+        const index = agents.findIndex(a => a.id === id);
+        if (index === -1) { alert("Agent not found"); return; }
+        agents[index] = { ...agents[index], ...data };
+        localStorage.removeItem(EDIT_KEY);
+      } else agents.push(data);
+      localStorage.setItem(STORE_KEY, JSON.stringify(agents));
+      alert("Agent saved successfully");
+    }
+
+    function openList() {
+      const formEl = document.querySelector(".erp-form");
+      const listSection = $("agentListSection");
+      const actionButtons = document.querySelector(".form-actions");
+      if (formEl) formEl.style.display = "none";
+      if (listSection) { listSection.style.display = "flex"; listSection.style.flexDirection = "column"; }
+      if (actionButtons) actionButtons.style.display = "none";
+      renderAgentList();
+    }
+
+    function goBackToAddAgent() {
+      const formEl = document.querySelector(".erp-form");
+      const listSection = $("agentListSection");
+      const actionButtons = document.querySelector(".form-actions");
+      if (formEl) { formEl.style.display = "block"; formEl.style.flex = "1"; }
+      if (listSection) listSection.style.display = "none";
+      if (actionButtons) actionButtons.style.display = "flex";
+      resetForm();
+      const title = $("pageTitle"); if (title) title.innerText = "Add Agent";
+      if (fields && fields.agentName) setTimeout(() => fields.agentName.focus(), 100);
+    }
+
+    function renderAgentList() {
+      const tbody = $("agentTableBody");
+      const searchBox = $("searchAgent");
+      if (!tbody) return;
+      const search = (searchBox ? searchBox.value || "" : "").toLowerCase();
+      tbody.innerHTML = "";
+
+      getAgents()
+        .filter(a =>
+          (a.name || "").toLowerCase().includes(search) ||
+          (a.mobile || "").includes(search) ||
+          (a.email || "").toLowerCase().includes(search)
+        )
+        .forEach(a => {
+          const nameEsc = (a.name || "").replace(/'/g, "&#39;");
+          const cid = a.cid || a.agentId || a.id;
+          const station = a.station != null ? a.station : (a.email || "—");
+          const balance = a.openingBalance != null ? a.openingBalance : "—";
+          tbody.innerHTML += `
+  <tr ondblclick="selectAgent(${a.id})">
+    <td>${cid}</td>
+    <td>${a.name || ""}</td>
+    <td>${a.mobile || ""}</td>
+    <td>${station}</td>
+    <td>${balance}</td>
+    <td>
+      <button onclick="editAgent(${a.id})">Edit</button>
+      <button onclick="deleteAgent(${a.id})">Delete</button>
+      <button onclick="selectAgent(${a.id})">Select</button>
+    </td>
+  </tr>`;
+        });
+    }
+
+    function editAgent(id) {
+      localStorage.setItem(EDIT_KEY, id);
+      loadForEdit(id);
+    }
+
+    function deleteAgent(id) {
+      if (!confirm("Delete this agent?")) return;
+      const agents = getAgents().filter(a => a.id !== id);
+      localStorage.setItem(STORE_KEY, JSON.stringify(agents));
+      renderAgentList();
+    }
+
+    function loadForEdit(id) {
+      if (!form || !fields.agentName) { setTimeout(() => loadForEdit(id), 100); return; }
+      const agent = getAgents().find(a => String(a.id) === String(id));
+      if (!agent) return;
+      const formEl = document.querySelector(".erp-form");
+      const listSection = $("agentListSection");
+      const actionButtons = document.querySelector(".form-actions");
+      if (formEl) { formEl.style.display = "block"; formEl.style.flex = "1"; }
+      if (listSection) listSection.style.display = "none";
+      if (actionButtons) actionButtons.style.display = "flex";
+      const title = $("pageTitle"); if (title) title.innerText = "Edit Agent";
+      fields.agentId.value = agent.cid || agent.agentId || agent.id;
+      fields.agentName.value = agent.name || "";
+      fields.agentMobile.value = agent.mobile || "";
+      fields.agentEmail.value = agent.email || "";
+      fields.agentNotes.value = agent.notes || "";
+      fields.agentId.readOnly = true;
+    }
+
+    function getAgents() {
+      return JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+    }
+
+    function selectAgent(id) {
+      const agents = getAgents();
+      const agent = agents.find(a => String(a.id) === String(id));
+      const name = agent ? (agent.name || "") : "";
+      localStorage.setItem("selectedAgentName", name);
+      if (name) localStorage.setItem("selectedAgentId", String(id));
+      if (window.opener && window.opener.setAgentName) { window.opener.setAgentName(name); window.close(); return; }
+      alert(name ? `Agent "${name}" selected.` : "Agent not found.");
+    }
+
+    window.submitForm = submitForm;
+    window.saveAndNew = saveAndNew;
+    window.resetForm = resetForm;
+    window.openList = openList;
+    window.goBackToAddAgent = goBackToAddAgent;
+    window.editAgent = editAgent;
+    window.deleteAgent = deleteAgent;
+    window.selectAgent = selectAgent;
+    window.renderAgentList = renderAgentList;
+    window.initAgentPage = initAgentPage;
+  </script>
 </body>
 </html>

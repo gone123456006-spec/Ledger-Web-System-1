@@ -551,42 +551,57 @@
     }
 
     /* =========================
-       GET CUSTOMER DATA FROM CUSTOMERS LIST
+       GET CUSTOMER DATA FROM CUSTOMERS LIST (BY ID OR NAME)
     ========================= */
-    function getCustomerData(customerName) {
-      if (!customerName) return null;
-      
+    /** Fetch full customer details by customerId (primary for edit). */
+    function getCustomerDataById(customerId) {
+      if (customerId == null || customerId === "") return null;
       try {
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-        
-        // Try to find customer by exact name match
-        let customer = customers.find(c => 
+        const customer = customers.find(c =>
+          c && (c.id == customerId || String(c.id) === String(customerId))
+        );
+        if (customer) return formatCustomerForPayload(customer, customer.name);
+      } catch (e) {
+        console.error("Error fetching customer by ID:", e);
+      }
+      return null;
+    }
+
+    function formatCustomerForPayload(customer, fallbackName) {
+      const rel = customer.relation || "";
+      const relName = customer.relationName || "";
+      return {
+        id: customer.id,
+        name: customer.name || customer.customerName || fallbackName || "",
+        openingBalance: customer.openingBalance ?? customer.currentBal ?? customer.balance ?? "",
+        currentBal: customer.openingBalance ?? customer.currentBal ?? customer.balance ?? "",
+        relation: (rel && relName ? rel + " " + relName : rel || relName) || "",
+        relationName: relName || "",
+        station: customer.station || customer.city || customer.location || ""
+      };
+    }
+
+    function getCustomerData(customerName) {
+      if (!customerName) return null;
+      try {
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        let customer = customers.find(c =>
           c && (c.name === customerName || c.customerName === customerName)
         );
-        
-        // If not found, try case-insensitive match
         if (!customer) {
           const lowerName = customerName.toLowerCase().trim();
-          customer = customers.find(c => 
+          customer = customers.find(c =>
             c && (
               (c.name || "").toLowerCase().trim() === lowerName ||
               (c.customerName || "").toLowerCase().trim() === lowerName
             )
           );
         }
-        
-        if (customer) {
-          return {
-            name: customer.name || customer.customerName || customerName,
-            currentBal: customer.currentBal || customer.balance || "",
-            relation: customer.relation || "",
-            station: customer.station || customer.city || customer.location || ""
-          };
-        }
+        if (customer) return formatCustomerForPayload(customer, customerName);
       } catch (e) {
         console.error("Error fetching customer data:", e);
       }
-      
       return null;
     }
 
@@ -622,25 +637,33 @@
           return;
         }
 
-        console.log("Found order:", order);
+        console.log("=== FETCHED ORDER DATA (by order ID) ===", order);
 
-        // Get customer name from order
-        const customerName = order.customer || order.customerName || "";
-        console.log("Customer name:", customerName);
+        // 1) Fetch linked customer by customerId first (do NOT rely only on name/dropdown)
+        const customerId = order.customerId != null && order.customerId !== "" ? order.customerId : null;
+        const customerName = (order.customer || order.customerName || "").toString().trim();
+        let customerData = null;
+        if (customerId) {
+          customerData = getCustomerDataById(customerId);
+          console.log("=== FETCHED CUSTOMER DATA (by customerId) ===", customerData);
+        }
+        if (!customerData && customerName) {
+          customerData = getCustomerData(customerName);
+          console.log("=== FETCHED CUSTOMER DATA (by name) ===", customerData);
+        }
 
-        // Fetch complete customer data from customers list
-        const customerData = getCustomerData(customerName);
-        console.log("Fetched customer data:", customerData);
-
-        // Create customer information object
+        // 2) Build customer info: prefer DB customer, else use order-saved fields so fields are never empty when data exists
         const customerInfo = customerData || {
+          id: order.customerId || "",
           name: customerName,
-          currentBal: order.currentBal || order.customerBalance || "",
-          relation: order.relation || order.customerRelation || "",
-          station: order.station || order.customerStation || ""
+          openingBalance: order.customerOpeningBalance ?? order.currentBal ?? order.customerBalance ?? "",
+          currentBal: order.customerOpeningBalance ?? order.currentBal ?? order.customerBalance ?? "",
+          relation: order.customerRelation || order.relation || "",
+          station: order.customerStation || order.station || ""
         };
+        console.log("=== CUSTOMER INFO FOR EDIT (will be stored in payload) ===", customerInfo);
 
-        // Create a complete snapshot of the order with ALL fields preserved
+        // Create a complete snapshot of the order with ALL fields preserved for new-order edit
         const orderSnapshot = {
           // ===== EDIT MODE FLAG =====
           isEditMode: true,
@@ -650,12 +673,16 @@
           orderNo: order.orderNo || order.billNo || "",
           billNo: order.billNo || order.orderNo || "",
           
-          // ===== CUSTOMER INFORMATION =====
+          // ===== CUSTOMER INFORMATION (names new-order.html loadOrderForEdit expects) =====
+          customerId: customerInfo.id || order.customerId || "",
           customer: customerInfo.name,
           customerName: customerInfo.name,
           currentBal: customerInfo.currentBal,
+          customerOpeningBalance: customerInfo.openingBalance ?? customerInfo.currentBal ?? "",
           relation: customerInfo.relation,
+          customerRelation: customerInfo.relation,
           station: customerInfo.station,
+          customerStation: customerInfo.station,
           
           // Additional customer fields (if they exist in your form)
           customerPhone: order.customerPhone || "",
@@ -1052,6 +1079,7 @@
       window.initElements = initElements;
       window.navigateToNewOrder = navigateToNewOrder;
       window.getCustomerData = getCustomerData;
+      window.getCustomerDataById = getCustomerDataById;
     }
 
     // Make functions globally accessible immediately

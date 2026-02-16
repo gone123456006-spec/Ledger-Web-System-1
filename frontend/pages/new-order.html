@@ -115,9 +115,10 @@
     }
 
     .app {
-      max-width: 1400px;
-      margin: auto;
-      padding: 16px;
+      max-width: none;
+      width: 100%;
+      margin: 0;
+      padding: 16px 12px;
     }
 
     /* =====================
@@ -278,7 +279,7 @@
       min-width: 1200px;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 13.5px;
+      font-size: 15px;
     }
 
     thead th {
@@ -286,12 +287,13 @@
       top: 0;
       background: #f5f6fa;
       z-index: 2;
+      font-size: 15px;
     }
 
     th,
     td {
       border-bottom: 1px solid var(--border);
-      padding: 8px 10px;
+      padding: 12px 14px;
       white-space: nowrap;
     }
 
@@ -316,11 +318,11 @@
     table input,
     table select {
       width: 100%;
-      height: 30px;
+      height: 36px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      padding: 4px 6px;
-      font-size: 13px;
+      padding: 8px 10px;
+      font-size: 14px;
     }
 
     table input:invalid {
@@ -2058,6 +2060,7 @@
           customerStation: AppState.elements.station?.value || '',
           orderDate: AppState.elements.orderDate.value,
           dueDate: AppState.elements.dueDate?.value || '',
+          gstRate: AppState.elements.gstRate?.value || '',
           type: rows[0]?.type || 'Order',
           pc: totalPc,
           grWt: totalGrWt,
@@ -2093,9 +2096,8 @@
         alert('Order saved successfully');
         showSaveIndicator();
 
-        if (resetAfter) {
-          setTimeout(() => resetOrder(true), 100);
-        }
+        // Always clear form after save so the table is empty for the next order
+        setTimeout(() => resetOrder(true), 100);
       } catch (e) {
         showLoading(false);
         console.error('Error saving order:', e);
@@ -2194,15 +2196,12 @@
 
     function loadOrderForEdit() {
       try {
-        // Check if we're in edit mode
         const editOrderId = localStorage.getItem('editOrderId');
         if (!editOrderId) return false;
 
-        // Load orders from storage
+        // 1) Fetch full order data using order ID (from DB / localStorage)
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         let order = orders.find(o => o && (o.id == editOrderId || String(o.id) === String(editOrderId)));
-
-        // Fallback: use cached snapshot from orders page edit action
         if (!order) {
           try {
             const payload = JSON.parse(localStorage.getItem('editOrderPayload') || 'null');
@@ -2213,180 +2212,158 @@
         }
 
         if (!order) {
-          console.warn('Order not found for editing:', editOrderId);
+          console.warn('[Edit Order] Order not found:', editOrderId);
           localStorage.removeItem('editOrderId');
           return false;
         }
 
-        // Set edit mode
+        console.log('[Edit Order] Fetched order data (by order ID):', order);
+        console.log('[Edit Order] Customer from order:', {
+          customerId: order.customerId,
+          customer: order.customer,
+          customerOpeningBalance: order.customerOpeningBalance,
+          currentBal: order.currentBal,
+          customerRelation: order.customerRelation,
+          relation: order.relation,
+          customerStation: order.customerStation,
+          station: order.station
+        });
+
         AppState.editMode = true;
         AppState.editOrderId = order.id;
 
-        // Load customer information (by customerId or by customer name)
-        if (AppState.elements.custName) {
-          const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-          const customerName = (order.customer || '').toString().trim();
-          const customerIdRaw = order.customerId;
+        const customerName = (order.customer || order.customerName || '').toString().trim();
+        const customerIdRaw = order.customerId != null && order.customerId !== '' ? order.customerId : null;
 
-          // Resolve customer: first by ID, then by name (for old orders or when ID missing)
-          let customer = null;
-          if (customerIdRaw != null && customerIdRaw !== '') {
-            customer = customers.find(c =>
-              c.id == customerIdRaw || String(c.id) === String(customerIdRaw)
-            );
-          }
-          if (!customer && customerName) {
-            customer = customers.find(c =>
-              (c.name || '').toString().trim().toLowerCase() === customerName.toLowerCase()
-            );
-          }
-
-          if (customer) {
-            // Select the customer in the dropdown (match by value or by display text)
-            const select = AppState.elements.custName;
-            let customerSelected = false;
-            for (let i = 0; i < select.options.length; i++) {
-              const option = select.options[i];
-              const matchByValue = option.value == customer.id || String(option.value) === String(customer.id);
-              const matchByText = (option.textContent || '').trim() === (customer.name || '').trim();
-              if (matchByValue || matchByText) {
-                select.selectedIndex = i;
-                customerSelected = true;
-                break;
-              }
-            }
-
-            if (!customerSelected && select.options.length > 0) {
-              // Last resort: append a temporary option for this customer if not in list
-              const opt = document.createElement('option');
-              opt.value = customer.id;
-              opt.textContent = customer.name;
-              opt.dataset.customer = JSON.stringify(customer);
-              select.appendChild(opt);
-              select.selectedIndex = select.options.length - 1;
-            }
-
-            // Populate customer information fields (always set these when we have customer)
-            if (AppState.elements.currentBal) {
-              AppState.elements.currentBal.value = safeNumber(customer.openingBalance).toFixed(2);
-            }
-            if (AppState.elements.relation) {
-              const rel = customer.relation || '';
-              const relName = customer.relationName || '';
-              AppState.elements.relation.value = (rel && relName ? `${rel} ${relName}` : (rel || relName));
-            }
-            if (AppState.elements.station) {
-              AppState.elements.station.value = customer.station || '';
-            }
-          } else if (customerName) {
-            // Keep legacy/old customer visible even if not found in current master list
-            const select = AppState.elements.custName;
-            const fallbackCustomer = {
-              id: String(customerIdRaw || `legacy_${editOrderId}`),
-              name: customerName,
-              openingBalance: order.customerOpeningBalance ?? order.currentBal ?? order.openingBalance ?? 0,
-              relation: order.customerRelation || order.relation || '',
-              relationName: '',
-              station: order.customerStation || order.station || ''
-            };
-            let option = Array.from(select.options).find(opt =>
-              (opt.textContent || '').toString().trim().toLowerCase() === customerName.toLowerCase()
-            );
-            if (!option) {
-              option = document.createElement('option');
-              option.value = fallbackCustomer.id;
-              option.textContent = fallbackCustomer.name;
-              option.dataset.customer = JSON.stringify(fallbackCustomer);
-              select.appendChild(option);
-            } else if (!option.dataset.customer) {
-              option.dataset.customer = JSON.stringify(fallbackCustomer);
-            }
-            select.value = option.value;
-
-            // Best-effort fallback for fields from saved order snapshot
-            if (AppState.elements.currentBal) {
-              const bal = order.customerOpeningBalance ?? order.currentBal ?? order.openingBalance ?? '';
-              AppState.elements.currentBal.value = bal !== '' ? safeNumber(bal).toFixed(2) : '';
-            }
-            if (AppState.elements.relation) {
-              AppState.elements.relation.value = order.customerRelation || order.relation || '';
-            }
-            if (AppState.elements.station) {
-              AppState.elements.station.value = order.customerStation || order.station || '';
-            }
-          }
-
-          // Trigger change so any other listeners (e.g. ratebook panel) update
-          setTimeout(() => {
-            AppState.elements.custName.dispatchEvent(new Event('change'));
-          }, 50);
-
-          // Hard fallback: ensure customer name/details are visible after async UI/render cycles.
-          setTimeout(() => {
-            const select = AppState.elements.custName;
-            if (!select) return;
-            const hasSelected = !!select.value;
-            if (!hasSelected && customerName) {
-              let option = Array.from(select.options).find(opt =>
-                (opt.textContent || '').toString().trim().toLowerCase() === customerName.toLowerCase()
-              );
-              if (!option) {
-                option = document.createElement('option');
-                option.value = String(customerIdRaw || `legacy_${editOrderId}`);
-                option.textContent = customerName;
-                option.dataset.customer = JSON.stringify({
-                  id: String(customerIdRaw || `legacy_${editOrderId}`),
-                  name: customerName,
-                  openingBalance: order.customerOpeningBalance ?? order.currentBal ?? order.openingBalance ?? 0,
-                  relation: order.customerRelation || order.relation || '',
-                  relationName: '',
-                  station: order.customerStation || order.station || ''
-                });
-                select.appendChild(option);
-              }
-              select.value = option.value;
-              select.dispatchEvent(new Event('change'));
-            }
-          }, 180);
+        // 2) Fetch linked customer details from DB using customerId (do NOT rely only on dropdown)
+        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+        let customer = null;
+        if (customerIdRaw != null && customerIdRaw !== '') {
+          customer = customers.find(c => c.id == customerIdRaw || String(c.id) === String(customerIdRaw));
         }
+        if (!customer && customerName) {
+          customer = customers.find(c =>
+            (c.name || '').toString().trim().toLowerCase() === customerName.toLowerCase()
+          );
+        }
+        console.log('[Edit Order] Fetched customer data (by customerId/name):', customer);
+
+        // 3) Explicit values from order for controlled binding (use order first, then customer)
+        const currentBalVal = (order.customerOpeningBalance ?? order.currentBal ?? order.openingBalance ?? (customer && (customer.openingBalance ?? customer.currentBal))) ?? '';
+        const relationVal = (order.customerRelation || order.relation || (customer && (customer.relation || (customer.relationName ? [customer.relation, customer.relationName].filter(Boolean).join(' ') : '')))) ?? '';
+        const stationVal = (order.customerStation || order.station || (customer && customer.station)) ?? '';
+
+        // 4) Populate form fields explicitly (value bound to order/customer state) – run after DOM is ready
+        function applyCustomerFieldsToForm() {
+          const select = AppState.elements.custName;
+          const currentBalEl = AppState.elements.currentBal;
+          const relationEl = AppState.elements.relation;
+          const stationEl = AppState.elements.station;
+
+          if (!select) return;
+
+          // Set dropdown to match customerId (controlled: value = customerId)
+          const idToSelect = String(customerIdRaw || (customer && customer.id) || '');
+          const nameToShow = customerName || (customer && customer.name) || '';
+
+          let option = Array.from(select.options).find(opt =>
+            (opt.value === idToSelect || String(opt.value) === idToSelect) ||
+            ((opt.textContent || '').trim().toLowerCase() === nameToShow.toLowerCase())
+          );
+          if (!option && (idToSelect || nameToShow)) {
+            option = document.createElement('option');
+            option.value = idToSelect || `legacy_${editOrderId}`;
+            option.textContent = nameToShow || 'Unknown';
+            option.dataset.customer = JSON.stringify({
+              id: idToSelect,
+              name: nameToShow,
+              openingBalance: currentBalVal,
+              relation: relationVal,
+              relationName: '',
+              station: stationVal
+            });
+            select.appendChild(option);
+          }
+          if (option) {
+            select.value = option.value;
+            if (!option.dataset.customer && (currentBalVal !== '' || relationVal !== '' || stationVal !== '')) {
+              option.dataset.customer = JSON.stringify({
+                id: idToSelect,
+                name: nameToShow,
+                openingBalance: currentBalVal,
+                relation: relationVal,
+                station: stationVal
+              });
+            }
+          }
+
+          // Set Current Balance, Relation, Station explicitly (controlled: value bound to state)
+          if (currentBalEl) {
+            currentBalEl.value = (currentBalVal !== '' && currentBalVal != null) ? safeNumber(currentBalVal).toFixed(2) : '';
+          }
+          if (relationEl) {
+            relationEl.value = (relationVal != null && relationVal !== undefined) ? String(relationVal) : '';
+          }
+          if (stationEl) {
+            stationEl.value = (stationVal != null && stationVal !== undefined) ? String(stationVal) : '';
+          }
+
+          console.log('[Edit Order] Form state after apply:', {
+            dropdownValue: select.value,
+            currentBal: currentBalEl ? currentBalEl.value : '',
+            relation: relationEl ? relationEl.value : '',
+            station: stationEl ? stationEl.value : ''
+          });
+        }
+
+        applyCustomerFieldsToForm();
+        // Lifecycle: run again after a tick so any async DOM/workspace is ready
+        requestAnimationFrame(() => applyCustomerFieldsToForm());
+        setTimeout(() => {
+          applyCustomerFieldsToForm();
+          AppState.elements.custName.dispatchEvent(new Event('change'));
+        }, 100);
+        setTimeout(() => applyCustomerFieldsToForm(), 250);
 
         // Lock customer field when editing from orders page
         const isCustomerReadOnly = localStorage.getItem('editCustomerReadOnly');
         setCustomerEditLock(isCustomerReadOnly === 'true');
 
-        // Load bill info
-        if (order.orderNo) AppState.elements.billNo.value = order.orderNo;
-        if (order.orderDate) AppState.elements.orderDate.value = order.orderDate;
-        if (order.dueDate && AppState.elements.dueDate) AppState.elements.dueDate.value = order.dueDate;
+        // Load bill info – ensure no field remains empty if data exists
+        if (order.orderNo != null && order.orderNo !== '') AppState.elements.billNo.value = String(order.orderNo);
+        if (order.orderDate != null && order.orderDate !== '') AppState.elements.orderDate.value = order.orderDate;
+        if (AppState.elements.dueDate && order.dueDate != null && order.dueDate !== '') AppState.elements.dueDate.value = order.dueDate;
+        if (AppState.elements.gstRate && order.gstRate != null && order.gstRate !== '') AppState.elements.gstRate.value = order.gstRate;
 
-        // Load items/rows
+        // Load all order items into the table – restore every row with values and metadata
         AppState.elements.itemBody.innerHTML = '';
-        if (order.items && order.items.length > 0) {
-          order.items.forEach(item => {
-            addRow();
-            const tr = AppState.elements.itemBody.lastElementChild;
+        const items = order.items || [];
+        for (let idx = 0; idx < items.length; idx++) {
+          const item = items[idx];
+          addRow();
+          const tr = AppState.elements.itemBody.lastElementChild;
+          if (!tr) continue;
 
-            // Restore all input/select values
-            tr.querySelectorAll('input,select').forEach((el, i) => {
-              if (item.values && item.values[i] !== undefined) {
-                el.value = item.values[i];
-              }
-            });
+          // Restore every input/select by index (same order as save)
+          const inputs = tr.querySelectorAll('input, select');
+          const values = item.values || [];
+          for (let i = 0; i < inputs.length && i < values.length; i++) {
+            if (values[i] !== undefined && values[i] !== null) inputs[i].value = String(values[i]);
+          }
 
-            // Restore type
-            if (item.type) {
-              const typeSelect = tr.cells[0]?.querySelector('select');
-              if (typeSelect) typeSelect.value = item.type;
-            }
+          // Restore type select
+          if (item.type) {
+            const typeSelect = tr.cells[0]?.querySelector('select');
+            if (typeSelect && [ 'Order', 'Repair', 'Sale', 'Purchase' ].includes(item.type)) typeSelect.value = item.type;
+          }
 
-            // Restore metadata
-            if (item.delivery) tr.dataset.delivery = item.delivery;
-            if (item.sample) tr.dataset.sample = item.sample;
-            if (item.orderFilled) tr.dataset.orderFilled = item.orderFilled;
+          // Restore row metadata
+          if (item.delivery != null) tr.dataset.delivery = item.delivery;
+          if (item.sample != null) tr.dataset.sample = item.sample;
+          if (item.orderFilled != null) tr.dataset.orderFilled = item.orderFilled;
 
-            // Recalculate row
-            setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
-          });
+          // Recalculate row totals so displayed totals match saved data
+          setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10 + idx * 5);
         }
 
         // Update panels
@@ -2415,58 +2392,39 @@
         return;
       }
 
-      // Clear fields
+      clearOrderFormAndState();
+    }
+
+    /** Permanently clear the entire order form, table, state, and UI for a fresh order. */
+    function clearOrderFormAndState() {
+      // Clear all input fields
       if (AppState.elements.custName) AppState.elements.custName.value = '';
       if (AppState.elements.billNo) AppState.elements.billNo.value = generateBillNo();
       if (AppState.elements.orderDate) AppState.elements.orderDate.valueAsDate = new Date();
       if (AppState.elements.dueDate) AppState.elements.dueDate.value = '';
       if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
 
+      // Clear customer details (name selection, balance, relation, station)
       clearCustomerFields();
 
-      // Clear table (no initial row; user clicks "+ Add Row" to add)
+      // Clear table completely – no rows remain
       if (AppState.elements.itemBody) {
         AppState.elements.itemBody.innerHTML = '';
       }
 
-      // Clear auto-save
+      // Remove all temporary order data from frontend state / local storage
       localStorage.removeItem('orderAutoSave');
+      localStorage.removeItem('newOrderState');
+      localStorage.removeItem('editOrderId');
+      localStorage.removeItem('editOrderPayload');
+      localStorage.removeItem('editCustomerReadOnly');
 
       // Reset edit mode
       AppState.editMode = false;
       AppState.editOrderId = null;
-      localStorage.removeItem('editCustomerReadOnly');
       setCustomerEditLock(false);
 
-      updateInfoPanel();
-    }
-
-    function clearAllData() {
-      // Clear all form fields
-      if (AppState.elements.custName) AppState.elements.custName.value = '';
-      if (AppState.elements.billNo) AppState.elements.billNo.value = '';
-      if (AppState.elements.orderDate) AppState.elements.orderDate.value = '';
-      if (AppState.elements.dueDate) AppState.elements.dueDate.value = '';
-      if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
-
-      // Clear customer information
-      clearCustomerFields();
-
-      // Clear all table rows
-      if (AppState.elements.itemBody) {
-        AppState.elements.itemBody.innerHTML = '';
-      }
-
-      // Clear auto-save
-      localStorage.removeItem('orderAutoSave');
-
-      // Reset edit mode
-      AppState.editMode = false;
-      AppState.editOrderId = null;
-      localStorage.removeItem('editCustomerReadOnly');
-      setCustomerEditLock(false);
-
-      // Clear and reset info panels
+      // Reset totals and panels so UI shows zero and empty lists
       const panelOrderTotal = document.getElementById('panelOrderTotal');
       const panelPurchaseTotal = document.getElementById('panelPurchaseTotal');
       const panelBillTotal = document.getElementById('panelBillTotal');
@@ -2484,10 +2442,15 @@
       if (paymentList) {
         paymentList.innerHTML = '<div class="empty-state">No payments yet</div>';
       }
-
       if (ratebookList) {
         ratebookList.innerHTML = '<div class="empty-state">No rates available</div>';
       }
+    }
+
+    function clearAllData() {
+      // Permanently clear form, table, state, and panels (e.g. before closing)
+      clearOrderFormAndState();
+      if (AppState.elements.billNo) AppState.elements.billNo.value = '';
     }
 
     function closeDashboard() {
@@ -2587,24 +2550,11 @@
       // Edit mode must take priority over return-state restoration
       const pendingEditOrderId = localStorage.getItem('editOrderId');
 
-      // New Order: open with unique Bill No. and everything clear (no old data)
+      // New Order: immediately clear any existing data and show empty form
       const newOrderClearForm = localStorage.getItem('newOrderClearForm');
       if (newOrderClearForm === 'true' && !pendingEditOrderId) {
         localStorage.removeItem('newOrderClearForm');
-        localStorage.removeItem('orderAutoSave');
-        if (AppState.elements.custName) AppState.elements.custName.value = '';
-        clearCustomerFields();
-        if (AppState.elements.billNo) AppState.elements.billNo.value = generateBillNo();
-        if (AppState.elements.orderDate) AppState.elements.orderDate.valueAsDate = new Date();
-        if (AppState.elements.dueDate) AppState.elements.dueDate.value = '';
-        if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
-        if (AppState.elements.itemBody) {
-          AppState.elements.itemBody.innerHTML = '';
-        }
-        AppState.editMode = false;
-        AppState.editOrderId = null;
-        setCustomerEditLock(false);
-        updateInfoPanel();
+        clearOrderFormAndState();
         // Skip edit load and auto-save restore below
       } else {
         // Check if returning from ratebook (only when not editing)
@@ -2624,20 +2574,20 @@
         // Start with no rows (no extra row for any type); rows added only by restore or edit load
         if (AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
 
-        // Set initial date
-        if (AppState.elements.orderDate && !AppState.elements.orderDate.value) {
-          AppState.elements.orderDate.valueAsDate = new Date();
-        }
-
-        // Generate bill number if empty (only when not in new-order-clear flow)
-        if (AppState.elements.billNo && !AppState.elements.billNo.value) {
-          AppState.elements.billNo.value = generateBillNo();
+        // When editing an order, don't pre-fill date/bill no – loadOrderForEdit will set them from the order
+        if (!pendingEditOrderId) {
+          if (AppState.elements.orderDate && !AppState.elements.orderDate.value) {
+            AppState.elements.orderDate.valueAsDate = new Date();
+          }
+          if (AppState.elements.billNo && !AppState.elements.billNo.value) {
+            AppState.elements.billNo.value = generateBillNo();
+          }
         }
 
         // Setup bill number change handler
         setupBillNoHandler();
 
-        // Check if we're editing an existing order
+        // Check if we're editing an existing order – load all customer data and items from DB (orders) by order ID
         const editLoaded = loadOrderForEdit();
 
         // If not editing, try to restore auto-saved state
