@@ -318,9 +318,9 @@
                 </div>
             </div>
 
-            <!-- Applied formula: (Cur.Rate - Rate Book) × [F3] Adj Wt = Diff Amount -->
+            <!-- Applied formula: RATE BOOK - CURRENT RATE × ADJ WT. = DIFF AMOUNT -->
             <div class="diff-formula-note" style="padding:8px 12px; margin-bottom:8px; background:var(--primary-soft); border-radius:var(--radius); font-size:13px; color:var(--text);">
-                <strong>Applied formula:</strong> (Cur.Rate − Rate Book) × [F3] Adj Wt = Diff Amount
+                <strong>Applied formula:</strong> Rate Book − (Cur.Rate × Adj Wt.) = Diff Amount
             </div>
             <!-- Table -->
             <div class="table-container">
@@ -342,7 +342,7 @@
                             <th style="width:100px;">Cur Stamp</th>
                             <th class="text-right" style="width:100px;">Cur Wt</th>
                             <th class="text-right" style="width:100px;">Cur Rate</th>
-                            <th class="text-right" style="width:110px;" title="(Cur.Rate − Rate Book) × [F3] Adj Wt = Diff Amount">Amt Diff</th>
+                            <th class="text-right" style="width:110px;" title="Rate Book − (Cur.Rate × Adj Wt.) = Diff Amount">Amt Diff</th>
                             <th style="width:130px;">Del Date</th>
                             <th style="width:150px;">Narration</th>
                             <th style="width:80px; text-align:center;">Action</th>
@@ -423,14 +423,11 @@
                     // Effective Current Rate
                     const effectiveCurrentRate = entryCurrentRate || globalCurrentRate;
 
-                    // Calculate Diff Amt dynamically
-                    let diffAmt = 0;
-                    if (effectiveCurrentRate > 0) {
-                        diffAmt = (effectiveCurrentRate - entryRate) * balWt;
-                    }
+                    // Diff Amount = Rate Book - (Cur.Rate × Adj Wt.)
+                    const diffAmt = entryRate - (effectiveCurrentRate * adjWt);
 
                     // Format Diff Amount for display
-                    const displayDiff = effectiveCurrentRate > 0 ? diffAmt.toFixed(2) : "0.00";
+                    const displayDiff = diffAmt.toFixed(2);
                     const diffColor = diffAmt >= 0 ? "var(--success)" : "var(--danger)";
 
                     // Determine if using Legacy Type (S,P,O,R) or New Type (order, repair...)
@@ -538,13 +535,12 @@
             } catch (e) { console.error(e); }
         };
 
-        /* Diff Amount = (Cur.Rate - Rate Book) × [F3] Adj Wt */
+        /* Diff Amount = Rate Book - (Cur.Rate × Adj Wt.) */
         function calculateDiff(entry, balWt, bookedRate) {
             const curRate = safeNumber(entry.curRate, 0);
             const adjWt = safeNumber(entry.adjWt, 0);
             const rateBook = safeNumber(bookedRate, 0);
-            const rateDiff = curRate - rateBook;
-            const diff = rateDiff * adjWt;
+            const diff = rateBook - (curRate * adjWt);
             return diff.toFixed(2);
         }
 
@@ -568,9 +564,8 @@
 
             const adjWt = parseFloat(adjWtInput.value) || 0;
             const curRate = parseFloat(curRateInput.value) || 0;
-            // (Cur.Rate - Rate Book) × [F3] Adj Wt = Diff Amount
-            const rateDiff = curRate - bookedRate;
-            const diff = rateDiff * adjWt;
+            // Rate Book - (Cur.Rate × Adj Wt.) = Diff Amount
+            const diff = bookedRate - (curRate * adjWt);
 
             diffInput.value = diff.toFixed(2);
             if (diff > 0) diffInput.style.color = 'var(--success)';
@@ -771,7 +766,7 @@
                     const rateBookVal = Number(forBill.rate) || 0;
                     const curRate = Number(forBill.curRate) || 0;
                     const adjWt = Number(forBill.adjWt) || 0;
-                    const diffAmount = (curRate - rateBookVal) * adjWt;
+                    const diffAmount = rateBookVal - (curRate * adjWt);
                     const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${Math.round(diffAmount)}`;
                     localStorage.setItem("rateBookDiffSummary_" + ratebookBillNo, line);
                 }
