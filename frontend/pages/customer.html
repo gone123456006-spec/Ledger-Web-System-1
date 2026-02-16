@@ -7,108 +7,234 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
-      --bg: #f5f6f8;
+      --bg: #e8f0fe;
+      --bg-gradient: linear-gradient(160deg, #d4e4f7 0%, #e8f0fe 50%, #f0f6fc 100%);
       --card: #ffffff;
-      --text: #000000;
-      --muted: #6e6e73;
-      --border: #e5e5ea;
-      --primary: #007aff;
-      --danger: #ff3b30;
-      --radius: 14px;
+      --text: #1a1a1a;
+      --muted: #5f6368;
+      --border: #dadce0;
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --danger: #d93025;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
-    * { box-sizing: border-box; font-family: "Segoe UI", Roboto, Arial, sans-serif; }
-    html, body { margin: 0; padding: 0; height: 100%; background: transparent; color: var(--text); }
+    * { box-sizing: border-box; font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif; }
+    html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg-gradient); color: var(--text); }
 
     .page {
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       margin: 0;
-      padding: 16px 12px;
+      padding: 24px 20px 100px;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
-      align-items: stretch;
+      align-items: center;
       justify-content: flex-start;
-      box-sizing: border-box;
     }
-    h2 { font-weight: 600; margin: 0 0 15px 0; font-size: 20px; flex-shrink: 0; width: 100%; max-width: none; }
+    h2 {
+      font-weight: 600;
+      margin: 0 0 20px 0;
+      font-size: 22px;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
 
     .erp-form {
       background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
       border: 1px solid var(--border);
-      padding: 22px 28px;
+      padding: 28px 32px 32px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px 24px;
-      max-width: none;
+      gap: 24px 40px;
+      max-width: 960px;
       width: 100%;
-      align-self: stretch;
+      align-self: center;
+      transition: box-shadow 0.2s ease;
     }
-    .form-left, .form-right { display: flex; flex-direction: column; gap: 0; }
-    .form-left h4, .form-right h4 { margin: 0 0 6px 0; font-size: 15px; color: var(--muted); font-weight: 600; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
-    .form-left h4:not(:first-child), .form-right h4:not(:first-child) { margin-top: 8px; }
-    label { font-size: 12px; color: var(--muted); margin-top: 4px; margin-bottom: 2px; display: block; font-weight: 500; }
+    .erp-form:hover { box-shadow: var(--shadow-hover); }
+
+    .form-left, .form-right {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .form-section {
+      margin-bottom: 20px;
+    }
+    .form-section:last-child { margin-bottom: 0; }
+    .form-left h4, .form-right h4 {
+      margin: 0 0 14px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border);
+    }
+    .form-left h4:not(:first-child), .form-right h4:not(:first-child) { margin-top: 4px; }
+
+    .field {
+      margin-bottom: 14px;
+    }
+    .field:last-child { margin-bottom: 0; }
+    label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: block;
+      font-weight: 500;
+    }
+    label .required { color: var(--danger); margin-left: 1px; }
     input, textarea, select {
       width: 100%;
-      max-width: 100%;
-      padding: 6px 10px;
-      margin-top: 2px;
-      border-radius: 8px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-      font-size: 13px;
-      box-sizing: border-box;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); }
-    textarea { resize: none; height: 55px; font-family: inherit; }
-    .row { display: flex; gap: 8px; align-items: flex-end; }
-    .row select { max-width: 75px; flex-shrink: 0; }
+    input::placeholder, textarea::placeholder { color: #9aa0a6; }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    }
+    input[readonly], input:disabled {
+      background: #f8f9fa;
+      color: var(--muted);
+      cursor: default;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+      font-family: inherit;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .row select { width: 80px; flex-shrink: 0; }
+    .row input { flex: 1; min-width: 0; }
+
+    .date-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .date-wrap input { padding-right: 40px; }
+    .date-wrap::after {
+      content: "";
+      position: absolute;
+      right: 12px;
+      width: 18px;
+      height: 18px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'/%3E%3C/svg%3E") center/contain no-repeat;
+      pointer-events: none;
+    }
 
     .form-actions {
-      position: sticky; bottom: 0; left: 0; right: 0;
-      background: rgba(255, 255, 255, .98);
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(8px);
       border-top: 1px solid var(--border);
-      display: flex; justify-content: center; gap: 10px; padding: 12px 15px; z-index: 100;
-      box-shadow: 0 -2px 8px rgba(0, 0, 0, .05); margin-top: auto; flex-shrink: 0; width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px 20px;
+      z-index: 100;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
     }
-    button { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: #cae8ff; cursor: pointer; font-size: 13px; min-width: 120px; }
-    button:hover { background: #b0d9f0; }
-    button.primary { background: var(--primary); color: #fff; border: none; }
-    button.primary:hover { background: #0056cc; }
+    .form-actions button {
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      min-width: 130px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.05s ease;
+    }
+    .form-actions button:active { transform: scale(0.98); }
+    .form-actions button:not(.primary) {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+    .form-actions button:not(.primary):hover {
+      background: #f8f9fa;
+      border-color: #bdc1c6;
+    }
+    .form-actions button.primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+    }
+    .form-actions button.primary:hover { background: var(--primary-hover); }
 
     #customerListSection {
       display: none;
       flex: 1;
       width: 100%;
-      max-width: none;
+      max-width: 1100px;
+      align-self: center;
       overflow: hidden;
       flex-direction: column;
       min-height: 0;
-      align-self: stretch;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 20px;
     }
     #customerListSection[style*="flex"] { display: flex !important; }
     #customerListSection .list-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
     }
-    #customerListSection h2 { margin: 0; }
-    #customerListSection .back-btn { padding: 8px 16px; font-size: 13px; white-space: nowrap; }
-    #customerListSection input { margin-bottom: 12px; max-width: 300px; }
-    .table-wrap { width: 100%; overflow: auto; border-radius: 12px; flex: 1; min-height: 0; }
-    table { width: 100%; min-width: 800px; border-collapse: collapse; background: #fff; border: 1px solid var(--border); }
-    th, td { padding: 12px 14px; font-size: 14px; text-align: left; border: 1px solid var(--border); white-space: nowrap; }
-    th { background: #f2f2f7; font-weight: 600; font-size: 15px; position: sticky; top: 0; z-index: 10; }
-    tbody tr:hover { background: #f9fafc; }
-    #customerListSection table button { padding: 6px 12px; font-size: 13px; margin: 0 2px; }
+    #customerListSection h2 { margin: 0; font-size: 20px; }
+    #customerListSection .back-btn { padding: 10px 18px; font-size: 14px; white-space: nowrap; }
+    #customerListSection input {
+      margin-bottom: 12px;
+      max-width: 320px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .table-wrap { width: 100%; overflow: auto; border-radius: var(--radius-sm); flex: 1; min-height: 0; border: 1px solid var(--border); }
+    table { width: 100%; min-width: 800px; border-collapse: collapse; background: #fff; }
+    th, td { padding: 12px 16px; font-size: 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: #f8f9fa; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 10; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child td { border-bottom: none; }
+    #customerListSection table button {
+      padding: 8px 14px;
+      font-size: 13px;
+      margin: 0 4px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+    }
+    #customerListSection table button:hover { background: #f0f6fc; }
+    #customerListSection table button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
     .erp-form[style*="none"] { display: none !important; }
 
     @media (max-width: 900px) {
-      .erp-form { grid-template-columns: 1fr; }
+      .erp-form { grid-template-columns: 1fr; gap: 20px; padding: 20px 24px; }
+      .page { padding: 16px 12px 90px; }
       #customerListSection .list-header { flex-direction: column; align-items: flex-start; }
     }
   </style>
@@ -121,62 +247,99 @@
     <form id="customerForm" class="erp-form">
       <div class="form-left">
         <h4>Personal Details</h4>
-        <label>Customer ID</label>
-        <input id="cid" placeholder="Auto Generated">
-        <label>Name *</label>
-        <input id="name" required>
-        <label>Relation</label>
-        <div class="row">
-          <select id="relation">
-            <option>S/O</option>
-            <option>W/O</option>
-            <option>D/O</option>
-            <option>C/O</option>
+        <div class="field">
+          <label for="cid">Customer ID</label>
+          <input id="cid" readonly placeholder="Auto Generated" title="Auto generated on save">
+        </div>
+        <div class="field">
+          <label for="name">Name <span class="required">*</span></label>
+          <input id="name" required placeholder="Enter full name">
+        </div>
+        <div class="field">
+          <label for="relation">Relation</label>
+          <div class="row">
+            <select id="relation">
+              <option>S/O</option>
+              <option>W/O</option>
+              <option>D/O</option>
+              <option>C/O</option>
+            </select>
+            <input id="relationName" placeholder="Name">
+          </div>
+        </div>
+        <div class="field">
+          <label for="type">Type</label>
+          <select id="type">
+            <option value="Customer">Customer</option>
+            <option value="Jeweller">Jeweller</option>
+            <option value="Agent">Agent</option>
           </select>
-          <input id="relationName" placeholder="Name">
         </div>
-        <label>Type</label>
-        <select id="type">
-          <option value="Customer">Customer</option>
-          <option value="Jeweller">Jeweller</option>
-          <option value="Agent">Agent</option>
-        </select>
-        <label>LF No</label>
-        <input id="lfno">
-        <label>Opening Date</label>
-        <input type="date" id="openingDate">
-        <h4 style="margin-top:16px">Account</h4>
-        <label>Opening Balance</label>
-        <input type="number" id="openingBalance" step="0.01">
-        <label>Gold Balance</label>
-        <div class="row">
-          <input type="number" id="goldBalance" step="0.001">
-          <select><option>gm</option></select>
+        <div class="field">
+          <label for="lfno">LF No</label>
+          <input id="lfno" placeholder="LF number">
         </div>
-        <label>Silver Balance</label>
-        <div class="row">
-          <input type="number" id="silverBalance" step="0.001">
-          <select><option>gm</option></select>
+        <div class="field">
+          <label for="openingDate">Opening Date</label>
+          <div class="date-wrap">
+            <input type="date" id="openingDate" placeholder="dd-mm-yyyy">
+          </div>
         </div>
-        <label>Max Credit Limit</label>
-        <input type="number" id="maxLimit" step="0.01">
-        <label>Aadhar No</label>
-        <input id="aadhar">
-        <label>PAN No</label>
-        <input id="pan">
+
+        <h4>Account</h4>
+        <div class="field">
+          <label for="openingBalance">Opening Balance</label>
+          <input type="number" id="openingBalance" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="goldBalance">Gold Balance</label>
+          <div class="row">
+            <input type="number" id="goldBalance" step="0.001" placeholder="0">
+            <select id="goldUnit" aria-label="Unit"><option>gm</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="silverBalance">Silver Balance</label>
+          <div class="row">
+            <input type="number" id="silverBalance" step="0.001" placeholder="0">
+            <select id="silverUnit" aria-label="Unit"><option>gm</option></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="maxLimit">Max Credit Limit</label>
+          <input type="number" id="maxLimit" step="0.01" placeholder="0.00">
+        </div>
+        <div class="field">
+          <label for="aadhar">Aadhar No</label>
+          <input id="aadhar" placeholder="Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div class="field">
+          <label for="pan">PAN No</label>
+          <input id="pan" placeholder="PAN number" maxlength="10">
+        </div>
       </div>
       <div class="form-right">
         <h4>Contact Details</h4>
-        <label>Address</label>
-        <textarea id="address"></textarea>
-        <label>Station</label>
-        <input type="text" id="station" placeholder="Enter station">
-        <label>Phone *</label>
-        <input id="phone" required placeholder="10-digit">
-        <label>Mobile</label>
-        <input id="mobile" placeholder="10-digit">
-        <label>Email</label>
-        <input type="email" id="email">
+        <div class="field">
+          <label for="address">Address</label>
+          <textarea id="address" placeholder="Enter full address" rows="3"></textarea>
+        </div>
+        <div class="field">
+          <label for="station">Station</label>
+          <input type="text" id="station" placeholder="Enter station">
+        </div>
+        <div class="field">
+          <label for="phone">Phone <span class="required">*</span></label>
+          <input id="phone" required placeholder="10-digit" maxlength="10" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label for="mobile">Mobile</label>
+          <input id="mobile" placeholder="10-digit" maxlength="10" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="email@example.com">
+        </div>
       </div>
     </form>
 
