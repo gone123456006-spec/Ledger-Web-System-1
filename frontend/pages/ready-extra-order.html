@@ -967,7 +967,7 @@
               <th>Est. Total Wt.</th>
               <th>Rate</th>
               <th>Lbr.%</th>
-              <th class="total">Total</th>
+              <th class="total">Est. Total</th>
               <th>Ready metal</th>
               <th>Neg</th>
               <th>Ready Weight</th>
@@ -2923,8 +2923,8 @@
 <tr>
   <td style="word-break:break-word; font-size:9px;">${itemName}</td>
   <td style="font-size:9px;">${r.cells[7] && r.cells[7].children[0] ? r.cells[7].children[0].value || "0" : "0"}</td>
+  <td style="font-size:9px;">${r.cells[9] && r.cells[9].children[0] ? r.cells[9].children[0].value || "0" : "0"}</td>
   <td style="font-size:9px;">${r.cells[10] && r.cells[10].children[0] ? r.cells[10].children[0].value || "0" : "0"}</td>
-  <td style="font-size:9px;">${r.cells[11] && r.cells[11].children[0] ? r.cells[11].children[0].value || "0" : "0"}</td>
   <td style="font-size:9px;">${t.toFixed(2)}</td>
   <td style="font-size:8px; word-break:break-word;">${orderDetails}</td>
 </tr>`;

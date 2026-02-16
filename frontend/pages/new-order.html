@@ -865,12 +865,8 @@
 
 <body>
 
-  <!-- Loading Overlay -->
-  <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-  </div>
-
-  <div id="loadingOverlay" class="overlay">
+  <!-- Loading Overlay (single element to avoid duplicate ID) -->
+  <div class="loading-overlay overlay" id="loadingOverlay">
     <div class="spinner"></div>
   </div>
 
@@ -881,11 +877,11 @@
 
     <div class="order-title">
       <span>GST Order</span>
-      <span class="save-indicator" id="saveIndicator">✓ Auto-saved</span>
+      <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
     </div>
 
-    <!-- Error Message -->
-    <div class="error-message" id="errorMessage"></div>
+    <!-- Error Message (toast above is main; this is inline placeholder) -->
+    <div class="error-message" id="errorMessageInline" aria-live="polite"></div>
 
     <!-- TOP -->
     <div class="order-top">
@@ -981,7 +977,7 @@
 
     <!-- ACTIONS -->
     <div class="actions">
-      <button class="primary" onclick="addRow()">+ Add Row</button>
+      <button class="primary" onclick="addRowNewOrder()">+ Add Row</button>
       <button onclick="openPayment()">Payment</button>
       <button onclick="openRateBook()">Rate Book</button>
       <button class="primary" onclick="saveOrder()">Save Order</button>
@@ -1097,7 +1093,7 @@
   </div>
 
   <!-- PAYMENT POPUP -->
-  <div id="paymentPopup" class="popup-bg" onclick="if(event.target===this) closePaymentPopup()">
+  <div id="paymentPopup" class="popup-bg" onclick="if(event.target===this) (typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup:closePaymentPopup)()">
     <div class="popup-box">
       <h3>Add Payment</h3>
       <div class="popup-row">
@@ -1124,14 +1120,14 @@
         <div><strong style="color:#dc3545;">Balance: ₹<span id="popupBalance">0.00</span></strong></div>
       </div>
       <div class="popup-actions">
-        <button onclick="savePayment()">Save Payment</button>
-        <button onclick="closePaymentPopup()">Cancel</button>
+        <button onclick="typeof newOrderSavePayment==='function'?newOrderSavePayment():savePayment()">Save Payment</button>
+        <button onclick="typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup():closePaymentPopup()">Cancel</button>
       </div>
     </div>
   </div>
 
   <!-- RATEBOOK POPUP -->
-  <div id="ratebookPopup" class="popup-bg" onclick="if(event.target===this) closeRatebookPopup()">
+  <div id="ratebookPopup" class="popup-bg" onclick="if(event.target===this) (typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup:closeRatebookPopup)()">
     <div class="popup-box" style="max-width: 500px;">
       <h3>Rate Booking</h3>
       <div class="popup-row">
@@ -1163,14 +1159,14 @@
         <textarea id="rbNarration" placeholder="Enter narration..."></textarea>
       </div>
       <div class="popup-actions">
-        <button onclick="saveRatebookEntry()">Save Rate</button>
-        <button onclick="closeRatebookPopup()">Cancel</button>
+        <button onclick="typeof newOrderSaveRatebookEntry==='function'?newOrderSaveRatebookEntry():saveRatebookEntry()">Save Rate</button>
+        <button onclick="typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup():closeRatebookPopup()">Cancel</button>
       </div>
     </div>
   </div>
 
   <!-- ORDER DETAILS POPUP (when Type = Order) -->
-  <div id="orderDetailsPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this) closeOrderDetailsPopup()">
+  <div id="orderDetailsPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this) (typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup:closeOrderDetailsPopup)()">
     <div class="popup-box" style="max-width: 420px;">
       <h3>Order Details</h3>
       <div class="popup-row">
@@ -1186,8 +1182,8 @@
         <textarea id="orderDetailsSample" placeholder="Sample details..." rows="2"></textarea>
       </div>
       <div class="popup-actions">
-        <button onclick="saveOrderDetailsPopup()">Save</button>
-        <button onclick="closeOrderDetailsPopup()">Cancel</button>
+        <button onclick="typeof newOrderSaveOrderDetailsPopup==='function'?newOrderSaveOrderDetailsPopup():saveOrderDetailsPopup()">Save</button>
+        <button onclick="typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup():closeOrderDetailsPopup()">Cancel</button>
       </div>
     </div>
   </div>
@@ -1261,6 +1257,12 @@
 
     function getSearchRoot() {
       return document.querySelector('.workspace') || document;
+    }
+
+    /** Find popup/element by id in workspace or document so popups work in both standalone and embedded (workspace) mode. */
+    function getPopupEl(id) {
+      const root = getSearchRoot();
+      return root.querySelector('#' + id) || document.getElementById(id);
     }
 
     function initElements() {
@@ -1438,6 +1440,11 @@
       scheduleAutoSave();
     }
 
+    /** Called by the + Add Row button. Ensures we always use new-order's 14-column row (not ready-extra-order's 20-column row) when in shared/workspace context. */
+    function addRowNewOrder() {
+      addRow();
+    }
+
     function removeRow(btn) {
       if (!confirm('Remove this row?')) return;
 
@@ -1530,12 +1537,11 @@
       const row = select ? select.closest('tr') : null;
       if (!row) return;
       _orderDetailsRow = row;
-      const root = getSearchRoot();
-      const popup = root.querySelector('#orderDetailsPopup');
+      const popup = getPopupEl('orderDetailsPopup');
       if (!popup) return;
-      const daysEl = root.querySelector('#orderDetailsDays');
-      const dateEl = root.querySelector('#orderDetailsDeliveryDate');
-      const sampleEl = root.querySelector('#orderDetailsSample');
+      const daysEl = getPopupEl('orderDetailsDays') || getSearchRoot().querySelector('#orderDetailsDays');
+      const dateEl = getPopupEl('orderDetailsDeliveryDate') || getSearchRoot().querySelector('#orderDetailsDeliveryDate');
+      const sampleEl = getPopupEl('orderDetailsSample') || getSearchRoot().querySelector('#orderDetailsSample');
       if (daysEl) daysEl.value = row.dataset.daysToDelivery || '';
       if (dateEl) {
         dateEl.value = row.dataset.deliveryDate || row.dataset.delivery || '';
@@ -1550,9 +1556,8 @@
     }
 
     function calculateOrderDetailsDeliveryDate() {
-      const root = getSearchRoot();
-      const daysEl = root.querySelector('#orderDetailsDays');
-      const dateEl = root.querySelector('#orderDetailsDeliveryDate');
+      const daysEl = getPopupEl('orderDetailsDays') || getSearchRoot().querySelector('#orderDetailsDays');
+      const dateEl = getPopupEl('orderDetailsDeliveryDate') || getSearchRoot().querySelector('#orderDetailsDeliveryDate');
       if (!daysEl || !dateEl) return;
       const days = parseInt(daysEl.value, 10);
       const today = new Date();
@@ -1565,19 +1570,21 @@
 
     function closeOrderDetailsPopup() {
       _orderDetailsRow = null;
-      const popup = getSearchRoot().querySelector('#orderDetailsPopup');
+      const popup = getPopupEl('orderDetailsPopup');
       if (popup) popup.style.display = 'none';
     }
+
+    function newOrderCloseOrderDetailsPopup() { closeOrderDetailsPopup(); }
+    function newOrderSaveOrderDetailsPopup() { saveOrderDetailsPopup(); }
 
     function saveOrderDetailsPopup() {
       if (!_orderDetailsRow) {
         closeOrderDetailsPopup();
         return;
       }
-      const root = getSearchRoot();
-      const daysEl = root.querySelector('#orderDetailsDays');
-      const dateEl = root.querySelector('#orderDetailsDeliveryDate');
-      const sampleEl = root.querySelector('#orderDetailsSample');
+      const daysEl = getPopupEl('orderDetailsDays') || getSearchRoot().querySelector('#orderDetailsDays');
+      const dateEl = getPopupEl('orderDetailsDeliveryDate') || getSearchRoot().querySelector('#orderDetailsDeliveryDate');
+      const sampleEl = getPopupEl('orderDetailsSample') || getSearchRoot().querySelector('#orderDetailsSample');
       const days = daysEl ? daysEl.value.trim() : '';
       const deliveryDate = dateEl ? dateEl.value : '';
       const sample = sampleEl ? sampleEl.value.trim() : '';
@@ -1687,14 +1694,13 @@
     function openPayment() {
       if (!validateBeforeAction()) return;
 
-      const root = getSearchRoot();
-      const popup = root.querySelector('#paymentPopup');
-      const totalEl = root.querySelector('#popupBillTotal');
-      const amountDisplayEl = root.querySelector('#popupAmountDisplay');
-      const balanceEl = root.querySelector('#popupBalance');
-      const amountInput = root.querySelector('#paymentAmount');
-      const modeSelect = root.querySelector('#paymentMode');
-      const narrationInput = root.querySelector('#paymentNarration');
+      const popup = getPopupEl('paymentPopup');
+      const totalEl = getPopupEl('popupBillTotal') || getSearchRoot().querySelector('#popupBillTotal');
+      const amountDisplayEl = getPopupEl('popupAmountDisplay') || getSearchRoot().querySelector('#popupAmountDisplay');
+      const balanceEl = getPopupEl('popupBalance') || getSearchRoot().querySelector('#popupBalance');
+      const amountInput = getPopupEl('paymentAmount') || getSearchRoot().querySelector('#paymentAmount');
+      const modeSelect = getPopupEl('paymentMode') || getSearchRoot().querySelector('#paymentMode');
+      const narrationInput = getPopupEl('paymentNarration') || getSearchRoot().querySelector('#paymentNarration');
 
       if (!popup || !amountInput) return;
 
@@ -1729,15 +1735,17 @@
     }
 
     function closePaymentPopup() {
-      const popup = getSearchRoot().querySelector('#paymentPopup');
+      const popup = getPopupEl('paymentPopup');
       if (popup) popup.style.display = 'none';
     }
 
+    function newOrderClosePaymentPopup() { closePaymentPopup(); }
+    function newOrderSavePayment() { savePayment(); }
+
     function savePayment() {
-      const root = getSearchRoot();
-      const amountInput = root.querySelector('#paymentAmount');
-      const modeSelect = root.querySelector('#paymentMode');
-      const narrationInput = root.querySelector('#paymentNarration');
+      const amountInput = getPopupEl('paymentAmount') || getSearchRoot().querySelector('#paymentAmount');
+      const modeSelect = getPopupEl('paymentMode') || getSearchRoot().querySelector('#paymentMode');
+      const narrationInput = getPopupEl('paymentNarration') || getSearchRoot().querySelector('#paymentNarration');
 
       if (!amountInput) return;
       const amount = safeNumber(amountInput.value);
@@ -1775,12 +1783,11 @@
     function openRateBook() {
       if (!validateBeforeAction()) return;
 
-      const root = getSearchRoot();
-      const popup = root.querySelector('#ratebookPopup');
+      const popup = getPopupEl('ratebookPopup');
       if (!popup) return;
 
       const setVal = (id, val) => {
-        const el = root.querySelector(id);
+        const el = getPopupEl(id.replace(/^#/, '')) || getSearchRoot().querySelector(id);
         if (el) el.value = val;
       };
       setVal('#rbStamp', '');
@@ -1797,15 +1804,17 @@
     }
 
     function closeRatebookPopup() {
-      const popup = getSearchRoot().querySelector('#ratebookPopup');
+      const popup = getPopupEl('ratebookPopup');
       if (popup) popup.style.display = 'none';
     }
 
+    function newOrderCloseRatebookPopup() { closeRatebookPopup(); }
+    function newOrderSaveRatebookEntry() { saveRatebookEntry(); }
+
     function calcRatebookAmount() {
-      const root = getSearchRoot();
-      const weightInput = root.querySelector('#rbWeight');
-      const rateInput = root.querySelector('#rbRate');
-      const amountInput = root.querySelector('#rbAmount');
+      const weightInput = getPopupEl('rbWeight') || getSearchRoot().querySelector('#rbWeight');
+      const rateInput = getPopupEl('rbRate') || getSearchRoot().querySelector('#rbRate');
+      const amountInput = getPopupEl('rbAmount') || getSearchRoot().querySelector('#rbAmount');
       if (!weightInput || !rateInput || !amountInput) return;
 
       const weight = safeNumber(weightInput.value);
@@ -1827,14 +1836,13 @@
 
     function saveRatebookEntry() {
       try {
-        const root = getSearchRoot();
-        const stampEl = root.querySelector('#rbStamp');
-        const weightEl = root.querySelector('#rbWeight');
-        const rateEl = root.querySelector('#rbRate');
-        const amountEl = root.querySelector('#rbAmount');
-        const delDateEl = root.querySelector('#rbDelDate');
-        const typeEl = root.querySelector('#rbType');
-        const narrationEl = root.querySelector('#rbNarration');
+        const stampEl = getPopupEl('rbStamp') || getSearchRoot().querySelector('#rbStamp');
+        const weightEl = getPopupEl('rbWeight') || getSearchRoot().querySelector('#rbWeight');
+        const rateEl = getPopupEl('rbRate') || getSearchRoot().querySelector('#rbRate');
+        const amountEl = getPopupEl('rbAmount') || getSearchRoot().querySelector('#rbAmount');
+        const delDateEl = getPopupEl('rbDelDate') || getSearchRoot().querySelector('#rbDelDate');
+        const typeEl = getPopupEl('rbType') || getSearchRoot().querySelector('#rbType');
+        const narrationEl = getPopupEl('rbNarration') || getSearchRoot().querySelector('#rbNarration');
         if (!stampEl) return;
 
         const stamp = stampEl.value.trim();
@@ -2850,17 +2858,24 @@
 
       // Make functions global
       window.addRow = addRow;
+      window.addRowNewOrder = addRowNewOrder;
       window.removeRow = removeRow;
       window.calculateRow = calculateRow;
       window.handleTypeChange = handleTypeChange;
       window.openCustomer = openCustomer;
       window.openPayment = openPayment;
       window.closePaymentPopup = closePaymentPopup;
+      window.newOrderClosePaymentPopup = newOrderClosePaymentPopup;
+      window.newOrderSavePayment = newOrderSavePayment;
       window.savePayment = savePayment;
       window.openRateBook = openRateBook;
       window.closeRatebookPopup = closeRatebookPopup;
+      window.newOrderCloseRatebookPopup = newOrderCloseRatebookPopup;
+      window.newOrderSaveRatebookEntry = newOrderSaveRatebookEntry;
       window.openOrderDetailsPopup = openOrderDetailsPopup;
       window.closeOrderDetailsPopup = closeOrderDetailsPopup;
+      window.newOrderCloseOrderDetailsPopup = newOrderCloseOrderDetailsPopup;
+      window.newOrderSaveOrderDetailsPopup = newOrderSaveOrderDetailsPopup;
       window.saveOrderDetailsPopup = saveOrderDetailsPopup;
       window.calculateOrderDetailsDeliveryDate = calculateOrderDetailsDeliveryDate;
       window.calcRatebookAmount = calcRatebookAmount;
