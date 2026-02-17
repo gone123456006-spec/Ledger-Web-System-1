@@ -385,6 +385,7 @@
       <table id="ordersTable">
         <thead>
           <tr>
+            <th class="center">Mark</th>
             <th>Order No</th>
             <th>Customer</th>
             <th>Order Date</th>
@@ -504,6 +505,9 @@
           }
 
           row.innerHTML = `
+        <td class="center">
+          <input type="checkbox" onchange="selectRow(this); event.stopPropagation();" onclick="event.stopPropagation();">
+        </td>
         <td>${order.orderNo || order.billNo || "-"}</td>
         <td>${order.customer || order.customerName || "-"}</td>
         <td>${order.orderDate || "-"}</td>
@@ -522,7 +526,7 @@
           // Make row clickable to edit order (but not if clicking Edit button)
           row.style.cursor = "pointer";
           row.onclick = function (e) {
-            if (e.target && e.target.tagName === "BUTTON") return;
+            if (e.target && (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT")) return;
             editOrder(order.id);
           };
 
@@ -797,7 +801,7 @@
     }
 
     /* =========================
-       TOGGLE ORDER STATUS (Mark/Unmark as PENDING)
+       TOGGLE ORDER STATUS (Mark/Unmark as PENDING via checkbox)
     ========================= */
     function toggleOrderStatus(cb, orderId) {
       try {
@@ -810,33 +814,20 @@
         }
 
         const order = orders[orderIndex];
-
         if (cb.checked) {
-          // Mark as PENDING
           order.status = "PENDING";
         } else {
-          // Unmark - set status to null
           order.status = null;
         }
 
-        // Save updated orders
         localStorage.setItem("orders", JSON.stringify(orders));
 
-        // Dispatch event to refresh pending orders page if it's open
         const refreshEvent = new CustomEvent('orderStatusChanged', {
           detail: { orderId: orderId, status: order.status || "UNMARKED" }
         });
-        
         window.dispatchEvent(refreshEvent);
-        
-        if (window.parent && window.parent !== window) {
-          window.parent.dispatchEvent(refreshEvent);
-        }
-        
-        if (window.top && window.top !== window) {
-          window.top.dispatchEvent(refreshEvent);
-        }
-
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(refreshEvent);
+        if (window.top && window.top !== window) window.top.dispatchEvent(refreshEvent);
       } catch (e) {
         console.error("Error toggling order status:", e);
         alert("Error updating order status");
@@ -866,7 +857,7 @@
       const rows = tbody.querySelectorAll("tr");
       rows.forEach(row => {
         const cells = row.querySelectorAll("td");
-        const orderDateCell = cells[2] ? cells[2].textContent.trim() : "";
+        const orderDateCell = cells[3] ? cells[3].textContent.trim() : "";
         if (!fromValue && !toValue) {
           row.style.display = "";
           return;

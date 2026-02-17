@@ -781,6 +781,50 @@
       margin-top: 2px;
     }
 
+    .panel-item-edit {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .panel-item-edit input,
+    .panel-item-edit select {
+      width: 100%;
+      padding: 4px 8px;
+      font-size: 12px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .panel-item-edit-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .panel-item-edit-actions button {
+      padding: 4px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+    }
+    .panel-item-edit-actions button:first-child {
+      background: #007aff;
+      color: #fff;
+      border-color: #007aff;
+    }
+    .panel-item .edit-payment-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px 4px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    .panel-item .edit-payment-btn:hover {
+      opacity: 1;
+    }
+
     .empty-state {
       text-align: center;
       color: var(--muted);
@@ -1787,6 +1831,88 @@
       else alert('Payment saved successfully');
     }
 
+    function openPaymentCardEdit(btnEl) {
+      const root = getSearchRoot();
+      const card = btnEl && btnEl.closest('.panel-item');
+      if (!card) return;
+      const payKey = card.getAttribute('data-payment-key') || '';
+      const timestamp = card.getAttribute('data-payment-timestamp') || '';
+      const billNoVal = card.getAttribute('data-bill-no') || (AppState.elements.billNo && AppState.elements.billNo.value) || '';
+      const amountEl = card.querySelector('.payment-amount');
+      const modeEl = card.querySelector('.payment-mode');
+      const dateEl = card.querySelector('.payment-date');
+      const amountStr = (amountEl && amountEl.textContent) ? amountEl.textContent.replace(/[^0-9.]/g, '') : '0';
+      const mode = (modeEl && modeEl.textContent) ? modeEl.textContent.trim() : 'Cash';
+      let dateStr = '';
+      if (dateEl && dateEl.textContent) {
+        const m = dateEl.textContent.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) dateStr = m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+      }
+      if (!dateStr && timestamp) dateStr = timestamp.split('T')[0] || '';
+
+      const modes = ['Cash', 'Card', 'Cheque', 'UPI', 'Online'];
+      const options = modes.map(m => '<option value="' + m + '"' + (m === mode ? ' selected' : '') + '>' + m + '</option>').join('');
+
+      card.innerHTML = `
+        <div class="panel-item-edit">
+          <label style="font-size:11px; color:var(--muted);">Amount (₹)</label>
+          <input type="number" class="payment-edit-amount" step="0.01" min="0" value="${amountStr}" placeholder="0.00">
+          <label style="font-size:11px; color:var(--muted);">Mode</label>
+          <select class="payment-edit-mode">${options}</select>
+          <label style="font-size:11px; color:var(--muted);">Date</label>
+          <input type="date" class="payment-edit-date" value="${dateStr}">
+          <div class="panel-item-edit-actions">
+            <button type="button" onclick="savePaymentCardEdit(this);">Save</button>
+            <button type="button" onclick="cancelPaymentCardEdit(this);">Cancel</button>
+          </div>
+        </div>
+      `;
+      card.dataset.paymentKey = payKey;
+      card.dataset.paymentTimestamp = timestamp;
+      card.dataset.billNo = billNoVal;
+    }
+
+    function savePaymentCardEdit(btnEl) {
+      const card = btnEl && btnEl.closest('.panel-item');
+      if (!card) return;
+      const amountInput = card.querySelector('.payment-edit-amount');
+      const modeSelect = card.querySelector('.payment-edit-mode');
+      const dateInput = card.querySelector('.payment-edit-date');
+      const amount = safeNumber(amountInput ? amountInput.value : 0);
+      if (amount <= 0) {
+        showError('Please enter a valid amount');
+        return;
+      }
+      const mode = modeSelect ? modeSelect.value : 'Cash';
+      const dateVal = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+
+      const payKey = card.getAttribute('data-payment-key');
+      const timestamp = card.getAttribute('data-payment-timestamp');
+      const billNoVal = card.getAttribute('data-bill-no');
+
+      const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+      const idx = payments.findIndex(p => p.billNo === billNoVal && (String(p.id) === payKey || (p.timestamp === timestamp) || (String(p.timestamp) === timestamp)));
+      if (idx === -1) {
+        showError('Payment not found');
+        updateInfoPanel();
+        return;
+      }
+      payments[idx].amount = amount;
+      payments[idx].mode = mode;
+      payments[idx].date = dateVal;
+      if (payments[idx].timestamp && dateVal) {
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) payments[idx].timestamp = d.toISOString();
+      }
+      localStorage.setItem('payments', JSON.stringify(payments));
+      if (typeof showSaveIndicator === 'function') showSaveIndicator();
+      updateInfoPanel();
+    }
+
+    function cancelPaymentCardEdit(btnEl) {
+      updateInfoPanel();
+    }
+
     // =====================================================
     // RATEBOOK MANAGEMENT
     // =====================================================
@@ -2097,16 +2223,20 @@
       if (billPayments.length === 0) {
         listEl.innerHTML = '<div class="empty-state">No payments yet</div>';
       } else {
+        const billNoVal = AppState.elements.billNo.value;
         let html = '';
         billPayments.slice(-5).reverse().forEach(p => {
-          const date = new Date(p.date).toLocaleDateString();
+          const date = p.date ? new Date(p.date).toLocaleDateString() : '—';
+          const dateIso = (p.date && (p.date.includes('-') || p.date.includes('/'))) ? (p.date.includes('T') ? p.date.split('T')[0] : p.date) : (p.timestamp ? p.timestamp.split('T')[0] : '');
+          const payKey = (p.id != null) ? String(p.id) : (p.timestamp || dateIso + '-' + (p.amount || 0));
           html += `
-            <div class="panel-item">
+            <div class="panel-item" data-payment-key="${String(payKey).replace(/"/g, '&quot;')}" data-payment-timestamp="${(p.timestamp || '').replace(/"/g, '&quot;')}" data-bill-no="${(billNoVal || '').replace(/"/g, '&quot;')}">
               <div class="panel-item-header">
-                <span>${formatCurrency(p.amount)}</span>
-                <span>${p.mode || 'Cash'}</span>
+                <span class="payment-amount">${formatCurrency(p.amount)}</span>
+                <span class="payment-mode">${p.mode || 'Cash'}</span>
+                <button type="button" class="edit-payment-btn" onclick="event.stopPropagation(); openPaymentCardEdit(this);" title="Edit payment">✏️</button>
               </div>
-              <div class="panel-item-detail">${date} - ${(p.narration || '—').substring(0, 30)}</div>
+              <div class="panel-item-detail payment-date">${date} — ${(p.narration || '—').substring(0, 30)}</div>
             </div>
           `;
         });
@@ -2883,6 +3013,9 @@
       window.newOrderClosePaymentPopup = newOrderClosePaymentPopup;
       window.newOrderSavePayment = newOrderSavePayment;
       window.savePayment = savePayment;
+      window.openPaymentCardEdit = openPaymentCardEdit;
+      window.savePaymentCardEdit = savePaymentCardEdit;
+      window.cancelPaymentCardEdit = cancelPaymentCardEdit;
       window.openRateBook = openRateBook;
       window.closeRatebookPopup = closeRatebookPopup;
       window.newOrderCloseRatebookPopup = newOrderCloseRatebookPopup;
