@@ -880,7 +880,7 @@
 
 <body>
 
-  <div class="app no-print" id="orderApp">
+  <div class="app no-print ready-order-page" id="orderApp" data-page-root="ready-extra-order">
 
     <div class="order-title">GST Order</div>
 
@@ -949,7 +949,7 @@
       <div class="box-title">Order Details</div>
 
       <div class="table-wrap order-details-table-wrap">
-        <table id="itemTable">
+        <table id="ready-order-item-table" class="ready-order-table">
           <colgroup>
             <col style="width:5%"><col style="width:6%"><col style="width:8%"><col style="width:4%"><col style="width:5%"><col style="width:4%"><col style="width:3%"><col style="width:3%"><col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:3%"><col style="width:6%"><col style="width:5%"><col style="width:3%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:2%">
           </colgroup>
@@ -1223,8 +1223,8 @@
     </div>
   </div>
 
-  <!-- ORDER POPUP -->
-  <div id="orderPopup" class="popup-bg" onclick="if(event.target===this) closePopup()">
+  <!-- ORDER POPUP (ready-order only) -->
+  <div id="ready-order-order-popup" class="popup-bg ready-order-popup" onclick="if(event.target===this) closePopup()">
     <div class="popup-box">
       <h3>Order Details</h3>
       <div class="popup-row">
@@ -1247,8 +1247,8 @@
     </div>
   </div>
 
-  <!-- PAYMENT POPUP (from payment.html) -->
-  <div id="paymentPopup" class="popup-bg" onclick="if(event.target===this) closePaymentPopup()">
+  <!-- PAYMENT POPUP (ready-order only) -->
+  <div id="ready-order-payment-popup" class="popup-bg ready-order-popup" onclick="if(event.target===this) closePaymentPopup()">
     <div class="payment-window">
       <div class="payment-title-bar">RECEIPT / PAYMENT</div>
       <div class="payment-content">
@@ -1323,8 +1323,8 @@
     </div>
   </div>
 
-  <!-- RATEBOOK DETAILS POPUP -->
-  <div id="ratebookDetailsPopup" class="popup-bg" style="display:none;"
+  <!-- RATEBOOK DETAILS POPUP (ready-order only) -->
+  <div id="ready-order-ratebook-details-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closeRatebookDetailsPopup()">
     <div class="payment-window" style="max-width:95%; width:1400px;">
       <div class="payment-title-bar">Rate Booking</div>
@@ -1372,7 +1372,7 @@
                   Amount</th>
               </tr>
             </thead>
-            <tbody id="ratebookDetailsTable">
+            <tbody id="ready-order-ratebook-details-table">
               <!-- Details will be populated here -->
             </tbody>
           </table>
@@ -1383,7 +1383,7 @@
         <button onclick="addRatebookRow()"
           style="background:#007aff; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">+
           Add Row</button>
-        <button id="ratebookDetailsSaveBtn" onclick="saveRatebookDetailsFromPopup()"
+        <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()"
           style="background:#28a745; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Save</button>
         <button onclick="closeRatebookDetailsPopup()"
           style="background:#6c757d; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Close</button>
@@ -1395,71 +1395,84 @@
     /* =====================
        DOM REFERENCES
     ===================== */
-    let custName = null;
-    let currentBal = null;
-    let relation = null;
-    let station = null;
-    let orderDate = null;
-    let dueDate = null;
-    let billNo = null;
-    let gstRate = null;
-    let itemBody = null;
-    let orderApp = null;
-    let invoice = null;
-    let orderPopup = null;
-    let popupDelivery = null;
-    let popupSample = null;
-    let popupDays = null;
-    let paymentPopup = null;
-    let paymentBillTotal = null;
-    let paymentAmountDisplay = null;
-    let paymentBalance = null;
+    (function () {
+      var container = document.querySelector(".workspace");
+      if (!container || container.getAttribute("data-page") !== "ready-extra-order") return;
 
-    // Invoice elements
-    let iCustomer = null;
-    let iOrderDate = null;
-    let iBillNo = null;
-    let iItems = null;
-    let iGrand = null;
+      var custName = null;
+      var currentBal = null;
+      var relation = null;
+      var station = null;
+      var orderDate = null;
+      var dueDate = null;
+      var billNo = null;
+      var gstRate = null;
+      var itemBody = null;
+      var orderApp = null;
+      var invoice = null;
+      var orderPopup = null;
+      var popupDelivery = null;
+      var popupSample = null;
+      var popupDays = null;
+      var paymentPopup = null;
+      var paymentBillTotal = null;
+      var paymentAmountDisplay = null;
+      var paymentBalance = null;
 
-    let activeRow = null;
+      var iCustomer = null;
+      var iOrderDate = null;
+      var iBillNo = null;
+      var iItems = null;
+      var iGrand = null;
 
-    /* =====================
-       INITIALIZE ELEMENTS
-    ===================== */
-    function initElements() {
-      // Try to find elements in workspace first (dashboard context)
-      const workspace = document.querySelector(".workspace");
-      const searchRoot = workspace || document;
+      var activeRow = null;
 
-      custName = searchRoot.querySelector("#custName") || document.getElementById("custName");
-      currentBal = searchRoot.querySelector("#currentBal") || document.getElementById("currentBal");
-      relation = searchRoot.querySelector("#relation") || document.getElementById("relation");
-      station = searchRoot.querySelector("#station") || document.getElementById("station");
-      orderDate = searchRoot.querySelector("#orderDate") || document.getElementById("orderDate");
-      dueDate = searchRoot.querySelector("#dueDate") || document.getElementById("dueDate");
-      billNo = searchRoot.querySelector("#billNo") || document.getElementById("billNo");
-      gstRate = searchRoot.querySelector("#gstRate") || document.getElementById("gstRate");
-      itemBody = searchRoot.querySelector("#itemTable tbody") || document.querySelector("#itemTable tbody");
-      orderApp = searchRoot.querySelector("#orderApp") || document.getElementById("orderApp");
-      invoice = searchRoot.querySelector("#invoice") || document.getElementById("invoice");
-      orderPopup = searchRoot.querySelector("#orderPopup") || document.getElementById("orderPopup");
-      popupDelivery = searchRoot.querySelector("#popupDelivery") || document.getElementById("popupDelivery");
-      popupSample = searchRoot.querySelector("#popupSample") || document.getElementById("popupSample");
-      popupDays = searchRoot.querySelector("#popupDays") || document.getElementById("popupDays");
-      paymentPopup = searchRoot.querySelector("#paymentPopup") || document.getElementById("paymentPopup");
-      paymentBillTotal = searchRoot.querySelector("#paymentBillTotal") || document.getElementById("paymentBillTotal");
-      paymentAmountDisplay = searchRoot.querySelector("#paymentAmountDisplay") || document.getElementById("paymentAmountDisplay");
-      paymentBalance = searchRoot.querySelector("#paymentBalance") || document.getElementById("paymentBalance");
+      (function hideOtherPagesPopupsOnInit() {
+        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
+        ids.forEach(function (id) {
+          try {
+            var el = container.querySelector("#" + id);
+            if (el && el.style) el.style.display = "none";
+          } catch (e) { }
+        });
+      })();
 
-      // Invoice elements
-      iCustomer = searchRoot.querySelector("#iCustomer") || document.getElementById("iCustomer");
-      iOrderDate = searchRoot.querySelector("#iOrderDate") || document.getElementById("iOrderDate");
-      iBillNo = searchRoot.querySelector("#iBillNo") || document.getElementById("iBillNo");
-      iItems = searchRoot.querySelector("#iItems") || document.getElementById("iItems");
-      iGrand = searchRoot.querySelector("#iGrand") || document.getElementById("iGrand");
+      function getSearchRoot() {
+        return container;
+      }
+      function getPopupEl(id) {
+        return container.querySelector("#" + id) || null;
+      }
 
-      // Check if required elements exist
+      function initElements() {
+        var searchRoot = container;
+
+        custName = searchRoot.querySelector("#custName");
+        currentBal = searchRoot.querySelector("#currentBal");
+        relation = searchRoot.querySelector("#relation");
+        station = searchRoot.querySelector("#station");
+        orderDate = searchRoot.querySelector("#orderDate");
+        dueDate = searchRoot.querySelector("#dueDate");
+        billNo = searchRoot.querySelector("#billNo");
+        gstRate = searchRoot.querySelector("#gstRate");
+        itemBody = searchRoot.querySelector("#ready-order-item-table tbody");
+        orderApp = searchRoot.querySelector("#orderApp");
+        invoice = searchRoot.querySelector("#invoice");
+        orderPopup = searchRoot.querySelector("#ready-order-order-popup");
+        popupDelivery = searchRoot.querySelector("#popupDelivery");
+        popupSample = searchRoot.querySelector("#popupSample");
+        popupDays = searchRoot.querySelector("#popupDays");
+        paymentPopup = searchRoot.querySelector("#ready-order-payment-popup");
+        paymentBillTotal = searchRoot.querySelector("#paymentBillTotal");
+        paymentAmountDisplay = searchRoot.querySelector("#paymentAmountDisplay");
+        paymentBalance = searchRoot.querySelector("#paymentBalance");
+
+      iCustomer = searchRoot.querySelector("#iCustomer");
+      iOrderDate = searchRoot.querySelector("#iOrderDate");
+      iBillNo = searchRoot.querySelector("#iBillNo");
+      iItems = searchRoot.querySelector("#iItems");
+      iGrand = searchRoot.querySelector("#iGrand");
+
       if (!custName || !orderDate || !billNo || !itemBody) {
         return false;
       }
@@ -2884,14 +2897,12 @@
       }
 
       if (!iCustomer || !iOrderDate || !iBillNo || !iItems) {
-        // Try to reinitialize invoice elements
-        const workspace = document.querySelector(".workspace");
-        const searchRoot = workspace || document;
-        iCustomer = searchRoot.querySelector("#iCustomer") || document.getElementById("iCustomer");
-        iOrderDate = searchRoot.querySelector("#iOrderDate") || document.getElementById("iOrderDate");
-        iBillNo = searchRoot.querySelector("#iBillNo") || document.getElementById("iBillNo");
-        iItems = searchRoot.querySelector("#iItems") || document.getElementById("iItems");
-        iGrand = searchRoot.querySelector("#iGrand") || document.getElementById("iGrand");
+        const searchRoot = getSearchRoot();
+        iCustomer = searchRoot.querySelector("#iCustomer");
+        iOrderDate = searchRoot.querySelector("#iOrderDate");
+        iBillNo = searchRoot.querySelector("#iBillNo");
+        iItems = searchRoot.querySelector("#iItems");
+        iGrand = searchRoot.querySelector("#iGrand");
       }
 
       if (!iCustomer || !iOrderDate || !iBillNo || !iItems) {
@@ -2903,9 +2914,8 @@
       if (iOrderDate) iOrderDate.textContent = orderDate.value || "—";
       if (iBillNo) iBillNo.textContent = billNo.value || "—";
 
-      const workspace = document.querySelector(".workspace");
-      const searchRoot = workspace || document;
-      const invoiceDateEl = searchRoot.querySelector("#iInvoiceDate") || document.getElementById("iInvoiceDate");
+      const searchRoot = getSearchRoot();
+      const invoiceDateEl = searchRoot.querySelector("#iInvoiceDate");
       if (invoiceDateEl) invoiceDateEl.textContent = new Date().toLocaleDateString();
 
       if (iItems) iItems.innerHTML = "";
@@ -2938,16 +2948,16 @@
       const balance = total - paid;
 
       if (iGrand) iGrand.textContent = total.toFixed(2);
-      const iPaidEl = searchRoot.querySelector("#iPaid") || document.getElementById("iPaid");
-      const iBalanceEl = searchRoot.querySelector("#iBalance") || document.getElementById("iBalance");
+      const iPaidEl = searchRoot.querySelector("#iPaid");
+      const iBalanceEl = searchRoot.querySelector("#iBalance");
       if (iPaidEl) iPaidEl.textContent = paid.toFixed(2);
       if (iBalanceEl) iBalanceEl.textContent = balance.toFixed(2);
 
       // Ratebook difference (uses latest Ratebook rate per Stamp)
-      const iRatebookTotalEl = searchRoot.querySelector("#iRatebookTotal") || document.getElementById("iRatebookTotal");
-      const iRateDiffEl = searchRoot.querySelector("#iRateDiff") || document.getElementById("iRateDiff");
-      const iRateDiffSignEl = searchRoot.querySelector("#iRateDiffSign") || document.getElementById("iRateDiffSign");
-      const iRateDiffRow = searchRoot.querySelector("#iRateDiffRow") || document.getElementById("iRateDiffRow");
+      const iRatebookTotalEl = searchRoot.querySelector("#iRatebookTotal");
+      const iRateDiffEl = searchRoot.querySelector("#iRateDiff");
+      const iRateDiffSignEl = searchRoot.querySelector("#iRateDiffSign");
+      const iRateDiffRow = searchRoot.querySelector("#iRateDiffRow");
 
       const rbTotal = calculateRatebookTotalForBill();
       const diff = total - rbTotal;
@@ -2961,12 +2971,12 @@
 
       // Ratebook Weight (Old vs Current) → Amount in bill
       try {
-        const iRbRateEl = searchRoot.querySelector("#iRbRate") || document.getElementById("iRbRate");
-        const iRbOldWtEl = searchRoot.querySelector("#iRbOldWt") || document.getElementById("iRbOldWt");
-        const iRbCurWtEl = searchRoot.querySelector("#iRbCurWt") || document.getElementById("iRbCurWt");
-        const iRbWtSignEl = searchRoot.querySelector("#iRbWtSign") || document.getElementById("iRbWtSign");
-        const iRbWtDiffEl = searchRoot.querySelector("#iRbWtDiff") || document.getElementById("iRbWtDiff");
-        const iRbWtAmtEl = searchRoot.querySelector("#iRbWtAmt") || document.getElementById("iRbWtAmt");
+        const iRbRateEl = searchRoot.querySelector("#iRbRate");
+        const iRbOldWtEl = searchRoot.querySelector("#iRbOldWt");
+        const iRbCurWtEl = searchRoot.querySelector("#iRbCurWt");
+        const iRbWtSignEl = searchRoot.querySelector("#iRbWtSign");
+        const iRbWtDiffEl = searchRoot.querySelector("#iRbWtDiff");
+        const iRbWtAmtEl = searchRoot.querySelector("#iRbWtAmt");
 
         // Prefer stored bill ratebook snapshot (after Save), otherwise compute a "would-be" snapshot.
         let snap = null;
@@ -3034,9 +3044,9 @@
       const payments = JSON.parse(localStorage.getItem("payments") || "[]");
       const billPayments = payments.filter(p => p.billNo === billNo.value);
 
-      // Display payment details in table
-      const paymentDetailsEl = document.getElementById("paymentDetails");
-      const invoicePaymentBody = document.getElementById("invoicePaymentBody");
+      const invRoot = getSearchRoot();
+      const paymentDetailsEl = invRoot.querySelector("#paymentDetails");
+      const invoicePaymentBody = invRoot.querySelector("#invoicePaymentBody");
       if (paymentDetailsEl && invoicePaymentBody) {
         invoicePaymentBody.innerHTML = "";
         if (billPayments.length > 0) {
@@ -3082,9 +3092,8 @@
         });
       }
 
-      // Display ratebook details in table - only show applied rates
-      const ratebookDetailsEl = document.getElementById("ratebookDetails");
-      const invoiceRatebookBody = document.getElementById("invoiceRatebookBody");
+      const ratebookDetailsEl = invRoot.querySelector("#ratebookDetails");
+      const invoiceRatebookBody = invRoot.querySelector("#invoiceRatebookBody");
       if (ratebookDetailsEl && invoiceRatebookBody) {
         invoiceRatebookBody.innerHTML = "";
         if (appliedRates.length > 0) {
@@ -3162,13 +3171,11 @@
       });
       displayReceipts = uniqueReceipts;
 
-      // Display receipt details in table
-      const receiptDetailsEl = document.getElementById("receiptDetails");
-      const invoiceReceiptBody = document.getElementById("invoiceReceiptBody");
+      const receiptDetailsEl = invRoot.querySelector("#receiptDetails");
+      const invoiceReceiptBody = invRoot.querySelector("#invoiceReceiptBody");
       if (receiptDetailsEl && invoiceReceiptBody) {
         invoiceReceiptBody.innerHTML = "";
         if (displayReceipts.length > 0) {
-          // Sort by date (newest first)
           const sortedReceipts = [...displayReceipts].sort((a, b) => {
             const dateA = new Date(a.timestamp || a.date || 0);
             const dateB = new Date(b.timestamp || b.date || 0);
@@ -3264,7 +3271,7 @@
 
     /* REFRESH RECEIPT TABLE IN INVOICE */
     function refreshInvoiceReceiptTable() {
-      // Get ALL receipts (from receipts storage, not payments)
+      const invRoot = getSearchRoot();
       const receipts = JSON.parse(localStorage.getItem("receipts") || "[]");
       const customerName = getCustomerName();
 
@@ -3315,13 +3322,11 @@
       });
       displayReceipts = uniqueReceipts;
 
-      // Display receipt details in table
-      const receiptDetailsEl = document.getElementById("receiptDetails");
-      const invoiceReceiptBody = document.getElementById("invoiceReceiptBody");
+      const receiptDetailsEl = invRoot.querySelector("#receiptDetails");
+      const invoiceReceiptBody = invRoot.querySelector("#invoiceReceiptBody");
       if (receiptDetailsEl && invoiceReceiptBody) {
         invoiceReceiptBody.innerHTML = "";
         if (displayReceipts.length > 0) {
-          // Sort by date (newest first)
           const sortedReceipts = [...displayReceipts].sort((a, b) => {
             const dateA = new Date(a.timestamp || a.date || 0);
             const dateB = new Date(b.timestamp || b.date || 0);
@@ -3403,35 +3408,23 @@
       // Calculate and show bill total
       const total = calculateBillTotal();
 
-      // Find payment elements in workspace or document
-      const workspace = document.querySelector(".workspace");
-      const searchRoot = workspace || document;
-
-      if (!paymentBillTotal) {
-        paymentBillTotal = searchRoot.querySelector("#paymentBillTotal") || document.getElementById("paymentBillTotal");
-      }
-      if (!paymentAmountDisplay) {
-        paymentAmountDisplay = searchRoot.querySelector("#paymentAmountDisplay") || document.getElementById("paymentAmountDisplay");
-      }
-      if (!paymentBalance) {
-        paymentBalance = searchRoot.querySelector("#paymentBalance") || document.getElementById("paymentBalance");
-      }
-      if (!paymentPopup) {
-        paymentPopup = searchRoot.querySelector("#paymentPopup") || document.getElementById("paymentPopup");
-      }
+      const searchRoot = getSearchRoot();
+      if (!paymentBillTotal) paymentBillTotal = searchRoot.querySelector("#paymentBillTotal");
+      if (!paymentAmountDisplay) paymentAmountDisplay = searchRoot.querySelector("#paymentAmountDisplay");
+      if (!paymentBalance) paymentBalance = searchRoot.querySelector("#paymentBalance");
+      if (!paymentPopup) paymentPopup = searchRoot.querySelector("#paymentPopup");
 
       if (paymentBillTotal) {
         paymentBillTotal.textContent = total.toFixed(2);
       }
 
-      // Reset form fields
-      const amountEl = searchRoot.querySelector("#amount") || document.getElementById("amount");
-      const narrationEl = searchRoot.querySelector("#narration") || document.getElementById("narration");
-      const modeEl = searchRoot.querySelector("#mode") || document.getElementById("mode");
-      const batchEl = searchRoot.querySelector("#batch") || document.getElementById("batch");
-      const typeEl = searchRoot.querySelector("#type") || document.getElementById("type");
-      const expDateEl = searchRoot.querySelector("#expDate") || document.getElementById("expDate");
-      const apCodeEl = searchRoot.querySelector("#apCode") || document.getElementById("apCode");
+      const amountEl = searchRoot.querySelector("#amount");
+      const narrationEl = searchRoot.querySelector("#narration");
+      const modeEl = searchRoot.querySelector("#mode");
+      const batchEl = searchRoot.querySelector("#batch");
+      const typeEl = searchRoot.querySelector("#type");
+      const expDateEl = searchRoot.querySelector("#expDate");
+      const apCodeEl = searchRoot.querySelector("#apCode");
 
       if (amountEl) amountEl.value = "";
       if (narrationEl) narrationEl.value = "";
@@ -3456,7 +3449,9 @@
 
     function calculatePaymentBalance() {
       const total = calculateBillTotal();
-      const amount = Number(document.getElementById("amount").value || 0);
+      const root = getSearchRoot();
+      const amtEl = root ? root.querySelector("#amount") : null;
+      const amount = Number(amtEl && amtEl.value ? amtEl.value : 0);
       const balance = total - amount;
 
       if (paymentAmountDisplay) {
@@ -3476,20 +3471,24 @@
     }
 
     function closePaymentPopup() {
-      paymentPopup.style.display = "none";
-      document.getElementById("amount").value = "";
-      document.getElementById("narration").value = "";
+      if (paymentPopup) paymentPopup.style.display = "none";
+      var root = getSearchRoot();
+      var amountEl = root.querySelector("#amount");
+      var narrationEl = root.querySelector("#narration");
+      if (amountEl) amountEl.value = "";
+      if (narrationEl) narrationEl.value = "";
     }
 
     function savePaymentFromPopup() {
-      const amountEl = document.getElementById("amount");
-      const modeEl = document.getElementById("mode");
-      const narrationEl = document.getElementById("narration");
-      const batchEl = document.getElementById("batch");
-      const typeEl = document.getElementById("type");
-      const expDateEl = document.getElementById("expDate");
-      const apCodeEl = document.getElementById("apCode");
-      const ptypeEl = document.querySelector('input[name="ptype"]:checked');
+      const root = getSearchRoot();
+      const amountEl = root.querySelector("#amount");
+      const modeEl = root.querySelector("#mode");
+      const narrationEl = root.querySelector("#narration");
+      const batchEl = root.querySelector("#batch");
+      const typeEl = root.querySelector("#type");
+      const expDateEl = root.querySelector("#expDate");
+      const apCodeEl = root.querySelector("#apCode");
+      const ptypeEl = root.querySelector('input[name="ptype"]:checked');
 
       const amt = Number(amountEl.value || 0);
       if (!amt || amt <= 0) {
@@ -4105,12 +4104,13 @@
       const paid = getPaidAmount(billNo.value);
       const balance = netTotal - paid;
 
-      const orderTotalEl = document.getElementById("panelOrderTotal");
-      const purchaseTotalEl = document.getElementById("panelPurchaseTotal");
-      const billTotalEl = document.getElementById("panelBillTotal");
-      const paidEl = document.getElementById("panelPaid");
-      const balanceEl = document.getElementById("panelBalance");
-      const paymentListEl = document.getElementById("paymentList");
+      const root = getSearchRoot();
+      const orderTotalEl = root.querySelector("#panelOrderTotal");
+      const purchaseTotalEl = root.querySelector("#panelPurchaseTotal");
+      const billTotalEl = root.querySelector("#panelBillTotal");
+      const paidEl = root.querySelector("#panelPaid");
+      const balanceEl = root.querySelector("#panelBalance");
+      const paymentListEl = root.querySelector("#paymentList");
 
       if (orderTotalEl) orderTotalEl.textContent = `₹ ${orderTotal.toFixed(2)}`;
       if (purchaseTotalEl) purchaseTotalEl.textContent = `₹ ${purchaseTotal.toFixed(2)}`;
@@ -4119,8 +4119,8 @@
       if (balanceEl) balanceEl.textContent = `₹ ${balance.toFixed(2)}`;
 
       // Rate Difference: only when saved for this bill — display "Rate Difference : 2.500 @(12000.00 - 13000.00) = 3000"
-      const rateDiffWrap = document.getElementById("panelRateDiffWrap");
-      const rateDiffEl = document.getElementById("panelRateDiffSummary");
+      const rateDiffWrap = root.querySelector("#panelRateDiffWrap");
+      const rateDiffEl = root.querySelector("#panelRateDiffSummary");
       const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
       if (rateDiffWrap && rateDiffEl) {
         if (rateDiffStored) {
@@ -4159,7 +4159,7 @@
     }
 
     function updateRatebookPanel() {
-      const ratebookListEl = document.getElementById("ratebookList");
+      const ratebookListEl = getSearchRoot().querySelector("#ratebookList");
       if (!ratebookListEl) return;
 
       // Get saved rates from localStorage
@@ -4275,8 +4275,8 @@
         billVal = clickedRate.billNo;
       }
 
-      const popup = document.getElementById("ratebookDetailsPopup");
-      const table = document.getElementById("ratebookDetailsTable");
+      const popup = getPopupEl("ready-order-ratebook-details-popup");
+      const table = getPopupEl("ready-order-ratebook-details-table");
 
       if (!popup || !table) return;
 
@@ -4393,7 +4393,7 @@
     }
 
     function saveRatebookDetailsFromPopup() {
-      const table = document.getElementById("ratebookDetailsTable");
+      const table = getPopupEl("ready-order-ratebook-details-table");
       if (!table) return;
 
       const rows = table.querySelectorAll("tr[data-rate-id]");
@@ -4435,7 +4435,7 @@
           }
         }
 
-        const btn = document.getElementById("ratebookDetailsSaveBtn");
+        const btn = getPopupEl("ready-order-ratebook-details-save-btn");
         if (btn) {
           const origText = btn.textContent;
           btn.textContent = "Saved!";
@@ -4449,7 +4449,7 @@
     }
 
     function closeRatebookDetailsPopup() {
-      const popup = document.getElementById("ratebookDetailsPopup");
+      const popup = getPopupEl("ready-order-ratebook-details-popup");
       if (popup) {
         popup.style.display = "none";
       }
@@ -4465,7 +4465,7 @@
     });
 
     function updateReceiptPanel() {
-      const receiptListEl = document.getElementById("receiptList");
+      const receiptListEl = getSearchRoot().querySelector("#receiptList");
       if (!receiptListEl) return;
 
       // Get ALL receipts (from receipts storage, not payments)
@@ -4733,12 +4733,13 @@
       }
     }
 
-    // Make functions globally accessible immediately
     ensureFunctionsGlobal();
 
-
-
-
+    window.__currentPageCleanup = function () {
+      var globals = ['addRow','calc','syncReadyWeight','calcReadyTotal','saveOrder','saveAndNew','resetOrder','showInvoice','back','openPayment','openCustomer','openReceipt','openRateBook','setCustomerName','getCustomerName','loadOrderForEdit','loadBill','handleTypeChange','calculateDeliveryDate','saveOrderPopup','closePopup','calculatePaymentBalance','closePaymentPopup','savePaymentFromPopup','saveRateBook','closeRateBookPopup','calculateRateAmount','loadRateBookHistory','applyRateToRow','initOrderPage','initElements','saveOrderState','restoreOrderState','generateBillNo','generateJobNo','calculateBillTotal','getPaidAmount','updateInfoPanel','updatePaymentPanel','updateRatebookPanel','updateReceiptPanel','refreshInvoiceReceiptTable','deleteReceipt','deleteRate','showRateDetails','closeRatebookDetailsPopup','saveRatebookFromRows','addRatebookRow','saveRatebookDetailsFromPopup','updateRateBookingRow','closeDashboard'];
+      globals.forEach(function (k) { try { delete window[k]; } catch (e) {} });
+    };
+    })();
   </script>
 
 </body>

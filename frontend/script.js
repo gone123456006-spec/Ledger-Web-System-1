@@ -201,6 +201,12 @@ function loadPage(pageUrl) {
         }
     }
 
+    // Clean up previous page: remove its globals and event listeners so no state overlaps
+    if (typeof window.__currentPageCleanup === 'function') {
+        try { window.__currentPageCleanup(); } catch (e) { }
+        window.__currentPageCleanup = null;
+    }
+
     // Loading screen
     workspace.innerHTML = `
         <div style="
@@ -233,6 +239,26 @@ function loadPage(pageUrl) {
 
             // Insert HTML content (without scripts and styles)
             workspace.innerHTML = temp.innerHTML;
+
+            // Page slug for scoping: e.g. "new-order", "ready-extra-order"
+            var pageSlug = (pageUrl || '').replace(/^pages\//i, '').replace(/\.html$/i, '').trim() || 'page';
+            workspace.setAttribute('data-page', pageSlug);
+
+            // Remove any popup from a previous page that might be outside workspace (no shared DOM)
+            var popupIds = [
+                'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup',
+                'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-item-table',
+                'ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'ready-order-item-table'
+            ];
+            popupIds.forEach(function (id) {
+                try {
+                    var el = document.getElementById(id);
+                    if (el && !workspace.contains(el)) {
+                        el.style.display = 'none';
+                        if (el.parentNode) el.parentNode.removeChild(el);
+                    }
+                } catch (e) { }
+            });
 
             // ============================================
             // [PERSISTENCE] Restore Form Data

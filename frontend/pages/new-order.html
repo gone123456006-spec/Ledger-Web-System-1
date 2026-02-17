@@ -873,7 +873,7 @@
   <div id="saveIndicator" class="toast success">Saved successfully</div>
   <div id="errorMessage" class="toast error">Error message</div>
 
-  <div class="app" id="orderApp">
+  <div class="app new-order-page" id="orderApp" data-page-root="new-order">
 
     <div class="order-title">
       <span>GST Order</span>
@@ -951,7 +951,7 @@
       <div class="box-title">Order Details</div>
 
       <div class="table-wrap">
-        <table id="itemTable">
+        <table id="new-order-item-table" class="new-order-table">
           <thead>
             <tr>
               <th style="min-width: 100px;">Type</th>
@@ -1092,8 +1092,8 @@
     </div>
   </div>
 
-  <!-- PAYMENT POPUP -->
-  <div id="paymentPopup" class="popup-bg" onclick="if(event.target===this) (typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup:closePaymentPopup)()">
+  <!-- PAYMENT POPUP (new-order only) -->
+  <div id="new-order-payment-popup" class="popup-bg new-order-popup" onclick="if(event.target===this) (typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup:closePaymentPopup)()">
     <div class="popup-box">
       <h3>Add Payment</h3>
       <div class="popup-row">
@@ -1126,8 +1126,8 @@
     </div>
   </div>
 
-  <!-- RATEBOOK POPUP -->
-  <div id="ratebookPopup" class="popup-bg" onclick="if(event.target===this) (typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup:closeRatebookPopup)()">
+  <!-- RATEBOOK POPUP (new-order only) -->
+  <div id="new-order-ratebook-popup" class="popup-bg new-order-popup" onclick="if(event.target===this) (typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup:closeRatebookPopup)()">
     <div class="popup-box" style="max-width: 500px;">
       <h3>Rate Booking</h3>
       <div class="popup-row">
@@ -1165,8 +1165,8 @@
     </div>
   </div>
 
-  <!-- ORDER DETAILS POPUP (when Type = Order) -->
-  <div id="orderDetailsPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this) (typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup:closeOrderDetailsPopup)()">
+  <!-- ORDER DETAILS POPUP (new-order only) -->
+  <div id="new-order-order-details-popup" class="popup-bg new-order-popup" style="display:none;" onclick="if(event.target===this) (typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup:closeOrderDetailsPopup)()">
     <div class="popup-box" style="max-width: 420px;">
       <h3>Order Details</h3>
       <div class="popup-row">
@@ -1189,19 +1189,22 @@
   </div>
 
   <script>
-    // =====================================================
-    // ENHANCED GST ORDER APPLICATION
-    // =====================================================
+    (function () {
+      var container = document.querySelector('.workspace');
+      if (!container || container.getAttribute('data-page') !== 'new-order') return;
 
-    // Global State Management
-    const AppState = {
-      elements: {},
-      isInitialized: false,
-      autoSaveTimer: null,
-      activeRow: null,
-      editMode: false,
-      editOrderId: null
-    };
+      // =====================================================
+      // NEW ORDER PAGE – scoped to this container only
+      // =====================================================
+
+      var AppState = {
+        elements: {},
+        isInitialized: false,
+        autoSaveTimer: null,
+        activeRow: null,
+        editMode: false,
+        editOrderId: null
+      };
 
     // =====================================================
     // UTILITY FUNCTIONS
@@ -1256,14 +1259,22 @@
     // =====================================================
 
     function getSearchRoot() {
-      return document.querySelector('.workspace') || document;
+      return container;
     }
 
-    /** Find popup/element by id in workspace or document so popups work in both standalone and embedded (workspace) mode. */
     function getPopupEl(id) {
-      const root = getSearchRoot();
-      return root.querySelector('#' + id) || document.getElementById(id);
+      return container.querySelector('#' + id) || null;
     }
+
+    function hideOwnPopupsOnInit() {
+      ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'].forEach(function (id) {
+        try {
+          var el = container.querySelector('#' + id);
+          if (el && el.style) el.style.display = 'none';
+        } catch (e) { }
+      });
+    }
+    hideOwnPopupsOnInit();
 
     function initElements() {
       const els = AppState.elements;
@@ -1281,8 +1292,8 @@
       els.dueDate = searchRoot.querySelector('#dueDate');
       els.gstRate = searchRoot.querySelector('#gstRate');
 
-      // Table
-      els.itemBody = searchRoot.querySelector('#itemTable tbody');
+      // Table (page-specific ID)
+      els.itemBody = searchRoot.querySelector('#new-order-item-table tbody');
 
       // Containers
       els.orderApp = searchRoot.querySelector('#orderApp');
@@ -1537,7 +1548,7 @@
       const row = select ? select.closest('tr') : null;
       if (!row) return;
       _orderDetailsRow = row;
-      const popup = getPopupEl('orderDetailsPopup');
+      const popup = getPopupEl('new-order-order-details-popup');
       if (!popup) return;
       const daysEl = getPopupEl('orderDetailsDays') || getSearchRoot().querySelector('#orderDetailsDays');
       const dateEl = getPopupEl('orderDetailsDeliveryDate') || getSearchRoot().querySelector('#orderDetailsDeliveryDate');
@@ -1570,7 +1581,7 @@
 
     function closeOrderDetailsPopup() {
       _orderDetailsRow = null;
-      const popup = getPopupEl('orderDetailsPopup');
+      const popup = getPopupEl('new-order-order-details-popup');
       if (popup) popup.style.display = 'none';
     }
 
@@ -1694,7 +1705,7 @@
     function openPayment() {
       if (!validateBeforeAction()) return;
 
-      const popup = getPopupEl('paymentPopup');
+      const popup = getPopupEl('new-order-payment-popup');
       const totalEl = getPopupEl('popupBillTotal') || getSearchRoot().querySelector('#popupBillTotal');
       const amountDisplayEl = getPopupEl('popupAmountDisplay') || getSearchRoot().querySelector('#popupAmountDisplay');
       const balanceEl = getPopupEl('popupBalance') || getSearchRoot().querySelector('#popupBalance');
@@ -1735,7 +1746,7 @@
     }
 
     function closePaymentPopup() {
-      const popup = getPopupEl('paymentPopup');
+      const popup = getPopupEl('new-order-payment-popup');
       if (popup) popup.style.display = 'none';
     }
 
@@ -1783,7 +1794,7 @@
     function openRateBook() {
       if (!validateBeforeAction()) return;
 
-      const popup = getPopupEl('ratebookPopup');
+      const popup = getPopupEl('new-order-ratebook-popup');
       if (!popup) return;
 
       const setVal = (id, val) => {
@@ -1804,7 +1815,7 @@
     }
 
     function closeRatebookPopup() {
-      const popup = getPopupEl('ratebookPopup');
+      const popup = getPopupEl('new-order-ratebook-popup');
       if (popup) popup.style.display = 'none';
     }
 
@@ -2832,16 +2843,20 @@
         }
       }
 
+      var _storageHandler = null;
+      var _visibilityHandler = null;
       function attachInitListeners() {
-        window.addEventListener('storage', function (e) {
+        _storageHandler = function (e) {
           if (e.key === 'rateBook') updateRatebookPanel();
-          if (e.key === 'newOrderState' && e.newValue) setTimeout(() => restoreOrderState(), 200);
-        });
-        document.addEventListener('visibilitychange', function () {
+          if (e.key === 'newOrderState' && e.newValue) setTimeout(function () { restoreOrderState(); }, 200);
+        };
+        window.addEventListener('storage', _storageHandler);
+        _visibilityHandler = function () {
           if (!document.hidden && localStorage.getItem('ratebookOpened') === 'true') {
-            setTimeout(() => { restoreOrderState(); updateRatebookPanel(); }, 200);
+            setTimeout(function () { restoreOrderState(); updateRatebookPanel(); }, 200);
           }
-        });
+        };
+        document.addEventListener('visibilitychange', _visibilityHandler);
         window.addEventListener('focus', function () {
           if (localStorage.getItem('ratebookOpened') === 'true') {
             setTimeout(() => { restoreOrderState(); updateRatebookPanel(); }, 100);
@@ -2890,15 +2905,21 @@
       window.closeDashboard = closeDashboard;
       window.saveOrderState = saveOrderState;
       window.restoreOrderState = restoreOrderState;
+
+      window.__currentPageCleanup = function () {
+        if (_storageHandler) window.removeEventListener('storage', _storageHandler);
+        if (_visibilityHandler) document.removeEventListener('visibilitychange', _visibilityHandler);
+        var globals = ['addRow','addRowNewOrder','removeRow','calculateRow','handleTypeChange','openCustomer','openPayment','closePaymentPopup','newOrderClosePaymentPopup','newOrderSavePayment','savePayment','openRateBook','closeRatebookPopup','newOrderCloseRatebookPopup','newOrderSaveRatebookEntry','openOrderDetailsPopup','closeOrderDetailsPopup','newOrderCloseOrderDetailsPopup','newOrderSaveOrderDetailsPopup','saveOrderDetailsPopup','calculateOrderDetailsDeliveryDate','calcRatebookAmount','saveRatebookEntry','applyRateToRow','deleteRate','saveOrder','saveAndNew','resetOrder','showInvoice','back','closeDashboard','saveOrderState','restoreOrderState'];
+        globals.forEach(function (k) { try { delete window[k]; } catch (e) {} });
+      };
     }
 
-    // Start initialization when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initApp);
     } else {
       setTimeout(initApp, 50);
     }
-
+    })();
   </script>
 
 </body>
