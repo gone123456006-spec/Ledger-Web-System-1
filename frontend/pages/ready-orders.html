@@ -506,10 +506,29 @@ function initElements(){
 function loadReadyOrders(){
   console.log("📋 Loading ready orders...");
   
-  if(!tbody && !initElements()){
+  // Always re-init elements so we have valid refs when returning to this page (workspace SPA)
+  if(!initElements()){
     console.warn("⚠️ Table elements not ready, retrying...");
     setTimeout(loadReadyOrders, 100);
     return;
+  }
+  // When in workspace, only update the list if we're actually on the Ready Orders page
+  const workspace = document.querySelector(".workspace");
+  if(workspace){
+    const page = (workspace.getAttribute("data-page") || "").trim();
+    if(page && page !== "ready-orders"){
+      return;
+    }
+    // Ensure tbody is still in the document (not detached after navigating away)
+    if(tbody && !document.contains(tbody)){
+      tbody = null;
+      footer = null;
+      searchBox = null;
+      if(!initElements()){
+        setTimeout(loadReadyOrders, 100);
+        return;
+      }
+    }
   }
   
   try{
@@ -852,9 +871,12 @@ if (document.readyState === 'loading') {
   setTimeout(initReadyOrdersPage, isInWorkspace() ? 200 : 50);
 }
 
-// Listen for page refresh event from dashboard
+// Listen for page refresh event from dashboard (e.g. after loadPage injects this page)
 window.addEventListener('pageRefresh', function() {
   console.log("📡 Page refresh event received");
+  tbody = null;
+  footer = null;
+  searchBox = null;
   setTimeout(initReadyOrdersPage, 150);
 });
 

@@ -371,20 +371,13 @@
     <div class="orders-toolbar">
       <button class="btn" onclick="newOrder()">➕ New Order</button>
 
-      <label>Customer</label>
-      <input type="text" id="customerFilter" onkeyup="filterTable()">
+      <label>From date</label>
+      <input type="date" id="filterFromDate" onchange="filterTable()">
 
-      <label>Order Hallmark</label>
-      <select id="hallmarkFilter" onchange="filterTable()">
-        <option value="">All</option>
-      </select>
+      <label>To date</label>
+      <input type="date" id="filterToDate" onchange="filterTable()">
 
-      <label>
-        <input type="checkbox" id="originalBillFilter" onchange="filterTable()"> Original Bill
-      </label>
-
-      <label>Search</label>
-      <input type="text" id="searchBox" placeholder="Search orders..." onkeyup="searchTable()">
+      <button class="btn" onclick="clearDateFilter()" style="padding:6px 12px; font-size:12px;">Clear filter</button>
     </div>
 
     <!-- TABLE -->
@@ -392,7 +385,6 @@
       <table id="ordersTable">
         <thead>
           <tr>
-            <th class="center">Mark</th>
             <th>Order No</th>
             <th>Customer</th>
             <th>Order Date</th>
@@ -477,11 +469,11 @@
         return;
       }
 
-      // Sort by date (newest first)
+      // Sort by date and time: newest order at top (descending by timestamp, then orderDate)
       const sortedOrders = [...orders].sort((a, b) => {
-        const dateA = new Date(a.orderDate || a.timestamp || 0);
-        const dateB = new Date(b.orderDate || b.timestamp || 0);
-        return dateB - dateA;
+        const timeA = new Date(a.timestamp || a.orderDate || 0).getTime();
+        const timeB = new Date(b.timestamp || b.orderDate || 0).getTime();
+        return timeB - timeA;
       });
 
       sortedOrders.forEach(order => {
@@ -511,11 +503,7 @@
             if (firstItemType) orderType = firstItemType;
           }
 
-          // Check if order is marked as PENDING
-          const isPending = order.status === "PENDING";
-
           row.innerHTML = `
-        <td class="center"><input type="checkbox" ${isPending ? 'checked' : ''} onclick="toggleOrderStatus(this, ${order.id}); event.stopPropagation();"></td>
         <td>${order.orderNo || order.billNo || "-"}</td>
         <td>${order.customer || order.customerName || "-"}</td>
         <td>${order.orderDate || "-"}</td>
@@ -531,11 +519,10 @@
         </td>
       `;
 
-          // Make row clickable to edit order (but not if clicking checkbox or edit button)
+          // Make row clickable to edit order (but not if clicking Edit button)
           row.style.cursor = "pointer";
           row.onclick = function (e) {
-            // Don't trigger if clicking checkbox or button
-            if (e.target && (e.target.type === 'checkbox' || e.target.tagName === 'BUTTON')) return;
+            if (e.target && e.target.tagName === "BUTTON") return;
             editOrder(order.id);
           };
 
@@ -857,32 +844,7 @@
     }
 
     /* =========================
-       SEARCH FILTER
-    ========================= */
-    function searchTable() {
-      if (!tbody) {
-        if (!initElements()) return;
-      }
-
-      const workspace = document.querySelector(".workspace");
-      let searchBox = null;
-
-      if (workspace) {
-        searchBox = workspace.querySelector("#searchBox");
-      }
-
-      if (!searchBox) {
-        searchBox = document.querySelector("#searchBox") || document.getElementById("searchBox");
-      }
-
-      if (!searchBox) return;
-
-      const value = searchBox.value.toLowerCase();
-      filterTable();
-    }
-
-    /* =========================
-       FILTER TABLE
+       DATE FILTER (by month, day, date)
     ========================= */
     function filterTable() {
       if (!tbody) {
@@ -890,73 +852,48 @@
       }
 
       const workspace = document.querySelector(".workspace");
-      let searchBox = null;
-      let customerFilter = null;
-      let hallmarkFilter = null;
-      let originalBillFilter = null;
+      let fromEl = workspace ? workspace.querySelector("#filterFromDate") : null;
+      let toEl = workspace ? workspace.querySelector("#filterToDate") : null;
+      if (!fromEl) fromEl = document.querySelector("#filterFromDate") || document.getElementById("filterFromDate");
+      if (!toEl) toEl = document.querySelector("#filterToDate") || document.getElementById("filterToDate");
 
-      if (workspace) {
-        searchBox = workspace.querySelector("#searchBox");
-        customerFilter = workspace.querySelector("#customerFilter");
-        hallmarkFilter = workspace.querySelector("#hallmarkFilter");
-        originalBillFilter = workspace.querySelector("#originalBillFilter");
-      }
-
-      if (!searchBox) {
-        searchBox = document.querySelector("#searchBox") || document.getElementById("searchBox");
-      }
-      if (!customerFilter) {
-        customerFilter = document.querySelector("#customerFilter") || document.getElementById("customerFilter");
-      }
-      if (!hallmarkFilter) {
-        hallmarkFilter = document.querySelector("#hallmarkFilter") || document.getElementById("hallmarkFilter");
-      }
-      if (!originalBillFilter) {
-        originalBillFilter = document.querySelector("#originalBillFilter") || document.getElementById("originalBillFilter");
-      }
-
-      const searchValue = searchBox ? searchBox.value.toLowerCase() : "";
-      const customerValue = customerFilter ? customerFilter.value.toLowerCase() : "";
-      const hallmarkValue = hallmarkFilter ? hallmarkFilter.value : "";
-      const originalBillChecked = originalBillFilter ? originalBillFilter.checked : false;
+      const fromValue = fromEl ? fromEl.value : "";
+      const toValue = toEl ? toEl.value : "";
+      const fromDate = fromValue ? new Date(fromValue) : null;
+      const toDate = toValue ? new Date(toValue) : null;
+      if (toDate) toDate.setHours(23, 59, 59, 999);
 
       const rows = tbody.querySelectorAll("tr");
-      let visibleCount = 0;
-
       rows.forEach(row => {
-        const rowText = row.innerText.toLowerCase();
         const cells = row.querySelectorAll("td");
-
-        // Get customer name from row (column 2)
-        const customerCell = cells[2] ? cells[2].textContent.toLowerCase() : "";
-
+        const orderDateCell = cells[2] ? cells[2].textContent.trim() : "";
+        if (!fromValue && !toValue) {
+          row.style.display = "";
+          return;
+        }
+        const rowDate = orderDateCell ? new Date(orderDateCell) : null;
+        if (!rowDate || isNaN(rowDate.getTime())) {
+          row.style.display = fromValue || toValue ? "none" : "";
+          return;
+        }
         let show = true;
-
-        // Search filter
-        if (searchValue && !rowText.includes(searchValue)) {
-          show = false;
-        }
-
-        // Customer filter
-        if (customerValue && !customerCell.includes(customerValue)) {
-          show = false;
-        }
-
-        // Hallmark filter (if implemented)
-        if (hallmarkValue && hallmarkValue !== "") {
-          // Add hallmark filtering logic if needed
-        }
-
-        // Original bill filter (if implemented)
-        if (originalBillChecked) {
-          // Add original bill filtering logic if needed
-        }
-
+        if (fromDate && rowDate < fromDate) show = false;
+        if (toDate && rowDate > toDate) show = false;
         row.style.display = show ? "" : "none";
-        if (show) visibleCount++;
       });
 
       updateFooter();
+    }
+
+    function clearDateFilter() {
+      const workspace = document.querySelector(".workspace");
+      let fromEl = workspace ? workspace.querySelector("#filterFromDate") : null;
+      let toEl = workspace ? workspace.querySelector("#filterToDate") : null;
+      if (!fromEl) fromEl = document.querySelector("#filterFromDate") || document.getElementById("filterFromDate");
+      if (!toEl) toEl = document.querySelector("#filterToDate") || document.getElementById("filterToDate");
+      if (fromEl) fromEl.value = "";
+      if (toEl) toEl.value = "";
+      filterTable();
     }
 
     /* =========================
@@ -1072,8 +1009,8 @@
       window.editOrder = editOrder;
       window.selectRow = selectRow;
       window.toggleOrderStatus = toggleOrderStatus;
-      window.searchTable = searchTable;
       window.filterTable = filterTable;
+      window.clearDateFilter = clearDateFilter;
       window.updateFooter = updateFooter;
       window.initOrdersPage = initOrdersPage;
       window.initElements = initElements;
