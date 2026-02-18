@@ -22,13 +22,13 @@
       --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
     * { box-sizing: border-box; font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif; }
-    html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg-gradient); color: var(--text); }
+    html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg-gradient); color: var(--text); overflow-x: hidden; }
 
     .page {
       width: 100%;
       min-height: 100%;
       margin: 0;
-      padding: 24px 20px 100px;
+      padding: 24px 32px 100px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -47,13 +47,14 @@
       border-radius: 16px;
       box-shadow: var(--shadow);
       border: 1px solid var(--border);
-      padding: 28px 32px 32px;
+      padding: 28px 36px 32px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px 40px;
-      max-width: 960px;
+      gap: 24px 44px;
+      max-width: none;
       width: 100%;
-      align-self: center;
+      min-width: 0;
+      align-self: stretch;
       transition: box-shadow 0.2s ease;
     }
     .erp-form:hover { box-shadow: var(--shadow-hover); }
@@ -62,6 +63,7 @@
       display: flex;
       flex-direction: column;
       gap: 0;
+      min-width: 0;
     }
     .form-section {
       margin-bottom: 20px;
@@ -71,7 +73,7 @@
       margin: 0 0 14px 0;
       font-size: 16px;
       font-weight: 600;
-      color: var(--text);
+      color: #c00;
       letter-spacing: -0.01em;
       padding-bottom: 8px;
       border-bottom: 2px solid var(--border);
@@ -185,8 +187,8 @@
       display: none;
       flex: 1;
       width: 100%;
-      max-width: 1100px;
-      align-self: center;
+      max-width: none;
+      align-self: stretch;
       overflow: hidden;
       flex-direction: column;
       min-height: 0;
@@ -200,42 +202,137 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 16px;
+      padding-bottom: 16px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--border);
     }
-    #customerListSection h2 { margin: 0; font-size: 20px; }
-    #customerListSection .back-btn { padding: 10px 18px; font-size: 14px; white-space: nowrap; }
-    #customerListSection input {
-      margin-bottom: 12px;
-      max-width: 320px;
-      padding: 10px 12px;
+    #customerListSection h2 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    #customerListSection .list-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #customerListSection .list-controls label {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+    #customerListSection .list-controls select {
+      padding: 8px 12px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
-    }
-    .table-wrap { width: 100%; overflow: auto; border-radius: var(--radius-sm); flex: 1; min-height: 0; border: 1px solid var(--border); }
-    table { width: 100%; min-width: 800px; border-collapse: collapse; background: #fff; }
-    th, td { padding: 12px 16px; font-size: 14px; text-align: left; border-bottom: 1px solid var(--border); }
-    th { background: #f8f9fa; font-weight: 600; color: var(--text); position: sticky; top: 0; z-index: 10; }
-    tbody tr:hover { background: #f8fafc; }
-    tbody tr:last-child td { border-bottom: none; }
-    #customerListSection table button {
-      padding: 8px 14px;
-      font-size: 13px;
-      margin: 0 4px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
+      font-size: 14px;
+      min-width: 140px;
       background: #fff;
       cursor: pointer;
     }
-    #customerListSection table button:hover { background: #f0f6fc; }
-    #customerListSection table button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    #customerListSection .list-controls select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    }
+    #customerListSection .back-btn {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.05s ease;
+      box-shadow: 0 1px 3px rgba(26, 115, 232, 0.3);
+    }
+    #customerListSection .back-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
+    }
+    #customerListSection .back-btn:active { transform: translateY(0); }
+    #customerListSection .list-search-wrap {
+      margin-bottom: 16px;
+    }
+    #customerListSection #searchCustomer {
+      width: 100%;
+      max-width: 360px;
+      padding: 12px 16px;
+      font-size: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: #fff;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    #customerListSection #searchCustomer:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    }
+    #customerListSection #searchCustomer::placeholder { color: var(--muted); }
+    .table-wrap { width: 100%; overflow: auto; border-radius: var(--radius-sm); flex: 1; min-height: 0; border: 1px solid var(--border); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04); }
+    #customerListSection table { width: 100%; min-width: 1200px; border-collapse: collapse; background: #fff; }
+    #customerListSection th, #customerListSection td { padding: 12px 16px; font-size: 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    #customerListSection th {
+      background: linear-gradient(to bottom, #f8f9fa, #f1f3f4);
+      font-weight: 600;
+      color: var(--text);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: var(--muted);
+    }
+    #customerListSection tbody tr { transition: background 0.15s ease; }
+    #customerListSection tbody tr:hover { background: #e8f0fe; }
+    #customerListSection tbody tr:last-child td { border-bottom: none; }
+    #customerListSection table button {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      margin: 0 3px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    #customerListSection table button:hover {
+      background: #e8f0fe;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    #customerListSection table button.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    #customerListSection table button.primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      color: #fff;
+    }
     .erp-form[style*="none"] { display: none !important; }
 
-    @media (max-width: 900px) {
-      .erp-form { grid-template-columns: 1fr; gap: 20px; padding: 20px 24px; }
-      .page { padding: 16px 12px 90px; }
-      #customerListSection .list-header { flex-direction: column; align-items: flex-start; }
+    @media (max-width: 960px) {
+      .erp-form { grid-template-columns: 1fr; gap: 20px; padding: 20px 24px; max-width: 100%; }
+      .page { padding: 16px 20px 90px; }
+      #customerListSection .list-header { flex-direction: column; align-items: stretch; }
+      #customerListSection .list-controls { width: 100%; }
+      #customerListSection .list-controls select { flex: 1; min-width: 0; }
+      #customerListSection #searchCustomer { max-width: none; }
     }
   </style>
 </head>
@@ -345,10 +442,10 @@
 
     <div id="customerListSection">
       <div class="list-header">
-        <h2 style="margin:0;" id="listSectionTitle">Customer List</h2>
-        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-          <label style="margin:0;">Show list:</label>
-          <select id="listTypeSelect" onchange="switchListType()" style="margin:0; max-width:140px; padding:6px 10px;">
+        <h2 id="listSectionTitle">Customer List</h2>
+        <div class="list-controls">
+          <label for="listTypeSelect">Show list</label>
+          <select id="listTypeSelect" onchange="switchListType()">
             <option value="Customer">Customer</option>
             <option value="Jeweller">Jeweller</option>
             <option value="Agent">Agent</option>
@@ -356,8 +453,9 @@
           <button type="button" class="primary back-btn" onclick="goBackToAddCustomer()">← Add New</button>
         </div>
       </div>
-      <input id="searchCustomer" placeholder="Search Name / Mobile" onkeyup="renderCustomerList()"
-        style="padding:8px 10px;width:300px;font-size:13px;margin-bottom:10px;">
+      <div class="list-search-wrap">
+        <input id="searchCustomer" placeholder="Search by name or mobile…" onkeyup="renderCustomerList()">
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -367,6 +465,11 @@
               <th>Mobile</th>
               <th>Station</th>
               <th>Balance</th>
+              <th>Silver Balance</th>
+              <th>Gold Balance</th>
+              <th>Opening Date</th>
+              <th>Aadhar Number</th>
+              <th>PAN Number</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -617,6 +720,10 @@
       const listType = getListType();
       tbody.innerHTML = "";
 
+      const fmtDate = (d) => { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString(); };
+      const fmtNum = (n) => (n != null && n !== "") ? Number(n) : "—";
+      const fmtBal = (n) => (n != null && n !== "") ? (typeof n === "number" ? n : Number(n)) : "—";
+
       if (listType === "Customer") {
         const title = $("listSectionTitle"); if (title) title.textContent = "Customer List";
         getCustomers()
@@ -624,7 +731,7 @@
           .forEach(c => {
             const nameEsc = (c.name || "").replace(/'/g, "&#39;");
             tbody.innerHTML += `<tr ondblclick="selectCustomerForOrder('${nameEsc}')">
-    <td>${c.cid || ""}</td><td>${c.name || ""}</td><td>${c.mobile || ""}</td><td>${c.station || ""}</td><td>${c.openingBalance != null ? c.openingBalance : ""}</td>
+    <td>${c.cid || ""}</td><td>${c.name || ""}</td><td>${c.mobile || ""}</td><td>${c.station || ""}</td><td>${fmtBal(c.openingBalance)}</td><td>${fmtBal(c.silverBalance)}</td><td>${fmtBal(c.goldBalance)}</td><td>${fmtDate(c.openingDate)}</td><td>${c.aadhar || "—"}</td><td>${c.pan || "—"}</td>
     <td><button onclick="editCustomer(${c.id})">Edit</button><button onclick="deleteCustomer(${c.id})">Delete</button><button onclick="selectCustomerForOrder('${nameEsc}')">Select</button></td></tr>`;
           });
       } else if (listType === "Jeweller") {
@@ -633,7 +740,7 @@
           .filter(j => (j.name || "").toLowerCase().includes(search) || (j.mobile || "").includes(search))
           .forEach(j => {
             tbody.innerHTML += `<tr>
-    <td>${j.cid || ""}</td><td>${j.name || ""}</td><td>${j.mobile || ""}</td><td>${j.station || ""}</td><td>${j.openingBalance != null ? j.openingBalance : ""}</td>
+    <td>${j.cid || ""}</td><td>${j.name || ""}</td><td>${j.mobile || ""}</td><td>${j.station || ""}</td><td>${fmtBal(j.openingBalance)}</td><td>${fmtBal(j.silverBalance)}</td><td>${fmtBal(j.goldBalance)}</td><td>${fmtDate(j.openingDate)}</td><td>${j.aadhar || "—"}</td><td>${j.pan || "—"}</td>
     <td><button onclick="editJeweller(${j.id})">Edit</button><button onclick="deleteJeweller(${j.id})">Delete</button></td></tr>`;
           });
       } else {
@@ -642,7 +749,7 @@
           .filter(a => (a.name || "").toLowerCase().includes(search) || (a.mobile || "").includes(search) || (a.email || "").toLowerCase().includes(search))
           .forEach(a => {
             tbody.innerHTML += `<tr>
-    <td>${a.cid || a.agentId || a.id}</td><td>${a.name || ""}</td><td>${a.mobile || ""}</td><td>${a.station || a.email || ""}</td><td>${a.openingBalance != null ? a.openingBalance : "—"}</td>
+    <td>${a.cid || a.agentId || ""}</td><td>${a.name || ""}</td><td>${a.mobile || ""}</td><td>${a.station || a.email || "—"}</td><td>${fmtBal(a.openingBalance)}</td><td>${fmtBal(a.silverBalance)}</td><td>${fmtBal(a.goldBalance)}</td><td>${fmtDate(a.openingDate)}</td><td>${a.aadhar || "—"}</td><td>${a.pan || "—"}</td>
     <td><button onclick="editAgent(${a.id})">Edit</button><button onclick="deleteAgent(${a.id})">Delete</button></td></tr>`;
           });
       }
@@ -652,7 +759,25 @@
     function editJeweller(id) { localStorage.removeItem(EDIT_KEY); localStorage.removeItem(EDIT_KEY_AGENT); localStorage.setItem(EDIT_KEY_JEWELLER, id); loadForEdit("Jeweller", id); }
     function editAgent(id) { localStorage.removeItem(EDIT_KEY); localStorage.removeItem(EDIT_KEY_JEWELLER); localStorage.setItem(EDIT_KEY_AGENT, id); loadForEdit("Agent", id); }
 
-    function deleteCustomer(id) { if (!confirm("Delete this customer?")) return; const customers = getCustomers().filter(c => c.id !== id); localStorage.setItem(STORE_KEY, JSON.stringify(customers)); renderCustomerList(); }
+    function deleteCustomer(id) {
+      const customers = getCustomers();
+      const cust = customers.find(c => String(c.id) === String(id));
+      if (!cust) return;
+      const name = (cust.name || "").trim();
+      const norm = n => (n || "").toLowerCase().trim();
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      const hasOrder = orders.some(o => norm(o.customer || o.customerName) === norm(name) || String(o.customerId) === String(id));
+      const hasBalance = balances.some(b => norm(b.customer) === norm(name));
+      if (hasOrder || hasBalance) {
+        alert("Cannot delete. This customer has orders or balance entries (New Order → Orders → Pending/Ready → All Bill → Customer Balance). Remove or transfer them first.");
+        return;
+      }
+      if (!confirm("Delete this customer?")) return;
+      const next = customers.filter(c => c.id !== id);
+      localStorage.setItem(STORE_KEY, JSON.stringify(next));
+      renderCustomerList();
+    }
     function deleteJeweller(id) { if (!confirm("Delete this jeweller?")) return; const jewellers = getJewellers().filter(j => j.id !== id); localStorage.setItem(STORE_KEY_JEWELLERS, JSON.stringify(jewellers)); renderCustomerList(); }
     function deleteAgent(id) { if (!confirm("Delete this agent?")) return; const agents = getAgents().filter(a => a.id !== id); localStorage.setItem(STORE_KEY_AGENTS, JSON.stringify(agents)); renderCustomerList(); }
 

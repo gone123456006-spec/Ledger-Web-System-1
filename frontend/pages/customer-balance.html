@@ -301,34 +301,43 @@
       try {
         const customers = JSON.parse(localStorage.getItem('customers') || "[]");
         const balances = JSON.parse(localStorage.getItem('customerBalances') || "[]");
+        const orders = JSON.parse(localStorage.getItem('orders') || "[]");
 
-        // Helper to normalize name
         const norm = name => (name || "").toLowerCase().trim();
         const customerNames = new Set(customers.map(c => norm(c.name)));
 
-        // 1) Rows from customers (with total balance = opening + pending bills)
+        // 1) Rows from customers — fetch from full flow: customerBalances + orders
         const customerData = customers.map(cust => {
           const custName = norm(cust.name);
 
-          // Find all pending bills for this customer
-          const pendingBills = balances.filter(b => norm(b.customer) === custName && !b.transferred);
-
-          // Calculate total pending amount
+          // All balance entries for this customer (pending + transferred)
+          const customerBalances = balances.filter(b => norm(b.customer) === custName);
+          const pendingBills = customerBalances.filter(b => !b.transferred);
           const pendingAmount = pendingBills.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
-
-          // Total Balance = Opening Balance + Pending Bills Amount
           const openingBal = parseFloat(cust.openingBalance || 0);
           const totalBalance = openingBal + pendingAmount;
 
-          // Find latest activity (bill)
-          // Sort bills by date descending
-          pendingBills.sort((a, b) => new Date(b.date || b.timestamp || 0) - new Date(a.date || a.timestamp || 0));
-          const latestBill = pendingBills[0];
+          // Latest activity: prefer customerBalances (All Bill flow), then orders (New Order → Orders → Pending/Ready)
+          let latestBill = null;
+          customerBalances.sort((a, b) => new Date(b.date || b.timestamp || 0) - new Date(a.date || a.timestamp || 0));
+          if (customerBalances.length) latestBill = customerBalances[0];
 
-          // Activity Timestamp for sorting the customer list
-          // Use latest bill timestamp, or customer update timestamp, or opening date
+          let latestOrder = null;
+          const customerOrders = orders.filter(o => norm(o.customer || o.customerName) === custName || String(o.customerId) === String(cust.id));
+          if (customerOrders.length) {
+            customerOrders.sort((a, b) => new Date(b.orderDate || b.timestamp || 0) - new Date(a.orderDate || a.timestamp || 0));
+            latestOrder = customerOrders[0];
+          }
+
+          // Use latest from balances, else from order (so Date / Bill No reflect full flow)
+          if (!latestBill && latestOrder) {
+            latestBill = { date: latestOrder.orderDate || (latestOrder.timestamp || "").split("T")[0], orderNo: latestOrder.orderNo || latestOrder.billNo || "—", timestamp: latestOrder.timestamp };
+          }
+
           let activityTimestamp = 0;
           if (latestBill && latestBill.timestamp) activityTimestamp = new Date(latestBill.timestamp).getTime();
+          else if (latestBill && latestBill.date) activityTimestamp = new Date(latestBill.date).getTime();
+          else if (latestOrder && (latestOrder.orderDate || latestOrder.timestamp)) activityTimestamp = new Date(latestOrder.orderDate || latestOrder.timestamp).getTime();
           else if (cust.timestamp) activityTimestamp = new Date(cust.timestamp).getTime();
           else if (cust.openingDate) activityTimestamp = new Date(cust.openingDate).getTime();
 
@@ -350,16 +359,18 @@
         customerData.forEach(cust => {
           const row = document.createElement('tr');
 
-          // Date: Latest Bill Date > Opening Date
+          // Date: from latest balance entry or order (full flow), else opening date
           let displayDate = "—";
           if (cust.latestBill && cust.latestBill.date) {
-            displayDate = cust.latestBill.date;
+            const d = new Date(cust.latestBill.date);
+            displayDate = isNaN(d.getTime()) ? cust.latestBill.date : d.toLocaleDateString();
           } else if (cust.openingDate) {
-            displayDate = new Date(cust.openingDate).toLocaleDateString();
+            const d = new Date(cust.openingDate);
+            displayDate = isNaN(d.getTime()) ? cust.openingDate : d.toLocaleDateString();
           }
 
-          // Bill No: Latest Bill No
-          const billNo = cust.latestBill ? cust.latestBill.orderNo : "—";
+          // Bill No: from latest balance or order
+          const billNo = (cust.latestBill && cust.latestBill.orderNo) ? cust.latestBill.orderNo : "—";
 
           // Data Mapping
           const mark = cust.cid || "—";
@@ -472,6 +483,16 @@
     }
 
     function deleteCustomer(id, name) {
+      const norm = n => (n || "").toLowerCase().trim();
+      const nameNorm = norm(name);
+      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      const hasOrder = orders.some(o => norm(o.customer || o.customerName) === nameNorm || String(o.customerId) === String(id));
+      const hasBalance = balances.some(b => norm(b.customer) === nameNorm);
+      if (hasOrder || hasBalance) {
+        alert("Cannot delete. This customer has orders or balance entries (New Order → Orders → Pending/Ready → All Bill → Customer Balance). Remove or transfer them first.");
+        return;
+      }
       if (!confirm(`Are you sure you want to delete customer "${name}"?`)) {
         return;
       }
@@ -480,7 +501,6 @@
         let customers = JSON.parse(localStorage.getItem('customers') || "[]");
         const initialLength = customers.length;
 
-        // Filter out the customer
         customers = customers.filter(c => String(c.id) !== String(id));
 
         if (customers.length === initialLength) {
@@ -490,7 +510,6 @@
 
         localStorage.setItem('customers', JSON.stringify(customers));
 
-        // Dispatch event for other pages
         const event = new CustomEvent('customersUpdated');
         window.dispatchEvent(event);
         if (window.parent) window.parent.dispatchEvent(event);
