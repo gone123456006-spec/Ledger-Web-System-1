@@ -4272,6 +4272,7 @@
         if (rateDiffStored) {
           rateDiffWrap.style.display = "";
           rateDiffEl.textContent = "Rate Difference : " + rateDiffStored;
+          rateDiffEl.style.color = rateDiffStored.includes("\u2212") ? "var(--danger)" : "";
         } else {
           rateDiffWrap.style.display = "none";
         }
@@ -4579,8 +4580,10 @@
             const rateBookVal = Number(rate.rate) || 0;
             const curRate = Number(rate.curRate) || 0;
             const adjWt = Number(rate.adjWt) || 0;
-            const diffAmount = (curRate - rateBookVal) * adjWt;
-            const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${Math.round(diffAmount)}`;
+            // Formula: (Rate Book - Cur. Rate) × Adj Wt = Diff Amount (negative shown with minus)
+            const diffAmount = (rateBookVal - curRate) * adjWt;
+            const formatted = diffAmount < 0 ? "\u2212" + Math.abs(diffAmount).toFixed(2) : diffAmount.toFixed(2);
+            const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${formatted}`;
             localStorage.setItem("rateBookDiffSummary_" + currentBillNo, line);
           }
         }

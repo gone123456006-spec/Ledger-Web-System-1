@@ -318,9 +318,9 @@
                 </div>
             </div>
 
-            <!-- Applied formula: RATE BOOK - CURRENT RATE × ADJ WT. = DIFF AMOUNT -->
+            <!-- Excel-style: Negative = red with minus. Positive = black (no + sign). -->
             <div class="diff-formula-note" style="padding:8px 12px; margin-bottom:8px; background:var(--primary-soft); border-radius:var(--radius); font-size:13px; color:var(--text);">
-                <strong>Applied formula:</strong> Rate book − Cur.Rate × Adj Wt = Diff Amount
+                <strong>Formula:</strong> Rate Book - Cur. Rate × Adj Wt = Diff Amount &nbsp;|&nbsp; <span style="color:var(--danger); font-weight:600;">Negative = red with minus (−)</span> &nbsp; Positive = black
             </div>
             <!-- Table -->
             <div class="table-container">
@@ -342,7 +342,8 @@
                             <th style="width:100px;">Cur Stamp</th>
                             <th class="text-right" style="width:100px;">Cur Wt</th>
                             <th class="text-right" style="width:100px;">Cur Rate</th>
-                            <th class="text-right" style="width:110px;" title="Rate book − Cur.Rate × Adj Wt = Diff Amount">Amt Diff</th>
+                            <th class="text-right" style="width:120px;" title="Rate Book minus Cur. Rate (step 1)">Rate Book - Cur. Rate</th>
+                            <th class="text-right" style="width:110px;" title="(Rate Book - Cur. Rate) × Adj Wt = Diff Amount">Amt Diff</th>
                             <th style="width:130px;">Del Date</th>
                             <th style="width:150px;">Narration</th>
                             <th style="width:80px; text-align:center;">Action</th>
@@ -385,7 +386,7 @@
                 if (rates.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="17" style="text-align:center; padding:40px; color:var(--muted); font-size:14px;">
+                            <td colspan="18" style="text-align:center; padding:40px; color:var(--muted); font-size:14px;">
                                 No rate book entries found. Click "Add New Row" to start.
                             </td>
                         </tr>
@@ -423,12 +424,13 @@
                     // Effective Current Rate
                     const effectiveCurrentRate = entryCurrentRate || globalCurrentRate;
 
-                    // Diff Amount = Rate Book - (Cur.Rate × Adj Wt.)
-                    const diffAmt = entryRate - (effectiveCurrentRate * adjWt);
-
-                    // Format Diff Amount for display
-                    const displayDiff = diffAmt.toFixed(2);
-                    const diffColor = diffAmt >= 0 ? "var(--success)" : "var(--danger)";
+                    // Step 1: Rate Book - Cur. Rate (e.g. 12000 - 15000 = -3000)
+                    const rateDiff = entryRate - effectiveCurrentRate;
+                    // Step 2: × Adj Wt = Diff Amount (e.g. -3000 × 3 = -9000)
+                    const diffAmt = rateDiff * adjWt;
+                    // Excel-style: negative = red with minus, positive = black
+                    const rateDiffColor = rateDiff < 0 ? "var(--danger)" : "inherit";
+                    const diffAmtColor = diffAmt < 0 ? "var(--danger)" : "inherit";
 
                     // Determine if using Legacy Type (S,P,O,R) or New Type (order, repair...)
                     // Mapping for legacy display
@@ -464,9 +466,13 @@
                         <td><input type="number" step="0.001" value="${safeNumber(entry.curWt, 0) > 0 ? safeNumber(entry.curWt, 0).toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'curWt')" oninput="calcDiff(this)"></td>
                         <td><input type="number" step="0.01" value="${safeNumber(entry.curRate, 0) > 0 ? safeNumber(entry.curRate, 0).toFixed(2) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'curRate')" oninput="calcDiff(this)"></td>
                         <td>
+                            <input type="text" readonly value="${rateDiff < 0 ? '\u2212' + Math.abs(rateDiff).toFixed(2) : rateDiff > 0 ? rateDiff.toFixed(2) : '0.00'}" style="text-align:right; font-weight:600; color:${rateDiffColor}; cursor:default; border:none; background:transparent;" title="Rate Book - Cur. Rate (Excel: negative = red)">
+                        </td>
+                        <td>
                             <input type="text" readonly 
-                                   value="${calculateDiff(entry, balWt, entryRate)}" 
-                                   style="text-align:right; font-weight:bold; color:${getDiffColor(entry, balWt, entryRate)}; cursor:default; border:none; background:transparent;">
+                                   value="${diffAmt < 0 ? '\u2212' + Math.abs(diffAmt).toFixed(2) : diffAmt > 0 ? diffAmt.toFixed(2) : '0.00'}" 
+                                   style="text-align:right; font-weight:bold; color:${diffAmtColor}; cursor:default; border:none; background:transparent;"
+                                   title="Diff Amount (Excel: negative = red with minus)">
                         </td>
                         <td><input type="date" value="${entry.delDate || ""}" onchange="updateHistoryRow(this, 'delDate')"></td>
                         <td><input value="${entry.curNarration || ""}" onchange="updateHistoryRow(this, 'curNarration')"></td>
@@ -535,42 +541,55 @@
             } catch (e) { console.error(e); }
         };
 
-        /* Diff Amount = Rate Book - (Cur.Rate × Adj Wt.) */
+        /* Diff Amount = (Rate Book - Cur. Rate) × Adj Wt */
         function calculateDiff(entry, balWt, bookedRate) {
             const curRate = safeNumber(entry.curRate, 0);
             const adjWt = safeNumber(entry.adjWt, 0);
             const rateBook = safeNumber(bookedRate, 0);
-            const diff = rateBook - (curRate * adjWt);
+            const rateDiff = rateBook - curRate;
+            const diff = rateDiff * adjWt;
             return diff.toFixed(2);
+        }
+
+        /** Excel-style: negative = minus sign + red. Positive = number only, black. */
+        function formatDiffAmount(diff) {
+            const n = Number(diff);
+            if (Number.isNaN(n)) return "0.00";
+            const fixed = Math.abs(n).toFixed(2);
+            if (n < 0) return "\u2212" + fixed; // negative: minus + red (Excel)
+            return fixed;                         // positive: no + sign (Excel)
         }
 
         function getDiffColor(entry, balWt, bookedRate) {
             const diff = parseFloat(calculateDiff(entry, balWt, bookedRate));
-            if (diff > 0) return 'var(--success)'; // Green
-            if (diff < 0) return 'var(--danger)';  // Red
-            return 'inherit';
+            if (diff < 0) return 'var(--danger)'; // Excel: negative = red
+            return 'inherit';                      // positive/zero = black
         }
 
-        /* LIVE CALC ON INPUT */
+        /* LIVE CALC: Step 1 Rate Book - Cur. Rate; Step 2 × Adj Wt = Diff Amount */
         window.calcDiff = function (input) {
             const tr = input.closest('tr');
             if (!tr) return;
 
-            // Get live values from DOM
-            const bookedRate = parseFloat(tr.cells[7].querySelector('input').value) || 0; // Index 7 is Rate
-            const adjWtInput = tr.cells[9].querySelector('input'); // Index 9 is Adj Wt
-            const curRateInput = tr.cells[12].querySelector('input'); // Index 12 is Cur Rate
-            const diffInput = tr.cells[13].querySelector('input'); // Index 13 is Diff
+            const bookedRate = parseFloat(tr.cells[7].querySelector('input').value) || 0;  // Rate Book
+            const adjWtInput = tr.cells[9].querySelector('input');    // Adj Wt
+            const curRateInput = tr.cells[12].querySelector('input'); // Cur Rate
+            const rateDiffCell = tr.cells[13].querySelector('input'); // Rate Book − Cur. Rate
+            const diffInput = tr.cells[14].querySelector('input');    // Amt Diff
 
             const adjWt = parseFloat(adjWtInput.value) || 0;
             const curRate = parseFloat(curRateInput.value) || 0;
-            // Rate Book - (Cur.Rate × Adj Wt.) = Diff Amount
-            const diff = bookedRate - (curRate * adjWt);
+            const rateDiff = bookedRate - curRate;   // e.g. 12000 - 15000 = -3000
+            const diff = rateDiff * adjWt;          // e.g. -3000 × 3 = -9000
 
-            diffInput.value = diff.toFixed(2);
-            if (diff > 0) diffInput.style.color = 'var(--success)';
-            else if (diff < 0) diffInput.style.color = 'var(--danger)';
-            else diffInput.style.color = 'inherit';
+            if (rateDiffCell) {
+                rateDiffCell.value = formatDiffAmount(rateDiff);
+                rateDiffCell.style.color = rateDiff < 0 ? 'var(--danger)' : 'inherit';
+            }
+            if (diffInput) {
+                diffInput.value = formatDiffAmount(diff);
+                diffInput.style.color = diff < 0 ? 'var(--danger)' : 'inherit';
+            }
         };
 
         /* COMPARE RATES LOGIC */
@@ -630,14 +649,14 @@
 
                     const totalDiff = rateDiff * weight;
 
-                    ValSpan.innerText = totalDiff.toFixed(2);
-                    if (totalDiff >= 0) {
-                        ValSpan.style.color = 'var(--success)';
+                    ValSpan.innerText = formatDiffAmount(totalDiff);
+                    if (totalDiff < 0) {
+                        ValSpan.style.color = 'var(--danger)';  // Excel: negative = red
                     } else {
-                        ValSpan.style.color = 'var(--danger)';
+                        ValSpan.style.color = 'inherit';
                     }
 
-                    localStorage.setItem("rateComparingDiff", totalDiff.toFixed(2));
+                    localStorage.setItem("rateComparingDiff", formatDiffAmount(totalDiff));
                     notifyDiffUpdate();
                 }
             } catch (e) { console.error(e); }
@@ -750,8 +769,8 @@
                     curStamp: getVal(10, false),
                     curWt: getVal(11, true),
                     curRate: getVal(12, true),
-                    delDate: getVal(14, false),
-                    curNarration: getVal(15, false)
+                    delDate: getVal(15, false),
+                    curNarration: getVal(16, false)
                 };
                 if (oldEntry && oldEntry.billNo) entry.billNo = oldEntry.billNo;
                 rates.push(entry);
@@ -766,7 +785,8 @@
                     const rateBookVal = Number(forBill.rate) || 0;
                     const curRate = Number(forBill.curRate) || 0;
                     const adjWt = Number(forBill.adjWt) || 0;
-                    const diffAmount = rateBookVal - (curRate * adjWt);
+                    const rateDiff = rateBookVal - curRate;
+                    const diffAmount = rateDiff * adjWt;
                     const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${Math.round(diffAmount)}`;
                     localStorage.setItem("rateBookDiffSummary_" + ratebookBillNo, line);
                 }

@@ -1,13 +1,504 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>Pending Items</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* =========================
+       BASE
+    ========================= */
+    * {
+      box-sizing: border-box;
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 13px;
+    }
+
+    body {
+      margin: 0;
+      background: #e6ebf2;
+    }
+
+    .workspace {
+      background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
+    }
+
+    /* =========================
+       CONTAINER
+    ========================= */
+    .pending-items-wrap {
+      margin: 15px;
+      background: #fff !important;
+      border: 1px solid #d1d6de;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 30px);
+      max-height: calc(100vh - 30px);
+      overflow: hidden;
+      box-sizing: border-box;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .workspace .pending-items-wrap {
+      margin: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: #fff !important;
+      border: none !important;
+    }
+
+    /* =========================
+       TOOLBAR
+    ========================= */
+    .pending-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid #e5e7eb;
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+    }
+
+    .workspace .pending-items-wrap .pending-toolbar {
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+    }
+
+    .pending-toolbar h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1d1d1f !important;
+      flex: 1;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: 1px solid #d1d6de;
+      background: #fff;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      color: #1d1d1f !important;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    input {
+      height: 36px;
+      padding: 6px 12px;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      font-size: 13px;
+      background: #fff;
+      transition: all 0.2s;
+      min-width: 200px;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+    }
+
+    input::placeholder {
+      color: #8e8e93;
+    }
+
+    /* =========================
+       TABLE
+    ========================= */
+    .table-wrap {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      min-height: 0;
+      box-sizing: border-box;
+      background: #fff !important;
+    }
+
+    .workspace .pending-items-wrap .table-wrap {
+      background: #fff !important;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1400px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: auto;
+      background: #fff !important;
+    }
+
+    .workspace .pending-items-wrap table {
+      background: #fff !important;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff !important;
+    }
+
+    .workspace .pending-items-wrap thead {
+      background: #fff !important;
+    }
+
+    thead th {
+      background: linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
+      border-bottom: 2px solid #d1d6de;
+      padding: 14px 12px;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      font-weight: 600;
+      font-size: 12px;
+      text-align: left;
+      color: #1d1d1f !important;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    thead th.center {
+      text-align: center;
+    }
+
+    thead th.right {
+      text-align: right;
+    }
+
+    tbody td {
+      padding: 12px;
+      border-bottom: 1px solid #f0f0f0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      font-size: 13px;
+      vertical-align: middle;
+      color: #333 !important;
+      background: transparent !important;
+      transition: all 0.15s ease;
+    }
+
+    tbody td.col-item-name,
+    tbody td.col-sample {
+      max-width: 220px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .workspace .pending-items-wrap tbody td {
+      color: #333 !important;
+      background: transparent !important;
+    }
+
+    tbody tr {
+      transition: all 0.2s ease;
+      background: #fff !important;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #fafbfc !important;
+    }
+
+    tbody tr:hover {
+      background: #f1f7ff !important;
+    }
+
+    tbody tr:hover td {
+      border-bottom-color: #ffe4b3;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right;
+      font-weight: 500;
+      color: #1d1d1f !important;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge.pending {
+      background: #fff4d6;
+      color: #9a6a00;
+      border: 1px solid #ffc107;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-subtext {
+      font-size: 13px;
+      color: #8e8e93;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #6e6e73 !important;
+      border-top: 1px solid #e5e7eb;
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      font-weight: 500;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f5f5f7;
+      border-radius: 5px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #c1c1c6;
+      border-radius: 5px;
+    }
+  </style>
 </head>
+
 <body>
-  <div style="padding:30px;font-family:Segoe UI,Arial,sans-serif">
-    <h2>Pending Items</h2>
-    <p>This module is not implemented yet.</p>
+
+  <div class="pending-items-wrap">
+    <div class="pending-toolbar">
+      <h2>⏳ Pending Items</h2>
+      <input type="text" id="searchBox" placeholder="🔍 Search by item, order, customer..." onkeyup="filterTable()">
+      <button class="btn" onclick="loadPendingItems()">🔄 Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="pendingItemsTable">
+        <thead>
+          <tr>
+            <th class="center">Mark</th>
+            <th class="center">Progress</th>
+            <th class="right">Qty</th>
+            <th>Item Name</th>
+            <th>Sample details</th>
+            <th>Design</th>
+            <th class="right">Est. unit weight</th>
+            <th class="right">Est. total weight</th>
+            <th>Order number</th>
+            <th>Customer name</th>
+            <th>Order date</th>
+            <th>Due date</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer" id="footerText">
+      No pending items
+    </div>
   </div>
+
+  <script>
+    let tbody = null;
+    let footer = null;
+
+    function initElements() {
+      const workspace = document.querySelector('.workspace');
+      const wrap = workspace ? workspace.querySelector('.pending-items-wrap') : null;
+      const root = wrap || document;
+      tbody = root.querySelector('#tableBody');
+      footer = root.querySelector('#footerText');
+      if (!tbody) tbody = document.getElementById('tableBody');
+      if (!footer) footer = document.getElementById('footerText');
+      return !!(tbody && footer);
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function loadPendingItems() {
+      if (!tbody && !initElements()) {
+        setTimeout(loadPendingItems, 100);
+        return;
+      }
+      tbody.innerHTML = '';
+
+      try {
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const pendingOrders = orders.filter(o => o && o.status === 'PENDING');
+
+        const rows = [];
+        pendingOrders.forEach(order => {
+          const items = order.items || [];
+          const orderNo = order.orderNo || order.billNo || '—';
+          const customerName = order.customer || order.customerName || '—';
+          const orderDate = order.orderDate || '';
+          const dueDate = order.dueDate || '';
+
+          items.forEach(item => {
+            if (!item || !item.values) return;
+            const v = item.values;
+            rows.push({
+              mark: 'PENDING',
+              progress: 'Pending',
+              qty: parseFloat(v[7]) || 0,
+              itemName: (v[2] || '').trim() || '—',
+              sampleDetails: (item.sample != null ? item.sample : (order.sampleDetails != null ? order.sampleDetails : '')) || '—',
+              design: (v[5] || '').trim() || '—',
+              estUnitWt: parseFloat(v[8]) || 0,
+              estTotalWt: parseFloat(v[9]) || 0,
+              orderNo,
+              customerName,
+              orderDate,
+              dueDate,
+              orderId: order.id
+            });
+          });
+        });
+
+        if (rows.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="12" style="border:none;">
+                <div class="empty-state">
+                  <div class="empty-state-icon">⏳</div>
+                  <div class="empty-state-text">No Pending Items</div>
+                  <div class="empty-state-subtext">Items from orders marked as PENDING (Orders → Mark) will appear here</div>
+                </div>
+              </td>
+            </tr>
+          `;
+          if (footer) footer.textContent = 'No pending items';
+          return;
+        }
+
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          tr.dataset.orderId = r.orderId;
+          tr.dataset.search = [r.itemName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
+          tr.innerHTML = `
+            <td class="center"><span class="badge pending">${r.mark}</span></td>
+            <td class="center">${r.progress}</td>
+            <td class="right">${r.qty.toFixed(0)}</td>
+            <td class="col-item-name">${escapeHtml(r.itemName)}</td>
+            <td class="col-sample">${escapeHtml(r.sampleDetails)}</td>
+            <td>${escapeHtml(r.design)}</td>
+            <td class="right">${r.estUnitWt.toFixed(3)}</td>
+            <td class="right">${r.estTotalWt.toFixed(3)}</td>
+            <td>${escapeHtml(r.orderNo)}</td>
+            <td>${escapeHtml(r.customerName)}</td>
+            <td>${formatDate(r.orderDate)}</td>
+            <td>${formatDate(r.dueDate)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        if (footer) footer.textContent = `${rows.length} pending item(s)`;
+        filterTable();
+      } catch (e) {
+        console.error('Error loading pending items:', e);
+        tbody.innerHTML = `<tr><td colspan="12" class="empty-state">Error loading data.</td></tr>`;
+        if (footer) footer.textContent = 'Error';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (str == null || str === '') return '—';
+      const s = String(str);
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function filterTable() {
+      if (!tbody || !tbody.querySelector('tr[data-search]')) return;
+      const searchEl = document.getElementById('searchBox');
+      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+      const trs = tbody.querySelectorAll('tr[data-search]');
+      trs.forEach(tr => {
+        const show = !query || (tr.dataset.search && tr.dataset.search.indexOf(query) !== -1);
+        tr.style.display = show ? '' : 'none';
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => setTimeout(loadPendingItems, 50));
+    } else {
+      setTimeout(loadPendingItems, 50);
+    }
+
+    window.addEventListener('storage', e => {
+      if (e.key === 'orders') loadPendingItems();
+    });
+    window.addEventListener('orderStatusChanged', () => loadPendingItems());
+    window.addEventListener('orderSaved', () => loadPendingItems());
+    window.addEventListener('pageRefresh', () => setTimeout(loadPendingItems, 150));
+
+    if (typeof ensureFunctionsGlobal === 'undefined') {
+      window.loadPendingItems = loadPendingItems;
+      window.filterTable = filterTable;
+    }
+  </script>
 </body>
+
 </html>
