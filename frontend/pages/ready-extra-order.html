@@ -350,6 +350,16 @@
       background: #0056b3;
     }
 
+    .actions button.btn-transfer {
+      background: #198754;
+      border-color: #198754;
+      color: #fff;
+    }
+    .actions button.btn-transfer:hover {
+      background: #157347;
+      border-color: #157347;
+      color: #fff;
+    }
 
     /* =====================
    INVOICE
@@ -1052,6 +1062,7 @@
 
       <button onclick="openPayment()"> Payment</button>
       <button onclick="openRateBook()"> Rate Book</button>
+      <button class="btn-transfer" onclick="transferToCustomerBalance()"> Transfers</button>
       <button onclick="saveOrder()"> Save</button>
       <button onclick="saveAndNew()"> Save & New</button>
       <button onclick="resetOrder()"> Reset</button>
@@ -1461,7 +1472,11 @@
     ===================== */
     (function () {
       var container = document.querySelector(".workspace");
-      if (!container || container.getAttribute("data-page") !== "ready-extra-order") return;
+      var inWorkspace = container && container.getAttribute("data-page") === "ready-extra-order";
+      if (!inWorkspace) {
+        container = document.querySelector("#orderApp") || document.body;
+      }
+      if (!container) return;
 
       var custName = null;
       var currentBal = null;
@@ -2256,6 +2271,117 @@
       return (rows || []).reduce((sum, row) => sum + rbSafeNum(row && row.values ? row.values[6] : 0, 0), 0);
     }
 
+    /* TRANSFER TO CUSTOMER BALANCE – saves current order data to Customer Balance (customerBalances + customer openingBalance) */
+    function transferToCustomerBalance() {
+      try {
+      if (!custName || !billNo || !itemBody) {
+        if (!initElements()) {
+          alert("Form not initialized. Please refresh the page.");
+          return;
+        }
+      }
+      if (!custName.value) { alert("Select customer"); return; }
+      if (!billNo.value) { alert("Order number is required"); return; }
+
+      const billTotal = calculateBillTotal();
+      let totalPc = 0;
+      let orderType = "Order";
+      itemBody.querySelectorAll("tr").forEach(tr => {
+        const typeSelect = tr.cells[0] && tr.cells[0].querySelector("select");
+        const type = typeSelect ? typeSelect.value : "Order";
+        const pc = parseFloat(tr.cells[4] && tr.cells[4].children[0] ? tr.cells[4].children[0].value : 0) || 0;
+        totalPc += pc;
+        if (type && type !== "") orderType = type;
+      });
+
+      const orderTimestamp = new Date().toISOString();
+      const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+      const advanceTotal = payments.filter(p => p.billNo === billNo.value).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+      const customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      const balanceIndex = customerBalances.findIndex(b => b.orderNo === billNo.value);
+
+      if (balanceIndex >= 0) {
+        const oldEntry = customerBalances[balanceIndex];
+        if (oldEntry.transferred) {
+          const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+          const oldCustNameNorm = (oldEntry.customer || "").trim().toLowerCase();
+          const oldCustomer = customers.find(c => (c.name || "").trim().toLowerCase() === oldCustNameNorm);
+          if (oldCustomer) {
+            const oldAmount = parseFloat(oldEntry.amount || 0);
+            const currentBal = parseFloat(oldCustomer.openingBalance || 0);
+            oldCustomer.openingBalance = (currentBal - oldAmount).toFixed(2);
+            if (oldCustomer.transferredBills) {
+              oldCustomer.transferredBills = oldCustomer.transferredBills.filter(tb => tb !== billNo.value);
+            }
+            localStorage.setItem("customers", JSON.stringify(customers));
+          }
+        }
+      }
+
+      const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+      const targetCustomerName = getCustomerName();
+      const targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+
+      const balanceEntry = {
+        orderNo: billNo.value,
+        customer: targetCustomerName,
+        amount: billTotal.toFixed(2),
+        date: orderDate && orderDate.value ? orderDate.value : new Date().toISOString().split("T")[0],
+        timestamp: orderTimestamp,
+        readyWeight: "",
+        neg: 0,
+        readyMetal: orderType === "Order" ? "Gold" : orderType,
+        payment: advanceTotal > 0 ? "Partial" : "Pending",
+        narration: orderType + " - " + totalPc + " pcs",
+        transferred: true,
+        phone: targetCust ? (targetCust.phone || "—") : "—",
+        mobile: targetCust ? (targetCust.mobile || targetCust.phone || "—") : "—",
+        station: targetCust ? (targetCust.station || "—") : (station && station.value ? station.value : "—"),
+        relation: targetCust ? (targetCust.relation || "—") : (relation && relation.value ? relation.value : "—"),
+        relationName: targetCust ? (targetCust.relationName || "—") : "—",
+        lfno: targetCust ? (targetCust.lfno || "—") : "—",
+        cid: targetCust ? (targetCust.cid || "—") : "—",
+        mark: targetCust ? (targetCust.mark || "—") : "—"
+      };
+      delete balanceEntry.rate;
+
+      if (balanceIndex >= 0) {
+        customerBalances[balanceIndex] = balanceEntry;
+      } else {
+        customerBalances.push(balanceEntry);
+      }
+      localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
+
+      if (targetCust) {
+        const amountVal = parseFloat(balanceEntry.amount || 0);
+        const currentBal = parseFloat(targetCust.openingBalance || 0);
+        targetCust.openingBalance = (currentBal + amountVal).toFixed(2);
+        targetCust.timestamp = new Date().toISOString();
+        if (!targetCust.transferredBills) targetCust.transferredBills = [];
+        if (!targetCust.transferredBills.includes(billNo.value)) {
+          targetCust.transferredBills.push(billNo.value);
+        }
+        if ((!targetCust.phone || targetCust.phone === "—") && balanceEntry.phone !== "—") targetCust.phone = balanceEntry.phone;
+        if ((!targetCust.mobile || targetCust.mobile === "—") && balanceEntry.mobile !== "—") targetCust.mobile = balanceEntry.mobile;
+        delete targetCust.rate;
+        localStorage.setItem("customers", JSON.stringify(customers));
+        window.dispatchEvent(new CustomEvent("customersUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
+      }
+
+      window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+
+      alert("Transferred to Customer Balance. Data saved according to Customer Balance.");
+      } catch (e) {
+        console.error("Transfer failed:", e);
+        alert("Transfer failed: " + (e && e.message ? e.message : String(e)));
+      }
+    }
+    window.transferToCustomerBalance = transferToCustomerBalance;
+
     /* SAVE ORDER */
     function saveOrder(resetAfterSave = false) {
       if (!custName || !billNo || !itemBody) {
@@ -2546,6 +2672,7 @@
         lfno: targetCust?.lfno || "—",
         cid: targetCust?.cid || "—"
       };
+      delete balanceEntry.rate;
 
       if (balanceIndex >= 0) {
         customerBalances[balanceIndex] = balanceEntry;
@@ -2571,6 +2698,7 @@
         if ((!targetCust.phone || targetCust.phone === "—") && balanceEntry.phone !== "—") targetCust.phone = balanceEntry.phone;
         if ((!targetCust.mobile || targetCust.mobile === "—") && balanceEntry.mobile !== "—") targetCust.mobile = balanceEntry.mobile;
 
+        delete targetCust.rate;
         localStorage.setItem("customers", JSON.stringify(customers));
 
         // Dispatch customer update event
@@ -4813,6 +4941,7 @@
       window.calcReadyTotal = calcReadyTotal;
       window.saveOrder = saveOrder;
       window.saveAndNew = saveAndNew;
+      window.transferToCustomerBalance = transferToCustomerBalance;
       window.resetOrder = resetOrder;
       window.showInvoice = showInvoice;
       window.back = back;
@@ -4892,7 +5021,7 @@
     ensureFunctionsGlobal();
 
     window.__currentPageCleanup = function () {
-      var globals = ['addRow','calc','syncReadyWeight','calcReadyTotal','saveOrder','saveAndNew','resetOrder','showInvoice','back','openPayment','openCustomer','openReceipt','openRateBook','setCustomerName','getCustomerName','loadOrderForEdit','loadBill','handleTypeChange','calculateDeliveryDate','saveOrderPopup','closePopup','calculatePaymentBalance','closePaymentPopup','savePaymentFromPopup','saveRateBook','closeRateBookPopup','calculateRateAmount','loadRateBookHistory','applyRateToRow','initOrderPage','initElements','saveOrderState','restoreOrderState','generateBillNo','generateJobNo','calculateBillTotal','getPaidAmount','updateInfoPanel','updatePaymentPanel','updateRatebookPanel','updateReceiptPanel','refreshInvoiceReceiptTable','deleteReceipt','deleteRate','showRateDetails','closeRatebookDetailsPopup','saveRatebookFromRows','addRatebookRow','saveRatebookDetailsFromPopup','updateRateBookingRow','closeDashboard'];
+      var globals = ['addRow','calc','syncReadyWeight','calcReadyTotal','saveOrder','saveAndNew','transferToCustomerBalance','resetOrder','showInvoice','back','openPayment','openCustomer','openReceipt','openRateBook','setCustomerName','getCustomerName','loadOrderForEdit','loadBill','handleTypeChange','calculateDeliveryDate','saveOrderPopup','closePopup','calculatePaymentBalance','closePaymentPopup','savePaymentFromPopup','saveRateBook','closeRateBookPopup','calculateRateAmount','loadRateBookHistory','applyRateToRow','initOrderPage','initElements','saveOrderState','restoreOrderState','generateBillNo','generateJobNo','calculateBillTotal','getPaidAmount','updateInfoPanel','updatePaymentPanel','updateRatebookPanel','updateReceiptPanel','refreshInvoiceReceiptTable','deleteReceipt','deleteRate','showRateDetails','closeRatebookDetailsPopup','saveRatebookFromRows','addRatebookRow','saveRatebookDetailsFromPopup','updateRateBookingRow','closeDashboard'];
       globals.forEach(function (k) { try { delete window[k]; } catch (e) {} });
     };
     })();

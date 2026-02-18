@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Customer Balance</title>
+  <title>All Bill</title>
 
   <style>
     /* =========================
@@ -323,9 +323,13 @@
 
   <div class="balance-wrap">
 
-    <!-- TOOLBAR -->
+    <!-- All Bill = bill ledger (customerBalances). One row per bill. Edit / Transfer / Remove. Different from Customer Balance = one row per customer (customers). -->
     <div class="balance-toolbar">
+      <h2 style="margin:0; font-size:18px; font-weight:600;">All Bill</h2>
+      <span style="font-size:12px; color:#6e6e73;">One row per bill — Edit, Transfer to customer, Remove</span>
       <button class="btn" onclick="loadBalances()">🔄 Refresh</button>
+
+      <button class="btn" type="button" onclick="transferAllToCustomerBalance()" title="Transfer all untransferred bills to Customer Balance">Transfers</button>
 
       <label>Customer</label>
       <input type="text" id="customerFilter" onkeyup="filterTable()" placeholder="Filter by customer...">
@@ -386,11 +390,11 @@
             <th class="center">Action</th>
           </tr>
         </thead>
-        <tbody id="balanceTableBody"></tbody>
+        <tbody id="allBillTableBody"></tbody>
       </table>
     </div>
 
-    <div class="footer" id="footerText">
+    <div class="footer" id="allBillFooter">
       No balance entries available
     </div>
 
@@ -407,44 +411,29 @@
        INITIALIZE ELEMENTS
     ========================= */
     function initElements() {
-      const workspace = document.querySelector(".workspace");
-
-      if (workspace) {
-        tbody = workspace.querySelector("#balanceTableBody");
-        footer = workspace.querySelector("#footerText");
-
-        if (!tbody) {
-          tbody = document.querySelector("#balanceTableBody");
-        }
-        if (!footer) {
-          footer = document.querySelector("#footerText") || document.getElementById("footerText");
-        }
-      } else {
-        tbody = document.querySelector("#balanceTableBody");
-        footer = document.querySelector("#footerText") || document.getElementById("footerText");
-      }
-
-      if (!tbody || !footer) {
-        return false;
-      }
-
-      return true;
+      const wrap = document.querySelector(".balance-wrap");
+      const root = wrap || document.querySelector(".workspace") || document;
+      tbody = root.querySelector("#allBillTableBody");
+      footer = root.querySelector("#allBillFooter");
+      if (!tbody) tbody = document.getElementById("allBillTableBody");
+      if (!footer) footer = document.getElementById("allBillFooter");
+      return !!(tbody && footer);
     }
 
     /* =========================
        LOAD BALANCES
     ========================= */
     function loadBalances() {
-      if (!tbody) {
-        if (!initElements()) {
-          console.warn("Balance table elements not found. Retrying...");
-          setTimeout(loadBalances, 100);
-          return;
-        }
+      tbody = null;
+      footer = null;
+      if (!initElements()) {
+        console.warn("All Bill table elements not found. Retrying...");
+        setTimeout(loadBalances, 100);
+        return;
       }
 
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-      tbody.innerHTML = "";
+      if (tbody) tbody.innerHTML = "";
 
       if (balances.length === 0) {
         updateFooter();
@@ -522,21 +511,9 @@
         if (!initElements()) return;
       }
 
-      const workspace = document.querySelector(".workspace");
-      let searchBox = null;
-      let customerFilter = null;
-
-      if (workspace) {
-        searchBox = workspace.querySelector("#searchBox");
-        customerFilter = workspace.querySelector("#customerFilter");
-      }
-
-      if (!searchBox) {
-        searchBox = document.querySelector("#searchBox") || document.getElementById("searchBox");
-      }
-      if (!customerFilter) {
-        customerFilter = document.querySelector("#customerFilter") || document.getElementById("customerFilter");
-      }
+      const root = document.querySelector(".balance-wrap") || document.querySelector(".workspace") || document;
+      const searchBox = root.querySelector("#searchBox") || document.getElementById("searchBox");
+      const customerFilter = root.querySelector("#customerFilter") || document.getElementById("customerFilter");
 
       const searchValue = searchBox ? searchBox.value.toLowerCase() : "";
       const customerValue = customerFilter ? customerFilter.value.toLowerCase() : "";
@@ -809,6 +786,95 @@
     }
 
     /* =========================
+       TRANSFER ALL TO CUSTOMER BALANCE (Toolbar button)
+    ========================= */
+    function transferAllToCustomerBalance() {
+      try {
+        const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+        const indices = [];
+        balances.forEach((b, i) => {
+          if (!b.transferred && b.customer && (b.customer || "").trim()) indices.push(i);
+        });
+        if (indices.length === 0) {
+          alert("No untransferred bills to transfer. All bills are already saved to Customer Balance.");
+          return;
+        }
+        if (!confirm("Transfer " + indices.length + " bill(s) to Customer Balance?")) return;
+
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+        let transferredCount = 0;
+
+        indices.forEach(index => {
+          const bill = balances[index];
+          if (!bill || bill.transferred) return;
+          const fullOrder = orders.find(o => o.orderNo === bill.orderNo || o.id === bill.orderNo);
+          const fullBill = bills.find(b => b.billNo === bill.orderNo);
+          const phone = fullOrder?.customerId || fullBill?.customerId || bill.phone || "—";
+          const mobile = fullOrder?.mobile || fullBill?.mobile || bill.mobile || phone;
+          const station = fullOrder?.station || fullBill?.station || bill.station || "—";
+          const relation = fullOrder?.relation || fullBill?.relation || bill.relation || "—";
+          const relationName = fullOrder?.relationName || fullBill?.relationName || bill.relationName || "—";
+          const lfno = fullOrder?.lfno || fullBill?.lfno || bill.lfno || "—";
+          const cid = fullOrder?.cid || fullBill?.cid || bill.cid || "—";
+          const custNameNorm = (bill.customer || "").trim().toLowerCase();
+          let customer = customers.find(c => (c.name || "").trim().toLowerCase() === custNameNorm);
+          const amountVal = parseFloat(bill.amount || 0);
+
+          if (customer) {
+            if (!customer.transferredBills) customer.transferredBills = [];
+            if (customer.transferredBills.includes(bill.orderNo)) return;
+            const currentBal = parseFloat(customer.openingBalance || 0);
+            customer.openingBalance = (currentBal + amountVal).toFixed(2);
+            customer.transferredBills.push(bill.orderNo);
+            customer.timestamp = new Date().toISOString();
+            if ((!customer.phone || customer.phone === "—") && phone !== "—") customer.phone = phone;
+            if ((!customer.mobile || customer.mobile === "—") && mobile !== "—") customer.mobile = mobile;
+            if ((!customer.station || customer.station === "—") && station !== "—") customer.station = station;
+            if ((!customer.relation || customer.relation === "—") && relation !== "—") customer.relation = relation;
+            if ((!customer.relationName || customer.relationName === "—") && relationName !== "—") customer.relationName = relationName;
+            if ((!customer.lfno || customer.lfno === "—") && lfno !== "—") customer.lfno = lfno;
+            if ((!customer.cid || customer.cid === "—") && cid !== "—") customer.cid = cid;
+          } else {
+            customer = {
+              cid: cid,
+              name: bill.customer,
+              openingBalance: amountVal.toFixed(2),
+              phone: phone,
+              mobile: mobile,
+              station: station,
+              relation: relation,
+              relationName: relationName,
+              lfno: lfno,
+              timestamp: new Date().toISOString(),
+              openingDate: bill.date || new Date().toISOString().split("T")[0],
+              transferredBills: [bill.orderNo]
+            };
+            customers.push(customer);
+          }
+          bill.transferred = true;
+          balances[index] = bill;
+          transferredCount++;
+        });
+
+        localStorage.setItem("customers", JSON.stringify(customers));
+        localStorage.setItem("customerBalances", JSON.stringify(balances));
+        window.dispatchEvent(new CustomEvent("customersUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
+        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
+        window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        loadBalances();
+        alert("Transferred " + transferredCount + " bill(s) to Customer Balance.");
+      } catch (e) {
+        console.error("Transfer all failed:", e);
+        alert("Transfer failed: " + (e && e.message ? e.message : String(e)));
+      }
+    }
+
+    /* =========================
        TRANSFER BILL FUNCTION
     ========================= */
     function transferBill(index) {
@@ -1058,6 +1124,7 @@
       window.initElements = initElements;
       window.editBill = editBill;
       window.transferBill = transferBill;
+      window.transferAllToCustomerBalance = transferAllToCustomerBalance;
       window.removeBill = removeBill;
       window.toggleAddForm = toggleAddForm;
       window.saveNewToCustomerBalance = saveNewToCustomerBalance;
