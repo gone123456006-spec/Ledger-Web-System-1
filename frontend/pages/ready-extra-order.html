@@ -309,6 +309,15 @@
       border-radius: 6px;
       border: 1px solid var(--border, #dee2e6);
     }
+    .order-details-table-wrap #ready-order-item-table td:first-child select,
+    .order-details-table-wrap .order-details-table td:first-child select {
+      min-width: 72px;
+      padding: 5px 8px;
+      font-size: 13px;
+      box-sizing: border-box;
+      border-radius: 6px;
+      border: 1px solid var(--border, #dee2e6);
+    }
     .order-details-table-wrap #ready-order-item-table .row-del-btn,
     .order-details-table-wrap .order-details-table .row-del-btn {
       min-width: 28px;
@@ -1069,7 +1078,7 @@
 
       <!-- BILL -->
       <div class="box">
-        <div class="box-title">Bill Information</div>
+        <div class="box-title">Order Information</div>
 
         <div class="row">
           <label>Order No</label>
@@ -1100,7 +1109,7 @@
       <div class="table-wrap order-details-table-wrap">
         <table id="ready-order-item-table" class="ready-order-table order-details-table">
           <colgroup>
-            <col style="width:5%"><col style="width:6%"><col style="width:9%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:4%"><col style="width:4%"><col style="width:6%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:4%"><col style="width:10%"><col style="width:2%">
+            <col style="width:6.5%"><col style="width:6%"><col style="width:11.5%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:6%"><col style="width:4%"><col style="width:4%"><col style="width:6%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:4%"><col style="width:9%"><col style="width:2%">
           </colgroup>
           <thead>
             <tr>
@@ -1455,7 +1464,11 @@
       <h3>Rate Booking</h3>
       <div class="popup-row">
         <label>Stamp *</label>
-        <input id="rbStamp" placeholder="e.g. 916, 22k">
+        <select id="rbStamp">
+          <option value="18K">18K</option>
+          <option value="22K">22K</option>
+          <option value="24K">24K</option>
+        </select>
       </div>
       <div class="popup-row">
         <label>Weight (g)</label>
@@ -1516,7 +1529,6 @@
         </div>
       </div>
       <div class="popup-actions">
-        <button onclick="addRatebookRow()">+ Add Row</button>
         <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()">Save</button>
         <button onclick="closeRatebookDetailsPopup()">Close</button>
       </div>
@@ -3914,7 +3926,7 @@
         var el = getPopupEl(id) || root.querySelector("#" + id);
         if (el) el.value = val;
       }
-      setVal("rbStamp", "");
+      setVal("rbStamp", "18K");
       setVal("rbWeight", "");
       setVal("rbRate", "");
       setVal("rbAmount", "");
@@ -4684,7 +4696,7 @@
       let totalDiff = 0;
 
       if (billRates.length === 0) {
-        html = '<tr><td colspan="11" style="text-align:center; padding:20px; color:#666;">No rates found. Click "Add Row" to create one.</td></tr>';
+        html = '<tr><td colspan="11" style="text-align:center; padding:20px; color:#666;">No rates found.</td></tr>';
       } else {
         billRates.forEach(rate => {
           const weight = Number(rate.weight) || 0;

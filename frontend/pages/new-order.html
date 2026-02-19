@@ -325,6 +325,10 @@
       font-size: 14px;
     }
 
+    #new-order-item-table td:first-child select {
+      min-width: 95px;
+    }
+
     table input:invalid {
       border-color: var(--danger);
     }
@@ -965,7 +969,7 @@
 
       <!-- BILL -->
       <div class="box">
-        <div class="box-title">Bill Information</div>
+        <div class="box-title">Order Information</div>
 
         <div class="row">
           <label>Order No *</label>
@@ -998,7 +1002,7 @@
         <table id="new-order-item-table" class="new-order-table">
           <thead>
             <tr>
-              <th style="min-width: 100px;">Type</th>
+              <th style="min-width: 115px;">Type</th>
               <th>Order No.</th>
               <th>Item Name</th>
               <th>Stamp</th>
@@ -1176,7 +1180,11 @@
       <h3>Rate Booking</h3>
       <div class="popup-row">
         <label>Stamp *</label>
-        <input id="rbStamp" placeholder="e.g. 916, 22k">
+        <select id="rbStamp">
+          <option value="18K">18K</option>
+          <option value="22K">22K</option>
+          <option value="24K">24K</option>
+        </select>
       </div>
       <div class="popup-row">
         <label>Weight (g)</label>
@@ -1950,7 +1958,7 @@
         const el = getPopupEl(id.replace(/^#/, '')) || getSearchRoot().querySelector(id);
         if (el) el.value = val;
       };
-      setVal('#rbStamp', '');
+      setVal('#rbStamp', '18K');
       setVal('#rbWeight', '');
       setVal('#rbRate', '');
       setVal('#rbAmount', '');
