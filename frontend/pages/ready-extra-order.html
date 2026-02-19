@@ -238,6 +238,15 @@
       background: #fff2cc;
       font-weight: 600;
     }
+    #ready-order-item-table td.total.total-col input {
+      min-width: 4.5em;
+      box-sizing: border-box;
+    }
+    #ready-order-item-table td.making-col input {
+      padding: 4px 6px;
+      font-size: 12px;
+      max-width: 100%;
+    }
 
     table input,
     table select {
@@ -605,7 +614,7 @@
     }
 
     /* =====================
-   ORDER POPUP (NEW)
+   POPUPS (same as new-order)
 ===================== */
     .popup-bg {
       position: fixed;
@@ -615,45 +624,81 @@
       align-items: center;
       justify-content: center;
       z-index: 999;
+      backdrop-filter: blur(2px);
     }
 
     .popup-box {
       background: #fff;
-      width: 300px;
-      padding: 15px;
-      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      animation: popupSlide .3s ease;
+    }
+
+    @keyframes popupSlide {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .popup-box h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
     }
 
     .popup-row {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     .popup-row label {
       display: block;
       font-weight: 600;
       margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .popup-row input,
+    .popup-row select,
+    .popup-row textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .popup-row textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
     }
 
     .popup-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
+      margin-top: 16px;
     }
 
-    .popup-days {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
+    .popup-actions button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      transition: .2s;
     }
 
-    .popup-days input[type="number"] {
-      width: 80px;
+    .popup-actions button:first-child {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
     }
 
-    .popup-box textarea {
-      font-family: inherit;
-      resize: vertical;
+    .popup-actions button:hover {
+      opacity: 0.9;
     }
 
     /* =====================
@@ -1028,7 +1073,7 @@
       <div class="table-wrap order-details-table-wrap">
         <table id="ready-order-item-table" class="ready-order-table order-details-table">
           <colgroup>
-            <col style="width:5%"><col style="width:6%"><col style="width:10%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:5%"><col style="width:4%"><col style="width:6%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:5%"><col style="width:2%">
+            <col style="width:5%"><col style="width:6%"><col style="width:9%"><col style="width:5%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:4%"><col style="width:4%"><col style="width:6%"><col style="width:5%"><col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:4%"><col style="width:10%"><col style="width:2%">
           </colgroup>
           <thead>
             <tr>
@@ -1042,9 +1087,9 @@
               <th>Rate</th>
               <th>Lbr.%</th>
               <th class="total">Est. Total</th>
-              <th>Ready metal</th>
+              <th>R. Metal</th>
               <th>Neg</th>
-              <th>Ready Weight</th>
+              <th>R. Wt</th>
               <th>Rate</th>
               <th>Making</th>
               <th class="total">Total</th>
@@ -1116,6 +1161,10 @@
               <div class="summary-item">
                 <span class="summary-label">Balance:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
+              </div>
+              <div class="summary-item" id="panelRateDiffMinusBalanceWrap" style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px;">
+                <span class="summary-label">Amount (Rate Diff − Balance):</span>
+                <span class="summary-value" id="panelRateDiffMinusBalance">₹ 0.00</span>
               </div>
             </div>
             <div class="panel-list" id="paymentList">
@@ -1298,22 +1347,21 @@
     </div>
   </div>
 
-  <!-- ORDER POPUP (ready-order only) -->
-  <div id="ready-order-order-popup" class="popup-bg ready-order-popup" onclick="if(event.target===this) closePopup()">
-    <div class="popup-box">
+  <!-- ORDER DETAILS POPUP (same as new-order) -->
+  <div id="ready-order-order-popup" class="popup-bg ready-order-popup" style="display:none;" onclick="if(event.target===this) closePopup()">
+    <div class="popup-box" style="max-width: 420px;">
       <h3>Order Details</h3>
       <div class="popup-row">
-        <label>Days</label>
-        <input type="number" id="popupDays" min="1" placeholder="Enter days" oninput="calculateDeliveryDate()">
-        <button onclick="calculateDeliveryDate()" style="padding:6px 12px; height:30px;">Apply</button>
+        <label>Days to Delivery</label>
+        <input type="number" id="orderDetailsDays" min="0" placeholder="0" style="width:100px;" oninput="calculateOrderDetailsDeliveryDate()">
       </div>
       <div class="popup-row">
         <label>Delivery Date</label>
-        <input type="date" id="popupDelivery">
+        <input type="date" id="orderDetailsDeliveryDate">
       </div>
       <div class="popup-row">
         <label>Sample Details</label>
-        <input id="popupSample">
+        <textarea id="orderDetailsSample" placeholder="Sample details..." rows="2"></textarea>
       </div>
       <div class="popup-actions">
         <button onclick="saveOrderPopup()">Save</button>
@@ -1322,146 +1370,110 @@
     </div>
   </div>
 
-  <!-- PAYMENT POPUP (ready-order only) -->
+  <!-- PAYMENT POPUP (same as new-order) -->
   <div id="ready-order-payment-popup" class="popup-bg ready-order-popup" onclick="if(event.target===this) closePaymentPopup()">
-    <div class="payment-window">
-      <div class="payment-title-bar">RECEIPT / PAYMENT</div>
-      <div class="payment-content">
-        <!-- LEFT -->
-        <div class="payment-left">
-          <h3>Payment Details</h3>
-          <div class="payment-form-row">
-            <label>Payment Mode</label>
-            <select id="mode">
-              <option>Cash</option>
-              <option>Card</option>
-              <option>Cheque</option>
-              <option>UPI</option>
-              <option>Online</option>
-            </select>
-          </div>
-          <div class="payment-form-row">
-            <label>Amount</label>
-            <input type="number" id="amount" placeholder="" step="" min="" oninput="calculatePaymentBalance()">
-          </div>
-          <div class="payment-form-row" style="margin-top:15px; padding-top:15px; border-top:1px solid #d1d6de;">
-            <div style="width:100%;">
-              <div style="margin-bottom:8px;">
-                <strong>Bill Total: ₹<span id="paymentBillTotal">0.00</span></strong>
-              </div>
-              <div style="margin-bottom:8px;">
-                <strong>Amount: ₹<span id="paymentAmountDisplay">0.00</span></strong>
-              </div>
-              <div>
-                <strong style="color:#dc3545;">Balance: ₹<span id="paymentBalance">0.00</span></strong>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- RIGHT -->
-        <div class="payment-right">
-          <h3>Additional Info</h3>
-          <div class="payment-form-row">
-            <label>Narration</label>
-            <textarea id="narration"></textarea>
-          </div>
-          <div class="payment-form-row">
-            <label>Batch</label>
-            <input id="batch">
-          </div>
-          <div class="payment-form-row">
-            <label>Type</label>
-            <input id="type">
-          </div>
-          <div class="payment-form-row">
-            <label>Exp Date</label>
-            <input id="expDate" placeholder="MM/YY">
-          </div>
-          <div class="payment-form-row">
-            <label>Ap.Code</label>
-            <input id="apCode">
-          </div>
-          <div class="payment-form-row">
-            <label></label>
-            <div>
-              <label><input type="radio" name="ptype" value="Cash" checked> Cash</label>
-              &nbsp;&nbsp;
-              <label><input type="radio" name="ptype" value="Chq"> Chq</label>
-            </div>
-          </div>
-        </div>
+    <div class="popup-box">
+      <h3>Add Payment</h3>
+      <div class="popup-row">
+        <label>Payment Mode</label>
+        <select id="paymentMode">
+          <option>Cash</option>
+          <option>Card</option>
+          <option>Cheque</option>
+          <option>UPI</option>
+          <option>Online</option>
+        </select>
       </div>
-      <div class="payment-footer">
-        <button onclick="savePaymentFromPopup()">Save</button>
+      <div class="popup-row">
+        <label>Amount *</label>
+        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required oninput="calculatePaymentBalance()">
+      </div>
+      <div class="popup-row">
+        <label>Narration</label>
+        <textarea id="paymentNarration" placeholder="Enter narration..."></textarea>
+      </div>
+      <div class="popup-row" style="display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--border);">
+        <div><strong>Order Total: ₹<span id="popupBillTotal">0.00</span></strong></div>
+        <div><strong>Amount: ₹<span id="popupAmountDisplay">0.00</span></strong></div>
+        <div><strong style="color:#dc3545;">Balance: ₹<span id="popupBalance">0.00</span></strong></div>
+      </div>
+      <div class="popup-actions">
+        <button onclick="savePaymentFromPopup()">Save Payment</button>
         <button onclick="closePaymentPopup()">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- RATEBOOK DETAILS POPUP (ready-order only) -->
+  <!-- RATE BOOKING FORM POPUP (same as new-order: add one rate entry) -->
+  <div id="ready-order-ratebook-popup" class="popup-bg ready-order-popup" style="display:none;" onclick="if(event.target===this) closeRatebookPopup()">
+    <div class="popup-box" style="max-width: 500px;">
+      <h3>Rate Booking</h3>
+      <div class="popup-row">
+        <label>Stamp *</label>
+        <input id="rbStamp" placeholder="e.g. 916, 22k">
+      </div>
+      <div class="popup-row">
+        <label>Weight (g)</label>
+        <input type="number" id="rbWeight" step="0.001" placeholder="0.000" oninput="calcRatebookAmount()">
+      </div>
+      <div class="popup-row">
+        <label>Rate (₹)</label>
+        <input type="number" id="rbRate" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
+      </div>
+      <div class="popup-row">
+        <label>Amount (₹)</label>
+        <input type="number" id="rbAmount" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
+      </div>
+      <div class="popup-row">
+        <label>Delivery Date</label>
+        <input type="date" id="rbDelDate">
+      </div>
+      <div class="popup-row">
+        <label>Type</label>
+        <input id="rbType" value="S" maxlength="1" style="text-align: center; width: 60px;">
+      </div>
+      <div class="popup-row">
+        <label>Narration</label>
+        <textarea id="rbNarration" placeholder="Enter narration..."></textarea>
+      </div>
+      <div class="popup-actions">
+        <button onclick="saveRatebookEntry()">Save Rate</button>
+        <button onclick="closeRatebookPopup()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RATEBOOK DETAILS POPUP (table: view/edit existing rates for this bill) -->
   <div id="ready-order-ratebook-details-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closeRatebookDetailsPopup()">
-    <div class="payment-window" style="max-width:95%; width:1400px;">
-      <div class="payment-title-bar">Rate Booking</div>
-      <div class="payment-content" style="padding:20px; background:#fff;">
-        <div style="overflow-x:auto; max-height:500px; border:1px solid #dee2e6;">
-          <table style="width:100%; border-collapse:collapse; font-size:13px;">
+    <div class="popup-box" style="max-width:98%; width:1350px;">
+      <h3>Rate Booking</h3>
+      <div class="popup-row" style="margin-bottom:0;">
+        <div style="overflow-y:auto; max-height:420px; border:1px solid var(--border); border-radius:8px;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed;">
             <thead>
               <tr style="background:#e8f0fe; position:sticky; top:0; z-index:10;">
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:left; font-weight:600; min-width:100px; white-space:nowrap;">
-                  Date
-                </th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:center; font-weight:600; min-width:60px; white-space:nowrap;">
-                  Type
-                </th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:left; font-weight:600; min-width:120px; white-space:nowrap;">
-                  Remarks</th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:left; font-weight:600; min-width:80px; white-space:nowrap;">
-                  Stamp
-                </th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:90px; white-space:nowrap;">
-                  Weight</th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:110px; white-space:nowrap;">
-                  Rate
-                  Book</th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:90px; white-space:nowrap;">
-                  Bal
-                  Wt</th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:110px; white-space:nowrap;">
-                  [F3]
-                  Adj Wt</th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:100px; white-space:nowrap;">
-                  Cur.Rate</th>
-                <th
-                  style="padding:10px 12px; border:1px solid #ccc; text-align:right; font-weight:600; min-width:120px; white-space:nowrap;">
-                  Diff
-                  Amount</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:left; font-weight:600; width:9%;">Date</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:center; font-weight:600; width:5%;">Type</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:left; font-weight:600; width:14%;">Remarks</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:left; font-weight:600; width:7%;">Stamp</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:8%;">Weight</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:9%;">Rate Book</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:7%;">Bal Wt</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:8%;">Adj Wt</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:9%;">Cur.Rate</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:9%;">Diff Amount</th>
+                <th style="padding:8px 10px; border:1px solid var(--border); text-align:center; font-weight:600; width:5%;">❌</th>
               </tr>
             </thead>
-            <tbody id="ready-order-ratebook-details-table">
-              <!-- Details will be populated here -->
-            </tbody>
+            <tbody id="ready-order-ratebook-details-table"></tbody>
           </table>
         </div>
       </div>
-      <div class="payment-footer"
-        style="background:#f8f9fa; border-top:1px solid #dee2e6; padding:15px; display:flex; justify-content:flex-end; gap:12px;">
-        <button onclick="addRatebookRow()"
-          style="background:#007aff; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">+
-          Add Row</button>
-        <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()"
-          style="background:#28a745; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Save</button>
-        <button onclick="closeRatebookDetailsPopup()"
-          style="background:#6c757d; color:white; border:none; padding:8px 20px; border-radius:6px; font-weight:500; cursor:pointer; font-size:14px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">Close</button>
+      <div class="popup-actions">
+        <button onclick="addRatebookRow()">+ Add Row</button>
+        <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()">Save</button>
+        <button onclick="closeRatebookDetailsPopup()">Close</button>
       </div>
     </div>
   </div>
@@ -1507,7 +1519,7 @@
       var activeRow = null;
 
       (function hideOtherPagesPopupsOnInit() {
-        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
+        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
         ids.forEach(function (id) {
           try {
             var el = container.querySelector("#" + id);
@@ -1538,13 +1550,13 @@
         orderApp = searchRoot.querySelector("#orderApp");
         invoice = searchRoot.querySelector("#invoice");
         orderPopup = searchRoot.querySelector("#ready-order-order-popup");
-        popupDelivery = searchRoot.querySelector("#popupDelivery");
-        popupSample = searchRoot.querySelector("#popupSample");
-        popupDays = searchRoot.querySelector("#popupDays");
+        popupDays = searchRoot.querySelector("#orderDetailsDays");
+        popupDelivery = searchRoot.querySelector("#orderDetailsDeliveryDate");
+        popupSample = searchRoot.querySelector("#orderDetailsSample");
         paymentPopup = searchRoot.querySelector("#ready-order-payment-popup");
-        paymentBillTotal = searchRoot.querySelector("#paymentBillTotal");
-        paymentAmountDisplay = searchRoot.querySelector("#paymentAmountDisplay");
-        paymentBalance = searchRoot.querySelector("#paymentBalance");
+        paymentBillTotal = searchRoot.querySelector("#popupBillTotal");
+        paymentAmountDisplay = searchRoot.querySelector("#popupAmountDisplay");
+        paymentBalance = searchRoot.querySelector("#popupBalance");
 
       iCustomer = searchRoot.querySelector("#iCustomer");
       iOrderDate = searchRoot.querySelector("#iOrderDate");
@@ -1973,12 +1985,12 @@
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
 <td class="total"><input type="number" step="0.01" readonly placeholder="0.00" class="order-detail-readonly"></td>
-<td><input type="text" placeholder="Ready metal" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)"></td>
+<td><input type="text" placeholder="R. metal" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Ready metal"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Neg: subtracted from Ready Weight"></td>
 <td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Auto: Ready metal minus Neg"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
-<td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
-<td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
+<td class="making-col"><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td class="total total-col"><input type="number" step="0.01" readonly placeholder="0.00"></td>
 <td><button type="button" class="row-del-btn" onclick="this.closest('tr').remove()">X</button></td>
 `;
       itemBody.appendChild(tr);
@@ -2045,52 +2057,52 @@
       if (allowedTypes.includes(sel.value) && sel.value === "Order") {
         activeRow = row;
 
-        if (row.dataset.delivery) {
-          popupDelivery.value = row.dataset.delivery;
-        } else {
-          popupDelivery.value = "";
+        if (popupDays) popupDays.value = row.dataset.daysToDelivery || "";
+        if (popupDelivery) {
+          popupDelivery.value = row.dataset.deliveryDate || row.dataset.delivery || "";
+          if (!popupDelivery.value && popupDays && popupDays.value) calculateOrderDetailsDeliveryDate();
+          else if (!popupDelivery.value) popupDelivery.value = new Date().toISOString().slice(0, 10);
         }
+        if (popupSample) popupSample.value = row.dataset.sample || "";
 
-        if (row.dataset.sample) {
-          popupSample.value = row.dataset.sample;
-        } else {
-          popupSample.value = "";
+        if (orderPopup) {
+          orderPopup.style.display = "flex";
+          orderPopup.style.alignItems = "center";
+          orderPopup.style.justifyContent = "center";
         }
-
-        if (popupDays) popupDays.value = "";
-
-        if (orderPopup) orderPopup.style.display = "flex";
       }
 
       updateInfoPanel();
     }
 
-    /* CALCULATE DELIVERY DATE FROM DAYS */
-    function calculateDeliveryDate() {
-      if (!popupDays || !popupDelivery || !orderDate) {
+    /* CALCULATE DELIVERY DATE FROM DAYS (same as new-order) */
+    function calculateOrderDetailsDeliveryDate() {
+      if (!popupDays || !popupDelivery) {
         if (!initElements()) return;
       }
-
-      const days = parseInt(popupDays.value);
-      if (days && days > 0 && orderDate.value) {
-        const orderDateObj = new Date(orderDate.value);
-        const deliveryDate = new Date(orderDateObj);
-        deliveryDate.setDate(deliveryDate.getDate() + days);
-        if (popupDelivery) popupDelivery.value = deliveryDate.toISOString().split('T')[0];
+      var days = parseInt(popupDays.value, 10);
+      var base = orderDate && orderDate.value ? new Date(orderDate.value) : new Date();
+      if (!isNaN(days) && days >= 0) {
+        var delivery = new Date(base);
+        delivery.setDate(base.getDate() + days);
+        popupDelivery.value = delivery.toISOString().slice(0, 10);
       }
+    }
+    function calculateDeliveryDate() {
+      calculateOrderDetailsDeliveryDate();
     }
     function saveOrderPopup() {
       if (!popupDelivery) {
         if (!initElements()) return;
       }
-
       if (!popupDelivery.value) {
         alert("Select delivery date");
         return;
       }
       if (activeRow) {
         activeRow.dataset.delivery = popupDelivery.value;
-        if (popupSample) activeRow.dataset.sample = popupSample.value;
+        if (popupSample) activeRow.dataset.sample = popupSample.value || "";
+        if (popupDays) activeRow.dataset.daysToDelivery = popupDays.value || "";
         activeRow.dataset.orderFilled = "1";
       }
       closePopup();
@@ -2178,14 +2190,14 @@
       }
     }
 
-    /* Second Total = Ready weight × Rate × Making (columns 12, 13, 14 → 15) */
+    /* Second Total = Ready weight × (Rate + Making). Rate works alone (Making 0); same logic when Making added. (columns 12, 13, 14 → 15) */
     function syncSecondTotalFromRow(r) {
       if (!r || !r.cells) return;
       try {
         const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
-        const rate = parseFloat(r.cells[13].children[0].value) || 0; // second Rate column
-        const making = parseFloat(r.cells[14].children[0].value) || 0;
-        const secondTotal = readyWeight * rate * making;
+        const rate = parseFloat(r.cells[13].children[0].value) || 0;   // Rate column
+        const making = parseFloat(r.cells[14].children[0].value) || 0; // Making (optional)
+        const secondTotal = readyWeight * (rate + making);
         if (r.cells[15] && r.cells[15].children[0]) {
           r.cells[15].children[0].value = secondTotal.toFixed(2);
         }
@@ -3634,113 +3646,84 @@
       const total = calculateBillTotal();
 
       const searchRoot = getSearchRoot();
-      if (!paymentBillTotal) paymentBillTotal = searchRoot.querySelector("#paymentBillTotal");
-      if (!paymentAmountDisplay) paymentAmountDisplay = searchRoot.querySelector("#paymentAmountDisplay");
-      if (!paymentBalance) paymentBalance = searchRoot.querySelector("#paymentBalance");
-      if (!paymentPopup) paymentPopup = searchRoot.querySelector("#paymentPopup");
+      if (!paymentBillTotal) paymentBillTotal = searchRoot.querySelector("#popupBillTotal");
+      if (!paymentAmountDisplay) paymentAmountDisplay = searchRoot.querySelector("#popupAmountDisplay");
+      if (!paymentBalance) paymentBalance = searchRoot.querySelector("#popupBalance");
+      if (!paymentPopup) paymentPopup = searchRoot.querySelector("#ready-order-payment-popup");
 
-      if (paymentBillTotal) {
-        paymentBillTotal.textContent = total.toFixed(2);
-      }
+      if (paymentBillTotal) paymentBillTotal.textContent = total.toFixed(2);
 
-      const amountEl = searchRoot.querySelector("#amount");
-      const narrationEl = searchRoot.querySelector("#narration");
-      const modeEl = searchRoot.querySelector("#mode");
-      const batchEl = searchRoot.querySelector("#batch");
-      const typeEl = searchRoot.querySelector("#type");
-      const expDateEl = searchRoot.querySelector("#expDate");
-      const apCodeEl = searchRoot.querySelector("#apCode");
+      var amountInput = searchRoot.querySelector("#paymentAmount");
+      var narrationInput = searchRoot.querySelector("#paymentNarration");
+      var modeSelect = searchRoot.querySelector("#paymentMode");
+      if (amountInput) amountInput.value = "";
+      if (narrationInput) narrationInput.value = "";
+      if (modeSelect) modeSelect.selectedIndex = 0;
 
-      if (amountEl) amountEl.value = "";
-      if (narrationEl) narrationEl.value = "";
-      if (modeEl) modeEl.value = "Cash";
-      if (batchEl) batchEl.value = "";
-      if (typeEl) typeEl.value = "";
-      if (expDateEl) expDateEl.value = "";
-      if (apCodeEl) apCodeEl.value = "";
-
-      const cashRadio = searchRoot.querySelector('input[name="ptype"][value="Cash"]') || document.querySelector('input[name="ptype"][value="Cash"]');
-      if (cashRadio) cashRadio.checked = true;
-
-      // Reset display
       if (paymentAmountDisplay) paymentAmountDisplay.textContent = "0.00";
+      var paid = getPaidAmount(billNo.value);
+      var balance = total - paid;
       if (paymentBalance) {
-        paymentBalance.textContent = total.toFixed(2);
-        paymentBalance.style.color = "#dc3545";
+        paymentBalance.textContent = balance.toFixed(2);
+        paymentBalance.style.color = balance <= 0 ? "#28a745" : "#dc3545";
       }
 
-      if (paymentPopup) paymentPopup.style.display = "flex";
+      if (amountInput) amountInput.oninput = function () { calculatePaymentBalance(); };
+      if (paymentPopup) {
+        paymentPopup.style.display = "flex";
+        paymentPopup.style.alignItems = "center";
+        paymentPopup.style.justifyContent = "center";
+      }
     }
 
     function calculatePaymentBalance() {
-      const total = calculateBillTotal();
-      const root = getSearchRoot();
-      const amtEl = root ? root.querySelector("#amount") : null;
-      const amount = Number(amtEl && amtEl.value ? amtEl.value : 0);
-      const balance = total - amount;
+      var total = calculateBillTotal();
+      var paid = billNo && billNo.value ? getPaidAmount(billNo.value) : 0;
+      var root = getSearchRoot();
+      var amtEl = root ? root.querySelector("#paymentAmount") : null;
+      var amount = Number(amtEl && amtEl.value ? amtEl.value : 0);
+      var balance = total - paid - amount;
 
-      if (paymentAmountDisplay) {
-        paymentAmountDisplay.textContent = amount.toFixed(2);
-      }
-
+      if (paymentAmountDisplay) paymentAmountDisplay.textContent = amount.toFixed(2);
       if (paymentBalance) {
         paymentBalance.textContent = balance.toFixed(2);
-        if (balance < 0) {
-          paymentBalance.style.color = "#dc3545";
-        } else if (balance === 0) {
-          paymentBalance.style.color = "#28a745";
-        } else {
-          paymentBalance.style.color = "#dc3545";
-        }
+        paymentBalance.style.color = balance <= 0 ? "#28a745" : "#dc3545";
       }
     }
 
     function closePaymentPopup() {
       if (paymentPopup) paymentPopup.style.display = "none";
       var root = getSearchRoot();
-      var amountEl = root.querySelector("#amount");
-      var narrationEl = root.querySelector("#narration");
+      var amountEl = root.querySelector("#paymentAmount");
+      var narrationEl = root.querySelector("#paymentNarration");
       if (amountEl) amountEl.value = "";
       if (narrationEl) narrationEl.value = "";
     }
 
     function savePaymentFromPopup() {
-      const root = getSearchRoot();
-      const amountEl = root.querySelector("#amount");
-      const modeEl = root.querySelector("#mode");
-      const narrationEl = root.querySelector("#narration");
-      const batchEl = root.querySelector("#batch");
-      const typeEl = root.querySelector("#type");
-      const expDateEl = root.querySelector("#expDate");
-      const apCodeEl = root.querySelector("#apCode");
-      const ptypeEl = root.querySelector('input[name="ptype"]:checked');
-
-      const amt = Number(amountEl.value || 0);
+      var root = getSearchRoot();
+      var amountInput = root.querySelector("#paymentAmount");
+      var modeSelect = root.querySelector("#paymentMode");
+      var narrationInput = root.querySelector("#paymentNarration");
+      if (!amountInput) return;
+      var amt = Number(amountInput.value || 0);
       if (!amt || amt <= 0) {
         alert("Enter valid amount");
         return;
       }
-
-      if (!billNo.value) {
+      if (!billNo || !billNo.value) {
         alert("Order number is required");
         return;
       }
-
-      const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-
+      var payments = JSON.parse(localStorage.getItem("payments") || "[]");
       payments.push({
         id: Date.now(),
         billNo: billNo.value,
         customer: getCustomerName(),
         customerId: custName.value,
         amount: amt,
-        mode: modeEl.value,
-        narration: narrationEl.value,
-        batch: batchEl.value,
-        type: typeEl.value,
-        expDate: expDateEl.value,
-        apCode: apCodeEl.value,
-        ptype: ptypeEl ? ptypeEl.value : "Cash",
+        mode: modeSelect ? modeSelect.value : "Cash",
+        narration: narrationInput ? narrationInput.value : "",
         date: new Date().toISOString().split("T")[0],
         timestamp: new Date().toISOString()
       });
@@ -3878,62 +3861,123 @@
       }
     }
 
-    /* RATE BOOK - Same logic but opens separate page */
-    let activeRateRow = null; // Store the row that opened rate book (for applying rate)
+    /* RATE BOOK - Same as new-order: open form popup to add one rate entry */
+    let activeRateRow = null;
+
+    function safeNumber(v) {
+      if (v === null || v === undefined) return 0;
+      var n = parseFloat(String(v).replace(/[^0-9.-]/g, ""));
+      return isNaN(n) ? 0 : n;
+    }
+    function showError(msg) {
+      alert(msg || "Error");
+    }
 
     function openRateBook(rowElement = null) {
-      // Store customer + bill context for Rate Book and prefill Amount Difference
-      try {
-        localStorage.setItem("ratebookCustomerId", custName && custName.value ? custName.value : "");
-        localStorage.setItem("ratebookCustomerName", getCustomerName() || "");
-        localStorage.setItem("ratebookBillNo", billNo && billNo.value ? billNo.value : "");
-        const suggestedDiff = calculateBillTotal() - calculateRatebookTotalForBill();
-        localStorage.setItem("ratebookAmountDifference", (Number(suggestedDiff) || 0).toFixed(2));
-      } catch (e) { }
-
-      // Store the active row if rate book was opened from a row
-      activeRateRow = rowElement;
-
-      // Store active row info in localStorage so ratebook.html can access it
-      if (rowElement) {
-        localStorage.setItem("activeRateRow", "true");
-      } else {
-        localStorage.removeItem("activeRateRow");
+      activeRateRow = rowElement || null;
+      if (!custName || !custName.value) {
+        alert("Select customer first");
+        return;
       }
+      if (!billNo || !billNo.value) {
+        alert("Order number is required");
+        return;
+      }
+      var popup = getPopupEl("ready-order-ratebook-popup");
+      if (!popup) return;
+      var root = getSearchRoot();
+      function setVal(id, val) {
+        var el = getPopupEl(id) || root.querySelector("#" + id);
+        if (el) el.value = val;
+      }
+      setVal("rbStamp", "");
+      setVal("rbWeight", "");
+      setVal("rbRate", "");
+      setVal("rbAmount", "");
+      setVal("rbDelDate", "");
+      setVal("rbType", "S");
+      setVal("rbNarration", "");
+      popup.style.display = "flex";
+      popup.style.alignItems = "center";
+      popup.style.justifyContent = "center";
+    }
 
-      // Return target for Ratebook → back to this page
-      localStorage.setItem("ratebookReturnTarget", "pages/new-order.html");
-      // Try to remember the row index (optional)
-      try {
-        let idx = -1;
-        if (itemBody && rowElement) {
-          const tr = rowElement.closest ? rowElement.closest("tr") : rowElement;
-          const trs = Array.from(itemBody.querySelectorAll("tr"));
-          idx = trs.indexOf(tr);
+    function closeRatebookPopup() {
+      var popup = getPopupEl("ready-order-ratebook-popup");
+      if (popup) popup.style.display = "none";
+    }
+
+    function calcRatebookAmount() {
+      var root = getSearchRoot();
+      var weightInput = getPopupEl("rbWeight") || root.querySelector("#rbWeight");
+      var rateInput = getPopupEl("rbRate") || root.querySelector("#rbRate");
+      var amountInput = getPopupEl("rbAmount") || root.querySelector("#rbAmount");
+      if (!weightInput || !rateInput || !amountInput) return;
+      var weight = safeNumber(weightInput.value);
+      var rate = safeNumber(rateInput.value);
+      var amount = safeNumber(amountInput.value);
+      if (document.activeElement === rateInput) {
+        if (amount > 0 && weight === 0 && rate > 0) {
+          weightInput.value = (amount / rate).toFixed(3);
+        } else {
+          amountInput.value = (weight * rate).toFixed(2);
         }
-        localStorage.setItem("ratebookTargetRowIndex", String(idx));
-      } catch (e) {
-        localStorage.setItem("ratebookTargetRowIndex", "-1");
+      } else if (document.activeElement === amountInput) {
+        if (rate > 0) weightInput.value = (amount / rate).toFixed(3);
+      } else if (document.activeElement === weightInput) {
+        amountInput.value = (weight * rate).toFixed(2);
       }
-      // Force restore even if flags get cleared elsewhere
-      localStorage.setItem("readyExtraForceRestore", "true");
+    }
 
-      // Save current new-order page state before opening ratebook
-      // This allows us to restore it when ratebook closes
-      // IMPORTANT: Save state BEFORE opening ratebook to preserve all data
-      saveOrderState();
-
-      // Mark that we're opening ratebook (so we know to restore on return)
-      localStorage.setItem("ratebookOpened", "true");
-
-      // Open rate book page - same logic flow, just different UI
-      if (typeof loadPage === 'function') {
-        // If in dashboard context, load in workspace
-        // The workspace will replace content, but we've saved state
-        loadPage("pages/ratebook.html");
-      } else {
-        // Otherwise open in new window (this preserves current page)
-        window.open("/pages/ratebook.html", "RateBook", "width=800,height=700");
+    function saveRatebookEntry() {
+      try {
+        var root = getSearchRoot();
+        var stampEl = getPopupEl("rbStamp") || root.querySelector("#rbStamp");
+        var weightEl = getPopupEl("rbWeight") || root.querySelector("#rbWeight");
+        var rateEl = getPopupEl("rbRate") || root.querySelector("#rbRate");
+        var amountEl = getPopupEl("rbAmount") || root.querySelector("#rbAmount");
+        var delDateEl = getPopupEl("rbDelDate") || root.querySelector("#rbDelDate");
+        var typeEl = getPopupEl("rbType") || root.querySelector("#rbType");
+        var narrationEl = getPopupEl("rbNarration") || root.querySelector("#rbNarration");
+        if (!stampEl) return;
+        var stamp = (stampEl.value || "").trim();
+        var weight = safeNumber(weightEl ? weightEl.value : 0);
+        var rate = safeNumber(rateEl ? rateEl.value : 0);
+        var amount = safeNumber(amountEl ? amountEl.value : 0);
+        var delDate = delDateEl ? delDateEl.value : "";
+        var type = (typeEl ? typeEl.value : "S").trim() || "S";
+        var narration = narrationEl ? narrationEl.value.trim() : "";
+        if (!stamp) {
+          showError("Stamp is required");
+          return;
+        }
+        if (weight <= 0 && rate <= 0 && amount <= 0) {
+          showError("Please enter at least weight, rate, or amount");
+          return;
+        }
+        var rateEntry = {
+          id: Date.now(),
+          stamp: stamp,
+          weight: weight,
+          rate: rate,
+          amount: amount,
+          delDate: delDate,
+          type: type,
+          narration: narration,
+          customer: getCustomerName(),
+          customerId: custName ? custName.value : "",
+          billNo: billNo ? billNo.value : "",
+          date: new Date().toISOString().split("T")[0],
+          timestamp: new Date().toISOString()
+        };
+        var rateBook = JSON.parse(localStorage.getItem("rateBook") || "[]");
+        rateBook.push(rateEntry);
+        localStorage.setItem("rateBook", JSON.stringify(rateBook));
+        closeRatebookPopup();
+        if (typeof updateRatebookPanel === "function") updateRatebookPanel();
+      } catch (e) {
+        console.error("Error saving rate:", e);
+        showError("Error saving rate: " + (e && e.message ? e.message : String(e)));
       }
     }
 
@@ -4244,9 +4288,7 @@
     }
 
     function closeRateBookPopup() {
-      // Compatibility function - does nothing since popup removed
-      activeRateRow = null;
-      localStorage.removeItem("activeRateRow");
+      closeRatebookPopup();
     }
 
     function calculateRateAmount() {
@@ -4355,22 +4397,21 @@
     function updatePaymentPanel() {
       if (!billNo || !billNo.value) return;
 
-      // Same logic as calculateBillTotal: Est. Total is column 9 in Ready Order (no Remark/Design/Size)
+      // Same logic as calculateBillTotal: use Est. Total (col 9) or second Total (col 15) per row so data shows correctly
       let orderTotal = 0;
       let purchaseTotal = 0;
 
       if (itemBody) {
         itemBody.querySelectorAll("tr").forEach(r => {
-          if (r.cells[9] && r.cells[9].children[0]) {
-            const t = parseFloat(r.cells[9].children[0].value) || 0;
-            const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
-            const type = typeSelect ? typeSelect.value : "Order";
-
-            if (type === "Purchase") {
-              purchaseTotal += t;
-            } else {
-              orderTotal += t;
-            }
+          const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
+          const type = typeSelect ? typeSelect.value : "Order";
+          const estTotal = (r.cells[9] && r.cells[9].children[0]) ? (parseFloat(r.cells[9].children[0].value) || 0) : 0;
+          const readyTotal = (r.cells[15] && r.cells[15].children[0]) ? (parseFloat(r.cells[15].children[0].value) || 0) : 0;
+          const rowTotal = estTotal || readyTotal;
+          if (type === "Purchase") {
+            purchaseTotal += rowTotal;
+          } else {
+            orderTotal += rowTotal;
           }
         });
       }
@@ -4395,15 +4436,30 @@
       // Rate Difference: only when saved for this bill — display "Rate Difference : 2.500 @(12000.00 - 13000.00) = 3000"
       const rateDiffWrap = root.querySelector("#panelRateDiffWrap");
       const rateDiffEl = root.querySelector("#panelRateDiffSummary");
+      const rateDiffMinusBalanceWrap = root.querySelector("#panelRateDiffMinusBalanceWrap");
+      const rateDiffMinusBalanceEl = root.querySelector("#panelRateDiffMinusBalance");
       const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
+      var rateDiffResult = 0;
       if (rateDiffWrap && rateDiffEl) {
         if (rateDiffStored) {
           rateDiffWrap.style.display = "";
           rateDiffEl.textContent = "Rate Difference : " + rateDiffStored;
-          rateDiffEl.style.color = rateDiffStored.includes("\u2212") ? "var(--danger)" : "";
+          rateDiffEl.style.color = rateDiffStored.includes("\u2212") || rateDiffStored.includes("-") ? "var(--danger)" : "";
+          // Parse result after "=" (e.g. "2.000 @(12000.00 - 15000.00) = -9000.00" -> -9000)
+          var match = rateDiffStored.match(/=\s*([-\u2212]?\s*[\d.]+)/);
+          if (match) {
+            var numStr = match[1].replace(/\u2212/g, "-").replace(/\s/g, "");
+            rateDiffResult = parseFloat(numStr) || 0;
+          }
         } else {
           rateDiffWrap.style.display = "none";
         }
+      }
+      // Amount = Balance minus Rate Difference Result (e.g. 21400 - 9000 = 12,400)
+      if (rateDiffMinusBalanceWrap && rateDiffMinusBalanceEl) {
+        var amountVal = balance - Math.abs(rateDiffResult);
+        rateDiffMinusBalanceEl.textContent = formatCurrency(amountVal);
+        rateDiffMinusBalanceEl.style.color = amountVal < 0 ? "var(--danger)" : "";
       }
 
       // Get payments for this bill
@@ -4964,7 +5020,10 @@
       window.savePaymentCardEdit = savePaymentCardEdit;
       window.cancelPaymentCardEdit = cancelPaymentCardEdit;
       window.saveRateBook = saveRateBook;
-      window.closeRateBookPopup = closeRateBookPopup;
+      window.closeRateBookPopup = closeRatebookPopup;
+      window.closeRatebookPopup = closeRatebookPopup;
+      window.calcRatebookAmount = calcRatebookAmount;
+      window.saveRatebookEntry = saveRatebookEntry;
       window.calculateRateAmount = calculateRateAmount;
       window.loadRateBookHistory = loadRateBookHistory;
       window.applyRateToRow = applyRateToRow;
@@ -5021,7 +5080,7 @@
     ensureFunctionsGlobal();
 
     window.__currentPageCleanup = function () {
-      var globals = ['addRow','calc','syncReadyWeight','calcReadyTotal','saveOrder','saveAndNew','transferToCustomerBalance','resetOrder','showInvoice','back','openPayment','openCustomer','openReceipt','openRateBook','setCustomerName','getCustomerName','loadOrderForEdit','loadBill','handleTypeChange','calculateDeliveryDate','saveOrderPopup','closePopup','calculatePaymentBalance','closePaymentPopup','savePaymentFromPopup','saveRateBook','closeRateBookPopup','calculateRateAmount','loadRateBookHistory','applyRateToRow','initOrderPage','initElements','saveOrderState','restoreOrderState','generateBillNo','generateJobNo','calculateBillTotal','getPaidAmount','updateInfoPanel','updatePaymentPanel','updateRatebookPanel','updateReceiptPanel','refreshInvoiceReceiptTable','deleteReceipt','deleteRate','showRateDetails','closeRatebookDetailsPopup','saveRatebookFromRows','addRatebookRow','saveRatebookDetailsFromPopup','updateRateBookingRow','closeDashboard'];
+      var globals = ['addRow','calc','syncReadyWeight','calcReadyTotal','saveOrder','saveAndNew','transferToCustomerBalance','resetOrder','showInvoice','back','openPayment','openCustomer','openReceipt','openRateBook','setCustomerName','getCustomerName','loadOrderForEdit','loadBill','handleTypeChange','calculateDeliveryDate','saveOrderPopup','closePopup','calculatePaymentBalance','closePaymentPopup','savePaymentFromPopup','saveRateBook','closeRateBookPopup','closeRatebookPopup','calcRatebookAmount','saveRatebookEntry','calculateRateAmount','loadRateBookHistory','applyRateToRow','initOrderPage','initElements','saveOrderState','restoreOrderState','generateBillNo','generateJobNo','calculateBillTotal','getPaidAmount','updateInfoPanel','updatePaymentPanel','updateRatebookPanel','updateReceiptPanel','refreshInvoiceReceiptTable','deleteReceipt','deleteRate','showRateDetails','closeRatebookDetailsPopup','saveRatebookFromRows','addRatebookRow','saveRatebookDetailsFromPopup','updateRateBookingRow','closeDashboard'];
       globals.forEach(function (k) { try { delete window[k]; } catch (e) {} });
     };
     })();

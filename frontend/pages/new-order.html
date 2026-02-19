@@ -1458,14 +1458,24 @@
     // =====================================================
 
     let _addRowLastCall = 0;
-    function addRow() {
-      if (!AppState.elements.itemBody) return;
-      // Prevent extra row from double-click or duplicate events (one row per Add Row click)
-      const now = Date.now();
-      if (now - _addRowLastCall < 400) return;
-      _addRowLastCall = now;
+    /** @param {boolean} [skipThrottle] - If true, skip the 400ms throttle (used when restoring multiple rows in edit mode) */
+    function addRow(skipThrottle) {
+      // Always use the new-order table tbody (re-resolve if needed so added rows are visible)
+      const itemBody = AppState.elements.itemBody ||
+        document.querySelector('.workspace #new-order-item-table tbody') ||
+        document.querySelector('#new-order-item-table tbody');
+      if (!itemBody) return;
+      if (AppState.elements && !AppState.elements.itemBody) AppState.elements.itemBody = itemBody;
+
+      // Prevent extra row from double-click or duplicate events (one row per Add Row click) – skip when restoring edit
+      if (!skipThrottle) {
+        const now = Date.now();
+        if (now - _addRowLastCall < 400) return;
+        _addRowLastCall = now;
+      }
 
       const tr = document.createElement('tr');
+      // Type column: show all four types (Order, Repair, Sale, Purchase) so every added row has full type list
       tr.innerHTML = `
         <td>
           <select onchange="handleTypeChange(this)">
@@ -1476,7 +1486,7 @@
             <option value="Purchase">Purchase</option>
           </select>
         </td>
-        <td><input readonly value="${AppState.elements.billNo?.value || ''}"></td>
+        <td><input readonly value="${(AppState.elements.billNo && AppState.elements.billNo.value) || ''}"></td>
         <td><input placeholder="Item Name"></td>
         <td>
           <select class="stamp-select">
@@ -1498,7 +1508,9 @@
         <td><button onclick="removeRow(this)" title="Remove row">❌</button></td>
       `;
 
-      AppState.elements.itemBody.appendChild(tr);
+      itemBody.appendChild(tr);
+      if (!skipThrottle) tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      updateInfoPanel();
       scheduleAutoSave();
     }
 
@@ -1508,6 +1520,10 @@
     }
 
     function removeRow(btn) {
+      if (AppState.editMode) {
+        alert('Cannot remove rows while editing an order. Save or reset first.');
+        return;
+      }
       if (!confirm('Remove this row?')) return;
 
       const row = btn.closest('tr');
@@ -2670,43 +2686,58 @@
         if (AppState.elements.dueDate && order.dueDate != null && order.dueDate !== '') AppState.elements.dueDate.value = order.dueDate;
         if (AppState.elements.gstRate && order.gstRate != null && order.gstRate !== '') AppState.elements.gstRate.value = order.gstRate;
 
-        // Load all order items into the table – restore every row with values and metadata
+        // Load all order items into the table – restore every row (Order, Repair, Sale, Purchase) with full data; do not delete or remove any type
         AppState.elements.itemBody.innerHTML = '';
-        const items = order.items || [];
+        // Support both items and legacy rows array; normalize to { values, type, ... }
+        const rawItems = order.items || order.rows || [];
+        const items = rawItems.map(it => ({
+          values: it.values || (Array.isArray(it) ? it : []),
+          type: it.type || (it.values && it.values[0] === undefined ? 'Order' : (typeof it.type === 'string' ? it.type : 'Order')),
+          delivery: it.delivery,
+          deliveryDate: it.deliveryDate,
+          daysToDelivery: it.daysToDelivery,
+          sample: it.sample,
+          orderFilled: it.orderFilled
+        }));
         for (let idx = 0; idx < items.length; idx++) {
           const item = items[idx];
-          addRow();
+          addRow(true); // skip throttle so every row is added (Order, Repair, Sale, Purchase all visible)
           const tr = AppState.elements.itemBody.lastElementChild;
           if (!tr) continue;
 
-          // Restore every input/select by index (same order as save)
-          const inputs = tr.querySelectorAll('input, select');
           const values = item.values || [];
-          for (let i = 0; i < inputs.length && i < values.length; i++) {
-            if (values[i] !== undefined && values[i] !== null) inputs[i].value = String(values[i]);
+          const typeVal = (item.type && [ 'Order', 'Repair', 'Sale', 'Purchase' ].includes(item.type)) ? item.type : 'Order';
+
+          // Restore type first so row UI matches (Purchase optional fields, etc.)
+          const typeSelect = tr.cells[0]?.querySelector('select');
+          if (typeSelect) typeSelect.value = typeVal;
+
+          // Restore every input/select by index (same order as save); pad with empty so all inputs get a value
+          const inputs = tr.querySelectorAll('input, select');
+          for (let i = 0; i < inputs.length; i++) {
+            const val = values[i];
+            if (val !== undefined && val !== null && val !== '') {
+              inputs[i].value = String(val);
+            } else if (i < values.length && (values[i] === '' || values[i] === null)) {
+              inputs[i].value = '';
+            }
           }
 
-          // Restore type select
-          if (item.type) {
-            const typeSelect = tr.cells[0]?.querySelector('select');
-            if (typeSelect && [ 'Order', 'Repair', 'Sale', 'Purchase' ].includes(item.type)) typeSelect.value = item.type;
-          }
-
-          // Restore row metadata (Order Details – recover like old)
-          if (item.delivery != null) tr.dataset.delivery = item.delivery;
-          if (item.deliveryDate != null) tr.dataset.deliveryDate = item.deliveryDate;
-          if (item.daysToDelivery != null) tr.dataset.daysToDelivery = item.daysToDelivery;
-          if (item.sample != null) tr.dataset.sample = item.sample;
-          if (item.orderFilled != null) tr.dataset.orderFilled = item.orderFilled;
+          // Restore row metadata (Order Details)
+          if (item.delivery != null && item.delivery !== '') tr.dataset.delivery = item.delivery;
+          if (item.deliveryDate != null && item.deliveryDate !== '') tr.dataset.deliveryDate = item.deliveryDate;
+          if (item.daysToDelivery != null && item.daysToDelivery !== '') tr.dataset.daysToDelivery = item.daysToDelivery;
+          if (item.sample != null && item.sample !== '') tr.dataset.sample = item.sample;
+          if (item.orderFilled != null && item.orderFilled !== '') tr.dataset.orderFilled = item.orderFilled;
 
           // Recalculate row totals so displayed totals match saved data
           setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10 + idx * 5);
         }
 
-        // For restored Purchase rows, disable Remarks/Design/Size (no value, not-allowed cursor)
+        // Apply Purchase optional-field state for all rows so Order/Repair/Sale/Purchase display correctly with full row visible
         AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
           const sel = tr.cells[0]?.querySelector('select');
-          if (sel && sel.value === 'Purchase') setPurchaseOptionalFieldsState(tr, true);
+          setPurchaseOptionalFieldsState(tr, sel && sel.value === 'Purchase');
         });
 
         // Update panels

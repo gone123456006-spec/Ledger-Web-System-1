@@ -69,7 +69,6 @@
 
         <main class="workspace" id="workspace"></main>
 
-
         <!-- side bar  -->
         <aside class="sidebar">
             <button>Add Customer</button>
@@ -80,10 +79,15 @@
             <button class="section-gap">Direct Bill</button>
             <button>All Bill</button>
 
-            <button class="section-gap">New Order</button>
-            <button>Orders</button>
-            <button>Pending Orders</button>
-            <button>Ready Orders</button>
+            <div class="sidebar-gold-order section-gap">
+                <button type="button" class="gold-order-trigger">Gold Order</button>
+                <div class="sidebar-gold-submenu">
+                    <button type="button">New Order</button>
+                    <button type="button">Orders</button>
+                    <button type="button">Pending Orders</button>
+                    <button type="button">Ready Orders</button>
+                </div>
+            </div>
             <button>Pending Items</button>
 
             <button class="section-gap">Add Jobworker</button>

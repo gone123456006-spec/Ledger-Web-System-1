@@ -3,6 +3,45 @@
    SIDEBAR BUTTON HANDLING (ERP STYLE)
 ====================================================== */
 
+function initGoldOrderSubmenu() {
+    const block = document.querySelector(".sidebar-gold-order");
+    const trigger = document.querySelector(".gold-order-trigger");
+    const submenu = document.querySelector(".sidebar-gold-submenu");
+    if (!block || !trigger || !submenu) return;
+    let hideTimeout = 0;
+    function show() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = 0;
+        const rect = trigger.getBoundingClientRect();
+        submenu.style.top = rect.top + "px";
+        submenu.style.right = (window.innerWidth - rect.left + 6) + "px";
+        submenu.classList.add("visible");
+    }
+    function scheduleHide() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(function () {
+            submenu.classList.remove("visible");
+            hideTimeout = 0;
+        }, 200);
+    }
+    block.addEventListener("mouseenter", show);
+    block.addEventListener("mouseleave", scheduleHide);
+    submenu.addEventListener("mouseenter", show);
+    submenu.addEventListener("mouseleave", scheduleHide);
+}
+
+// Global Esc → go to dashboard (any page inside the app)
+function initEscToDashboard() {
+    if (window.__escToDashboardInited) return;
+    window.__escToDashboardInited = true;
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape") return;
+        const workspace = document.querySelector(".workspace");
+        if (!workspace) return;
+        if (typeof loadPage === "function") loadPage("dashboard.html");
+    });
+}
+
 // Wait for DOM to be ready
 function initSidebarButtons() {
     const sidebarButtons = document.querySelectorAll(".sidebar button");
@@ -14,6 +53,8 @@ function initSidebarButtons() {
         return;
     }
 
+    initEscToDashboard();
+    initGoldOrderSubmenu();
     sidebarButtons.forEach(btn => {
         btn.addEventListener("click", () => {
 
@@ -63,6 +104,10 @@ function initSidebarButtons() {
 
                 case "all bill":
                     loadPage("pages/all-bill.html");
+                    break;
+
+                case "gold order":
+                    // Gold Order is the hover parent; click does nothing (submenu shows on hover)
                     break;
 
                 case "new order":
@@ -188,6 +233,20 @@ function loadPage(pageUrl) {
         pageUrl = pageUrl.replace(/^(\.\.\/)+pages\//i, "pages/");
         pageUrl = pageUrl.replace(/^(\.\.\/)+public\//i, "");
     } catch (e) { }
+
+    // Dashboard home: no fetch, show simple home view
+    const isDashboard = /dashboard\.html$/i.test(String(pageUrl).trim());
+    if (isDashboard) {
+        workspace.innerHTML = `
+            <div style="padding:40px; font-size:16px; color:#1f3b57;">
+                <h2 style="margin:0 0 12px 0; font-weight:600;">Dashboard</h2>
+                <p style="margin:0; opacity:0.85;">Use the sidebar to open a page. Press <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Esc</kbd> anytime to return here.</p>
+            </div>
+        `;
+        workspace.removeAttribute("data-page");
+        setActiveSidebar(null);
+        return;
+    }
 
     // Normalize/encode URL (handles spaces like "ready extra order.html")
     let fetchUrl = pageUrl;
@@ -406,7 +465,7 @@ function loadPage(pageUrl) {
 function setActiveSidebar(activeBtn) {
     document.querySelectorAll(".sidebar button")
         .forEach(b => b.classList.remove("active"));
-    activeBtn.classList.add("active");
+    if (activeBtn) activeBtn.classList.add("active");
 }
 
 /* ======================================================

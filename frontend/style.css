@@ -175,6 +175,46 @@ ul, li{
     color:#000 !important;
 }
 
+/* Gold Order: hover to show submenu (New Order, Orders, Pending Orders, Ready Orders) */
+.sidebar-gold-order{
+    position:relative;
+    margin-bottom:8px;
+}
+.sidebar-gold-order .gold-order-trigger{
+    width:100%;
+    margin-bottom:0;
+}
+.sidebar-gold-submenu{
+    display:none;
+    position:fixed;
+    min-width:140px;
+    padding:4px 0;
+    background:#fff;
+    border:1px solid #d1d6de;
+    border-radius:10px;
+    box-shadow:0 6px 16px rgba(0,0,0,.12);
+    z-index:10000;
+}
+.sidebar-gold-submenu.visible{
+    display:block;
+}
+.sidebar-gold-submenu button{
+    display:block;
+    width:100%;
+    margin:0;
+    padding:8px 14px;
+    border:none;
+    border-radius:6px;
+    background:transparent;
+    font-size:13px;
+    text-align:left;
+    cursor:pointer;
+    color:#000 !important;
+}
+.sidebar-gold-submenu button:hover{
+    background:#abccff;
+}
+
 /* =========================
    STATION POPUP 
 ========================= */
