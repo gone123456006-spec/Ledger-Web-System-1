@@ -746,16 +746,45 @@
           localStorage.setItem("editBalanceRows", JSON.stringify(balanceEntry.rows));
         }
 
-        // Try to find the order in orders storage by orderNo
+        // Prefer full bill from bills (has all row data: R. Metal, Neg, R. Wt, Rate, Making, Total)
+        const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+        const fullBill = bills.find(b => b.billNo === balanceEntry.orderNo);
+
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
         const order = orders.find(o => o.orderNo === balanceEntry.orderNo);
 
         if (order && order.id) {
-          // Use the order ID for editing
           localStorage.setItem("editOrderId", order.id);
+          // Ensure ready-extra-order can load full items (incl. cols 10–15); pass payload from bill if it has more complete rows
+          if (fullBill && (fullBill.items || fullBill.rows) && (fullBill.items || fullBill.rows).length > 0) {
+            const payload = {
+              id: order.id,
+              orderNo: fullBill.billNo,
+              billNo: fullBill.billNo,
+              customer: fullBill.customer,
+              customerId: fullBill.customerId,
+              orderDate: fullBill.date,
+              dueDate: fullBill.dueDate || "",
+              items: fullBill.items || fullBill.rows
+            };
+            localStorage.setItem("editOrderPayload", JSON.stringify(payload));
+          }
         } else {
-          // Create a temporary order ID or use timestamp
-          localStorage.setItem("editOrderId", balanceEntry.timestamp || Date.now().toString());
+          const tempId = balanceEntry.timestamp || Date.now().toString();
+          localStorage.setItem("editOrderId", tempId);
+          if (fullBill && (fullBill.items || fullBill.rows) && (fullBill.items || fullBill.rows).length > 0) {
+            const payload = {
+              id: tempId,
+              orderNo: fullBill.billNo,
+              billNo: fullBill.billNo,
+              customer: fullBill.customer,
+              customerId: fullBill.customerId,
+              orderDate: fullBill.date,
+              dueDate: fullBill.dueDate || "",
+              items: fullBill.items || fullBill.rows
+            };
+            localStorage.setItem("editOrderPayload", JSON.stringify(payload));
+          }
         }
 
         // Open ready-extra-order for editing

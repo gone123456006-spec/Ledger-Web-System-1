@@ -621,11 +621,13 @@
       // Get customer name
       const customerName = order.customer || order.customerName || "—";
 
-      // Create row
+      // Create row (clickable to open in ready-extra-order)
       const tr = document.createElement("tr");
       tr.dataset.orderId = order.id;
       tr.dataset.orderNo = order.orderNo || order.billNo || "";
       tr.dataset.customer = customerName;
+      tr.style.cursor = "pointer";
+      tr.title = "Click to open order";
 
       tr.innerHTML = `
         <td><span class="badge pending">⏳ PENDING</span></td>
@@ -640,9 +642,15 @@
         <td class="right">₹${parseFloat(order.advance || 0).toFixed(2)}</td>
         <td class="right">₹${parseFloat(order.balance || 0).toFixed(2)}</td>
         <td class="center">
+          <button class="action-btn" onclick="editOrder(${order.id}); event.stopPropagation();">✏️ Edit</button>
           <button class="action-btn" onclick="markReady(${order.id}); event.stopPropagation();">✓ Mark Ready</button>
         </td>
       `;
+
+      tr.onclick = function (e) {
+        if (e.target.closest("button")) return;
+        editOrder(order.id);
+      };
 
       tbody.appendChild(tr);
     }
@@ -823,6 +831,44 @@
     }
 
     /* =========================
+       EDIT ORDER (open in ready-extra-order)
+    ========================= */
+    function editOrder(orderId) {
+      try {
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const order = orders.find(o => o && (o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId)));
+        if (!order) {
+          alert("❌ Order not found!");
+          return;
+        }
+        localStorage.removeItem("editOrderId");
+        localStorage.removeItem("editOrderPayload");
+        localStorage.setItem("editOrderId", String(orderId));
+        navigateToReadyExtraOrder();
+      } catch (e) {
+        console.error("Error opening order:", e);
+        alert("Error opening order: " + (e.message || e));
+      }
+    }
+
+    function navigateToReadyExtraOrder() {
+      if (typeof loadPage === "function") {
+        loadPage("pages/ready-extra-order.html");
+        return;
+      }
+      if (window.parent && window.parent !== window && typeof window.parent.loadPage === "function") {
+        window.parent.loadPage("pages/ready-extra-order.html");
+        return;
+      }
+      if (window.top && window.top !== window && typeof window.top.loadPage === "function") {
+        window.top.loadPage("pages/ready-extra-order.html");
+        return;
+      }
+      const path = window.location.pathname || "";
+      window.location.href = path.includes("/pages/") ? "ready-extra-order.html" : "/pages/ready-extra-order.html";
+    }
+
+    /* =========================
        INITIALIZE PAGE
     ========================= */
     function initPendingOrdersPage() {
@@ -911,6 +957,8 @@
       Object.assign(window, {
         loadPendingOrders,
         markReady,
+        editOrder,
+        navigateToReadyExtraOrder,
         searchOrders,
         updateFooter,
         initPendingOrdersPage,

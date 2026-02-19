@@ -912,6 +912,33 @@
       color: #dc3545;
     }
 
+    .billing-detail {
+      display: flex;
+      flex-direction: column;
+      border-top: 1px dashed var(--border);
+      padding-top: 10px;
+      margin-top: 8px;
+    }
+    .billing-detail .summary-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    .billing-detail .summary-item:last-child {
+      margin-bottom: 0;
+      padding-top: 4px;
+      margin-top: 4px;
+      border-top: 1px solid var(--border);
+      font-weight: 600;
+    }
+    .billing-detail .summary-label { color: var(--muted); }
+    .billing-detail .summary-value { color: var(--text); font-weight: 600; }
+    .billing-detail .summary-item.purchase-minus .summary-label,
+    .billing-detail .summary-item.purchase-minus .summary-value {
+      color: #d63384;
+    }
+
     .panel-list {
       display: flex;
       flex-direction: column;
@@ -1155,16 +1182,34 @@
                 <span class="summary-label">Paid:</span>
                 <span class="summary-value paid" id="panelPaid">₹ 0.00</span>
               </div>
-              <div class="summary-item" id="panelRateDiffWrap" style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
-                <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
-              </div>
               <div class="summary-item">
                 <span class="summary-label">Balance:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
               </div>
-              <div class="summary-item" id="panelRateDiffMinusBalanceWrap" style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px;">
-                <span class="summary-label">Amount (Rate Diff − Balance):</span>
-                <span class="summary-value" id="panelRateDiffMinusBalance">₹ 0.00</span>
+              <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
+                <div class="summary-item">
+                  <span class="summary-label">Order (add):</span>
+                  <span class="summary-value" id="panelOrderSaleAdd">₹ 0.00</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Sale (add):</span>
+                  <span class="summary-value" id="panelSaleAdd">₹ 0.00</span>
+                </div>
+                <div class="summary-item purchase-minus">
+                  <span class="summary-label">Purchase (minus):</span>
+                  <span class="summary-value" id="panelPurchaseMinus">₹ 0.00</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Amount:</span>
+                  <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
+                </div>
+              </div>
+              <div class="summary-item" id="panelRateDiffWrap" style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
+                <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
+              </div>
+              <div class="summary-item" id="panelAmountMinusRateDiffWrap" style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
+                <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
+                <span class="summary-value" id="panelAmountMinusRateDiff" style="color:#28a745; font-weight:bold;"></span>
               </div>
             </div>
             <div class="panel-list" id="paymentList">
@@ -1532,7 +1577,7 @@
         return container;
       }
       function getPopupEl(id) {
-        return container.querySelector("#" + id) || null;
+        return container.querySelector("#" + id) || document.querySelector("#" + id) || null;
       }
 
       function initElements() {
@@ -1954,10 +1999,12 @@
       if (fromNewOrder && vals.length >= 13) {
         /* New Order: cols 4–6 are Remark/Design/Size; Pc=7, Ut.Wt=8, Est.Total Wt=9, Rate=10, Lbr%=11, Est.Total=12 */
         setCol(4, vals[7]); setCol(5, vals[8]); setCol(6, vals[9]); setCol(7, vals[10]); setCol(8, vals[11]); setCol(9, vals[12]);
+        for (var i = 10; i <= 15; i++) clearCol(i);
       } else {
         setCol(4, vals[4]); setCol(5, vals[5]); setCol(6, vals[6]); setCol(7, vals[7]); setCol(8, vals[8]); setCol(9, vals[9]);
+        /* Ready order: cols 10–15 are R. Metal, Neg, R. Wt, Rate, Making, Total – restore from saved values */
+        for (var i = 10; i <= 15; i++) setCol(i, vals[i]);
       }
-      for (var i = 10; i <= 15; i++) clearCol(i);
     }
 
     /* ADD ROW */
@@ -2215,22 +2262,21 @@
       setTimeout(() => updateInfoPanel(), 100);
     }
 
-    /* CALCULATE BILL TOTAL */
+    /* CALCULATE BILL TOTAL: Est. Total (col 9) or second Total (col 15) per row – same as new-order / previous behavior */
     function calculateBillTotal() {
       if (!itemBody) return 0;
 
       let total = 0;
       itemBody.querySelectorAll("tr").forEach(r => {
-        if (r.cells[9] && r.cells[9].children[0]) {
-          const t = parseFloat(r.cells[9].children[0].value) || 0;
-          const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
-          const type = typeSelect ? typeSelect.value : "Order";
-
-          if (type === "Purchase") {
-            total -= t;
-          } else {
-            total += t;
-          }
+        const estTotal = (r.cells[9] && r.cells[9].children[0]) ? (parseFloat(r.cells[9].children[0].value) || 0) : 0;
+        const readyTotal = (r.cells[15] && r.cells[15].children[0]) ? (parseFloat(r.cells[15].children[0].value) || 0) : 0;
+        const rowTotal = estTotal || readyTotal;
+        const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
+        const type = typeSelect ? typeSelect.value : "Order";
+        if (type === "Purchase") {
+          total -= rowTotal;
+        } else {
+          total += rowTotal;
         }
       });
       return total;
@@ -2589,19 +2635,14 @@
         });
       }
 
-      // Update existing order by ID if found, otherwise by orderNo, or add new
-      if (existingOrderByIdIndex >= 0) {
-        orders[existingOrderByIdIndex] = orderData;
-      } else if (existingOrderIndex >= 0) {
-        orders[existingOrderIndex] = orderData;
-      } else {
-        orders.push(orderData);
-      }
-      localStorage.setItem("orders", JSON.stringify(orders));
+      // Remove this order from orders so it no longer appears in Order list, Ready Order, or Pending Order (saved bill appears only in All Bill)
+      const ordersFiltered = orders.filter(o => o && o.orderNo !== billNo.value);
+      localStorage.setItem("orders", JSON.stringify(ordersFiltered));
 
-      // Also save to "bills" for All Bills page
+      // Also save to "bills" for All Bills page – with all data (rows, totals, rate diff, etc.)
       const allBills = JSON.parse(localStorage.getItem("bills") || "[]");
       const billIndex = allBills.findIndex(b => b.billNo === billNo.value);
+      const rateBookDiffSummaryStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
 
       const newBillData = {
         billNo: billNo.value,
@@ -2610,11 +2651,16 @@
         date: orderDate.value,
         dueDate: dueDate.value || "",
         amount: billTotal.toFixed(2),
+        totalAmount: billTotal,
         paid: advanceTotal.toFixed(2),
         balance: (billTotal - advanceTotal).toFixed(2),
         status: orderData.status,
         timestamp: orderTimestamp,
-        items: rows
+        items: rows,
+        rows: rows,
+        rateBookDiffSummary: rateBookDiffSummaryStored,
+        pc: totalPc,
+        grWt: totalGrWt.toFixed(3)
       };
 
       if (billIndex >= 0) {
@@ -2766,8 +2812,11 @@
       // Update panel after saving
       updateInfoPanel();
 
-      if (resetAfterSave) {
-        resetOrder(true); // Skip confirmation since data is already saved
+      // Close page and go to Dashboard after save
+      if (typeof closeDashboard === 'function') {
+        closeDashboard();
+      } else if (resetAfterSave) {
+        resetOrder(true); // Fallback: reset form if Save & New
       }
     }
 
@@ -2787,47 +2836,21 @@
         rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
       } catch (e) { rates = []; }
 
-      // Remove old entries for this bill (to avoid duplicates when re-saving)
-      rates = rates.filter(r => r.billNo !== currentBillNo);
-
-      const now = new Date();
-      const baseTimestamp = now.getTime();
-
-      // Extract rate data from each row
-      const rows = itemBody.querySelectorAll("tr");
-      rows.forEach((row, index) => {
-        // Column indices: 2=Item Name, 3=Stamp, 8=Ut.Wt, 10=Rate
-        const itemNameInput = row.cells[2] && row.cells[2].children[0];
-        const stampInput = row.cells[3] && row.cells[3].children[0];
-        const weightInput = row.cells[5] && row.cells[5].children[0];
-        const rateInput = row.cells[7] && row.cells[7].children[0];
-
-        const itemName = itemNameInput ? itemNameInput.value.trim() : "";
-        const stampVal = stampInput ? stampInput.value.trim() : "";
-        const weight = weightInput ? parseFloat(weightInput.value) || 0 : 0;
-        const rate = rateInput ? parseFloat(rateInput.value) || 0 : 0;
-
-        // Only save if we have valid rate data
-        if (rate > 0 && weight > 0) {
-          const entry = {
-            id: baseTimestamp + index, // Unique ID for each row
-            date: now.toISOString().split('T')[0],
-            timestamp: new Date(baseTimestamp + index).toISOString(),
-            customerId: currentCustomerId,
-            customer: currentCustomerName,
-            billNo: currentBillNo,
-            itemName: itemName,
-            stamp: stampVal || itemName || "—",
-            rate: rate,
-            weight: weight,
-            amount: rate * weight,
-            narration: `From order row ${index + 1}`,
-            type: "S",
-            delDate: ""
-          };
-          rates.push(entry);
-        }
+      // Remove auto-generated "From order row" entries for this bill (do not re-add from rows — user sees only what they added)
+      const fromRowNarrationPrefix = "From order row ";
+      rates = rates.filter(r => {
+        if (r.billNo !== currentBillNo) return true;
+        const nar = (r.narration || "").trim();
+        return !nar.startsWith(fromRowNarrationPrefix);
       });
+
+      // For this bill: keep only one ratebook entry (most recent) so extra entries do not appear or display after save
+      const forThisBill = rates.filter(r => r.billNo === currentBillNo);
+      const others = rates.filter(r => r.billNo !== currentBillNo);
+      if (forThisBill.length > 1) {
+        forThisBill.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+        rates = others.concat([forThisBill[0]]);
+      }
 
       // Save back to localStorage
       try {
@@ -3095,7 +3118,8 @@
       if (billNo) billNo.value = b.billNo;
       if (itemBody) itemBody.innerHTML = "";
 
-      b.rows.forEach(r => {
+      const billRows = b.rows || b.items || [];
+      billRows.forEach(r => {
         addRow();
         const tr = itemBody.lastElementChild;
         const vals = r.values || [];
@@ -4397,9 +4421,14 @@
     function updatePaymentPanel() {
       if (!billNo || !billNo.value) return;
 
-      // Same logic as calculateBillTotal: use Est. Total (col 9) or second Total (col 15) per row so data shows correctly
-      let orderTotal = 0;
-      let purchaseTotal = 0;
+      // Main panel (Order Total, Purchase Total, Net Bill Total, Balance): use Est. Total (col 9) or second Total (col 15) – same as previous / new-order
+      let mainOrderTotal = 0;
+      let mainSaleTotal = 0;
+      let mainPurchaseTotal = 0;
+      // Detail breakdown (Order add, Sale add, Purchase minus, Net): use only second Total column (R. Metal, Neg, R. Wt, Rate, Making, Total)
+      let detailOrderTotal = 0;
+      let detailSaleTotal = 0;
+      let detailPurchaseTotal = 0;
 
       if (itemBody) {
         itemBody.querySelectorAll("tr").forEach(r => {
@@ -4407,37 +4436,56 @@
           const type = typeSelect ? typeSelect.value : "Order";
           const estTotal = (r.cells[9] && r.cells[9].children[0]) ? (parseFloat(r.cells[9].children[0].value) || 0) : 0;
           const readyTotal = (r.cells[15] && r.cells[15].children[0]) ? (parseFloat(r.cells[15].children[0].value) || 0) : 0;
-          const rowTotal = estTotal || readyTotal;
+          const mainRowTotal = estTotal || readyTotal;
+          const detailRowTotal = readyTotal;
+
           if (type === "Purchase") {
-            purchaseTotal += rowTotal;
+            mainPurchaseTotal += mainRowTotal;
+            detailPurchaseTotal += detailRowTotal;
+          } else if (type === "Sale") {
+            mainSaleTotal += mainRowTotal;
+            detailSaleTotal += detailRowTotal;
           } else {
-            orderTotal += rowTotal;
+            mainOrderTotal += mainRowTotal;
+            detailOrderTotal += detailRowTotal;
           }
         });
       }
 
-      const netTotal = orderTotal - purchaseTotal;
+      const mainOrderPlusSale = mainOrderTotal + mainSaleTotal;
+      const mainNetTotal = mainOrderPlusSale - mainPurchaseTotal;
       const paid = getPaidAmount(billNo.value);
-      const balance = netTotal - paid;
+      const balance = mainNetTotal - paid;
 
       const root = getSearchRoot();
       const setPanel = function (id, text) {
         var el = root.querySelector(id);
         if (el) el.textContent = text;
       };
-      setPanel("#panelOrderTotal", formatCurrency(orderTotal));
-      setPanel("#panelPurchaseTotal", formatCurrency(purchaseTotal));
-      setPanel("#panelBillTotal", formatCurrency(netTotal));
+      setPanel("#panelOrderTotal", formatCurrency(mainOrderPlusSale));
+      setPanel("#panelPurchaseTotal", formatCurrency(mainPurchaseTotal));
+      setPanel("#panelBillTotal", formatCurrency(mainNetTotal));
       setPanel("#panelPaid", formatCurrency(paid));
       setPanel("#panelBalance", formatCurrency(balance));
+
+      // Breakdown: Order (add), Sale (add), Purchase (minus), Amount – from second Total column only
+      const panelWrap = root.querySelector("#panelPurchaseSaleDetailWrap");
+      const orderSaleAddEl = root.querySelector("#panelOrderSaleAdd");
+      const saleAddEl = root.querySelector("#panelSaleAdd");
+      const purchaseMinusEl = root.querySelector("#panelPurchaseMinus");
+      const netDetailEl = root.querySelector("#panelNetDetail");
+      const detailNet = detailOrderTotal + detailSaleTotal - detailPurchaseTotal;
+      if (panelWrap) panelWrap.style.display = "";
+      if (orderSaleAddEl) orderSaleAddEl.textContent = formatCurrency(detailOrderTotal);
+      if (saleAddEl) saleAddEl.textContent = formatCurrency(detailSaleTotal);
+      if (purchaseMinusEl) purchaseMinusEl.textContent = formatCurrency(detailPurchaseTotal);
+      if (netDetailEl) netDetailEl.textContent = formatCurrency(detailNet);
 
       var paymentListEl = root.querySelector("#paymentList");
 
       // Rate Difference: only when saved for this bill — display "Rate Difference : 2.500 @(12000.00 - 13000.00) = 3000"
       const rateDiffWrap = root.querySelector("#panelRateDiffWrap");
       const rateDiffEl = root.querySelector("#panelRateDiffSummary");
-      const rateDiffMinusBalanceWrap = root.querySelector("#panelRateDiffMinusBalanceWrap");
-      const rateDiffMinusBalanceEl = root.querySelector("#panelRateDiffMinusBalance");
       const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
       var rateDiffResult = 0;
       if (rateDiffWrap && rateDiffEl) {
@@ -4455,11 +4503,20 @@
           rateDiffWrap.style.display = "none";
         }
       }
-      // Amount = Balance minus Rate Difference Result (e.g. 21400 - 9000 = 12,400)
-      if (rateDiffMinusBalanceWrap && rateDiffMinusBalanceEl) {
-        var amountVal = balance - Math.abs(rateDiffResult);
-        rateDiffMinusBalanceEl.textContent = formatCurrency(amountVal);
-        rateDiffMinusBalanceEl.style.color = amountVal < 0 ? "var(--danger)" : "";
+
+      // Amount minus Rate book Diff Amount – show below Rate Difference, in green
+      const amountMinusRateDiffWrap = root.querySelector("#panelAmountMinusRateDiffWrap");
+      const amountMinusRateDiffEl = root.querySelector("#panelAmountMinusRateDiff");
+      if (amountMinusRateDiffWrap && amountMinusRateDiffEl) {
+        if (rateDiffStored) {
+          var amountMinusRateDiff = detailNet - Math.abs(rateDiffResult);
+          amountMinusRateDiffWrap.style.display = "flex";
+          amountMinusRateDiffWrap.style.justifyContent = "space-between";
+          amountMinusRateDiffEl.textContent = formatCurrency(amountMinusRateDiff);
+          amountMinusRateDiffEl.style.color = "#28a745";
+        } else {
+          amountMinusRateDiffWrap.style.display = "none";
+        }
       }
 
       // Get payments for this bill
