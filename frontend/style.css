@@ -136,6 +136,7 @@ ul, li{
     border:1px solid #d1d6de;
     background:#ffffff;
     font-size:13px;
+    font-weight: bold;
     text-align:left;
     cursor:pointer;
     transition:.2s;
@@ -175,7 +176,7 @@ ul, li{
     color:#000 !important;
 }
 
-/* Gold Order: hover to show submenu (New Order, Orders, Pending Orders, Ready Orders) */
+/* Gold Order Book: hover to show submenu (New Order, Orders, Pending Orders, Ready Orders, etc.) */
 .sidebar-gold-order{
     position:relative;
     margin-bottom:8px;
@@ -183,6 +184,7 @@ ul, li{
 .sidebar-gold-order .gold-order-trigger{
     width:100%;
     margin-bottom:0;
+    font-weight: bold;
 }
 .sidebar-gold-submenu{
     display:none;
@@ -207,6 +209,7 @@ ul, li{
     border-radius:6px;
     background:transparent;
     font-size:13px;
+    font-weight: bold;
     text-align:left;
     cursor:pointer;
     color:#000 !important;

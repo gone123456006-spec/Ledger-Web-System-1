@@ -107,7 +107,8 @@ function initSidebarButtons() {
                     break;
 
                 case "gold order":
-                    // Gold Order is the hover parent; click does nothing (submenu shows on hover)
+                case "gold order book":
+                    // Gold Order Book is the hover parent; click does nothing (submenu shows on hover)
                     break;
 
                 case "new order":
