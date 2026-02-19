@@ -973,7 +973,7 @@
 
         <div class="row">
           <label>Order No *</label>
-          <input id="billNo" required>
+          <input id="billNo" required readonly>
         </div>
 
         <div class="row">
@@ -1255,7 +1255,7 @@
         autoSaveTimer: null,
         activeRow: null,
         editMode: false,
-        editOrderId: null
+        editOrderId: null,
       };
 
     // =====================================================
@@ -1303,7 +1303,7 @@
       const last = localStorage.getItem('lastBillNo') || '0';
       const next = Number(last) + 1;
       localStorage.setItem('lastBillNo', String(next));
-      return `B-${String(next).padStart(4, '0')}`;
+      return `SGJ/0/${next}`;
     }
 
     // =====================================================
@@ -1375,6 +1375,7 @@
 
       if (customers.length === 0) {
         select.innerHTML += '<option value="" disabled>No customers found</option>';
+        select.onchange = handleCustomerChange;
         return;
       }
 
@@ -1386,7 +1387,6 @@
         select.appendChild(opt);
       });
 
-      // Set up change handler
       select.onchange = handleCustomerChange;
     }
 
@@ -3005,6 +3005,15 @@
 
         // If not editing, restore auto-saved state only when we did NOT just come from Ready order (avoid extra rows / Ready data)
         const restored = editLoaded ? true : (cameFromReadyExtraPage ? false : restoreFormState());
+
+        // Ensure Order No is auto-generated if still empty (e.g. DOM ready late)
+        if (!pendingEditOrderId) {
+          setTimeout(function () {
+            if (AppState.elements.billNo && !AppState.elements.billNo.value) {
+              AppState.elements.billNo.value = generateBillNo();
+            }
+          }, 200);
+        }
       }
 
       function setupBillNoHandler() {

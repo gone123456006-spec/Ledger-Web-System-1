@@ -258,6 +258,7 @@
       font-size: 14px;
     }
 
+
     /* Order row: Pc, Ut. Wt., Est. Total Wt., Rate, Lbr.%, Total – non-editable */
     td input.order-detail-readonly {
       cursor: not-allowed;
@@ -1082,7 +1083,7 @@
 
         <div class="row">
           <label>Order No</label>
-          <input id="billNo">
+          <input id="billNo" readonly>
         </div>
 
         <div class="row">
@@ -1652,6 +1653,12 @@
         if (billNo && !billNo.value) {
           billNo.value = generateBillNo();
         }
+        // Ensure Order No is auto-generated if still empty after a short delay (e.g. DOM ready late)
+        setTimeout(function () {
+          if (billNo && !billNo.value && !localStorage.getItem("editOrderId")) {
+            billNo.value = generateBillNo();
+          }
+        }, 200);
       }
 
       // Load customers
@@ -1676,11 +1683,47 @@
       // Edit mode must take priority over saved return-state restoration.
       // This ensures customer/order data always loads when opening from Edit.
       const editOrderId = localStorage.getItem("editOrderId");
+      const editFromAllBill = localStorage.getItem("editFromAllBill") === "true";
       if (editOrderId) {
-        // Wait a bit for DOM to be ready, then load order
-        setTimeout(() => {
-          loadOrderForEdit(editOrderId);
-        }, 200);
+        if (editFromAllBill) {
+          // Load from bills so totals and payment panel show saved data
+          try {
+            const balanceEntryJson = localStorage.getItem("editBalanceEntry");
+            if (balanceEntryJson) {
+              const balanceEntry = JSON.parse(balanceEntryJson);
+              const orderNo = balanceEntry.orderNo;
+              const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+              const billIndex = bills.findIndex(b => b && b.billNo === orderNo);
+              if (billIndex >= 0) {
+                setTimeout(() => {
+                  loadBill(billIndex);
+                  setTimeout(() => {
+                    updateInfoPanel();
+                    calc();
+                  }, 100);
+                  setTimeout(() => {
+                    updateInfoPanel();
+                    updatePaymentPanel();
+                  }, 450);
+                }, 200);
+                localStorage.removeItem("editFromAllBill");
+                localStorage.removeItem("editBalanceEntry");
+                localStorage.removeItem("editBalanceRows");
+              } else {
+                setTimeout(() => loadOrderForEdit(editOrderId), 200);
+              }
+            } else {
+              setTimeout(() => loadOrderForEdit(editOrderId), 200);
+            }
+          } catch (e) {
+            setTimeout(() => loadOrderForEdit(editOrderId), 200);
+          }
+        } else {
+          // Wait a bit for DOM to be ready, then load order
+          setTimeout(() => {
+            loadOrderForEdit(editOrderId);
+          }, 200);
+        }
       } else {
         // If we have a saved state (Ratebook/Receipt flow), restore it. Use readyExtraOrderState so new-order data never shows here.
         const savedState = localStorage.getItem("readyExtraOrderState");
@@ -1896,8 +1939,8 @@
     function generateBillNo() {
       let last = localStorage.getItem("lastBillNo") || "0";
       let next = Number(last) + 1;
-      localStorage.setItem("lastBillNo", next);
-      return "B-" + String(next).padStart(4, "0");
+      localStorage.setItem("lastBillNo", String(next));
+      return "SGJ/0/" + next;
     }
 
     /* AUTO JOB NO - Same as Order No */
@@ -1916,7 +1959,7 @@
       const list = JSON.parse(localStorage.getItem("customers") || "[]");
       console.log('[LOAD CUSTOMERS] Found', list.length, 'customers in localStorage');
 
-      custName.innerHTML = `<option value="" style="color: #1e293b;">-- Select --</option>`;
+      custName.innerHTML = `<option value="" style="color: #1e293b;">-- Select Customer --</option>`;
 
       list.forEach(c => {
         const o = document.createElement("option");
@@ -2819,7 +2862,7 @@
       // Save ratebook entries from rows
       saveRatebookFromRows();
 
-      alert("Order saved successfully");
+      alert("Bill Save Successfully");
 
       // Update panel after saving
       updateInfoPanel();
@@ -3126,8 +3169,9 @@
         }
       }
 
-      if (orderDate) orderDate.value = b.date;
-      if (billNo) billNo.value = b.billNo;
+      if (orderDate) orderDate.value = b.date || "";
+      if (dueDate) dueDate.value = b.dueDate || "";
+      if (billNo) billNo.value = b.billNo || "";
       if (itemBody) itemBody.innerHTML = "";
 
       const billRows = b.rows || b.items || [];
@@ -3158,6 +3202,16 @@
           if (typeSel && typeSel.value === "Purchase") setPurchaseOptionalFieldsState(tr, true);
         });
       }
+
+      // Refresh totals and payment panel so they show saved data
+      setTimeout(function () {
+        if (typeof updateInfoPanel === "function") updateInfoPanel();
+        if (typeof calc === "function") calc();
+      }, 100);
+      setTimeout(function () {
+        if (typeof updateInfoPanel === "function") updateInfoPanel();
+        if (typeof updatePaymentPanel === "function") updatePaymentPanel();
+      }, 400);
     }
 
     /* INVOICE */
