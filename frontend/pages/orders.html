@@ -7,12 +7,12 @@
 
   <style>
     /* =========================
-   BASE
+   BASE (Customer Balance–style design)
 ========================= */
     * {
       box-sizing: border-box;
       font-family: Segoe UI, Arial, sans-serif;
-      font-size: 13px;
+      font-size: 14px;
     }
 
     body {
@@ -47,27 +47,29 @@
     }
 
     /* =========================
-   TOOLBAR
+   TOOLBAR (Customer Balance style)
 ========================= */
     .orders-toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      padding: 16px;
-      border-bottom: 1px solid #e5e7eb;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 2px solid #d1d6de;
       background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
       flex-shrink: 0;
       box-sizing: border-box;
     }
 
+    .orders-toolbar h2 { font-size: 20px; font-weight: 600; }
+
     .btn {
-      padding: 8px 16px;
+      padding: 10px 18px;
       border: 1px solid #d1d6de;
       background: #fff;
       cursor: pointer;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
       transition: all 0.2s;
       color: #1d1d1f;
@@ -82,13 +84,10 @@
       box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
     }
 
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
+    .btn:active { transform: translateY(0); }
 
     label {
-      font-size: 13px;
+      font-size: 14px;
       color: #3a3a3c;
       font-weight: 500;
       white-space: nowrap;
@@ -96,14 +95,14 @@
 
     input,
     select {
-      height: 36px;
-      padding: 6px 12px;
+      height: 40px;
+      padding: 8px 14px;
       border: 1px solid #d1d6de;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       background: #fff;
       transition: all 0.2s;
-      min-width: 120px;
+      min-width: 140px;
     }
 
     input:focus,
@@ -114,18 +113,14 @@
       background: #fff;
     }
 
-    input::placeholder {
-      color: #8e8e93;
-    }
+    input::placeholder { color: #8e8e93; }
 
     /* =========================
-   TABLE
+   TABLE (Customer Balance style)
 ========================= */
     .table-wrap {
       flex: 1;
       overflow: auto;
-      overflow-x: auto;
-      overflow-y: auto;
       position: relative;
       min-height: 0;
       box-sizing: border-box;
@@ -135,9 +130,7 @@
     table {
       width: 100%;
       min-width: 1000px;
-      border-collapse: separate;
-      border-spacing: 0;
-      table-layout: auto;
+      border-collapse: collapse;
       background: #fff;
     }
 
@@ -146,115 +139,67 @@
       top: 0;
       z-index: 10;
       background: #fff;
+      box-shadow: 0 1px 0 0 #c5c9ce;
     }
 
     thead th {
-      background: linear-gradient(to bottom, #f8f9fb, #f0f2f5);
-      border-bottom: 2px solid #d1d6de;
-      padding: 14px 12px;
+      background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
+      border: 1px solid #c5c9ce;
+      padding: 18px;
       white-space: nowrap;
-      position: sticky;
-      top: 0;
-      z-index: 10;
       font-weight: 600;
-      font-size: 12px;
+      font-size: 13px;
       text-align: left;
       color: #1d1d1f;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.04em;
     }
 
-    thead th.center {
-      text-align: center;
-    }
-
-    thead th.right {
-      text-align: right;
-    }
+    thead th.center { text-align: center; }
+    thead th.right { text-align: right; }
 
     tbody td {
-      padding: 12px;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 18px;
+      border: 1px solid #d1d6de;
+      font-size: 14px;
+      vertical-align: middle;
+      color: #333;
+      line-height: 1.35;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 200px;
-      font-size: 13px;
-      vertical-align: middle;
-      color: #333;
-      transition: all 0.15s ease;
     }
 
-    /* Allow some columns to wrap if needed */
     tbody td:nth-child(3) {
-      max-width: 200px;
       white-space: normal;
       word-break: break-word;
-      line-height: 1.4;
-    }
-
-    tbody td:nth-child(2) {
-      max-width: 120px;
     }
 
     tbody td:nth-child(6) {
-      max-width: 100px;
       text-align: center;
       font-weight: 500;
       color: #007aff;
       text-transform: capitalize;
     }
 
-    tbody tr {
-      transition: all 0.2s ease;
-      background: #fff;
-    }
+    tbody tr { transition: background 0.2s; background: #fff; }
+    tbody tr:nth-child(even) { background: #f8f9fb; }
+    tbody tr:hover { background: #e8f2ff; }
+    tbody tr:hover td { border-color: #b8d4f0; }
 
-    tbody tr:nth-child(even) {
-      background: #fafbfc;
-    }
-
-    tbody tr:hover {
-      background: #e8f2ff !important;
-      transform: scale(1.001);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    tbody tr:hover td {
-      border-bottom-color: #d1e7ff;
-    }
-
-    /* Do not remove: Mark (checkbox) selected row colour – keep so user can see marked rows */
     tbody tr.selected {
       background: #ffe6e6 !important;
       border-left: 3px solid #ff3b30;
     }
 
-    tbody tr.selected td {
-      border-bottom-color: #ffcccc;
-    }
+    tbody tr.selected td { border-color: #ffcccc; }
 
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    tbody tr td:first-child {
-      padding-left: 16px;
-    }
-
-    tbody tr td:last-child {
-      padding-right: 16px;
-    }
-
-    .center {
-      text-align: center;
-    }
-
+    .center { text-align: center; }
     .right {
       text-align: right;
       font-weight: 500;
       color: #1d1d1f;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       font-variant-numeric: tabular-nums;
     }
 
@@ -267,41 +212,26 @@
     }
 
     /* =========================
-   FOOTER
+   FOOTER (Customer Balance style)
 ========================= */
     .footer {
-      padding: 12px 16px;
-      font-size: 13px;
+      padding: 14px 20px;
+      font-size: 14px;
       color: #6e6e73;
-      border-top: 1px solid #e5e7eb;
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
+      border-top: 2px solid #d1d6de;
+      background: #f5f7fa;
       flex-shrink: 0;
       box-sizing: border-box;
       font-weight: 500;
     }
 
     /* =========================
-   SCROLLBAR STYLING
+   SCROLLBAR (Customer Balance style)
 ========================= */
-    .table-wrap::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
-    }
-
-    .table-wrap::-webkit-scrollbar-track {
-      background: #f5f5f7;
-      border-radius: 5px;
-    }
-
-    .table-wrap::-webkit-scrollbar-thumb {
-      background: #c1c1c6;
-      border-radius: 5px;
-      border: 2px solid #f5f5f7;
-    }
-
-    .table-wrap::-webkit-scrollbar-thumb:hover {
-      background: #a1a1a6;
-    }
+    .table-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
+    .table-wrap::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 6px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: #b0b4b8; border-radius: 6px; }
+    .table-wrap::-webkit-scrollbar-thumb:hover { background: #a1a1a6; }
 
     /* =========================
    RESPONSIVE
@@ -352,13 +282,13 @@
 
       tbody td {
         max-width: 150px;
-        font-size: 12px;
-        padding: 10px;
+        font-size: 13px;
+        padding: 14px;
       }
 
       thead th {
-        font-size: 11px;
-        padding: 12px 10px;
+        font-size: 12px;
+        padding: 14px;
       }
     }
   </style>

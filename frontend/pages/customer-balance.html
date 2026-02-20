@@ -6,7 +6,7 @@
   <title>Customer Balance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * { box-sizing: border-box; font-family: Segoe UI, Arial, sans-serif; font-size: 13px; }
+    * { box-sizing: border-box; font-family: Segoe UI, Arial, sans-serif; font-size: 14px; }
     body { margin: 0; background: #e6ebf2; }
     .workspace { background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important; }
 
@@ -28,20 +28,21 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 12px;
-      padding: 16px;
-      border-bottom: 1px solid #e5e7eb;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 2px solid #d1d6de;
       background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
       flex-shrink: 0;
     }
-    .balance-toolbar h2 { margin: 0; font-size: 18px; font-weight: 600; color: #1d1d1f; flex: 1; }
+    .balance-toolbar h2 { margin: 0; font-size: 20px; font-weight: 600; color: #1d1d1f; flex: 1; }
+    .balance-toolbar .toolbar-subtitle { font-size: 14px; color: #6e6e73; }
     .btn {
-      padding: 8px 16px;
+      padding: 10px 18px;
       border: 1px solid #d1d6de;
       background: #fff;
       cursor: pointer;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
       color: #1d1d1f;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -49,15 +50,15 @@
     }
     .btn:hover { background: #007aff; border-color: #007aff; color: #fff; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2); }
     .btn:active { transform: translateY(0); }
-    label { font-size: 13px; color: #3a3a3c; font-weight: 500; white-space: nowrap; }
+    label { font-size: 14px; color: #3a3a3c; font-weight: 500; white-space: nowrap; }
     input {
-      height: 36px;
-      padding: 6px 12px;
+      height: 40px;
+      padding: 8px 14px;
       border: 1px solid #d1d6de;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 14px;
       background: #fff;
-      min-width: 160px;
+      min-width: 180px;
     }
     input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12); }
     input::placeholder { color: #8e8e93; }
@@ -68,48 +69,52 @@
       min-height: 0;
       background: #fff;
     }
-    table { width: 100%; min-width: 900px; border-collapse: separate; border-spacing: 0; background: #fff; }
-    thead { position: sticky; top: 0; z-index: 10; background: #fff; }
+    table { width: 100%; min-width: 920px; border-collapse: collapse; background: #fff; table-layout: fixed; }
+    thead { position: sticky; top: 0; z-index: 10; background: #fff; box-shadow: 0 1px 0 0 #c5c9ce; }
     thead th {
-      background: linear-gradient(to bottom, #f8f9fb, #f0f2f5);
-      border-bottom: 2px solid #d1d6de;
-      padding: 12px 10px;
+      background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
+      border: 1px solid #c5c9ce;
+      padding: 18px;
       white-space: nowrap;
       font-weight: 600;
-      font-size: 12px;
+      font-size: 13px;
       text-align: left;
       color: #1d1d1f;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.04em;
     }
     thead th.center { text-align: center; }
     thead th.right { text-align: right; }
     tbody td {
-      padding: 10px;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 13px;
+      padding: 18px;
+      border: 1px solid #d1d6de;
+      font-size: 14px;
       vertical-align: middle;
       color: #333;
+      line-height: 1.35;
     }
-    tbody td:nth-child(4), tbody td:nth-child(5) { max-width: 160px; white-space: normal; word-break: break-word; line-height: 1.4; }
+    tbody td:nth-child(4), tbody td:nth-child(5) { white-space: normal; word-break: break-word; }
     tbody tr { transition: background 0.2s; background: #fff; }
-    tbody tr:nth-child(even) { background: #fafbfc; }
+    tbody tr:nth-child(even) { background: #f8f9fb; }
     tbody tr:hover { background: #e8f2ff; }
-    tbody tr:hover td { border-bottom-color: #d1e7ff; }
+    tbody tr:hover td { border-color: #b8d4f0; }
     .center { text-align: center; }
     .right { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
-    .empty-state { padding: 40px 20px; text-align: center; color: #8e8e93; font-size: 14px; }
-    .footer { padding: 12px 16px; font-size: 13px; color: #6e6e73; border-top: 1px solid #e5e7eb; background: #fafbfc; flex-shrink: 0; }
+    .amount-rate-diff { font-size: 13px; font-weight: 600; color: #28a745; }
+    .empty-state { padding: 48px 24px; text-align: center; color: #6e6e73; font-size: 15px; line-height: 1.5; }
+    .footer { padding: 14px 20px; font-size: 14px; color: #6e6e73; border-top: 2px solid #d1d6de; background: #f5f7fa; flex-shrink: 0; }
     .mark-cell { display: flex; align-items: center; justify-content: center; }
-    .mark-cell input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #007aff; margin: 0; }
-    .table-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
-    .table-wrap::-webkit-scrollbar-track { background: #f5f5f7; border-radius: 5px; }
-    .table-wrap::-webkit-scrollbar-thumb { background: #c1c1c6; border-radius: 5px; }
+    .mark-cell input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #007aff; margin: 0; }
+    .table-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
+    .table-wrap::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 6px; }
+    .table-wrap::-webkit-scrollbar-thumb { background: #b0b4b8; border-radius: 6px; }
     @media (max-width: 768px) {
       .customer-balance-wrap { margin: 8px; height: calc(100vh - 16px); max-height: calc(100vh - 16px); }
       .workspace .customer-balance-wrap { margin: 0; height: 100%; max-height: 100%; }
-      .balance-toolbar { padding: 12px; gap: 8px; }
-      input { min-width: 120px; }
+      .balance-toolbar { padding: 14px; gap: 10px; }
+      .balance-toolbar h2 { font-size: 18px; }
+      input { min-width: 140px; font-size: 14px; }
+      tbody td, thead th { padding: 14px; font-size: 13px; }
     }
   </style>
 </head>
@@ -118,7 +123,7 @@
   <div class="customer-balance-wrap">
     <div class="balance-toolbar">
       <h2>Customer Balance</h2>
-      <span style="font-size:12px; color:#6e6e73;">One row per customer — balance from Add Customer / Transfers</span>
+      <span class="toolbar-subtitle">One row per customer — balance from Add Customer / Transfers</span>
       <button type="button" class="btn" onclick="loadTable()">🔄 Refresh</button>
       <label for="customerBalanceSearch">Search</label>
       <input id="customerBalanceSearch" type="text" placeholder="Name, phone, mobile, station…" onkeyup="filterRows()">
@@ -128,15 +133,15 @@
       <table>
         <thead>
           <tr>
-            <th class="center" style="width:50px;">Serial No.</th>
-            <th class="center" style="width:60px;">Marks</th>
-            <th style="width:80px;">LF No.</th>
-            <th>Name</th>
-            <th>Relation and Name</th>
-            <th style="width:100px;">Station</th>
-            <th style="width:100px;">Phone no.</th>
-            <th style="width:100px;">Mobile</th>
-            <th class="right" style="width:100px;">Amount</th>
+            <th class="center" style="width:8%;">Serial No.</th>
+            <th class="center" style="width:7%;">Marks</th>
+            <th style="width:8%;">LF No.</th>
+            <th style="width:12%;">Name</th>
+            <th style="width:14%;">Relation and Name</th>
+            <th style="width:12%;">Station</th>
+            <th style="width:11%;">Phone no.</th>
+            <th style="width:11%;">Mobile</th>
+            <th class="right" style="width:17%;">Amount</th>
           </tr>
         </thead>
         <tbody id="customerBalanceTableBody"></tbody>
@@ -147,8 +152,10 @@
   </div>
 
   <script>
-    // CUSTOMER BALANCE: Uses "customers" only. One row per customer. Separate page from All Bill.
+    // CUSTOMER BALANCE: Uses "customers" list — one row per customer. Balance from Add Customer / Transfers.
+    // When a bill is transferred from Ready Order with Rate Diff, Amount column shows Amount − Rate Diff in green.
     const CUSTOMERS_KEY = "customers";
+    const BALANCES_KEY = "customerBalances";
 
     let tbody = null;
     let footer = null;
@@ -170,6 +177,14 @@
     function getCustomers() {
       try {
         return JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function getCustomerBalances() {
+      try {
+        return JSON.parse(localStorage.getItem(BALANCES_KEY) || "[]");
       } catch (e) {
         return [];
       }
@@ -203,13 +218,36 @@
         setTimeout(loadTable, 100);
         return;
       }
+      const balances = getCustomerBalances();
       const customers = getCustomers();
-      const sorted = [...customers].sort((a, b) => ((a.name || "").toLowerCase() > (b.name || "").toLowerCase() ? 1 : -1));
+      const norm = (s) => (s || "").trim().toLowerCase();
 
-      function getCustomerIndex(cust) {
-        const k = customers.findIndex(c => c === cust || (c.id != null && c.id === cust.id));
-        return k >= 0 ? k : 0;
-      }
+      // One row per customer from Add Customer list — data saves and shows here
+      const rows = customers.map((c) => {
+        const name = (c.name || "").trim();
+        const customerEntries = balances.filter((b) => norm(b.customer) === norm(name));
+        const amount = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
+        const amountMinusRateDiffSum = customerEntries.reduce((sum, b) => {
+          const v = b.amountMinusRateDiff != null && b.amountMinusRateDiff !== "" ? Number(b.amountMinusRateDiff) : NaN;
+          return Number.isNaN(v) ? sum : sum + v;
+        }, 0);
+        const amountMinusRateDiff = (amountMinusRateDiffSum > 0 || amountMinusRateDiffSum < 0) ? amountMinusRateDiffSum : null;
+        return {
+          name,
+          lfno: c.lfno || "—",
+          relation: c.relation || "—",
+          relationName: c.relationName || "—",
+          station: c.station || "—",
+          phone: c.phone || "—",
+          mobile: c.mobile || "—",
+          amount,
+          amountMinusRateDiff,
+          mark: c.mark || "—",
+          id: c.id != null ? c.id : null
+        };
+      });
+
+      const sorted = [...rows].sort((a, b) => ((a.name || "").toLowerCase() > (b.name || "").toLowerCase() ? 1 : -1));
 
       if (sorted.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No customers yet. Add customers in <strong>Add Customer</strong>. Balances update when you use <strong>Transfers</strong> in Ready Order.</td></tr>';
@@ -218,25 +256,27 @@
       }
 
       tbody.innerHTML = "";
-      sorted.forEach((c, i) => {
+      sorted.forEach((r, i) => {
         const sn = i + 1;
-        const markVal = c.mark || "—";
+        const markVal = r.mark || "—";
         const isChecked = markVal !== "—" && markVal !== "" && markVal;
-        const origIdx = getCustomerIndex(c);
-        const id = (c.id != null ? String(c.id) : "idx-" + origIdx).replace(/"/g, "&quot;");
-        const relName = relationAndName(c);
+        const id = (r.id != null ? String(r.id) : "idx-" + i).replace(/"/g, "&quot;");
+        const relName = (r.relation + " " + (r.relationName || "")).trim() || "—";
         const tr = document.createElement("tr");
-        tr.dataset.customerId = c.id != null ? c.id : i;
+        tr.dataset.customerId = r.id != null ? r.id : i;
+        const amountCell = r.amountMinusRateDiff != null
+          ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + "</span>"
+          : formatAmount(r.amount);
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
           '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-customer-id="' + id + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
-          "<td>" + (c.lfno || "—") + "</td>" +
-          "<td>" + (c.name || "—") + "</td>" +
+          "<td>" + (r.lfno || "—") + "</td>" +
+          "<td>" + (r.name || "—") + "</td>" +
           "<td>" + relName + "</td>" +
-          "<td>" + (c.station || "—") + "</td>" +
-          "<td>" + (c.phone || "—") + "</td>" +
-          "<td>" + (c.mobile || "—") + "</td>" +
-          '<td class="right">' + formatAmount(c.openingBalance) + "</td>";
+          "<td>" + (r.station || "—") + "</td>" +
+          "<td>" + (r.phone || "—") + "</td>" +
+          "<td>" + (r.mobile || "—") + "</td>" +
+          '<td class="right">' + amountCell + "</td>";
         tbody.appendChild(tr);
       });
 
@@ -246,7 +286,7 @@
     function saveMarkCheckbox(checkbox) {
       const idStr = checkbox.getAttribute("data-customer-id");
       const customers = getCustomers();
-      let idx = customers.findIndex(c => String(c.id) === idStr);
+      let idx = customers.findIndex((c) => String(c.id) === idStr);
       if (idx < 0 && idStr.indexOf("idx-") === 0) idx = parseInt(idStr.replace("idx-", ""), 10);
       if (idx < 0 || idx >= customers.length) return;
       customers[idx].mark = checkbox.checked ? "✓" : "—";
@@ -288,6 +328,7 @@
     }
     window.addEventListener("pageRefresh", function () { setTimeout(loadTable, 100); });
     window.addEventListener("customersUpdated", function () { setTimeout(loadTable, 100); });
+    window.addEventListener("customerBalancesUpdated", function () { setTimeout(loadTable, 100); });
   </script>
 </body>
 

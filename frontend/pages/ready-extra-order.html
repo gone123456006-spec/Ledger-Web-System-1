@@ -2436,6 +2436,17 @@
       const targetCustomerName = getCustomerName();
       const targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
 
+      const rateBookDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
+      let rateDiffResult = 0;
+      if (rateBookDiffStored) {
+        const match = rateBookDiffStored.match(/=\s*([-\u2212]?\s*[\d.]+)/);
+        if (match) {
+          const numStr = (match[1] || "").replace(/\u2212/g, "-").replace(/\s/g, "");
+          rateDiffResult = parseFloat(numStr) || 0;
+        }
+      }
+      const amountMinusRateDiffVal = rateBookDiffStored ? (billTotal - Math.abs(rateDiffResult)) : null;
+
       const balanceEntry = {
         orderNo: billNo.value,
         customer: targetCustomerName,
@@ -2457,6 +2468,7 @@
         cid: targetCust ? (targetCust.cid || "—") : "—",
         mark: targetCust ? (targetCust.mark || "—") : "—"
       };
+      if (amountMinusRateDiffVal != null) balanceEntry.amountMinusRateDiff = parseFloat(amountMinusRateDiffVal).toFixed(2);
       delete balanceEntry.rate;
 
       if (balanceIndex >= 0) {
@@ -2764,6 +2776,17 @@
       const targetCustomerName = getCustomerName();
       const targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
 
+      const rateBookDiffStoredSave = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
+      let rateDiffResultSave = 0;
+      if (rateBookDiffStoredSave) {
+        const matchSave = rateBookDiffStoredSave.match(/=\s*([-\u2212]?\s*[\d.]+)/);
+        if (matchSave) {
+          const numStrSave = (matchSave[1] || "").replace(/\u2212/g, "-").replace(/\s/g, "");
+          rateDiffResultSave = parseFloat(numStrSave) || 0;
+        }
+      }
+      const amountMinusRateDiffSave = rateBookDiffStoredSave ? (billTotal - Math.abs(rateDiffResultSave)) : null;
+
       const balanceEntry = {
         orderNo: billNo.value,
         customer: targetCustomerName,
@@ -2776,7 +2799,6 @@
         payment: advanceTotal > 0 ? "Partial" : "Pending",
         narration: `${orderType} - ${totalPc} pcs`,
         transferred: true, // AUTOMATICALLY MARK AS TRANSFERRED
-        // Store additional fields
         phone: targetCust?.phone || custName.value || "—",
         mobile: targetCust?.mobile || targetCust?.phone || "—",
         station: targetCust?.station || station?.value || "—",
@@ -2785,6 +2807,7 @@
         lfno: targetCust?.lfno || "—",
         cid: targetCust?.cid || "—"
       };
+      if (amountMinusRateDiffSave != null) balanceEntry.amountMinusRateDiff = parseFloat(amountMinusRateDiffSave).toFixed(2);
       delete balanceEntry.rate;
 
       if (balanceIndex >= 0) {

@@ -11,7 +11,7 @@
 *{
   box-sizing:border-box;
   font-family:Segoe UI, Arial, sans-serif;
-  font-size:13px;
+  font-size:14px;
 }
 
 body{
@@ -57,9 +57,9 @@ body{
   display:flex;
   flex-wrap:wrap;
   align-items:center;
-  gap:12px;
-  padding:16px;
-  border-bottom:1px solid #e5e7eb;
+  gap:14px;
+  padding:18px 20px;
+  border-bottom:2px solid #d1d6de;
   background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
   flex-shrink:0;
   box-sizing:border-box;
@@ -71,19 +71,19 @@ body{
 
 .ready-toolbar h2{
   margin:0;
-  font-size:18px;
+  font-size:20px;
   font-weight:600;
   color:#1d1d1f !important;
   flex:1;
 }
 
 .btn{
-  padding:8px 16px;
+  padding:10px 18px;
   border:1px solid #d1d6de;
   background:#fff;
   cursor:pointer;
   border-radius:8px;
-  font-size:13px;
+  font-size:14px;
   font-weight:500;
   transition:all 0.2s;
   color:#1d1d1f !important;
@@ -104,11 +104,11 @@ body{
 }
 
 input{
-  height:36px;
-  padding:6px 12px;
+  height:40px;
+  padding:8px 14px;
   border:1px solid #d1d6de;
   border-radius:8px;
-  font-size:13px;
+  font-size:14px;
   background:#fff;
   transition:all 0.2s;
   min-width:200px;
@@ -143,9 +143,7 @@ input::placeholder{
 table{
   width:100%;
   min-width:1000px;
-  border-collapse:separate;
-  border-spacing:0;
-  table-layout:auto;
+  border-collapse:collapse;
   background:#fff !important;
 }
 
@@ -158,6 +156,7 @@ thead{
   top:0;
   z-index:10;
   background:#fff !important;
+  box-shadow:0 1px 0 0 #c5c9ce;
 }
 
 .workspace .ready-orders-wrap thead{
@@ -165,46 +164,38 @@ thead{
 }
 
 thead th{
-  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
-  border-bottom:2px solid #d1d6de;
-  padding:14px 12px;
+  background:linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
+  border:1px solid #c5c9ce;
+  padding:18px;
   white-space:nowrap;
-  position:sticky;
-  top:0;
-  z-index:10;
   font-weight:600;
-  font-size:12px;
+  font-size:13px;
   text-align:left;
   color:#1d1d1f !important;
   text-transform:uppercase;
-  letter-spacing:0.3px;
+  letter-spacing:0.04em;
 }
 
 .workspace .ready-orders-wrap thead th{
-  background:linear-gradient(to bottom, #f8f9fb, #f0f2f5) !important;
+  background:linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
   color:#1d1d1f !important;
 }
 
-thead th.center{
-  text-align:center;
-}
-
-thead th.right{
-  text-align:right;
-}
+thead th.center{ text-align:center; }
+thead th.right{ text-align:right; }
 
 tbody td{
-  padding:12px;
-  border-bottom:1px solid #f0f0f0;
+  padding:18px;
+  border:1px solid #d1d6de;
+  font-size:14px;
+  vertical-align:middle;
+  color:#333 !important;
+  background:transparent !important;
+  line-height:1.35;
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
   max-width:200px;
-  font-size:13px;
-  vertical-align:middle;
-  color:#333 !important;
-  background:transparent !important;
-  transition:all 0.15s ease;
 }
 
 .workspace .ready-orders-wrap tbody td{
@@ -216,39 +207,28 @@ tbody td:nth-child(5){
   max-width:250px;
   white-space:normal;
   word-break:break-word;
-  line-height:1.4;
 }
 
 tbody tr{
-  transition:all 0.2s ease;
+  transition:background 0.2s;
   background:#fff !important;
   cursor:pointer;
 }
 
 tbody tr:nth-child(even){
-  background:#fafbfc !important;
-}
-
-.workspace .ready-orders-wrap tbody tr{
-  background:#fff !important;
+  background:#f8f9fb !important;
 }
 
 .workspace .ready-orders-wrap tbody tr:nth-child(even){
-  background:#fafbfc !important;
+  background:#f8f9fb !important;
 }
 
 tbody tr:hover{ 
   background:#e8f2ff !important;
-  transform:scale(1.001);
-  box-shadow:0 2px 4px rgba(0,0,0,0.05);
 }
 
 tbody tr:hover td{
-  border-bottom-color:#d1e7ff;
-}
-
-tbody tr:last-child td{
-  border-bottom:none;
+  border-color:#b8d4f0;
 }
 
 tbody tr td:first-child{
@@ -332,46 +312,31 @@ tbody tr td:last-child{
 }
 
 /* =========================
-   FOOTER
+   FOOTER (Customer Balance style)
 ========================= */
 .footer{
-  padding:12px 16px;
-  font-size:13px;
+  padding:14px 20px;
+  font-size:14px;
   color:#6e6e73 !important;
-  border-top:1px solid #e5e7eb;
-  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+  border-top:2px solid #d1d6de;
+  background:#f5f7fa !important;
   flex-shrink:0;
   box-sizing:border-box;
   font-weight:500;
 }
 
 .workspace .ready-orders-wrap .footer{
-  background:linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+  background:#f5f7fa !important;
   color:#6e6e73 !important;
 }
 
 /* =========================
-   SCROLLBAR STYLING
+   SCROLLBAR (Customer Balance style)
 ========================= */
-.table-wrap::-webkit-scrollbar{
-  width:10px;
-  height:10px;
-}
-
-.table-wrap::-webkit-scrollbar-track{
-  background:#f5f5f7;
-  border-radius:5px;
-}
-
-.table-wrap::-webkit-scrollbar-thumb{
-  background:#c1c1c6;
-  border-radius:5px;
-  border:2px solid #f5f5f7;
-}
-
-.table-wrap::-webkit-scrollbar-thumb:hover{
-  background:#a1a1a6;
-}
+.table-wrap::-webkit-scrollbar{ width:12px; height:12px; }
+.table-wrap::-webkit-scrollbar-track{ background:#f0f2f5; border-radius:6px; }
+.table-wrap::-webkit-scrollbar-thumb{ background:#b0b4b8; border-radius:6px; }
+.table-wrap::-webkit-scrollbar-thumb:hover{ background:#a1a1a6; }
 
 /* =========================
    RESPONSIVE
