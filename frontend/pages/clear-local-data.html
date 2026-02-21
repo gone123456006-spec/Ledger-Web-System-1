@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clear All Local Data – Clean System</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 2rem auto; padding: 1.5rem; background: #f8f9fa; }
+    h1 { font-size: 1.35rem; color: #c00; margin-top: 0; }
+    p { color: #333; line-height: 1.5; }
+    .card { background: #fff; padding: 1.25rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    button { padding: 0.6rem 1.2rem; font-size: 1rem; cursor: pointer; margin: 0.5rem 0.25rem 0 0; border-radius: 6px; }
+    .danger { background: #c00; color: #fff; border: none; }
+    .danger:hover { background: #a00; }
+    .primary { background: #2563eb; color: #fff; border: none; }
+    .primary:hover { background: #1d4ed8; }
+    .done { color: #0a0; font-weight: bold; margin-top: 1rem; }
+    .muted { color: #666; font-size: 0.9rem; margin-top: 1rem; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Clear all local data</h1>
+    <p>This removes <strong>all</strong> data stored in this browser for the Ledger app: orders, bills, customers, payments, ratebook, drafts, edit state, and any other local/session data. Use this to fix local bugs and start with a clean system.</p>
+    <button type="button" class="danger" id="clearBtn">Delete all local data</button>
+    <p id="result"></p>
+    <p id="next" class="muted" style="display:none;">
+      <a href="#" id="linkDashboard">← Back to Dashboard</a> or <button type="button" class="primary" id="goDashboard">Go to Dashboard</button>
+    </p>
+  </div>
+
+  <script>
+    (function() {
+      function clearAll() {
+        try {
+          for (var i = localStorage.length - 1; i >= 0; i--) {
+            var k = localStorage.key(i);
+            if (k) localStorage.removeItem(k);
+          }
+          localStorage.clear();
+        } catch (e) {}
+        try {
+          for (var j = sessionStorage.length - 1; j >= 0; j--) {
+            var k2 = sessionStorage.key(j);
+            if (k2) sessionStorage.removeItem(k2);
+          }
+          sessionStorage.clear();
+        } catch (e) {}
+      }
+
+      function goDashboard() {
+        clearAll();
+        if (typeof loadPage === 'function') {
+          loadPage('dashboard.html');
+        } else if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
+          window.parent.loadPage('dashboard.html');
+        } else {
+          window.location.href = 'index.html';
+        }
+      }
+
+      document.getElementById('clearBtn').onclick = function() {
+        clearAll();
+        document.getElementById('result').className = 'done';
+        document.getElementById('result').textContent = 'All local data has been deleted. System is clean.';
+        document.getElementById('clearBtn').disabled = true;
+        document.getElementById('next').style.display = 'block';
+      };
+
+      document.getElementById('goDashboard').onclick = function() {
+        goDashboard();
+      };
+
+      document.getElementById('linkDashboard').onclick = function(e) {
+        e.preventDefault();
+        goDashboard();
+      };
+    })();
+  </script>
+</body>
+</html>

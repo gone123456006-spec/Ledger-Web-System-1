@@ -57,7 +57,12 @@
 
             <li class="menu-item" onclick="showInfo('Transactions module coming soon')">Transactions</li>
             <li class="menu-item" onclick="showInfo('Reports module coming soon')">Reports</li>
-            <li class="menu-item" onclick="showInfo('Tools module coming soon')">Tools</li>
+            <li class="menu-item has-submenu">
+                Tools
+                <ul class="submenu right">
+                    <li onclick="loadPage('pages/clear-local-data.html')">Clear local data (clean system)</li>
+                </ul>
+            </li>
             <li class="menu-item" onclick="showInfo('Settings module coming soon')">Settings</li>
             <li class="menu-item" onclick="showInfo('Help module coming soon')">Help</li>
 
