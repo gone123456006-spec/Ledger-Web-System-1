@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Item Process</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* =========================
+       BASE
+    ========================= */
+        * {
+            box-sizing: border-box;
+            font-family: Segoe UI, Arial, sans-serif;
+            font-size: 14px;
+        }
+
+        body {
+            margin: 0;
+            background: #e6ebf2;
+        }
+
+        .workspace {
+            background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
+        }
+
+        /* =========================
+       CONTAINER
+    ========================= */
+        .process-items-wrap {
+            margin: 15px;
+            background: #fff !important;
+            border: 1px solid #d1d6de;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 30px);
+            max-height: calc(100vh - 30px);
+            overflow: hidden;
+            box-sizing: border-box;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .workspace .process-items-wrap {
+            margin: 0 !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #fff !important;
+            border: none !important;
+        }
+
+        /* =========================
+       TOOLBAR
+    ========================= */
+        .process-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 20px;
+            border-bottom: 2px solid #d1d6de;
+            background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+            flex-shrink: 0;
+            box-sizing: border-box;
+        }
+
+        .workspace .process-items-wrap .process-toolbar {
+            background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+        }
+
+        .process-toolbar h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f !important;
+            flex: 1;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: 1px solid #d1d6de;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: #1d1d1f !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn:hover {
+            background: #007aff;
+            border-color: #007aff;
+            color: #fff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"] {
+            height: 40px;
+            padding: 8px 14px;
+            border: 1px solid #d1d6de;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+            transition: all 0.2s;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+        }
+
+        input[type="text"]::placeholder {
+            color: #8e8e93;
+        }
+
+        /* =========================
+       TABLE
+    ========================= */
+        .table-wrap {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            min-height: 0;
+            box-sizing: border-box;
+            background: #fff !important;
+        }
+
+        .workspace .process-items-wrap .table-wrap {
+            background: #fff !important;
+        }
+
+        table {
+            width: 100%;
+            min-width: 1400px;
+            border-collapse: collapse;
+            background: #fff !important;
+        }
+
+        .workspace .process-items-wrap table {
+            background: #fff !important;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: #fff !important;
+            box-shadow: 0 1px 0 0 #c5c9ce;
+        }
+
+        .workspace .process-items-wrap thead {
+            background: #fff !important;
+        }
+
+        thead th {
+            background: linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
+            border: 1px solid #c5c9ce;
+            padding: 18px;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: left;
+            color: #1d1d1f !important;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        thead th.center {
+            text-align: center;
+        }
+
+        thead th.right {
+            text-align: right;
+        }
+
+        tbody td {
+            padding: 18px;
+            border: 1px solid #d1d6de;
+            font-size: 14px;
+            vertical-align: middle;
+            color: #333 !important;
+            background: transparent !important;
+            line-height: 1.35;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        tbody td.col-item-name,
+        tbody td.col-sample {
+            max-width: 220px;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .workspace .process-items-wrap tbody td {
+            color: #333 !important;
+            background: transparent !important;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+            background: #fff !important;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fb !important;
+        }
+
+        tbody tr:hover {
+            background: #e8f2ff !important;
+        }
+
+        tbody tr:hover td {
+            border-color: #b8d4f0;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+            font-weight: 500;
+            color: #1d1d1f !important;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge.process {
+            background: #e1f0fa;
+            color: #0060a8;
+            border: 1px solid #9ccaf0;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-subtext {
+            font-size: 13px;
+            color: #8e8e93;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 14px 20px;
+            font-size: 14px;
+            color: #6e6e73 !important;
+            border-top: 2px solid #d1d6de;
+            background: #f5f7fa !important;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            font-weight: 500;
+        }
+
+        .table-wrap::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .table-wrap::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 6px;
+        }
+
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: #b0b4b8;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="process-items-wrap">
+        <div class="process-toolbar">
+            <h2>⚙️ Item Process</h2>
+            <input type="text" id="searchBox" placeholder="🔍 Search by item, job worker, order..."
+                onkeyup="filterTable()">
+            <button class="btn" onclick="loadProcessItems()">🔄 Refresh</button>
+        </div>
+
+        <div class="table-wrap">
+            <table id="processItemsTable">
+                <thead>
+                    <tr>
+                        <th class="center">Status</th>
+                        <th class="right">Qty</th>
+                        <th>Item Name</th>
+                        <th>Sample details</th>
+                        <th>Design</th>
+                        <th class="right">Est. unit weight</th>
+                        <th class="right">Est. total weight</th>
+                        <th>Job Worker</th>
+                        <th>Assigned Date</th>
+                        <th>Order number</th>
+                        <th>Customer name</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Filled by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer" id="footerText">
+            No items in process
+        </div>
+    </div>
+
+    <script>
+        let tbody = null;
+        let footer = null;
+
+        function initElements() {
+            const workspace = document.querySelector('.workspace');
+            const wrap = workspace ? workspace.querySelector('.process-items-wrap') : null;
+            const root = wrap || document;
+            tbody = root.querySelector('#tableBody');
+            footer = root.querySelector('#footerText');
+            if (!tbody) tbody = document.getElementById('tableBody');
+            if (!footer) footer = document.getElementById('footerText');
+            return !!(tbody && footer);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            try {
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function escapeHtml(str) {
+            if (str == null || str === '') return '—';
+            const s = String(str);
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function loadProcessItems() {
+            if (!tbody && !initElements()) {
+                setTimeout(loadProcessItems, 100);
+                return;
+            }
+            tbody.innerHTML = '';
+
+            try {
+                const items = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+
+                if (items.length === 0) {
+                    tbody.innerHTML = `
+            <tr>
+              <td colspan="11" style="border:none;">
+                <div class="empty-state">
+                  <div class="empty-state-icon">⚙️</div>
+                  <div class="empty-state-text">No Items in Process</div>
+                  <div class="empty-state-subtext">Items assigned to Job Workers will appear here</div>
+                </div>
+              </td>
+            </tr>
+          `;
+                    if (footer) footer.textContent = 'No items in process';
+                    return;
+                }
+
+                items.forEach(r => {
+                    const tr = document.createElement('tr');
+                    tr.dataset.search = [r.itemName, r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
+                    tr.innerHTML = `
+            <td class="center"><span class="badge process">In Process</span></td>
+            <td class="right">${r.qty.toFixed(0)}</td>
+            <td class="col-item-name">${escapeHtml(r.itemName)}</td>
+            <td class="col-sample">${escapeHtml(r.sampleDetails)}</td>
+            <td>${escapeHtml(r.design)}</td>
+            <td class="right">${r.estUnitWt.toFixed(3)}</td>
+            <td class="right">${r.estTotalWt.toFixed(3)}</td>
+            <td style="font-weight:bold; color:#00508c !important;">${escapeHtml(r.jobworkerName)}</td>
+            <td>${formatDate(r.assignedDate)}</td>
+            <td>${escapeHtml(r.orderNo)}</td>
+            <td>${escapeHtml(r.customerName)}</td>
+          `;
+                    tbody.appendChild(tr);
+                });
+
+                if (footer) footer.textContent = `${items.length} item(s) in process`;
+                filterTable();
+            } catch (e) {
+                console.error('Error loading process items:', e);
+                tbody.innerHTML = `<tr><td colspan="11" class="empty-state">Error loading data.</td></tr>`;
+                if (footer) footer.textContent = 'Error';
+            }
+        }
+
+        function filterTable() {
+            if (!tbody || !tbody.querySelector('tr[data-search]')) return;
+            const searchEl = document.getElementById('searchBox');
+            const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+            const trs = tbody.querySelectorAll('tr[data-search]');
+            trs.forEach(tr => {
+                const show = !query || (tr.dataset.search && tr.dataset.search.indexOf(query) !== -1);
+                tr.style.display = show ? '' : 'none';
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(loadProcessItems, 50));
+        } else {
+            setTimeout(loadProcessItems, 50);
+        }
+
+        window.addEventListener('storage', e => {
+            if (e.key === 'itemProcess') loadProcessItems();
+        });
+        window.addEventListener('pageRefresh', () => setTimeout(loadProcessItems, 150));
+
+        if (typeof ensureFunctionsGlobal === 'undefined') {
+            window.loadProcessItems = loadProcessItems;
+            window.filterTable = filterTable;
+        }
+    </script>
+</body>
+
+</html>

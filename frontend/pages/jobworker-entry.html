@@ -1,13 +1,785 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jobworker Entry</title>
+  <style>
+    :root {
+      --bg: #f8f9fc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-soft: rgba(59, 130, 246, 0.1);
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 10000;
+      transform: translateY(100px);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: var(--success);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    /* PAGE */
+    .app {
+      width: 100%;
+      padding: 16px 12px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    /* TWO-COLUMN GRID */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* BOX */
+    .box {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+      animation: fadeIn .35s ease;
+    }
+
+    .box-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* FORM ROWS */
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .row label {
+      min-width: 100px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .required-star {
+      color: var(--danger);
+    }
+
+    .row input,
+    .row select,
+    .row textarea {
+      flex: 1;
+      height: 40px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      background: #fff;
+      transition: .2s;
+      color: var(--text);
+    }
+
+    .row textarea {
+      height: 140px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .row select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 32px;
+    }
+
+    .row input:focus,
+    .row select:focus,
+    .row textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    .row input[readonly],
+    .row input:disabled {
+      background: #f5f5f7;
+      cursor: not-allowed;
+    }
+
+    /* Name row: input + add-button */
+    .name-wrap {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+    }
+
+    .name-wrap input {
+      flex: 1;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #eef4ff;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 16px;
+      transition: .2s;
+    }
+
+    .icon-btn:hover {
+      background: #dce9ff;
+    }
+
+    /* Hint bar */
+    .hint-bar {
+      margin-top: 2px;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--card);
+      border-radius: 0 0 var(--radius) var(--radius);
+      border: 1px solid var(--border);
+      border-top: none;
+    }
+
+    .hint-bar span {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    /* Name dropdown: all job workers from list */
+    .jw-dropdown-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .jw-dropdown-wrap input {
+      width: 100%;
+    }
+
+    .jw-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      max-height: 220px;
+      overflow-y: auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      display: none;
+    }
+
+    .jw-dropdown.show {
+      display: block;
+    }
+
+    .jw-dropdown div {
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .jw-dropdown div:last-child {
+      border-bottom: none;
+    }
+
+    .jw-dropdown div:hover {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .jw-dropdown-empty {
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: default;
+    }
+
+    /* ACTION BUTTONS */
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      margin-top: 4px;
+    }
+
+    .actions button {
+      min-width: 110px;
+      height: 38px;
+      padding: 6px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: .2s;
+      font-weight: 500;
+    }
+
+    .actions button:hover:not(:disabled) {
+      background: #f5f5f7;
+      transform: translateY(-1px);
+    }
+
+    .actions button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .actions button.primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .actions button.success {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .actions button.success:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .actions button.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    .actions button.danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:900px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:600px) {
+      .app {
+        padding: 12px;
+      }
+
+      .row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .row label {
+        min-width: 100%;
+      }
+
+      .row input,
+      .row select,
+      .row textarea {
+        width: 100%;
+      }
+
+      .name-wrap {
+        width: 100%;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .actions button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <div style="padding:30px;font-family:Segoe UI,Arial,sans-serif">
-    <h2>Jobworker Entry</h2>
-    <p>This module is not implemented yet.</p>
+
+  <div id="toastMsg" class="toast"></div>
+
+  <div class="app">
+
+    <div class="page-title">Entry</div>
+
+    <div class="form-grid">
+
+      <!-- LEFT: Jobworker Details -->
+      <div class="box">
+        <div class="box-title">JobWorker Details</div>
+
+        <!-- Name: all names from Job Worker List; on select, Relation/Address/Station/Phone/Mobile auto-fill -->
+        <div class="row">
+          <label>Name <span class="required-star">*</span></label>
+          <div class="name-wrap">
+            <div class="jw-dropdown-wrap">
+              <input id="jwName" list="jwNameList" placeholder="Select from Job Worker list only"
+                oninput="onJwNameInput(); filterJwDropdown();" onchange="onJwNameInput()" onfocus="showJwDropdown()"
+                required>
+              <datalist id="jwNameList"></datalist>
+              <div id="jwDropdown" class="jw-dropdown" role="listbox"></div>
+            </div>
+            <button class="icon-btn" title="Add new Job Worker (Ctrl+M)" onclick="addJobworker()">➕</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>Relation</label>
+          <input id="jwRelation" readonly placeholder="—">
+        </div>
+
+        <div class="row" style="align-items:flex-start;">
+          <label style="padding-top:8px;">Address <span class="required-star">*</span></label>
+          <textarea id="jwAddress" readonly placeholder="—"></textarea>
+        </div>
+
+        <div class="row">
+          <label>Station <span class="required-star">*</span></label>
+          <input id="jwStation" readonly placeholder="—">
+        </div>
+
+        <div class="row">
+          <label>Phone No</label>
+          <input id="jwPhone" readonly placeholder="—">
+        </div>
+
+        <div class="row">
+          <label>Mobile</label>
+          <input id="jwMobile" readonly placeholder="—">
+        </div>
+      </div>
+
+      <!-- RIGHT: Entry Details -->
+      <div class="box">
+        <div class="box-title">Entry Details</div>
+
+        <div class="row">
+          <label>Date <span class="required-star">*</span></label>
+          <input id="entryDate" type="date" required>
+        </div>
+
+        <div class="row">
+          <label>Metal</label>
+          <input id="entryMetal" type="number" step="0.001" min="0" placeholder="0.000">
+        </div>
+
+        <div class="row">
+          <label>Chain</label>
+          <input id="entryChain" type="number" step="0.001" min="0" placeholder="0.000">
+        </div>
+
+        <div class="row">
+          <label>Nag</label>
+          <input id="entryNag" type="number" step="0.001" min="0" placeholder="0.000">
+        </div>
+
+        <div class="row">
+          <label>Maal</label>
+          <input id="entryMaal" type="number" step="0.001" min="0" placeholder="0.000">
+        </div>
+
+        <div class="row" style="align-items:flex-start;">
+          <label style="padding-top:8px;">Narration</label>
+          <textarea id="entryNarration" placeholder="Enter narration..."></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="actions">
+      <button class="primary" onclick="saveAndClose()">Save And Close</button>
+      <button class="success" onclick="saveAndNew()">Save And New</button>
+      <button onclick="resetForm()">Reset</button>
+      <button class="danger" onclick="closeForm()">Close</button>
+    </div>
+
+    <!-- Hint -->
+    <div class="hint-bar"><span>Ctrl + M :</span> Add Job Worker</div>
+
   </div>
+
+  <script>
+    (function () {
+
+      // ── TOAST ──────────────────────────────────────
+      function showToast(msg, type = 'success') {
+        const t = document.getElementById('toastMsg');
+        t.textContent = msg;
+        t.className = 'toast ' + type + ' show';
+        setTimeout(() => t.classList.remove('show'), 3000);
+      }
+
+      // ── LOAD JOBWORKERS FROM JOB WORKER LIST (localStorage jobworkers) ───
+      let _jwData = [];
+
+      function loadJobworkers() {
+        _jwData = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        const dl = document.getElementById('jwNameList');
+        if (!dl) return;
+        dl.innerHTML = _jwData.map(function (jw) {
+          var name = (jw.name || '').replace(/"/g, '&quot;');
+          return '<option value="' + name + '" data-id="' + (jw.id != null ? jw.id : '') + '">';
+        }).join('');
+      }
+
+      function refreshJobworkerList() {
+        loadJobworkers();
+        fillJwDropdown(_jwData);
+      }
+      window.refreshJobworkerList = refreshJobworkerList;
+
+      function fillJwDropdown(list, isFiltered) {
+        var el = document.getElementById('jwDropdown');
+        if (!el) return;
+        list = list || _jwData;
+        if (list.length === 0) {
+          var msg = isFiltered ? 'No matching name in Job Worker list.' : 'No names in Job Worker list. Add from Job Worker List first.';
+          el.innerHTML = '<div class="jw-dropdown-empty">' + msg + '</div>';
+          return;
+        }
+        el.innerHTML = list.map(function (jw) {
+          var name = (jw.name || '—').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+          return '<div role="option" data-name="' + name + '" onclick="selectJwFromNode(this)">' + name + '</div>';
+        }).join('');
+      }
+
+      function selectJwFromNode(node) {
+        var name = node && node.getAttribute('data-name');
+        if (name != null) selectJwName(name);
+      }
+      window.selectJwFromNode = selectJwFromNode;
+
+      function showJwDropdown() {
+        loadJobworkers();
+        fillJwDropdown(_jwData);
+        var el = document.getElementById('jwDropdown');
+        if (el) el.classList.add('show');
+      }
+
+      function filterJwDropdown() {
+        var q = (document.getElementById('jwName').value || '').trim().toLowerCase();
+        var list = q ? _jwData.filter(function (j) { return (j.name || '').toLowerCase().indexOf(q) !== -1; }) : _jwData;
+        fillJwDropdown(list, !!q);
+        var el = document.getElementById('jwDropdown');
+        if (el) el.classList.add('show');
+      }
+
+      function selectJwName(name) {
+        var input = document.getElementById('jwName');
+        if (input) {
+          input.value = name;
+          onJwNameInput();
+        }
+        var el = document.getElementById('jwDropdown');
+        if (el) el.classList.remove('show');
+      }
+      window.selectJwName = selectJwName;
+
+      document.addEventListener('click', function (e) {
+        var wrap = document.querySelector('.jw-dropdown-wrap');
+        var dd = document.getElementById('jwDropdown');
+        if (dd && wrap && !wrap.contains(e.target)) dd.classList.remove('show');
+      });
+
+      // ── ON NAME SELECT/TYPE: FETCH DETAILS FROM JOB WORKER LIST ─────────
+      function onJwNameInput() {
+        var nameEl = document.getElementById('jwName');
+        var name = (nameEl && nameEl.value) ? nameEl.value.trim() : '';
+        var jw = _jwData.find(function (j) {
+          return (j.name || '').trim().toLowerCase() === name.toLowerCase();
+        });
+
+        if (jw) {
+          var rel = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim() || '—';
+          document.getElementById('jwRelation').value = rel;
+          document.getElementById('jwAddress').value = jw.address || '—';
+          document.getElementById('jwStation').value = jw.station || '—';
+          document.getElementById('jwPhone').value = jw.phone || '—';
+          document.getElementById('jwMobile').value = jw.mobile || '—';
+        } else {
+          clearJWFields();
+        }
+      }
+      window.onJwNameInput = onJwNameInput;
+
+      function getFormRoot() {
+        return document.querySelector('.workspace .app') || document.querySelector('.workspace') || document;
+      }
+      function clearJWFields() {
+        var root = getFormRoot();
+        ['jwRelation', 'jwAddress', 'jwStation', 'jwPhone', 'jwMobile'].forEach(function (id) {
+          var el = root.querySelector('#' + id);
+          if (el) el.value = '';
+        });
+      }
+
+      // ── ADD JOBWORKER ──────────────────────────────
+      function addJobworker() {
+        if (typeof loadPage === 'function') {
+          loadPage('pages/add-jobworker.html');
+        } else {
+          window.open('/pages/add-jobworker.html', 'AddJobworker', 'width=900,height=620');
+        }
+      }
+      window.addJobworker = addJobworker;
+
+      // ── VALIDATE ───────────────────────────────────
+      function validate() {
+        const name = document.getElementById('jwName').value.trim();
+        const date = document.getElementById('entryDate').value;
+        const jw = _jwData.find(j => j.name.toLowerCase() === name.toLowerCase());
+
+        if (!name) { showToast('Please select a Job Worker', 'error'); return false; }
+        if (!jw) { showToast('Job Worker not found. Add them first.', 'error'); return false; }
+        if (!date) { showToast('Date is required', 'error'); return false; }
+        return jw;
+      }
+
+      // ── COLLECT DATA ───────────────────────────────
+      function collectData(jw) {
+        return {
+          id: Date.now(),
+          jobworkerId: jw.id,
+          jobworkerName: jw.name,
+          date: document.getElementById('entryDate').value,
+          metal: parseFloat(document.getElementById('entryMetal').value) || 0,
+          chain: parseFloat(document.getElementById('entryChain').value) || 0,
+          nag: parseFloat(document.getElementById('entryNag').value) || 0,
+          maal: parseFloat(document.getElementById('entryMaal').value) || 0,
+          narration: document.getElementById('entryNarration').value.trim(),
+          createdAt: new Date().toISOString()
+        };
+      }
+
+      // ── SYNC TO JOBWORKER BALANCE (on save, update balance row with opening + all entries) ──
+      var BALANCE_STORE = 'jobworkerBalances';
+      function num(v) { var n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
+      function syncToJobworkerBalance(jw) {
+        var entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        var forJw = entries.filter(function (e) {
+          return e.jobworkerId === jw.id || String(e.jobworkerId) === String(jw.id);
+        });
+        var sumMetal = forJw.reduce(function (a, e) { return a + num(e.metal); }, 0);
+        var sumChain = forJw.reduce(function (a, e) { return a + num(e.chain); }, 0);
+        var sumNag = forJw.reduce(function (a, e) { return a + num(e.nag); }, 0);
+        var sumMaal = forJw.reduce(function (a, e) { return a + num(e.maal); }, 0);
+        var obMetal = num(jw.obMetal);
+        var obChain = num(jw.obChain);
+        var obNag = num(jw.obNag);
+        var obMaal = num(jw.obMaal);
+        var metal = obMetal + sumMetal;
+        var chain = obChain + sumChain;
+        var nag = obNag + sumNag;
+        var maal = obMaal + sumMaal;
+        var relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim() || '';
+        var jwId = (jw.jwId || '').trim();
+        var name = (jw.name || '').trim();
+        var lfNo = (jw.lfNo != null && jw.lfNo !== '') ? String(jw.lfNo) : '';
+        var station = (jw.station || '').trim();
+        var balances = JSON.parse(localStorage.getItem(BALANCE_STORE) || '[]');
+        var existing = balances.filter(function (r) {
+          return (r.jwId || '').trim() === jwId || (r.name || '').trim().toLowerCase() === name.toLowerCase();
+        })[0];
+        if (existing) {
+          existing.jwId = jwId;
+          existing.name = name;
+          existing.lfNo = lfNo;
+          existing.relation = relation;
+          existing.station = station;
+          existing.metal = metal;
+          existing.chain = chain;
+          existing.nag = nag;
+          existing.maal = maal;
+        } else {
+          balances.push({
+            id: Date.now(),
+            mark: false,
+            jwId: jwId,
+            name: name,
+            lfNo: lfNo,
+            relation: relation,
+            station: station,
+            metal: metal,
+            chain: chain,
+            nag: nag,
+            maal: maal
+          });
+        }
+        localStorage.setItem(BALANCE_STORE, JSON.stringify(balances));
+      }
+
+      // ── SAVE ───────────────────────────────────────
+      function save() {
+        var jw = validate();
+        if (!jw) return false;
+        var data = collectData(jw);
+        var list = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        list.push(data);
+        localStorage.setItem('jobworkerEntries', JSON.stringify(list));
+        syncToJobworkerBalance(jw);
+        showToast('Entry saved! Saved to Jobworker Balance too.');
+        return true;
+      }
+
+      // ── RESET ENTRY FIELDS (keep JW info) ─────────
+      function resetEntryFields() {
+        var root = getFormRoot();
+        var set = function (id, val) { var el = root.querySelector('#' + id); if (el) el.value = val; };
+        set('entryDate', new Date().toISOString().slice(0, 10));
+        set('entryMetal', '');
+        set('entryChain', '');
+        set('entryNag', '');
+        set('entryMaal', '');
+        set('entryNarration', '');
+      }
+
+      function resetAll() {
+        var root = getFormRoot();
+        var nameEl = root.querySelector('#jwName');
+        if (nameEl) nameEl.value = '';
+        clearJWFields();
+        resetEntryFields();
+        if (nameEl) nameEl.focus();
+
+        // Clear persistence so drafts don't reappear on reload
+        if (window.FormPersistence) {
+          try { window.FormPersistence.getInstance().clear(); } catch (e) { }
+        }
+      }
+
+      // ── CLOSE ──────────────────────────────────────
+      function goBack() {
+        if (typeof loadPage === 'function') loadPage('pages/advanced.html');
+        else window.history.back();
+      }
+
+      // ── BUTTON HANDLERS: clear form on each action so next visit or new entry is clean ──
+      window.saveAndClose = function () {
+        if (save()) {
+          resetAll();
+          goBack();
+        }
+      };
+      window.saveAndNew = function () {
+        if (save()) {
+          resetAll();
+          document.getElementById('jwName').focus();
+        }
+      };
+      window.resetForm = function () {
+        if (confirm('Reset all fields? All data will be cleared.')) resetAll();
+      };
+      window.closeForm = function () {
+        resetAll();
+        goBack();
+      };
+
+      // ── KEYBOARD SHORTCUT: Ctrl+M = Add Jobworker ──
+      document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.key.toLowerCase() === 'm') {
+          e.preventDefault();
+          addJobworker();
+        }
+      });
+
+      // ── INIT: when opened from sidebar or any visit, clear form so data is reset ──
+      try { sessionStorage.removeItem('jobworkerFormClear'); } catch (e) { }
+      resetAll();
+      document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
+      loadJobworkers();
+
+      // Refresh if a new JW was added in another tab
+      window.addEventListener('storage', function (e) {
+        if (e.key === 'jobworkers') loadJobworkers();
+      });
+
+    })();
+  </script>
+
 </body>
+
 </html>

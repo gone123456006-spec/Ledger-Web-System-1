@@ -1,13 +1,743 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <title>Add Jobworker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Job Worker</title>
+  <style>
+    :root {
+      --bg: #f8f9fc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-soft: rgba(59, 130, 246, 0.1);
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 10000;
+      transform: translateY(100px);
+      transition: transform 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: var(--success);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    /* ── PAGE WRAPPER ── */
+    .app {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 16px 12px;
+    }
+
+    /* ── PAGE TITLE ── */
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ── TWO-COLUMN LAYOUT ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* ── CARD / BOX ── */
+    .box {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+      animation: fadeIn .35s ease;
+    }
+
+    .box-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* ── FORM ROWS ── */
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .row label {
+      min-width: 130px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .row .required-star {
+      color: var(--danger);
+    }
+
+    .row input,
+    .row select,
+    .row textarea {
+      flex: 1;
+      height: 40px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      background: #fff;
+      transition: .2s;
+      color: var(--text);
+    }
+
+    .row textarea {
+      height: 140px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .row select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 32px;
+      appearance: none;
+    }
+
+    .row select:hover {
+      border-color: var(--primary);
+      background-color: #f8faff;
+    }
+
+    .row input:focus,
+    .row select:focus,
+    .row textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    .row input[readonly],
+    .row input:disabled {
+      background: #f5f5f7;
+      cursor: not-allowed;
+    }
+
+    /* Relation row: two inputs side by side */
+    .relation-wrap {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+    }
+
+    .relation-wrap select {
+      flex: 0 0 90px;
+    }
+
+    .relation-wrap input {
+      flex: 1;
+    }
+
+    /* Phone icon button */
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #eef4ff;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 16px;
+      transition: .2s;
+    }
+
+    .icon-btn:hover {
+      background: #dce9ff;
+    }
+
+    /* ── OPENING BALANCE TABLE-STYLE ── */
+    .ob-grid {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0;
+    }
+
+    .ob-grid .ob-label {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 7px 0;
+      display: flex;
+      align-items: center;
+    }
+
+    .ob-grid .ob-input {
+      padding: 4px 0 4px 8px;
+    }
+
+    .ob-grid .ob-input input {
+      width: 100%;
+      height: 34px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+      background: #fff;
+      transition: .2s;
+    }
+
+    .ob-grid .ob-input input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    /* ── ACTION BUTTONS ── */
+    .actions {
+      margin-top: 4px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .actions button {
+      min-width: 110px;
+      height: 38px;
+      padding: 6px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: .2s;
+      font-weight: 500;
+    }
+
+    .actions button:hover:not(:disabled) {
+      background: #f5f5f7;
+      transform: translateY(-1px);
+    }
+
+    .actions button.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .actions button.primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .actions button.success {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .actions button.success:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    .actions button.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+
+    .actions button.danger:hover:not(:disabled) {
+      background: #dc2626;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:600px) {
+      .app {
+        padding: 12px;
+      }
+
+      .row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .row label {
+        min-width: 100%;
+      }
+
+      .row input,
+      .row select,
+      .row textarea {
+        width: 100%;
+      }
+
+      .relation-wrap {
+        width: 100%;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .actions button {
+        width: 100%;
+      }
+
+      .page-title {
+        font-size: 16px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <div style="padding:30px;font-family:Segoe UI,Arial,sans-serif">
-    <h2>Add Jobworker</h2>
-    <p>This module is not implemented yet.</p>
+
+  <div id="toastMsg" class="toast"></div>
+
+  <div class="app">
+
+    <div class="page-title">
+      <span>Job Worker</span>
+      <button type="button" class="primary" onclick="goToJobworkerList()" style="height:36px; padding:0 14px;">Job
+        Worker List</button>
+    </div>
+
+    <div class="form-grid">
+
+      <!-- ── LEFT COLUMN ── -->
+      <div>
+
+        <!-- Personal -->
+        <div class="box" style="margin-bottom:16px;">
+          <div class="box-title">Personal</div>
+
+          <div class="row">
+            <label>Jobworker Id <span class="required-star">*</span></label>
+            <input id="jwId" readonly placeholder="Auto-generated">
+          </div>
+
+          <div class="row">
+            <label>Name <span class="required-star">*</span></label>
+            <input id="jwName" placeholder="Full name" required>
+          </div>
+
+          <div class="row">
+            <label>Relation</label>
+            <div class="relation-wrap">
+              <select id="jwRelationType">
+                <option value="">—</option>
+                <option value="S/O">S/O</option>
+                <option value="D/O">D/O</option>
+                <option value="W/O">W/O</option>
+                <option value="C/O">C/O</option>
+              </select>
+              <input id="jwRelationName" placeholder="Relation name">
+            </div>
+          </div>
+
+          <div class="row">
+            <label>LF No <span class="required-star">*</span></label>
+            <input id="jwLfNo" type="number" placeholder="Ledger folio number" required>
+          </div>
+        </div>
+
+        <!-- Opening Balance -->
+        <div class="box">
+          <div class="box-title">Opening Balance</div>
+
+          <div class="row">
+            <label>Date</label>
+            <input id="jwObDate" type="date">
+          </div>
+
+          <div class="ob-grid">
+            <div class="ob-label">Metal</div>
+            <div class="ob-input"><input id="jwObMetal" type="number" step="0.001" placeholder="0.000"></div>
+
+            <div class="ob-label">Chain</div>
+            <div class="ob-input"><input id="jwObChain" type="number" step="0.001" placeholder="0.000"></div>
+
+            <div class="ob-label">Nag</div>
+            <div class="ob-input"><input id="jwObNag" type="number" step="0.001" placeholder="0.000"></div>
+
+            <div class="ob-label">Maal</div>
+            <div class="ob-input"><input id="jwObMaal" type="number" step="0.001" placeholder="0.000"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT COLUMN ── -->
+      <div class="box">
+        <div class="box-title">Contact</div>
+
+        <div class="row">
+          <label>Address <span class="required-star">*</span></label>
+          <textarea id="jwAddress" placeholder="Full address..."></textarea>
+        </div>
+
+        <div class="row">
+          <label>Station <span class="required-star">*</span></label>
+          <input id="jwStation" list="stationList" placeholder="City / Station">
+          <datalist id="stationList"></datalist>
+          <button class="icon-btn" title="Refresh stations" onclick="loadStations()">🌐</button>
+        </div>
+
+        <div class="row">
+          <label>Phone No</label>
+          <input id="jwPhone" type="tel" placeholder="Phone number">
+        </div>
+
+        <div class="row">
+          <label>Mobile No</label>
+          <input id="jwMobile" type="tel" placeholder="Mobile number">
+        </div>
+
+        <div class="row">
+          <label>Email Id</label>
+          <input id="jwEmail" type="email" placeholder="email@example.com">
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── ACTIONS ── -->
+    <div class="actions">
+      <button class="primary" onclick="saveAndClose()">Save And Close</button>
+      <button class="success" onclick="saveAndNew()">Save And New</button>
+      <button onclick="resetForm()">Reset</button>
+      <button class="danger" onclick="closeForm()">Close</button>
+    </div>
+
   </div>
+
+  <script>
+    (function () {
+
+      // ── TOAST ──────────────────────────────────────
+      function showToast(msg, type = 'success') {
+        const t = document.getElementById('toastMsg');
+        t.textContent = msg;
+        t.className = 'toast ' + type + ' show';
+        setTimeout(() => t.classList.remove('show'), 3000);
+      }
+
+      // ── AUTO ID GENERATION ─────────────────────────
+      function generateJWId() {
+        const last = localStorage.getItem('lastJobworkerId') || '0';
+        const next = Number(last) + 1;
+        // We don't commit until save
+        return 'SGJ/Jobworker/' + next;
+      }
+
+      // ── STATION SUGGESTIONS ────────────────────────
+      function loadStations() {
+        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+        const jobworkers = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        const all = [...customers, ...jobworkers];
+        const stations = [...new Set(all.map(x => x.station).filter(Boolean))].sort();
+        const dl = document.getElementById('stationList');
+        dl.innerHTML = stations.map(s => `<option value="${s}">`).join('');
+      }
+
+      // ── SET DATE DEFAULTS ──────────────────────────
+      function setDefaults() {
+        var root = getFormRoot();
+        var dateEl = root.querySelector('#jwObDate');
+        var idEl = root.querySelector('#jwId');
+        if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+        if (idEl) idEl.value = generateJWId();
+      }
+
+      // ── VALIDATE ───────────────────────────────────
+      function validate() {
+        const name = document.getElementById('jwName').value.trim();
+        const lfNo = document.getElementById('jwLfNo').value.trim();
+        const address = document.getElementById('jwAddress').value.trim();
+        const station = document.getElementById('jwStation').value.trim();
+
+        if (!name) { showToast('Name is required', 'error'); return false; }
+        if (!lfNo) { showToast('LF No is required', 'error'); return false; }
+        if (!address) { showToast('Address is required', 'error'); return false; }
+        if (!station) { showToast('Station is required', 'error'); return false; }
+        return true;
+      }
+
+      // ── EDIT MODE (from Job Worker List) ─────────────
+      function getEditPayload() {
+        try {
+          const id = localStorage.getItem('editJobworkerId');
+          const payload = localStorage.getItem('editJobworkerPayload');
+          if (id && payload) return { id: id, data: JSON.parse(payload) };
+        } catch (e) { }
+        return null;
+      }
+
+      function fillFormForEdit(editData) {
+        const j = editData;
+        document.getElementById('jwId').value = j.jwId || '';
+        document.getElementById('jwName').value = j.name || '';
+        document.getElementById('jwRelationName').value = j.relationName || '';
+        const relSelect = document.getElementById('jwRelationType');
+        if (relSelect) relSelect.value = j.relationType || '';
+        document.getElementById('jwLfNo').value = j.lfNo || '';
+        document.getElementById('jwObDate').value = (j.obDate || '').slice(0, 10);
+        document.getElementById('jwObMetal').value = j.obMetal != null ? j.obMetal : '';
+        document.getElementById('jwObChain').value = j.obChain != null ? j.obChain : '';
+        document.getElementById('jwObNag').value = j.obNag != null ? j.obNag : '';
+        document.getElementById('jwObMaal').value = j.obMaal != null ? j.obMaal : '';
+        document.getElementById('jwAddress').value = j.address || '';
+        document.getElementById('jwStation').value = j.station || '';
+        document.getElementById('jwPhone').value = j.phone || '';
+        document.getElementById('jwMobile').value = j.mobile || '';
+        document.getElementById('jwEmail').value = j.email || '';
+      }
+
+      // ── COLLECT DATA ───────────────────────────────
+      let editId = null;
+
+      function collectData() {
+        const base = {
+          jwId: document.getElementById('jwId').value.trim(),
+          name: document.getElementById('jwName').value.trim(),
+          relationType: document.getElementById('jwRelationType').value,
+          relationName: document.getElementById('jwRelationName').value.trim(),
+          lfNo: document.getElementById('jwLfNo').value.trim(),
+          obDate: document.getElementById('jwObDate').value,
+          obMetal: parseFloat(document.getElementById('jwObMetal').value) || 0,
+          obChain: parseFloat(document.getElementById('jwObChain').value) || 0,
+          obNag: parseFloat(document.getElementById('jwObNag').value) || 0,
+          obMaal: parseFloat(document.getElementById('jwObMaal').value) || 0,
+          address: document.getElementById('jwAddress').value.trim(),
+          station: document.getElementById('jwStation').value.trim(),
+          phone: document.getElementById('jwPhone').value.trim(),
+          mobile: document.getElementById('jwMobile').value.trim(),
+          email: document.getElementById('jwEmail').value.trim(),
+        };
+        const id = editId != null ? Number(editId) : Date.now();
+        let createdAt = new Date().toISOString();
+        if (editId) {
+          const ep = getEditPayload();
+          if (ep && ep.data && ep.data.createdAt) createdAt = ep.data.createdAt;
+        }
+        return { id: id, createdAt: createdAt, ...base };
+      }
+
+      // ── SAVE ───────────────────────────────────────
+      function save() {
+        if (!validate()) return null;
+
+        const data = collectData();
+        const list = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+
+        // Check duplicate LF No (when adding, or when editing and LF No changed to another's)
+        const duplicateLf = list.some(j => j.lfNo === data.lfNo && j.id !== data.id && String(j.id) !== String(data.id));
+        if (duplicateLf) {
+          showToast('LF No already exists!', 'error');
+          return null;
+        }
+
+        if (editId != null) {
+          const idx = list.findIndex(j => j.id === data.id || String(j.id) === String(data.id));
+          if (idx >= 0) {
+            list[idx] = data;
+            localStorage.setItem('jobworkers', JSON.stringify(list));
+            localStorage.removeItem('editJobworkerId');
+            localStorage.removeItem('editJobworkerPayload');
+            editId = null;
+            showToast('Job Worker updated successfully!', 'success');
+            return true;
+          }
+        }
+
+        // New record
+        const last = localStorage.getItem('lastJobworkerId') || '0';
+        localStorage.setItem('lastJobworkerId', String(Number(last) + 1));
+        list.push(data);
+        localStorage.setItem('jobworkers', JSON.stringify(list));
+        showToast('Job Worker saved successfully!', 'success');
+        return true;
+      }
+
+      function goToJobworkerList() {
+        if (typeof loadPage === 'function') {
+          loadPage('pages/jobworker-list.html');
+        } else if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
+          window.parent.loadPage('pages/jobworker-list.html');
+        } else {
+          window.location.href = 'jobworker-list.html';
+        }
+      }
+
+      // ── RESET / BLANK FORM (use root so we clear the form inside workspace when in dashboard) ─────────────────────────
+      function getFormRoot() {
+        return document.querySelector('.workspace .app') || document.querySelector('.workspace') || document;
+      }
+      function resetFields() {
+        localStorage.removeItem('editJobworkerId');
+        localStorage.removeItem('editJobworkerPayload');
+        editId = null;
+        var root = getFormRoot();
+        ['jwName', 'jwRelationName', 'jwLfNo', 'jwObMetal', 'jwObChain', 'jwObNag', 'jwObMaal',
+          'jwAddress', 'jwStation', 'jwPhone', 'jwMobile', 'jwEmail'].forEach(function (id) {
+            var el = root.querySelector('#' + id);
+            if (el) el.value = '';
+          });
+        var relSelect = root.querySelector('#jwRelationType');
+        if (relSelect) relSelect.selectedIndex = 0;
+        var jwIdEl = root.querySelector('#jwId');
+        if (jwIdEl) jwIdEl.value = generateJWId();
+        var dateEl = root.querySelector('#jwObDate');
+        if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+
+        // Clear persistence so drafts don't reappear on reload
+        if (window.FormPersistence) {
+          try { window.FormPersistence.getInstance().clear(); } catch (e) { }
+        }
+      }
+
+      // ── CLOSE / NAVIGATE BACK ──────────────────────
+      function goBack() {
+        if (typeof loadPage === 'function') {
+          loadPage('pages/advanced.html');
+        } else {
+          window.history.back();
+        }
+      }
+
+      // ── BUTTON HANDLERS: clear form on each action so next visit or new entry is clean ──
+      window.saveAndClose = function () {
+        if (save()) {
+          resetFields();
+          goBack();
+        }
+      };
+      window.saveAndNew = function () {
+        if (save()) {
+          resetFields();
+          var root = getFormRoot();
+          var nameEl = root.querySelector('#jwName');
+          if (nameEl) nameEl.focus();
+        }
+      };
+      window.resetForm = function () {
+        if (confirm('Reset all fields? All data will be cleared.')) resetFields();
+      };
+      window.closeForm = function () {
+        resetFields();
+        goBack();
+      };
+      window.loadStations = loadStations;
+      window.goToJobworkerList = goToJobworkerList;
+
+      // ── INIT: when opened from sidebar (jobworkerFormClear) or new visit, clear form; else restore edit if from list ──
+      // Clear persistence right away so second pass restore doesn't mess up edits or new forms
+      if (window.FormPersistence) {
+        try { window.FormPersistence.getInstance().clear(); } catch (e) { }
+      }
+
+      const fromSidebar = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('jobworkerFormClear');
+      if (fromSidebar) try { sessionStorage.removeItem('jobworkerFormClear'); } catch (e) { }
+      const editPayload = !fromSidebar && getEditPayload();
+      if (editPayload && editPayload.data) {
+        editId = editPayload.id;
+        fillFormForEdit(editPayload.data);
+      } else {
+        resetFields();
+        setDefaults();
+      }
+      loadStations();
+
+      // Refresh customer list if new customer was added in another tab
+      window.addEventListener('storage', function (e) {
+        if (e.key === 'customers' || e.key === 'jobworkers') loadStations();
+      });
+
+    })();
+  </script>
 </body>
+
 </html>

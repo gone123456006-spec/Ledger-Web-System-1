@@ -6,9 +6,6 @@
   <title>Pending Items</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* =========================
-       BASE
-    ========================= */
     * {
       box-sizing: border-box;
       font-family: Segoe UI, Arial, sans-serif;
@@ -24,12 +21,9 @@
       background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
     }
 
-    /* =========================
-       CONTAINER
-    ========================= */
     .pending-items-wrap {
       margin: 15px;
-      background: #fff !important;
+      background: #fff;
       border: 1px solid #d1d6de;
       border-radius: 12px;
       display: flex;
@@ -37,7 +31,6 @@
       height: calc(100vh - 30px);
       max-height: calc(100vh - 30px);
       overflow: hidden;
-      box-sizing: border-box;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
@@ -47,13 +40,10 @@
       max-height: 100% !important;
       border-radius: 0 !important;
       box-shadow: none !important;
-      background: #fff !important;
       border: none !important;
     }
 
-    /* =========================
-       TOOLBAR
-    ========================= */
+    /* TOOLBAR */
     .pending-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -61,20 +51,15 @@
       gap: 14px;
       padding: 18px 20px;
       border-bottom: 2px solid #d1d6de;
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
       flex-shrink: 0;
-      box-sizing: border-box;
-    }
-
-    .workspace .pending-items-wrap .pending-toolbar {
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
     }
 
     .pending-toolbar h2 {
       margin: 0;
       font-size: 20px;
       font-weight: 600;
-      color: #1d1d1f !important;
+      color: #1d1d1f;
       flex: 1;
     }
 
@@ -87,24 +72,40 @@
       font-size: 14px;
       font-weight: 500;
       transition: all 0.2s;
-      color: #1d1d1f !important;
+      color: #1d1d1f;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     }
 
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       background: #007aff;
       border-color: #007aff;
-      color: #fff !important;
+      color: #fff;
       transform: translateY(-1px);
       box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
     }
 
-    .btn:active {
+    .btn:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
-    input {
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #007aff;
+      color: #fff;
+      border-color: #007aff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #005ecb;
+      border-color: #005ecb;
+    }
+
+    input[type="text"],
+    input[type="search"] {
       height: 40px;
       padding: 8px 14px;
       border: 1px solid #d1d6de;
@@ -125,68 +126,55 @@
       color: #8e8e93;
     }
 
-    /* =========================
-       TABLE
-    ========================= */
+    /* TABLE */
     .table-wrap {
       flex: 1;
       overflow: auto;
       position: relative;
       min-height: 0;
-      box-sizing: border-box;
-      background: #fff !important;
-    }
-
-    .workspace .pending-items-wrap .table-wrap {
-      background: #fff !important;
+      background: #fff;
     }
 
     table {
       width: 100%;
       min-width: 1400px;
       border-collapse: collapse;
-      background: #fff !important;
-    }
-
-    .workspace .pending-items-wrap table {
-      background: #fff !important;
+      background: #fff;
     }
 
     thead {
       position: sticky;
       top: 0;
       z-index: 10;
-      background: #fff !important;
-      box-shadow: 0 1px 0 0 #c5c9ce;
-    }
-
-    .workspace .pending-items-wrap thead {
-      background: #fff !important;
     }
 
     thead th {
-      background: linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
+      background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
       border: 1px solid #c5c9ce;
-      padding: 18px;
+      padding: 14px 18px;
       white-space: nowrap;
       font-weight: 600;
       font-size: 13px;
       text-align: left;
-      color: #1d1d1f !important;
+      color: #1d1d1f;
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
-    thead th.center { text-align: center; }
-    thead th.right { text-align: right; }
+    thead th.center {
+      text-align: center;
+    }
+
+    thead th.right {
+      text-align: right;
+    }
 
     tbody td {
-      padding: 18px;
+      padding: 14px 18px;
       border: 1px solid #d1d6de;
       font-size: 14px;
       vertical-align: middle;
-      color: #333 !important;
-      background: transparent !important;
+      color: #333;
       line-height: 1.35;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -200,51 +188,71 @@
       word-break: break-word;
     }
 
-    .workspace .pending-items-wrap tbody td {
-      color: #333 !important;
-      background: transparent !important;
-    }
-
     tbody tr {
-      transition: background 0.2s;
-      background: #fff !important;
+      transition: background 0.15s;
+      background: #fff;
     }
 
     tbody tr:nth-child(even) {
-      background: #f8f9fb !important;
+      background: #f8f9fb;
     }
 
     tbody tr:hover {
       background: #e8f2ff !important;
     }
 
-    tbody tr:hover td {
-      border-color: #b8d4f0;
+    tbody tr.row-selected {
+      background: #dff0ff !important;
     }
 
-    .center { text-align: center; }
+    tbody tr.row-selected td {
+      border-color: #7ab8f5;
+    }
+
+    .center {
+      text-align: center;
+    }
+
     .right {
       text-align: right;
       font-weight: 500;
-      color: #1d1d1f !important;
       font-variant-numeric: tabular-nums;
     }
 
+    /* STATUS BADGE */
     .badge {
       padding: 4px 10px;
       border-radius: 20px;
       font-size: 12px;
       font-weight: 600;
       display: inline-block;
+      white-space: nowrap;
     }
 
-    .badge.pending {
+    .badge-pending {
       background: #fff4d6;
       color: #9a6a00;
       border: 1px solid #ffc107;
     }
 
-    /* Empty state */
+    .badge-selected {
+      background: #e3f0ff;
+      color: #0057c2;
+      border: 1px solid #007aff;
+    }
+
+    /* SELECTION COUNT PILL */
+    #selectionPill {
+      display: none;
+      background: #007aff;
+      color: #fff;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* EMPTY STATE */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -268,21 +276,200 @@
       color: #8e8e93;
     }
 
-    /* Footer (Customer Balance style) */
+    /* FOOTER */
     .footer {
       padding: 14px 20px;
       font-size: 14px;
-      color: #6e6e73 !important;
+      color: #6e6e73;
       border-top: 2px solid #d1d6de;
-      background: #f5f7fa !important;
+      background: #f5f7fa;
       flex-shrink: 0;
-      box-sizing: border-box;
       font-weight: 500;
     }
 
-    .table-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
-    .table-wrap::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb { background: #b0b4b8; border-radius: 6px; }
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #fff;
+      width: 440px;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      animation: modalIn 0.22s ease;
+    }
+
+    @keyframes modalIn {
+      from {
+        transform: scale(0.95) translateY(10px);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .modal-header {
+      padding: 18px 22px;
+      background: linear-gradient(to bottom, #f5f7fa, #eef1f5);
+      border-bottom: 1px solid #d1d6de;
+      font-weight: 700;
+      font-size: 16px;
+      color: #1d1d1f;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-body {
+      padding: 22px;
+    }
+
+    .modal-body label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .modal-body input {
+      width: 100%;
+      height: 44px;
+      padding: 10px 14px;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 22px;
+      border-top: 1px solid #e8eaed;
+      background: #fafbfc;
+    }
+
+    /* JW LIST */
+    .jw-list {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .jw-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #eee;
+    }
+
+    .jw-item:last-child {
+      border-bottom: none;
+    }
+
+    .jw-item:hover {
+      background: #f0f7ff;
+    }
+
+    .jw-item.selected {
+      background: #dff0ff;
+    }
+
+    .jw-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #007aff;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .jw-name-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .jw-name {
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    .jw-balance {
+      font-size: 11px;
+      color: #6e6e73;
+      margin-top: 3px;
+      font-weight: 500;
+      white-space: normal;
+    }
+
+    .jw-check {
+      margin-left: auto;
+      color: #007aff;
+      font-size: 18px;
+      display: none;
+    }
+
+    .jw-item.selected .jw-check {
+      display: block;
+    }
+
+    .assign-summary {
+      background: #f0f7ff;
+      border: 1px solid #b8d9f7;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: #0057c2;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f0f2f5;
+      border-radius: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #b0b4b8;
+      border-radius: 6px;
+    }
   </style>
 </head>
 
@@ -291,6 +478,8 @@
   <div class="pending-items-wrap">
     <div class="pending-toolbar">
       <h2>⏳ Pending Items</h2>
+      <span id="selectionPill">0 selected</span>
+      <button class="btn btn-primary" id="assignBtn" disabled onclick="openAssignModal()">✔ Assign Selected</button>
       <input type="text" id="searchBox" placeholder="🔍 Search by item, order, customer..." onkeyup="filterTable()">
       <button class="btn" onclick="loadPendingItems()">🔄 Refresh</button>
     </div>
@@ -299,110 +488,118 @@
       <table id="pendingItemsTable">
         <thead>
           <tr>
-            <th class="center">Mark</th>
-            <th class="center">Progress</th>
+            <th class="center" style="width:50px;">
+              <input type="checkbox" id="selectAllCb" onclick="toggleAllCb(this)"
+                style="transform:scale(1.2);cursor:pointer;min-width:auto;height:auto;padding:0;">
+            </th>
+            <th class="center">Status</th>
             <th class="right">Qty</th>
             <th>Item Name</th>
-            <th>Sample details</th>
+            <th>Sample Details</th>
             <th>Design</th>
-            <th class="right">Est. unit weight</th>
-            <th class="right">Est. total weight</th>
-            <th>Order number</th>
-            <th>Customer name</th>
-            <th>Order date</th>
-            <th>Due date</th>
+            <th class="right">Est. Unit Wt</th>
+            <th class="right">Est. Total Wt</th>
+            <th>Order No.</th>
+            <th>Customer</th>
+            <th>Order Date</th>
+            <th>Due Date</th>
           </tr>
         </thead>
-        <tbody id="tableBody">
-          <!-- Filled by JS -->
-        </tbody>
+        <tbody id="tableBody"></tbody>
       </table>
     </div>
 
-    <div class="footer" id="footerText">
-      No pending items
+    <div class="footer" id="footerText">No pending items</div>
+  </div>
+
+  <!-- ASSIGN MODAL -->
+  <div class="modal-overlay" id="assignModal">
+    <div class="modal-box">
+      <div class="modal-header">👷 Assign to Job Worker</div>
+      <div class="modal-body">
+        <div class="assign-summary" id="assignSummary"></div>
+        <label>Select Job Worker</label>
+        <input type="text" id="jwSearch" placeholder="🔍 Filter job workers..." oninput="filterJwList()">
+        <div class="jw-list" id="jwList"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeAssignModal()">Cancel</button>
+        <button class="btn btn-primary" id="confirmBtn" onclick="confirmAssign()">✔ Confirm Assign</button>
+      </div>
     </div>
   </div>
 
   <script>
-    let tbody = null;
-    let footer = null;
-
-    function initElements() {
-      const workspace = document.querySelector('.workspace');
-      const wrap = workspace ? workspace.querySelector('.pending-items-wrap') : null;
-      const root = wrap || document;
-      tbody = root.querySelector('#tableBody');
-      footer = root.querySelector('#footerText');
-      if (!tbody) tbody = document.getElementById('tableBody');
-      if (!footer) footer = document.getElementById('footerText');
-      return !!(tbody && footer);
-    }
+    let selectedJwId = null;
+    let selectedJwName = null;
 
     function formatDate(dateStr) {
       if (!dateStr) return '—';
       try {
         const d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
-        return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
-      } catch (e) {
-        return dateStr;
-      }
+        return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+      } catch (e) { return dateStr; }
+    }
+
+    function escapeHtml(str) {
+      if (str == null || str === '') return '—';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function updateSelectionUI() {
+      const cbs = document.querySelectorAll('.assign-cb:checked');
+      const count = cbs.length;
+      const pill = document.getElementById('selectionPill');
+      const btn = document.getElementById('assignBtn');
+      pill.style.display = count > 0 ? 'inline-block' : 'none';
+      pill.textContent = count + ' selected';
+      btn.disabled = count === 0;
     }
 
     function loadPendingItems() {
-      if (!tbody && !initElements()) {
-        setTimeout(loadPendingItems, 100);
-        return;
-      }
+      const tbody = document.getElementById('tableBody');
+      const footer = document.getElementById('footerText');
       tbody.innerHTML = '';
 
       try {
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         const pendingOrders = orders.filter(o => o && o.status === 'PENDING');
-
         const rows = [];
+
         pendingOrders.forEach(order => {
           const items = order.items || [];
           const orderNo = order.orderNo || order.billNo || '—';
           const customerName = order.customer || order.customerName || '—';
-          const orderDate = order.orderDate || '';
-          const dueDate = order.dueDate || '';
 
-          items.forEach(item => {
+          items.forEach((item, idx) => {
             if (!item || !item.values) return;
+            if (item.processAssigned === true) return;
             const v = item.values;
             rows.push({
-              mark: 'PENDING',
-              progress: 'Pending',
+              itemIdx: idx,
               qty: parseFloat(v[7]) || 0,
               itemName: (v[2] || '').trim() || '—',
               sampleDetails: (item.sample != null ? item.sample : (order.sampleDetails != null ? order.sampleDetails : '')) || '—',
               design: (v[5] || '').trim() || '—',
               estUnitWt: parseFloat(v[8]) || 0,
               estTotalWt: parseFloat(v[9]) || 0,
-              orderNo,
-              customerName,
-              orderDate,
-              dueDate,
+              orderNo, customerName,
+              orderDate: order.orderDate || '',
+              dueDate: order.dueDate || '',
               orderId: order.id
             });
           });
         });
 
         if (rows.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="12" style="border:none;">
-                <div class="empty-state">
-                  <div class="empty-state-icon">⏳</div>
-                  <div class="empty-state-text">No Pending Items</div>
-                  <div class="empty-state-subtext">Items from orders marked as PENDING (Orders → Mark) will appear here</div>
-                </div>
-              </td>
-            </tr>
-          `;
-          if (footer) footer.textContent = 'No pending items';
+          tbody.innerHTML = `<tr><td colspan="12" style="border:none;">
+          <div class="empty-state">
+            <div class="empty-state-icon">⏳</div>
+            <div class="empty-state-text">No Pending Items</div>
+            <div class="empty-state-subtext">Items from PENDING orders will appear here</div>
+          </div></td></tr>`;
+          footer.textContent = 'No pending items';
+          updateSelectionUI();
           return;
         }
 
@@ -411,65 +608,206 @@
           tr.dataset.orderId = r.orderId;
           tr.dataset.search = [r.itemName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
           tr.innerHTML = `
-            <td class="center"><span class="badge pending">${r.mark}</span></td>
-            <td class="center">${r.progress}</td>
-            <td class="right">${r.qty.toFixed(0)}</td>
-            <td class="col-item-name">${escapeHtml(r.itemName)}</td>
-            <td class="col-sample">${escapeHtml(r.sampleDetails)}</td>
-            <td>${escapeHtml(r.design)}</td>
-            <td class="right">${r.estUnitWt.toFixed(3)}</td>
-            <td class="right">${r.estTotalWt.toFixed(3)}</td>
-            <td>${escapeHtml(r.orderNo)}</td>
-            <td>${escapeHtml(r.customerName)}</td>
-            <td>${formatDate(r.orderDate)}</td>
-            <td>${formatDate(r.dueDate)}</td>
-          `;
+          <td class="center">
+            <input type="checkbox" class="assign-cb"
+              data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
+              onchange="onCbChange(this)"
+              style="transform:scale(1.3);cursor:pointer;min-width:auto;height:auto;padding:0;">
+          </td>
+          <td class="center"><span class="badge badge-pending" id="badge-${r.orderId}-${r.itemIdx}">Pending</span></td>
+          <td class="right">${r.qty.toFixed(0)}</td>
+          <td class="col-item-name">${escapeHtml(r.itemName)}</td>
+          <td class="col-sample">${escapeHtml(r.sampleDetails)}</td>
+          <td>${escapeHtml(r.design)}</td>
+          <td class="right">${r.estUnitWt.toFixed(3)}</td>
+          <td class="right">${r.estTotalWt.toFixed(3)}</td>
+          <td>${escapeHtml(r.orderNo)}</td>
+          <td>${escapeHtml(r.customerName)}</td>
+          <td>${formatDate(r.orderDate)}</td>
+          <td>${formatDate(r.dueDate)}</td>
+        `;
           tbody.appendChild(tr);
         });
 
-        if (footer) footer.textContent = `${rows.length} pending item(s)`;
+        footer.textContent = `${rows.length} pending item(s)`;
         filterTable();
+        updateSelectionUI();
       } catch (e) {
-        console.error('Error loading pending items:', e);
+        console.error(e);
         tbody.innerHTML = `<tr><td colspan="12" class="empty-state">Error loading data.</td></tr>`;
-        if (footer) footer.textContent = 'Error';
+        footer.textContent = 'Error';
       }
     }
 
-    function escapeHtml(str) {
-      if (str == null || str === '') return '—';
-      const s = String(str);
-      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function onCbChange(cb) {
+      const tr = cb.closest('tr');
+      const oId = cb.getAttribute('data-order-id');
+      const iIdx = cb.getAttribute('data-item-idx');
+      const badge = document.getElementById(`badge-${oId}-${iIdx}`);
+      if (cb.checked) {
+        tr.classList.add('row-selected');
+        if (badge) { badge.className = 'badge badge-selected'; badge.textContent = '✔ Selected'; }
+      } else {
+        tr.classList.remove('row-selected');
+        if (badge) { badge.className = 'badge badge-pending'; badge.textContent = 'Pending'; }
+      }
+      updateSelectionUI();
+      // Sync select-all checkbox
+      const all = document.querySelectorAll('.assign-cb:not([style*="display:none"])').length;
+      const checked = document.querySelectorAll('.assign-cb:checked').length;
+      document.getElementById('selectAllCb').checked = (all > 0 && checked === all);
     }
 
-    function filterTable() {
-      if (!tbody || !tbody.querySelector('tr[data-search]')) return;
-      const searchEl = document.getElementById('searchBox');
-      const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
-      const trs = tbody.querySelectorAll('tr[data-search]');
-      trs.forEach(tr => {
-        const show = !query || (tr.dataset.search && tr.dataset.search.indexOf(query) !== -1);
-        tr.style.display = show ? '' : 'none';
+    function toggleAllCb(source) {
+      const cbs = document.querySelectorAll('.assign-cb');
+      cbs.forEach(cb => {
+        if (cb.closest('tr').style.display !== 'none') {
+          cb.checked = source.checked;
+          onCbChange(cb);
+        }
       });
     }
 
+    function filterTable() {
+      const query = (document.getElementById('searchBox').value || '').toLowerCase().trim();
+      document.querySelectorAll('#tableBody tr[data-search]').forEach(tr => {
+        tr.style.display = (!query || tr.dataset.search.includes(query)) ? '' : 'none';
+      });
+    }
+
+    // MODAL
+    function openAssignModal() {
+      const checked = document.querySelectorAll('.assign-cb:checked');
+      if (checked.length === 0) return;
+
+      selectedJwId = null; selectedJwName = null;
+      document.getElementById('assignSummary').textContent = `${checked.length} item(s) will be assigned to the selected job worker.`;
+      document.getElementById('jwSearch').value = '';
+      renderJwList('');
+      document.getElementById('assignModal').classList.add('open');
+    }
+
+    function closeAssignModal() {
+      document.getElementById('assignModal').classList.remove('open');
+      selectedJwId = null; selectedJwName = null;
+    }
+
+    function renderJwList(filter) {
+      const jwList = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+      const container = document.getElementById('jwList');
+      const filtered = jwList.filter(jw => jw.name && jw.name.toLowerCase().includes(filter.toLowerCase()));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="padding:16px;text-align:center;color:#8e8e93;font-size:13px;">
+        ${jwList.length === 0 ? 'No job workers found. Add some in settings.' : 'No matches found.'}</div>`;
+        return;
+      }
+      container.innerHTML = filtered.map(jw => {
+        const initials = jw.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        const isSelected = selectedJwId === jw.id;
+
+        let balStrs = [];
+        if (Number(jw.obMetal)) balStrs.push('Metal: ' + Number(jw.obMetal).toFixed(3));
+        if (Number(jw.obChain)) balStrs.push('Chain: ' + Number(jw.obChain).toFixed(3));
+        if (Number(jw.obNag)) balStrs.push('Nag: ' + Number(jw.obNag).toFixed(3));
+        if (Number(jw.obMaal)) balStrs.push('Maal: ' + Number(jw.obMaal).toFixed(3));
+
+        const balHtml = balStrs.length > 0
+          ? `<div class="jw-balance">Bal: ${balStrs.join(' | ')}</div>`
+          : `<div class="jw-balance">Bal: 0.000</div>`;
+
+        return `<div class="jw-item ${isSelected ? 'selected' : ''}" onclick="selectJw('${jw.id}','${escapeJs(jw.name)}')">
+        <div class="jw-avatar">${initials}</div>
+        <div class="jw-name-col">
+          <div class="jw-name">${escapeHtml(jw.name)}</div>
+          ${balHtml}
+        </div>
+        <div class="jw-check">✔</div>
+      </div>`;
+      }).join('');
+    }
+
+    function escapeJs(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+
+    function filterJwList() {
+      renderJwList(document.getElementById('jwSearch').value || '');
+    }
+
+    function selectJw(id, name) {
+      selectedJwId = id; selectedJwName = name;
+      renderJwList(document.getElementById('jwSearch').value || '');
+    }
+
+    function confirmAssign() {
+      if (!selectedJwId || !selectedJwName) { alert('Please select a job worker.'); return; }
+      const checked = document.querySelectorAll('.assign-cb:checked');
+      if (checked.length === 0) { closeAssignModal(); return; }
+
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+      const now = new Date().toISOString();
+
+      checked.forEach(cb => {
+        const oId = cb.getAttribute('data-order-id');
+        const iIdx = parseInt(cb.getAttribute('data-item-idx'), 10);
+        const order = orders.find(o => o.id == oId);
+        if (!order || !order.items || !order.items[iIdx]) return;
+
+        const item = order.items[iIdx];
+        item.processAssigned = true;
+        item.assignedToId = selectedJwId;
+        item.assignedToName = selectedJwName;
+        item.assignedDate = now;
+
+        itemProcess.push({
+          id: Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+          orderId: oId,
+          orderNo: order.orderNo || order.billNo || '—',
+          customerName: order.customer || order.customerName || '—',
+          itemIdx: iIdx,
+          itemName: item.values[2] || '—',
+          qty: parseFloat(item.values[7]) || 0,
+          estUnitWt: parseFloat(item.values[8]) || 0,
+          estTotalWt: parseFloat(item.values[9]) || 0,
+          sampleDetails: item.sample || order.sampleDetails || '—',
+          design: item.values[5] || '—',
+          jobworkerId: selectedJwId,
+          jobworkerName: selectedJwName,
+          assignedDate: now,
+          orderDate: order.orderDate || '',
+          dueDate: order.dueDate || '',
+          status: 'ASSIGNED',
+          receivedQty: 0,
+          receivedWt: 0
+        });
+      });
+
+      localStorage.setItem('orders', JSON.stringify(orders));
+      localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
+
+      closeAssignModal();
+      document.getElementById('selectAllCb').checked = false;
+      loadPendingItems();
+      try { window.dispatchEvent(new Event('storage')); } catch (e) { }
+
+      const goToProcess = confirm(`✅ ${checked.length} item(s) assigned to ${selectedJwName}.\n\nOpen Item Process page now?`);
+      if (goToProcess) window.open('item-process.html', '_blank');
+    }
+
+    // Init
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => setTimeout(loadPendingItems, 50));
     } else {
       setTimeout(loadPendingItems, 50);
     }
 
-    window.addEventListener('storage', e => {
-      if (e.key === 'orders') loadPendingItems();
-    });
-    window.addEventListener('orderStatusChanged', () => loadPendingItems());
-    window.addEventListener('orderSaved', () => loadPendingItems());
+    window.addEventListener('storage', e => { if (e.key === 'orders') loadPendingItems(); });
+    window.addEventListener('orderStatusChanged', loadPendingItems);
+    window.addEventListener('orderSaved', loadPendingItems);
     window.addEventListener('pageRefresh', () => setTimeout(loadPendingItems, 150));
 
-    if (typeof ensureFunctionsGlobal === 'undefined') {
-      window.loadPendingItems = loadPendingItems;
-      window.filterTable = filterTable;
-    }
+    window.loadPendingItems = loadPendingItems;
+    window.filterTable = filterTable;
   </script>
 </body>
 

@@ -1,13 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jobworker Balance</title>
+  <style>
+    :root {
+      --bg: #f8f9fc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); }
+    .app { width: 100%; max-width: none; margin: 0; padding: 16px 12px; }
+    .page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .box { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); padding: 16px; }
+    .box-title { font-size: 15px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .list-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    .list-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+    }
+    .list-table th,
+    .list-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .list-table th { background: #f1f5f9; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .list-table tbody tr:hover { background: #f8faff; }
+    .list-table .col-mark { width: 5%; text-align: center; }
+    .list-table .col-id { width: 10%; }
+    .list-table .col-name { width: 10%; }
+    .list-table .col-lf { width: 6%; text-align: right; }
+    .list-table .col-relation { width: 10%; }
+    .list-table .col-station { width: 8%; }
+    .list-table .col-num { width: 7%; text-align: right; }
+    .empty-list { text-align: center; padding: 32px; color: var(--muted); }
+    .search-wrap { margin-bottom: 12px; }
+    .search-wrap input { width: 100%; max-width: 320px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
+    .search-wrap input:focus { outline: none; border-color: var(--primary); }
+    .list-table .balance-mark { cursor: pointer; width: 16px; height: 16px; }
+  </style>
 </head>
 <body>
-  <div style="padding:30px;font-family:Segoe UI,Arial,sans-serif">
-    <h2>Jobworker Balance</h2>
-    <p>This module is not implemented yet.</p>
+  <div class="app">
+    <div class="page-title">
+      <span>Jobworker Balance</span>
+      <button type="button" class="primary" onclick="addBalanceRow()" style="padding:8px 16px;">Add row</button>
+    </div>
+
+    <div class="box">
+      <div class="box-title">Balance (own data – not linked to Job Worker List)</div>
+      <div class="search-wrap">
+        <input type="text" id="searchInput" placeholder="Search by name, id, LF, station..." oninput="filterTable()">
+      </div>
+      <div class="list-table-wrap">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th class="col-mark">Mark</th>
+              <th class="col-id">Jobworker Id</th>
+              <th class="col-name">Name</th>
+              <th class="col-lf">LF</th>
+              <th class="col-relation">Relation with Name</th>
+              <th class="col-station">Station</th>
+              <th class="col-num">Metal</th>
+              <th class="col-num">Chain</th>
+              <th class="col-num">Nag</th>
+              <th class="col-num">Maal</th>
+            </tr>
+          </thead>
+          <tbody id="balanceTableBody"></tbody>
+        </table>
+      </div>
+      <div id="balanceEmpty" class="empty-list" style="display:none;">No balance rows. Click Add row to add.</div>
+    </div>
   </div>
+
+  <script>
+    (function () {
+      var STORE_KEY = 'jobworkerBalances';
+
+      function getBalances() {
+        return JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+      }
+
+      function saveBalances(list) {
+        localStorage.setItem(STORE_KEY, JSON.stringify(list));
+      }
+
+      function addBalanceRow() {
+        var list = getBalances();
+        list.push({
+          id: Date.now(),
+          mark: false,
+          jwId: '',
+          name: '',
+          lfNo: '',
+          relation: '',
+          station: '',
+          metal: 0,
+          chain: 0,
+          nag: 0,
+          maal: 0
+        });
+        saveBalances(list);
+        loadTable();
+      }
+      window.addBalanceRow = addBalanceRow;
+
+      function toggleMark(id) {
+        var list = getBalances();
+        var r = list.filter(function (x) { return x.id === id || String(x.id) === String(id); })[0];
+        if (r) { r.mark = !r.mark; saveBalances(list); loadTable(); }
+      }
+
+      var _allRows = [];
+
+      function renderTable(rows) {
+        var tbody = document.getElementById('balanceTableBody');
+        var emptyEl = document.getElementById('balanceEmpty');
+        if (!tbody) return;
+
+        if (rows.length === 0) {
+          tbody.innerHTML = '';
+          if (emptyEl) emptyEl.style.display = 'block';
+          return;
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+
+        tbody.innerHTML = rows.map(function (r) {
+          var id = r.id != null ? r.id : '';
+          var markChecked = r.mark ? ' checked' : '';
+          return '<tr>' +
+            '<td class="col-mark"><input type="checkbox" class="balance-mark" aria-label="Mark"' + markChecked + ' onclick="toggleMark(' + id + ')"></td>' +
+            '<td class="col-id">' + (r.jwId || '—') + '</td>' +
+            '<td class="col-name">' + (r.name || '—') + '</td>' +
+            '<td class="col-lf">' + (r.lfNo || '—') + '</td>' +
+            '<td class="col-relation">' + (r.relation || '—') + '</td>' +
+            '<td class="col-station">' + (r.station || '—') + '</td>' +
+            '<td class="col-num">' + (r.metal != null ? Number(r.metal).toFixed(3) : '—') + '</td>' +
+            '<td class="col-num">' + (r.chain != null ? Number(r.chain).toFixed(3) : '—') + '</td>' +
+            '<td class="col-num">' + (r.nag != null ? Number(r.nag).toFixed(3) : '—') + '</td>' +
+            '<td class="col-num">' + (r.maal != null ? Number(r.maal).toFixed(3) : '—') + '</td>' +
+            '</tr>';
+        }).join('');
+      }
+
+      function filterTable() {
+        var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+        var rows = q
+          ? _allRows.filter(function (r) {
+              return (r.jwId || '').toLowerCase().indexOf(q) !== -1 ||
+                     (r.name || '').toLowerCase().indexOf(q) !== -1 ||
+                     (r.lfNo || '').toLowerCase().indexOf(q) !== -1 ||
+                     (r.relation || '').toLowerCase().indexOf(q) !== -1 ||
+                     (r.station || '').toLowerCase().indexOf(q) !== -1;
+            })
+          : _allRows;
+        renderTable(rows);
+      }
+
+      function loadTable() {
+        _allRows = getBalances();
+        filterTable();
+      }
+      window.toggleMark = toggleMark;
+
+      loadTable();
+      window.addEventListener('storage', function (e) {
+        if (e.key === STORE_KEY) loadTable();
+      });
+    })();
+  </script>
 </body>
 </html>

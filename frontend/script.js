@@ -141,12 +141,26 @@ function initSidebarButtons() {
                     loadPage("pages/pending-items.html");
                     break;
 
+                case "item process":
+                    loadPage("pages/item-process.html");
+                    break;
+
                 case "add jobworker":
+                    try {
+                        localStorage.removeItem("editJobworkerId");
+                        localStorage.removeItem("editJobworkerPayload");
+                        sessionStorage.setItem("jobworkerFormClear", "1");
+                    } catch (e) { }
                     loadPage("pages/add-jobworker.html");
                     break;
 
                 case "jobworker entry":
+                    try { sessionStorage.setItem("jobworkerFormClear", "1"); } catch (e) { }
                     loadPage("pages/jobworker-entry.html");
+                    break;
+
+                case "job worker list":
+                    loadPage("pages/jobworker-list.html");
                     break;
 
                 case "jobworker balance":
@@ -259,6 +273,18 @@ function loadPage(pageUrl) {
         } catch (e2) {
             fetchUrl = pageUrl;
         }
+    }
+
+    // When leaving Add Jobworker or Jobworker Entry, set flag so form auto-resets on next visit
+    const currentPage = workspace.getAttribute('data-page') || '';
+    if (currentPage === 'add-jobworker' || currentPage === 'jobworker-entry') {
+        try {
+            sessionStorage.setItem('jobworkerFormClear', '1');
+            if (currentPage === 'add-jobworker') {
+                localStorage.removeItem('editJobworkerId');
+                localStorage.removeItem('editJobworkerPayload');
+            }
+        } catch (e) { }
     }
 
     // Clean up previous page: remove its globals and event listeners so no state overlaps
