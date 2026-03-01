@@ -119,22 +119,31 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
-        .btn-ready {
-            background: #34c759;
-            border-color: #34c759;
+        .btn-ready:disabled {
+            background: #a8e0b8;
+            border-color: #a8e0b8;
+            color: #fff !important;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-unready {
+            background: #ff3b30;
+            border-color: #ff3b30;
             color: #fff !important;
             font-weight: 600;
         }
 
-        .btn-ready:hover:not(:disabled) {
-            background: #28a745;
-            border-color: #28a745;
+        .btn-unready:hover:not(:disabled) {
+            background: #d32f2f;
+            border-color: #d32f2f;
             color: #fff !important;
         }
 
-        .btn-ready:disabled {
-            background: #a8e0b8;
-            border-color: #a8e0b8;
+        .btn-unready:disabled {
+            background: #ffb3b0;
+            border-color: #ffb3b0;
             color: #fff !important;
             cursor: not-allowed;
             transform: none;
@@ -160,6 +169,25 @@
 
         input[type="text"]::placeholder {
             color: #8e8e93;
+        }
+
+        select {
+            height: 40px;
+            padding: 8px 14px;
+            border: 1px solid #d1d6de;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+            color: #1d1d1f;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            min-width: 160px;
+        }
+
+        select:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
         }
 
         /* =========================
@@ -566,6 +594,217 @@
             background: #b0b4b8;
             border-radius: 6px;
         }
+
+        /* ── JW CLICKABLE NAME ── */
+        .jw-link {
+            color: #00508c;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline dotted;
+            text-underline-offset: 3px;
+            transition: color 0.15s;
+        }
+
+        .jw-link:hover {
+            color: #0070d8;
+            text-decoration: underline solid;
+        }
+
+        /* ── JW INFO MODAL ── */
+        .jw-modal-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 9100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .jw-modal-overlay.open {
+            display: flex;
+        }
+
+        .jw-modal {
+            background: #fff;
+            width: 98%;
+            height: 96%;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            animation: pop 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+            display: flex;
+            flex-direction: column;
+            max-height: 98%;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        .jw-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 22px 14px;
+            border-bottom: 2px solid #e2e8f0;
+            background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
+            flex-shrink: 0;
+        }
+
+        .jw-modal-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+            font-size: 19px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .jw-modal-title {
+            flex: 1;
+        }
+
+        .jw-modal-title h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .jw-modal-title p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .jw-modal-close {
+            width: 32px;
+            height: 32px;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 17px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s;
+        }
+
+        .jw-modal-close:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .jw-modal-body {
+            overflow: auto;
+            flex: 1;
+        }
+
+        /* Job Worker Balance Table — same look as jobworker-list.html */
+        .jw-bal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .jw-bal-table th,
+        .jw-bal-table td {
+            padding: 11px 14px;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .jw-bal-table th {
+            background: #f1f5f9;
+            color: #64748b;
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .jw-bal-table td {
+            color: #1e293b;
+        }
+
+        .jw-bal-table .num {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+            color: #0f5132;
+        }
+
+        .jw-bal-table .num-neutral {
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .jw-modal-section-title {
+            padding: 12px 22px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #64748b;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .jw-modal-footer {
+            padding: 11px 20px;
+            font-size: 13px;
+            color: #64748b;
+            border-top: 2px solid #e2e8f0;
+            background: #f8fafc;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .jw-stat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .jw-stat-chip.process {
+            background: #e1f0fa;
+            color: #0060a8;
+            border: 1px solid #9ccaf0;
+        }
+
+        .jw-stat-chip.ready {
+            background: #d1f2eb;
+            color: #0f5132;
+            border: 1px solid #a3cfbb;
+        }
+
+        .jw-modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .jw-modal-body::-webkit-scrollbar-track {
+            background: #f0f2f5;
+        }
+
+        .jw-modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
     </style>
 </head>
 
@@ -578,9 +817,15 @@
             <span class="sel-pill" id="ipSelPill">0 selected</span>
             <input type="text" id="searchBox" placeholder="🔍 Search by item, job worker, order..."
                 onkeyup="ipFilterTable()">
+            <select id="jwFilter" onchange="ipFilterTable()">
+                <option value="">👤 All Job Workers</option>
+            </select>
             <button class="btn" onclick="loadProcessItems()">🔄 Refresh</button>
             <button class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled>
                 ✅ Mark Ready
+            </button>
+            <button class="btn btn-unready" id="markUnReadyBtn" onclick="openMarkUnReadyModal()" disabled>
+                ❌ Mark UnReady
             </button>
         </div>
 
@@ -637,6 +882,90 @@
         </div>
     </div>
 
+    <!-- MARK UNREADY CONFIRMATION MODAL -->
+    <div class="modal-overlay" id="markUnReadyModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-header-text">
+                    <h3 style="color:#ff3b30;">❌ Mark as UnReady</h3>
+                    <p id="unReadyModalSubtitle">The selected items will be moved back to In Process.</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeMarkUnReadyModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body-info" id="unReadyModalInfo"
+                    style="background:#fff5f5; border-color:#feb2b2; color:#c53030;">
+                    These items will be marked as "In Process" again.
+                </div>
+                <div class="modal-item-list" id="unReadyModalItemList"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel-modal" onclick="closeMarkUnReadyModal()">Cancel</button>
+                <button class="btn-confirm-ready" id="confirmUnReadyBtn" onclick="confirmMarkUnReady()"
+                    style="background:#ff3b30;">
+                    ❌ Confirm — Mark UnReady
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JW INFO MODAL -->
+    <div class="jw-modal-overlay" id="jwModalOverlay" onclick="if(event.target===this)closeJwModal()">
+        <div class="jw-modal">
+            <div class="jw-modal-header">
+                <div class="jw-modal-avatar" id="jwModalAvatar">J</div>
+                <div class="jw-modal-title">
+                    <h3 id="jwModalName">Job Worker</h3>
+                    <p id="jwModalSub">Job Worker Details</p>
+                </div>
+                <button class="jw-modal-close" onclick="closeJwModal()">✕</button>
+            </div>
+            <div class="jw-modal-body">
+                <div class="jw-modal-section-title">Balance Information</div>
+                <table class="jw-bal-table">
+                    <thead>
+                        <tr>
+                            <th>Jobworker ID</th>
+                            <th>Name</th>
+                            <th>Relation</th>
+                            <th>Date</th>
+                            <th style="text-align:right">Metal (g)</th>
+                            <th style="text-align:right">Chain (g)</th>
+                            <th style="text-align:right">Neg (g)</th>
+                            <th style="text-align:right">Maal (g)</th>
+                            <th>Address</th>
+                            <th>Station</th>
+                            <th>Phone</th>
+                            <th>Mobile</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jwModalTableBody"></tbody>
+                </table>
+                <div class="jw-modal-section-title" style="margin-top:0;">Assigned Items in Process</div>
+                <table class="jw-bal-table" id="jwModalItemsTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center">Status</th>
+                            <th style="text-align:right">Qty</th>
+                            <th>Item Name</th>
+                            <th>Sample Details</th>
+                            <th>Design</th>
+                            <th style="text-align:right">Est. Unit Wt</th>
+                            <th style="text-align:right">Est. Total Wt</th>
+                            <th>Order No.</th>
+                            <th>Customer</th>
+                            <th>Assigned Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="jwModalItemsBody"></tbody>
+                </table>
+            </div>
+            <div class="jw-modal-footer" id="jwModalFooter">
+                <span style="font-weight:600;color:#1e293b;">Loading…</span>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div id="ipToast">
         <div class="toast-inner" id="ipToastInner"></div>
@@ -687,18 +1016,26 @@
 
         /* ── UI STATE ── */
         function ipUpdateUI() {
-            const checked = document.querySelectorAll('.ip-row-cb:not(:disabled):checked');
+            const checked = document.querySelectorAll('.ip-row-cb:checked');
             const n = checked.length;
+
+            const hasInProcess = [...checked].some(cb => cb.dataset.status !== 'READY');
+            const hasReady = [...checked].some(cb => cb.dataset.status === 'READY');
+
             const pill = document.getElementById('ipSelPill');
             if (pill) {
                 pill.style.display = n > 0 ? 'inline-block' : 'none';
                 pill.textContent = n + ' selected';
             }
-            const btn = document.getElementById('markReadyBtn');
-            if (btn) btn.disabled = n === 0;
+
+            const readyBtn = document.getElementById('markReadyBtn');
+            if (readyBtn) readyBtn.disabled = !hasInProcess;
+
+            const unReadyBtn = document.getElementById('markUnReadyBtn');
+            if (unReadyBtn) unReadyBtn.disabled = !hasReady;
 
             // Update select-all checkbox state
-            const all = [...document.querySelectorAll('.ip-row-cb:not(:disabled)')].filter(c => {
+            const all = [...document.querySelectorAll('.ip-row-cb')].filter(c => {
                 const tr = c.closest('tr');
                 return tr && tr.style.display !== 'none';
             });
@@ -716,7 +1053,7 @@
         }
 
         function ipToggleAll(src) {
-            document.querySelectorAll('.ip-row-cb:not(:disabled)').forEach(cb => {
+            document.querySelectorAll('.ip-row-cb').forEach(cb => {
                 const tr = cb.closest('tr');
                 if (!tr || tr.style.display === 'none') return;
                 cb.checked = src.checked;
@@ -755,6 +1092,7 @@
                     const isReady = r.status === 'READY';
                     const tr = document.createElement('tr');
                     tr.dataset.search = [r.itemName, r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
+                    tr.dataset.jobworker = (r.jobworkerName || '').trim();
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
                     if (isReady) tr.classList.add('row-selected');
@@ -764,7 +1102,7 @@
                             <input type="checkbox" class="ip-row-cb"
                                 data-process-id="${escapeHtml(r.id)}"
                                 data-order-id="${escapeHtml(r.orderId)}"
-                                ${isReady ? 'disabled' : ''}
+                                data-status="${escapeHtml(r.status || '')}"
                                 ${isReady ? 'checked' : ''}
                                 onchange="ipOnCbChange(this)">
                         </td>
@@ -779,7 +1117,7 @@
                         <td>${escapeHtml(r.design)}</td>
                         <td class="right">${(r.estUnitWt || 0).toFixed(3)}</td>
                         <td class="right">${(r.estTotalWt || 0).toFixed(3)}</td>
-                        <td style="font-weight:bold; color:#00508c !important;">${escapeHtml(r.jobworkerName)}</td>
+                        <td><span class="jw-link" onclick="openJwModal('${escapeHtml(String(r.jobworkerId || ''))}','${escapeHtml(r.jobworkerName)}')">${escapeHtml(r.jobworkerName)}</span></td>
                         <td>${formatDate(r.assignedDate)}</td>
                         <td>${escapeHtml(r.orderNo)}</td>
                         <td>${escapeHtml(r.customerName)}</td>`;
@@ -787,6 +1125,17 @@
                 });
 
                 if (footer) footer.textContent = `${items.length} item(s) in process`;
+
+                // Update JW filter dropdown
+                const jwFilter = document.getElementById('jwFilter');
+                if (jwFilter) {
+                    const currentVal = jwFilter.value;
+                    const names = [...new Set(items.map(i => (i.jobworkerName || '').trim()).filter(Boolean))].sort();
+                    jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>' +
+                        names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+                    jwFilter.value = currentVal;
+                }
+
                 ipFilterTable();
                 ipUpdateUI();
             } catch (e) {
@@ -799,9 +1148,14 @@
         function ipFilterTable() {
             if (!tbody || !tbody.querySelector('tr[data-search]')) return;
             const searchEl = document.getElementById('searchBox');
+            const jwFilter = document.getElementById('jwFilter');
             const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+            const jwQuery = (jwFilter ? jwFilter.value : '').trim();
+
             tbody.querySelectorAll('tr[data-search]').forEach(tr => {
-                tr.style.display = (!query || tr.dataset.search.includes(query)) ? '' : 'none';
+                const matchesSearch = !query || tr.dataset.search.includes(query);
+                const matchesJw = !jwQuery || tr.dataset.jobworker === jwQuery;
+                tr.style.display = (matchesSearch && matchesJw) ? '' : 'none';
             });
             ipUpdateUI();
         }
@@ -858,7 +1212,7 @@
 
         /* ── CONFIRM MARK READY ── */
         function confirmMarkReady() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:not(:disabled):checked')];
+            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status !== 'READY');
             if (checked.length === 0) { closeMarkReadyModal(); return; }
 
             const btn = document.getElementById('confirmReadyBtn');
@@ -933,6 +1287,108 @@
             }, 400);
         }
 
+        /* ── MARK UNREADY MODAL ── */
+        function openMarkUnReadyModal() {
+            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status === 'READY');
+            if (checked.length === 0) {
+                showIpToast('⚠️ Please select at least one READY item first');
+                return;
+            }
+
+            const orderMap = {};
+            checked.forEach(cb => {
+                const oid = cb.dataset.orderId;
+                const tr = cb.closest('tr');
+                if (!orderMap[oid]) {
+                    const tds = tr.querySelectorAll('td');
+                    orderMap[oid] = {
+                        orderId: oid,
+                        orderNo: tds[10] ? tds[10].textContent.trim() : oid,
+                        customer: tds[11] ? tds[11].textContent.trim() : '—',
+                        items: []
+                    };
+                }
+                const tds = tr.querySelectorAll('td');
+                orderMap[oid].items.push(tds[3] ? tds[3].textContent.trim() : '—');
+            });
+
+            const orders = Object.values(orderMap);
+            const itemCount = checked.length;
+            const orderCount = orders.length;
+
+            document.getElementById('unReadyModalSubtitle').textContent =
+                `${itemCount} item${itemCount > 1 ? 's' : ''} from ${orderCount} order${orderCount > 1 ? 's' : ''} will be marked as In Process.`;
+
+            const list = document.getElementById('unReadyModalItemList');
+            list.innerHTML = orders.map(o => `
+                <div class="modal-item-row">
+                    <span class="modal-item-order" style="color:#ff3b30;">${escapeHtml(o.orderNo)}</span>
+                    <span style="color:#6b7a95;">| ${escapeHtml(o.customer)}</span>
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#374151;">${escapeHtml(o.items.join(', '))}</span>
+                </div>`).join('');
+
+            document.getElementById('markUnReadyModal').classList.add('open');
+        }
+
+        function closeMarkUnReadyModal() {
+            document.getElementById('markUnReadyModal').classList.remove('open');
+        }
+
+        function confirmMarkUnReady() {
+            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status === 'READY');
+            if (checked.length === 0) { closeMarkUnReadyModal(); return; }
+
+            const btn = document.getElementById('confirmUnReadyBtn');
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            setTimeout(() => {
+                try {
+                    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                    const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+
+                    const affectedOrderIds = new Set();
+                    checked.forEach(cb => affectedOrderIds.add(String(cb.dataset.orderId)));
+
+                    checked.forEach(cb => {
+                        const pid = String(cb.dataset.processId);
+                        const entry = itemProcess.find(e => String(e.id) === pid);
+                        if (entry) {
+                            entry.status = 'IN PROCESS';
+                            delete entry.readyDate;
+                        }
+                    });
+
+                    affectedOrderIds.forEach(oid => {
+                        const order = orders.find(o => String(o.id) === oid);
+                        if (order) {
+                            order.status = 'ASSIGNED'; // Or keep it simple
+                            delete order.readyDate;
+                        }
+                    });
+
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
+
+                    closeMarkUnReadyModal();
+
+                    const count = checked.length;
+                    showIpToast(`✅ ${count} item${count > 1 ? 's' : ''} moved back to In Process`);
+
+                    tbody = null;
+                    loadProcessItems();
+
+                    try { window.dispatchEvent(new Event('storage')); } catch (e) { }
+
+                } catch (err) {
+                    console.error('Mark UnReady error:', err);
+                    showIpToast('❌ Failed to mark unready.');
+                    btn.disabled = false;
+                    btn.textContent = '❌ Confirm — Mark UnReady';
+                }
+            }, 400);
+        }
+
         /* ── INIT ── */
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => setTimeout(loadProcessItems, 50));
@@ -945,10 +1401,108 @@
         });
         window.addEventListener('pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
 
-        // Close modal on overlay click
+        // Close modals on overlay click
         document.getElementById('markReadyModal').addEventListener('click', function (e) {
             if (e.target === this) closeMarkReadyModal();
         });
+        document.getElementById('markUnReadyModal').addEventListener('click', function (e) {
+            if (e.target === this) closeMarkUnReadyModal();
+        });
+
+        /* ── JW INFO MODAL ── */
+        function openJwModal(jwId, jwName) {
+            // Find job worker in jobworkers list
+            const jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+            let jw = jws.find(j => String(j.id) === String(jwId) || String(j.jwId) === String(jwId)) ||
+                jws.find(j => (j.name || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase()) ||
+                null;
+
+            // Header
+            const nameEl = document.getElementById('jwModalName');
+            const subEl = document.getElementById('jwModalSub');
+            const avatarEl = document.getElementById('jwModalAvatar');
+            const displayName = jw ? (jw.name || jwName) : jwName;
+            if (nameEl) nameEl.textContent = displayName || 'Job Worker';
+            if (avatarEl) avatarEl.textContent = (displayName || 'J').charAt(0).toUpperCase();
+
+            // Balance table row
+            const tbodyEl = document.getElementById('jwModalTableBody');
+            if (tbodyEl) {
+                if (!jw) {
+                    tbodyEl.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:#94a3b8;">No balance record found for "${escapeHtml(jwName)}"</td></tr>`;
+                } else {
+                    const relText = [jw.relationType, jw.relationName].filter(Boolean).join(' ') || '—';
+                    const dateText = (jw.obDate || jw.date || '').slice(0, 10) || '—';
+                    const fmt = (v, d = 3) => v != null && v !== '' ? Number(v).toFixed(d) : '—';
+                    tbodyEl.innerHTML = `<tr>
+                        <td>${escapeHtml(jw.jwId || '—')}</td>
+                        <td style="font-weight:700;">${escapeHtml(jw.name || '—')}</td>
+                        <td>${escapeHtml(relText)}</td>
+                        <td>${escapeHtml(dateText)}</td>
+                        <td class="num">${fmt(jw.obMetal)}</td>
+                        <td class="num">${fmt(jw.obChain)}</td>
+                        <td class="num">${fmt(jw.obNag)}</td>
+                        <td class="num">${fmt(jw.obMaal)}</td>
+                        <td title="${escapeHtml(jw.address || '')}">${escapeHtml(jw.address || '—')}</td>
+                        <td>${escapeHtml(jw.station || '—')}</td>
+                        <td>${escapeHtml(jw.phone || '—')}</td>
+                        <td>${escapeHtml(jw.mobile || '—')}</td>
+                    </tr>`;
+                }
+            }
+
+            // Items in process table
+            const allItems = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+            const items = allItems.filter(e =>
+                (jwId && (String(e.jobworkerId) === String(jwId))) ||
+                (e.jobworkerName || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase()
+            );
+            const inProcess = items.filter(e => e.status !== 'READY').length;
+            const ready = items.filter(e => e.status === 'READY').length;
+
+            if (subEl) subEl.textContent = `${items.length} item${items.length !== 1 ? 's' : ''} assigned in Item Process`;
+
+            const itemsBodyEl = document.getElementById('jwModalItemsBody');
+            if (itemsBodyEl) {
+                if (items.length === 0) {
+                    itemsBodyEl.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
+                } else {
+                    itemsBodyEl.innerHTML = items.map(r => {
+                        const isReady = r.status === 'READY';
+                        return `<tr>
+                            <td style="text-align:center">${isReady
+                                ? `<span class="badge ready-done">✓ Ready</span>`
+                                : `<span class="badge process">In Process</span>`}
+                            </td>
+                            <td class="num num-neutral">${(r.qty || 0).toFixed(0)}</td>
+                            <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(r.itemName)}</td>
+                            <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(r.sampleDetails)}</td>
+                            <td>${escapeHtml(r.design)}</td>
+                            <td class="num num-neutral">${(r.estUnitWt || 0).toFixed(3)}</td>
+                            <td class="num num-neutral">${(r.estTotalWt || 0).toFixed(3)}</td>
+                            <td style="font-weight:700;color:#2a50d8;">${escapeHtml(r.orderNo)}</td>
+                            <td>${escapeHtml(r.customerName)}</td>
+                            <td style="font-size:12px;color:#64748b;white-space:nowrap;">${formatDate(r.assignedDate)}</td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
+
+            // Footer
+            const footerEl = document.getElementById('jwModalFooter');
+            if (footerEl) {
+                footerEl.innerHTML = `
+                    <span class="jw-stat-chip process">⚙ ${inProcess} In Process</span>
+                    <span class="jw-stat-chip ready">✓ ${ready} Ready</span>
+                    <span style="margin-left:auto;font-weight:600;color:#1e293b;">${items.length} total item${items.length !== 1 ? 's' : ''}</span>`;
+            }
+
+            document.getElementById('jwModalOverlay').classList.add('open');
+        }
+
+        function closeJwModal() {
+            document.getElementById('jwModalOverlay').classList.remove('open');
+        }
 
         /* Expose all functions to window (required when loaded via dashboard loadPage IIFE wrapper) */
         window.loadProcessItems = loadProcessItems;
@@ -958,6 +1512,11 @@
         window.openMarkReadyModal = openMarkReadyModal;
         window.closeMarkReadyModal = closeMarkReadyModal;
         window.confirmMarkReady = confirmMarkReady;
+        window.openMarkUnReadyModal = openMarkUnReadyModal;
+        window.closeMarkUnReadyModal = closeMarkUnReadyModal;
+        window.confirmMarkUnReady = confirmMarkUnReady;
+        window.openJwModal = openJwModal;
+        window.closeJwModal = closeJwModal;
     </script>
 </body>
 

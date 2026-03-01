@@ -23,6 +23,8 @@
       overflow: hidden;
     }
 
+    /* When inside the dashboard workspace, body styles above don't matter.
+       .wrap adjusts via JS below. */
     .wrap {
       margin: 14px;
       background: #fff;
@@ -322,7 +324,7 @@
     /* ── MODAL ── */
     .modal-overlay {
       display: none;
-      position: absolute;
+      position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.48);
       backdrop-filter: blur(3px);
@@ -718,6 +720,54 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #9aa3b0;
     }
+
+    /* ── MARK CHECKBOX ── */
+    .mark-cb-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mark-cb {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .mark-cb-box {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #b8c8f5;
+      border-radius: 6px;
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .mark-cb-wrap:hover .mark-cb-box {
+      border-color: #4f7ef8;
+      background: #eef4ff;
+    }
+
+    .mark-cb:checked+.mark-cb-box {
+      background: #4f7ef8;
+      border-color: #4f7ef8;
+    }
+
+    .mark-cb:checked+.mark-cb-box::after {
+      content: '';
+      display: block;
+      width: 6px;
+      height: 11px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translateY(-1px);
+    }
   </style>
 </head>
 
@@ -759,6 +809,7 @@
             <th class="center cb-cell" style="width:46px;">
               <input type="checkbox" id="selectAll" onchange="toggleAll(this)">
             </th>
+            <th class="center" style="width:68px;">Mark</th>
             <th class="center">Status</th>
             <th class="right">Qty</th>
             <th>Item Name</th>
@@ -844,6 +895,27 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ENTRY POPUP OVERLAY (Fullscreen iframe for jobworker-entry) -->
+  <div class="modal-overlay" id="entryPopupOverlay" style="z-index: 9999; padding: 20px; position: fixed; inset: 0;">
+    <div class="modal"
+      style="width: 90%; max-width: 1100px; height: 88vh; max-height: 700px; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;">
+      <div class="modal-header"
+        style="background: #f8f9fc; border-bottom: 2px solid #e2e8f0; padding: 12px 20px; flex-shrink:0;">
+        <div class="modal-header-text">
+          <h3>👷 New Job Worker Entry</h3>
+          <p>Fill in entry details and Save to proceed to assignment.</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeEntryPopup()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <iframe id="entryFrame" style="flex: 1; border: none; background: #f8f9fc; min-height: 0;"
+        src="about:blank"></iframe>
     </div>
   </div>
 
@@ -955,9 +1027,20 @@
               <input type="checkbox" class="row-cb" ${r.assigned ? 'disabled' : ''}
                 data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}" onchange="onCbChange(this)">
             </td>
+            <td class="center" style="padding:10px 8px;">
+              ${r.assigned
+                ? `<span style="font-size:18px;color:#16a34a;">&#10003;</span>`
+                : `<label class="mark-cb-wrap" title="Mark to open Job Worker Entry">
+                    <input type="checkbox" class="mark-cb"
+                      id="mark-${r.orderId}-${r.itemIdx}"
+                      data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
+                      onchange="onMarkCbChange(this)">
+                    <span class="mark-cb-box"></span>
+                  </label>`}
+            </td>
             <td class="center">
               ${r.assigned
-                ? `<span class="badge badge-assigned">✔ ${esc(r.assignedTo)}</span>`
+                ? `<span class="badge badge-assigned">&#10004; ${esc(r.assignedTo)}</span>`
                 : `<span class="badge badge-pending" id="badge-${r.orderId}-${r.itemIdx}">Pending</span>`}
             </td>
             <td class="right">${r.qty}</td>
@@ -1037,10 +1120,92 @@
     }
 
     function closeAssignModal() {
-      if (isAssigning) return;
       document.getElementById('assignModal').classList.remove('open');
       selectedJwId = null; selectedJwName = null;
     }
+
+    /* ── ENTRY POPUP ── */
+    let _currentMarkCb = null; // track the checkbox that triggered the popup
+
+    function getEntryPageUrl() {
+      const path = window.location.pathname || '';
+      const isDashboard = /index\.html$/i.test(path) || /\/$/.test(path) || !/pages\//i.test(path);
+      return isDashboard ? 'pages/jobworker-entry.html?mode=assignment' : 'jobworker-entry.html?mode=assignment';
+    }
+
+    /* Called when a Mark checkbox is clicked */
+    function onMarkCbChange(cb) {
+      if (!cb.checked) return; // only act on check, not uncheck
+      _currentMarkCb = cb;
+      const orderId = cb.dataset.orderId;
+      const itemIdx = cb.dataset.itemIdx;
+
+      // Also select the row checkbox so this item is included in assign
+      const rowCb = document.querySelector(`.row-cb[data-order-id="${orderId}"][data-item-idx="${itemIdx}"]`);
+      if (rowCb && !rowCb.disabled) { rowCb.checked = true; onCbChange(rowCb); }
+
+      // Open the Job Worker Entry popup
+      const overlay = document.getElementById('entryPopupOverlay');
+      const frame = document.getElementById('entryFrame');
+      overlay.classList.add('open');
+      frame.src = getEntryPageUrl();
+    }
+
+    function markEntry(orderId, itemIdx) {
+      // Auto-select the row
+      document.querySelectorAll('.row-cb').forEach(cb => {
+        if (cb.dataset.orderId == orderId && cb.dataset.itemIdx == itemIdx) {
+          cb.checked = true; onCbChange(cb);
+        }
+      });
+      // Open popup
+      const overlay = document.getElementById('entryPopupOverlay');
+      const frame = document.getElementById('entryFrame');
+      overlay.classList.add('open');
+      frame.src = getEntryPageUrl();
+    }
+
+    function closeEntryPopup() {
+      const overlay = document.getElementById('entryPopupOverlay');
+      const frame = document.getElementById('entryFrame');
+      overlay.classList.remove('open');
+      frame.src = 'about:blank';
+      // If popup was closed without saving, uncheck the mark checkbox
+      if (_currentMarkCb) { _currentMarkCb.checked = false; _currentMarkCb = null; }
+    }
+
+    // Listen for save message from jobworker-entry.html
+    window.addEventListener('message', function (event) {
+      if (event.data && event.data.type === 'jwEntrySaved') {
+        const { jobworkerId, jobworkerName } = event.data;
+
+        // Pre-select the worker that was just saved
+        selectedJwId = jobworkerId;
+        selectedJwName = jobworkerName;
+
+        closeEntryPopup();
+
+        // After closing popup, open the Assign Modal with this worker pre-selected
+        setTimeout(() => {
+          const checked = document.querySelectorAll('.row-cb:not(:disabled):checked');
+          const n = checked.length;
+          document.getElementById('assignSummary').textContent = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
+          document.getElementById('stripText').textContent = `${n} item${n > 1 ? 's' : ''} selected for assignment`;
+          document.getElementById('stripCount').textContent = n;
+          document.getElementById('jwSearch').value = '';
+          document.getElementById('confirmBtnText').textContent = `Assign to ${(jobworkerName || '').split(' ')[0]}`;
+          document.getElementById('confirmBtn').disabled = false;
+          document.getElementById('modalFooterHint').innerHTML = `Worker: <span>${esc(jobworkerName)}</span>`;
+          document.getElementById('assignModal').classList.add('open');
+          // Render worker list with the just-saved worker pre-selected
+          setTimeout(renderJwList, 80);
+        }, 300);
+
+      } else if (event.data && event.data.type === 'jwEntryClosed') {
+        _currentMarkCb = null; // cancelled, let closeEntryPopup handle uncheck
+        closeEntryPopup();
+      }
+    });
 
     /* ── WORKER LIST ── */
     function renderJwList() {
@@ -1193,6 +1358,25 @@
     window.selectJw = selectJw;
     window.onCbChange = onCbChange;
     window.toggleAll = toggleAll;
+    window.markEntry = markEntry;
+    window.closeEntryPopup = closeEntryPopup;
+    window.getEntryPageUrl = getEntryPageUrl;
+    window.onMarkCbChange = onMarkCbChange;
+
+    // When inside the dashboard, .wrap should fill the workspace container
+    // not use 100vh (which is the full page height, not the workspace height)
+    (function () {
+      const wrap = document.querySelector('.wrap');
+      if (!wrap) return;
+      const inDashboard = !!document.querySelector('.workspace');
+      if (inDashboard) {
+        wrap.style.margin = '0';
+        wrap.style.borderRadius = '0';
+        wrap.style.border = 'none';
+        wrap.style.boxShadow = 'none';
+        wrap.style.height = '100%';
+      }
+    })();
   </script>
 </body>
 

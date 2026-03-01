@@ -733,13 +733,36 @@
 
       // ── CLOSE ──────────────────────────────────────
       function goBack() {
+        // [MOD] If in assignment mode (parent is listening), notify parent instead of navigating
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'assignment') {
+          window.parent.postMessage({ type: 'jwEntryClosed' }, '*');
+          return;
+        }
+
         if (typeof loadPage === 'function') loadPage('pages/advanced.html');
         else window.history.back();
       }
 
-      // ── BUTTON HANDLERS: clear form on each action so next visit or new entry is clean ──
+      // ── BUTTON HANDLERS ──
       window.saveAndClose = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAssignmentMode = urlParams.get('mode') === 'assignment';
+
         if (save()) {
+          if (isAssignmentMode) {
+            // Get name to send back
+            const name = document.getElementById('jwName').value.trim();
+            const jw = _jwData.find(j => j.name.toLowerCase() === name.toLowerCase());
+
+            window.parent.postMessage({
+              type: 'jwEntrySaved',
+              jobworkerId: jw ? jw.id : null,
+              jobworkerName: name
+            }, '*');
+            return;
+          }
+
           resetAll();
           goBack();
         }
