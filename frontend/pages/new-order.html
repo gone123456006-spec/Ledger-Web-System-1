@@ -1321,7 +1321,7 @@
         const last = localStorage.getItem('lastBillNo') || '0';
         const next = Number(last) + 1;
         localStorage.setItem('lastBillNo', String(next));
-        return `SGJ/0/${next}`;
+        return `SGJ/0/${String(next).padStart(4, '0')}`;
       }
 
       // =====================================================
