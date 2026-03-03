@@ -30,6 +30,40 @@ function initGoldOrderSubmenu() {
     submenu.addEventListener("mouseleave", scheduleHide);
 }
 
+function initAgentsSubmenu() {
+    const block = document.querySelector(".sidebar-agents-order");
+    const trigger = document.querySelector(".agents-order-trigger");
+    const submenu = document.querySelector(".sidebar-agents-submenu");
+    if (!block || !trigger || !submenu) return;
+    let hideTimeout = 0;
+    function show() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = 0;
+        const rect = trigger.getBoundingClientRect();
+        submenu.style.top = rect.top + "px";
+        submenu.style.right = (window.innerWidth - rect.left + 6) + "px";
+        submenu.style.display = "block";
+
+        // Add hover effect via JS since inline styles make hover pseudo-class harder to override
+        const btns = submenu.querySelectorAll('button');
+        btns.forEach(btn => {
+            btn.onmouseenter = () => btn.style.background = '#abccff';
+            btn.onmouseleave = () => btn.style.background = 'transparent';
+        });
+    }
+    function scheduleHide() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(function () {
+            submenu.style.display = "none";
+            hideTimeout = 0;
+        }, 200);
+    }
+    block.addEventListener("mouseenter", show);
+    block.addEventListener("mouseleave", scheduleHide);
+    submenu.addEventListener("mouseenter", show);
+    submenu.addEventListener("mouseleave", scheduleHide);
+}
+
 // Global Esc → go to dashboard (any page inside the app)
 function initEscToDashboard() {
     if (window.__escToDashboardInited) return;
@@ -55,6 +89,7 @@ function initSidebarButtons() {
 
     initEscToDashboard();
     initGoldOrderSubmenu();
+    initAgentsSubmenu();
     sidebarButtons.forEach(btn => {
         btn.addEventListener("click", () => {
 
@@ -91,7 +126,19 @@ function initSidebarButtons() {
                     break;
 
                 case "agents":
-                    loadPage("pages/agents.html");
+                    // Agents is the hover parent; click does nothing (submenu shows on hover)
+                    break;
+
+                case "balance sheet":
+                    loadPage("pages/balance-sheet.html");
+                    break;
+
+                case "purchase":
+                    loadPage("pages/purchase.html");
+                    break;
+
+                case "purchase return":
+                    loadPage("pages/purchase-return.html");
                     break;
 
                 case "customer balance":
