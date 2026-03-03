@@ -7,60 +7,923 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         :root {
-            --bg: #f5f6f8;
-            --card: #ffffff;
-            --text: #000000;
+            --primary: #007aff;
+            --primary-soft: #e8f0fe;
+            --text: #1e293b;
+            --muted: #6e6e73;
             --border: #e5e5ea;
+            --card: #ffffff;
+            --bg: #f5f6f8;
+            --radius: 12px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, .08);
+            --danger: #dc3545;
+            --success: #28a745;
         }
 
         * {
             box-sizing: border-box;
-            font-family: "Segoe UI", Roboto, Arial, sans-serif;
-        }
-
-        html,
-        body {
             margin: 0;
             padding: 0;
-            height: 100%;
         }
 
-        .page {
-            padding: 20px;
+        body {
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .app {
+            padding: 16px;
+            max-width: 100%;
+        }
+
+        .order-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: var(--text);
+        }
+
+        /* TOP BOXES */
+        .order-top {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            gap: 16px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
         }
 
-        h2 {
-            font-weight: 600;
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 1200px;
-        }
-
-        .content-box {
-            color: #6e6e73;
-            padding: 40px;
+        .box {
             background: var(--card);
-            border-radius: 14px;
+            border-radius: var(--radius);
             border: 1px solid var(--border);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, .12);
+            padding: 14px 18px;
+            flex: 1;
+            min-width: 220px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .box-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 10px;
+        }
+
+        .row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        .row label {
+            min-width: 100px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .row input,
+        .row select {
+            flex: 1;
+            padding: 5px 8px;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        .row input:focus,
+        .row select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .row input[readonly] {
+            background: #f8f9fa;
+            color: var(--muted);
+            cursor: default;
+        }
+
+        .row button {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .row button:hover {
+            opacity: .9;
+        }
+
+        /* TABLE */
+        .order-details {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 14px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        .purchase-table {
             width: 100%;
-            max-width: 1200px;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .purchase-table th {
+            background: #f0f4ff;
+            color: #3b5bdb;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 7px 4px;
             text-align: center;
+            border-bottom: 2px solid #c5d0f5;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .purchase-table td {
+            padding: 3px 2px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .purchase-table tr:hover td {
+            background: #f8faff;
+        }
+
+        .purchase-table input,
+        .purchase-table select {
+            width: 100%;
+            padding: 4px 3px;
+            font-size: 11px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: transparent;
+            text-align: center;
+        }
+
+        .purchase-table input:focus,
+        .purchase-table select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        .purchase-table input[readonly] {
+            color: var(--muted);
+            background: transparent;
+            cursor: default;
+        }
+
+        .purchase-table td.total input {
+            font-weight: 700;
+            color: #1a56db;
+        }
+
+        .row-del-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+        }
+
+        .row-del-btn:hover {
+            background: #ffe5e5;
+        }
+
+        /* Making column — disabled for purchase */
+        .purchase-table input.making-disabled {
+            background: #f0f0f0 !important;
+            color: #aaa !important;
+            border-color: transparent !important;
+            pointer-events: none;
+        }
+
+        /* ACTIONS */
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .actions button {
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            transition: .15s;
+        }
+
+        .actions button:hover {
+            background: var(--primary-soft);
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .actions .btn-save {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .actions .btn-save:hover {
+            background: #0056cc;
+        }
+
+        .actions .btn-close {
+            background: var(--danger);
+            color: #fff;
+            border-color: var(--danger);
+        }
+
+        /* PAYMENT PANEL */
+        .info-panel {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .panel-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-section-header h3 {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .panel-add-btn {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--primary);
+            cursor: pointer;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .summary-value {
+            font-weight: 700;
+        }
+
+        .summary-value.paid {
+            color: var(--success);
+        }
+
+        .summary-value.net-amt {
+            color: var(--danger);
+        }
+
+        /* POPUP */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .45);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .popup-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 24px 28px;
+            width: 340px;
+            max-width: 94vw;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, .18);
+        }
+
+        .popup-box h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .popup-field {
+            margin-bottom: 12px;
+        }
+
+        .popup-field label {
+            display: block;
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .popup-field input,
+        .popup-field select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .popup-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+
+        .popup-actions button {
+            padding: 7px 16px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .popup-actions .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
         }
     </style>
 </head>
 
 <body>
-    <div class="page">
-        <h2>Purchase</h2>
-        <div class="content-box">
-            <h3>Purchase Page</h3>
-            <p>Module coming soon.</p>
+    <div class="app" id="purchaseApp">
+
+        <div class="order-title">Purchase Entry</div>
+
+        <!-- TOP INFO -->
+        <div class="order-top">
+            <div class="box">
+                <div class="box-title">Supplier / Agent Info</div>
+                <div class="row">
+                    <label>Name *</label>
+                    <select id="pCustName"></select>
+                </div>
+                <div class="row">
+                    <label>Current Bal</label>
+                    <input id="pCurrentBal" readonly>
+                </div>
+                <div class="row">
+                    <label>Relation</label>
+                    <input id="pRelation" readonly>
+                </div>
+                <div class="row">
+                    <label>Station</label>
+                    <input id="pStation" readonly>
+                </div>
+                <div class="row">
+                    <button onclick="openCustomerPage()">+ Add / Edit Supplier</button>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="box-title">Purchase Information</div>
+                <div class="row">
+                    <label>Bill No *</label>
+                    <input id="pBillNo" readonly>
+                </div>
+                <div class="row">
+                    <label>Date</label>
+                    <input type="date" id="pOrderDate">
+                </div>
+                <div class="row">
+                    <label>Due Date</label>
+                    <input type="date" id="pDueDate">
+                </div>
+                <div class="row">
+                    <label>GST %</label>
+                    <input id="pGstRate" type="number" step="0.01" placeholder="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDER DETAILS TABLE -->
+        <div class="order-details">
+            <div class="box-title" style="margin-bottom:10px;">Purchase Details</div>
+            <div class="table-wrap">
+                <table class="purchase-table" id="purchase-item-table">
+                    <colgroup>
+                        <col style="width:6%">
+                        <col style="width:6%">
+                        <col style="width:12%">
+                        <col style="width:5%">
+                        <col style="width:4%">
+                        <col style="width:5%">
+                        <col style="width:6%">
+                        <col style="width:5%">
+                        <col style="width:4%">
+                        <col style="width:7%">
+                        <col style="width:5%">
+                        <col style="width:4%">
+                        <col style="width:5%">
+                        <col style="width:5%">
+                        <col style="width:4%">
+                        <col style="width:9%">
+                        <col style="width:2%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Order No.</th>
+                            <th>Item Name</th>
+                            <th>Stamp</th>
+                            <th>Pc</th>
+                            <th>Ut. Wt.</th>
+                            <th>Est. Total Wt.</th>
+                            <th>Rate</th>
+                            <th>Lbr.%</th>
+                            <th class="total">Est. Total</th>
+                            <th>R. Metal</th>
+                            <th>Neg</th>
+                            <th>R. Wt</th>
+                            <th>Rate</th>
+                            <th>Making</th>
+                            <th class="total">Total</th>
+                            <th>❌</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pItemBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+            <button onclick="pAddRow()">➕ Add Row</button>
+            <button onclick="openPurchasePayment()">💰 Payment</button>
+            <button class="btn-save" onclick="savePurchase()">💾 Save</button>
+            <button onclick="resetPurchase()">🔄 Reset</button>
+            <button class="btn-close" onclick="closePurchasePage()">✖ Close</button>
+        </div>
+
+        <!-- PAYMENT SUMMARY PANEL -->
+        <div class="info-panel">
+            <div class="panel-section-header">
+                <h3>Payment Summary</h3>
+                <button class="panel-add-btn" onclick="openPurchasePayment()">+ Add Payment</button>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Purchase Total:</span>
+                <span class="summary-value" id="pPanelTotal">₹ 0.00</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">Paid:</span>
+                <span class="summary-value paid" id="pPanelPaid">₹ 0.00</span>
+            </div>
+            <div class="summary-item"
+                style="border-top:1px dashed #ccc; padding-top:6px; margin-top:4px; font-weight:700;">
+                <span class="summary-label" style="font-weight:700;">Net Amount:</span>
+                <span class="summary-value net-amt" id="pPanelNet">₹ 0.00</span>
+            </div>
+            <div id="pPaymentList" style="margin-top:12px; display:flex; flex-direction:column; gap:6px;">
+                <div style="text-align:center; color:var(--muted); font-size:12px; padding:10px 0;">No payments yet
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PAYMENT POPUP -->
+    <div class="popup-overlay" id="pPaymentPopup">
+        <div class="popup-box">
+            <h3>Add Payment</h3>
+            <div style="margin-bottom:10px; font-size:12px; color:var(--muted);">
+                Purchase Total: ₹<span id="pPopupTotal">0.00</span><br>
+                Already Paid: ₹<span id="pPopupAlreadyPaid">0.00</span><br>
+                <strong>Net Amount Due: ₹<span id="pPopupNetDue">0.00</span></strong>
+            </div>
+            <div class="popup-field">
+                <label>Amount (₹)</label>
+                <input type="number" step="0.01" id="pPayAmt" placeholder="0.00">
+            </div>
+            <div class="popup-field">
+                <label>Mode</label>
+                <select id="pPayMode">
+                    <option>Cash</option>
+                    <option>Card</option>
+                    <option>UPI</option>
+                    <option>Cheque</option>
+                    <option>Online</option>
+                </select>
+            </div>
+            <div class="popup-field">
+                <label>Narration</label>
+                <input id="pPayNarration" placeholder="Optional note">
+            </div>
+            <div class="popup-actions">
+                <button onclick="closePurchasePaymentPopup()">Cancel</button>
+                <button class="btn-primary" onclick="savePurchasePayment()">Save Payment</button>
+            </div>
         </div>
     </div>
+
+    <script>
+        /* ===== ELEMENTS ===== */
+        const pCustName = () => document.getElementById("pCustName");
+        const pCurrentBal = () => document.getElementById("pCurrentBal");
+        const pRelation = () => document.getElementById("pRelation");
+        const pStation = () => document.getElementById("pStation");
+        const pBillNo = () => document.getElementById("pBillNo");
+        const pOrderDate = () => document.getElementById("pOrderDate");
+        const pDueDate = () => document.getElementById("pDueDate");
+        const pGstRate = () => document.getElementById("pGstRate");
+        const pItemBody = () => document.getElementById("pItemBody");
+
+        /* ===== BILL NO ===== */
+        function pGenerateBillNo() {
+            let last = Number(localStorage.getItem("lastPurchaseBillNo") || "0");
+            let next = last + 1;
+            localStorage.setItem("lastPurchaseBillNo", String(next));
+            return "PUR/" + String(next).padStart(4, "0");
+        }
+
+        /* ===== INIT ===== */
+        function initPurchasePage() {
+            pLoadCustomers();
+            const b = pBillNo();
+            if (b && !b.value) b.value = pGenerateBillNo();
+            const d = pOrderDate();
+            if (d && !d.value) d.valueAsDate = new Date();
+            pUpdateSummary();
+        }
+
+        /* ===== CUSTOMERS ===== */
+        function pLoadCustomers() {
+            const sel = pCustName();
+            if (!sel) return;
+            const list = JSON.parse(localStorage.getItem("customers") || "[]");
+            sel.innerHTML = '<option value="">-- Select Supplier --</option>';
+            list.forEach(c => {
+                const o = document.createElement("option");
+                o.value = c.id;
+                o.textContent = c.name;
+                o.dataset.data = JSON.stringify(c);
+                sel.appendChild(o);
+            });
+            sel.onchange = function () {
+                const o = sel.selectedOptions[0];
+                if (!o || !o.dataset.data) { pCurrentBal().value = ""; pRelation().value = ""; pStation().value = ""; return; }
+                const c = JSON.parse(o.dataset.data);
+                pCurrentBal().value = c.openingBalance || 0;
+                pRelation().value = (c.relation || "") + " " + (c.relationName || "");
+                pStation().value = c.station || "";
+            };
+        }
+
+        function pGetCustomerName() {
+            const sel = pCustName();
+            if (!sel) return "";
+            const o = sel.selectedOptions[0];
+            return o ? o.textContent : "";
+        }
+
+        function openCustomerPage() {
+            if (typeof loadPage === "function") loadPage("pages/customer.html");
+            else window.open("/pages/customer.html", "Customer", "width=1200,height=700");
+        }
+
+        /* ===== ADD ROW ===== */
+        function pAddRow() {
+            const tbody = pItemBody();
+            if (!tbody) return;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+<td><select onchange="pHandleTypeChange(this)">
+  <option selected>Purchase</option>
+  <option>Order</option>
+  <option>Sale</option>
+  <option>Repair</option>
+</select></td>
+<td><input readonly value="${pBillNo() ? pBillNo().value : ""}"></td>
+<td><input placeholder="Item Name"></td>
+<td><input placeholder="Stamp"></td>
+<td><input type="number" step="0.01" oninput="pCalc(this)" onchange="pCalc(this)" placeholder="0"></td>
+<td><input type="number" step="0.001" oninput="pCalc(this)" onchange="pCalc(this)" placeholder="0"></td>
+<td><input type="number" step="0.001" readonly placeholder="0"></td>
+<td><input type="number" step="0.01" oninput="pCalc(this)" onchange="pCalc(this)" placeholder="0"></td>
+<td><input type="number" step="0.01" oninput="pCalc(this)" onchange="pCalc(this)" placeholder="0"></td>
+<td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
+<td><input type="text" placeholder="R. Metal" oninput="pSyncReadyWt(this)" onchange="pSyncReadyWt(this)"></td>
+<td><input type="number" step="0.01" placeholder="0" oninput="pSyncReadyWt(this)" onchange="pSyncReadyWt(this)"></td>
+<td><input type="number" step="0.001" readonly placeholder="0"></td>
+<td><input type="number" step="0.01" oninput="pCalcTotal(this)" onchange="pCalcTotal(this)" placeholder="0"></td>
+<td><input type="number" step="0.01" placeholder="0" readonly class="making-disabled" tabindex="-1"></td>
+<td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
+<td><button type="button" class="row-del-btn" onclick="this.closest('tr').remove(); pUpdateSummary()">✕</button></td>
+`;
+            tbody.appendChild(tr);
+            // Default Purchase — making already disabled, Total = Est.Total via pCalc
+        }
+
+        /* ===== TYPE CHANGE ===== */
+        function pHandleTypeChange(sel) {
+            const row = sel.closest("tr");
+            if (!row) return;
+            const isPurchase = sel.value === "Purchase";
+            const makingInput = row.cells[14] && row.cells[14].querySelector("input");
+            if (makingInput) {
+                if (isPurchase) {
+                    makingInput.value = "0";
+                    makingInput.setAttribute("readonly", "readonly");
+                    makingInput.classList.add("making-disabled");
+                    makingInput.tabIndex = -1;
+                } else {
+                    makingInput.removeAttribute("readonly");
+                    makingInput.classList.remove("making-disabled");
+                    makingInput.tabIndex = 0;
+                }
+            }
+            pSyncTotalFromRow(row);
+            pUpdateSummary();
+        }
+
+        /* ===== CALC: Est. Total Wt. + Est. Total ===== */
+        function pCalc(el) {
+            const r = el.closest("tr");
+            if (!r || !r.cells) return;
+            const pc = parseFloat(r.cells[4].children[0].value) || 0;
+            const utWt = parseFloat(r.cells[5].children[0].value) || 0;
+            const estWt = pc * utWt;
+            if (r.cells[6] && r.cells[6].children[0]) r.cells[6].children[0].value = estWt.toFixed(3);
+
+            const net = estWt;
+            const rate = parseFloat(r.cells[7].children[0].value) || 0;
+            const lbr = parseFloat(r.cells[8].children[0].value) || 0;
+            if (net > 0 && rate > 0) {
+                const base = net * rate;
+                const estTotal = base + base * (lbr / 100);
+                if (r.cells[9] && r.cells[9].children[0]) r.cells[9].children[0].value = estTotal.toFixed(2);
+                pSyncTotalFromRow(r);
+            } else {
+                if (r.cells[9] && r.cells[9].children[0]) r.cells[9].children[0].value = "0.00";
+                if (r.cells[15] && r.cells[15].children[0]) r.cells[15].children[0].value = "0.00";
+            }
+            setTimeout(pUpdateSummary, 50);
+        }
+
+        /* ===== SYNC R.WT = R.Metal - Neg ===== */
+        function pSyncReadyWt(el) {
+            const r = el.closest("tr");
+            if (!r || !r.cells) return;
+            const metal = parseFloat(r.cells[10].children[0].value) || 0;
+            const neg = parseFloat(r.cells[11].children[0].value) || 0;
+            if (r.cells[12] && r.cells[12].children[0]) r.cells[12].children[0].value = (metal - neg).toFixed(3);
+            pSyncTotalFromRow(r);
+            setTimeout(pUpdateSummary, 50);
+        }
+
+        /* ===== CALC TOTAL ===== */
+        function pCalcTotal(el) {
+            const r = el.closest("tr");
+            if (!r) return;
+            pSyncTotalFromRow(r);
+            setTimeout(pUpdateSummary, 50);
+        }
+
+        /* ===== SYNC TOTAL FROM ROW ===== */
+        function pSyncTotalFromRow(r) {
+            if (!r || !r.cells) return;
+            const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
+            const isPurchase = !typeSelect || typeSelect.value === "Purchase";
+            if (isPurchase) {
+                // Total = Est. Total (col 9)
+                const estTotal = parseFloat(r.cells[9] && r.cells[9].children[0] ? r.cells[9].children[0].value : 0) || 0;
+                if (r.cells[15] && r.cells[15].children[0]) r.cells[15].children[0].value = estTotal.toFixed(2);
+            } else {
+                const rWt = parseFloat(r.cells[12].children[0].value) || 0;
+                const rate = parseFloat(r.cells[13].children[0].value) || 0;
+                const making = parseFloat(r.cells[14].children[0].value) || 0;
+                if (r.cells[15] && r.cells[15].children[0]) r.cells[15].children[0].value = (rWt * (rate + making)).toFixed(2);
+            }
+        }
+
+        /* ===== GRAND TOTAL ===== */
+        function pCalculateGrandTotal() {
+            const tbody = pItemBody();
+            if (!tbody) return 0;
+            let total = 0;
+            tbody.querySelectorAll("tr").forEach(r => {
+                const estTotal = parseFloat(r.cells[9] && r.cells[9].children[0] ? r.cells[9].children[0].value : 0) || 0;
+                const readyTotal = parseFloat(r.cells[15] && r.cells[15].children[0] ? r.cells[15].children[0].value : 0) || 0;
+                total += estTotal || readyTotal;
+            });
+            return total;
+        }
+
+        function pGetPaid() {
+            const bn = pBillNo() && pBillNo().value;
+            if (!bn) return 0;
+            const payments = JSON.parse(localStorage.getItem("purchasePayments") || "[]");
+            return payments.filter(p => p.billNo === bn).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+        }
+
+        /* ===== UPDATE SUMMARY PANEL ===== */
+        function pUpdateSummary() {
+            const total = pCalculateGrandTotal();
+            const paid = pGetPaid();
+            const net = total - paid;
+            const fmt = v => "₹ " + (parseFloat(v) || 0).toFixed(2);
+
+            const setEl = (id, text, color) => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = text; if (color) el.style.color = color; }
+            };
+            setEl("pPanelTotal", fmt(total));
+            setEl("pPanelPaid", fmt(paid));
+            setEl("pPanelNet", fmt(net), net <= 0 ? "var(--success)" : "var(--danger)");
+
+            // Payment list
+            const listEl = document.getElementById("pPaymentList");
+            if (!listEl) return;
+            const bn = pBillNo() && pBillNo().value;
+            const payments = JSON.parse(localStorage.getItem("purchasePayments") || "[]");
+            const billPay = bn ? payments.filter(p => p.billNo === bn) : [];
+            if (billPay.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; color:var(--muted); font-size:12px; padding:10px 0;">No payments yet</div>';
+            } else {
+                listEl.innerHTML = billPay.slice(-5).reverse().map(p => `
+        <div style="background:#f8f9fa; border:1px solid var(--border); border-radius:8px; padding:8px 10px; font-size:12px;">
+          <div style="display:flex; justify-content:space-between; font-weight:700;">
+            <span>₹ ${(Number(p.amount) || 0).toFixed(2)}</span>
+            <span style="color:var(--muted); font-weight:400;">${p.mode || "Cash"}</span>
+          </div>
+          <div style="color:var(--muted); font-size:11px; margin-top:2px;">${new Date(p.date).toLocaleDateString()} — ${p.narration || "—"}</div>
+        </div>
+      `).join("");
+            }
+        }
+
+        /* ===== PAYMENT POPUP ===== */
+        function openPurchasePayment() {
+            const total = pCalculateGrandTotal();
+            const paid = pGetPaid();
+            const el = id => document.getElementById(id);
+            if (el("pPopupTotal")) el("pPopupTotal").textContent = total.toFixed(2);
+            if (el("pPopupAlreadyPaid")) el("pPopupAlreadyPaid").textContent = paid.toFixed(2);
+            if (el("pPopupNetDue")) el("pPopupNetDue").textContent = (total - paid).toFixed(2);
+            const popup = document.getElementById("pPaymentPopup");
+            if (popup) { popup.style.display = "flex"; }
+            const amt = document.getElementById("pPayAmt");
+            if (amt) { amt.value = ""; amt.focus(); }
+        }
+
+        function closePurchasePaymentPopup() {
+            const popup = document.getElementById("pPaymentPopup");
+            if (popup) popup.style.display = "none";
+        }
+
+        function savePurchasePayment() {
+            const bn = pBillNo() && pBillNo().value;
+            if (!bn) { alert("Bill number required"); return; }
+            const amtEl = document.getElementById("pPayAmt");
+            const amt = Number(amtEl && amtEl.value || 0);
+            if (!amt || amt <= 0) { alert("Enter valid amount"); return; }
+            const payments = JSON.parse(localStorage.getItem("purchasePayments") || "[]");
+            payments.push({
+                id: Date.now(),
+                billNo: bn,
+                customer: pGetCustomerName(),
+                customerId: pCustName() && pCustName().value,
+                amount: amt,
+                mode: document.getElementById("pPayMode") ? document.getElementById("pPayMode").value : "Cash",
+                narration: document.getElementById("pPayNarration") ? document.getElementById("pPayNarration").value : "",
+                date: new Date().toISOString().split("T")[0],
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem("purchasePayments", JSON.stringify(payments));
+            closePurchasePaymentPopup();
+            pUpdateSummary();
+            alert("Payment saved successfully");
+        }
+
+        /* ===== SAVE PURCHASE ===== */
+        function savePurchase() {
+            const bn = pBillNo() && pBillNo().value;
+            const cust = pGetCustomerName();
+            if (!cust) { alert("Select a supplier"); return; }
+            if (!bn) { alert("Bill number required"); return; }
+            const tbody = pItemBody();
+            if (!tbody || tbody.querySelectorAll("tr").length === 0) { alert("Add at least one item"); return; }
+
+            const rows = [...tbody.querySelectorAll("tr")].map(tr => ({
+                type: tr.cells[0].children[0].value,
+                values: Array.from(tr.cells).slice(0, 16).map(td => td.children[0] ? td.children[0].value : ""),
+                delivery: "", sample: "", orderFilled: ""
+            }));
+
+            const total = pCalculateGrandTotal();
+            const paid = pGetPaid();
+
+            const bill = {
+                id: Date.now(),
+                billNo: bn,
+                customer: cust,
+                customerId: pCustName() && pCustName().value,
+                date: pOrderDate() && pOrderDate().value,
+                dueDate: pDueDate() && pDueDate().value,
+                totalAmount: total,
+                paid: paid,
+                balance: total - paid,
+                type: "Purchase",
+                rows,
+                timestamp: new Date().toISOString()
+            };
+
+            const bills = JSON.parse(localStorage.getItem("purchaseBills") || "[]");
+            const idx = bills.findIndex(b => b.billNo === bn);
+            if (idx >= 0) bills[idx] = bill; else bills.push(bill);
+            localStorage.setItem("purchaseBills", JSON.stringify(bills));
+
+            window.dispatchEvent(new CustomEvent("purchaseSaved", { detail: bill }));
+            alert("Purchase Saved Successfully");
+
+            // Clear session and reset for new entry
+            window.__purchaseBillNoSession = null;
+            resetPurchase(true);
+        }
+
+        /* ===== RESET ===== */
+        function resetPurchase(skipConfirm) {
+            if (!skipConfirm && !confirm("Reset? All unsaved data will be lost.")) return;
+            window.__purchaseBillNoSession = null;
+            const b = pBillNo();
+            if (b) b.value = pGenerateBillNo();
+            const od = pOrderDate();
+            if (od) od.valueAsDate = new Date();
+            const dd = pDueDate();
+            if (dd) dd.value = "";
+            const gs = pGstRate();
+            if (gs) gs.value = "";
+            const sel = pCustName();
+            if (sel) sel.value = "";
+            if (pCurrentBal()) pCurrentBal().value = "";
+            if (pRelation()) pRelation().value = "";
+            if (pStation()) pStation().value = "";
+            const tbody = pItemBody();
+            if (tbody) tbody.innerHTML = "";
+            pAddRow();
+            pUpdateSummary();
+        }
+
+        /* ===== CLOSE ===== */
+        function closePurchasePage() {
+            if (typeof closeDashboard === "function") closeDashboard();
+        }
+
+        /* ===== START ===== */
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                initPurchasePage();
+                pAddRow();
+            });
+        } else {
+            initPurchasePage();
+            pAddRow();
+        }
+        window.addEventListener("pageRefresh", () => { setTimeout(() => { initPurchasePage(); }, 150); });
+    </script>
 </body>
 
 </html>

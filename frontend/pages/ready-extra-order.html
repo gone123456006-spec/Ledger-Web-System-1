@@ -1240,8 +1240,9 @@
                 <span class="summary-label">Paid:</span>
                 <span class="summary-value paid" id="panelPaid">₹ 0.00</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Balance:</span>
+              <div class="summary-item"
+                style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; font-weight:600;">
+                <span class="summary-label">Net Amount:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
               </div>
               <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
@@ -1506,7 +1507,7 @@
         style="display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--border);">
         <div><strong>Order Total: ₹<span id="popupBillTotal">0.00</span></strong></div>
         <div><strong>Amount: ₹<span id="popupAmountDisplay">0.00</span></strong></div>
-        <div><strong style="color:#dc3545;">Balance: ₹<span id="popupBalance">0.00</span></strong></div>
+        <div><strong style="color:#dc3545;">Net Amount: ₹<span id="popupBalance">0.00</span></strong></div>
       </div>
       <div class="popup-actions">
         <button onclick="savePaymentFromPopup()">Save Payment</button>
@@ -1720,22 +1721,35 @@
         // Signal that we're on ready-extra so New Order page can start fresh (no restore of new-order state)
         try { localStorage.setItem('lastOrderPage', 'ready-extra'); } catch (e) { }
 
+        // If this is a genuine FRESH open (not returning from ratebook/receipt, not editing),
+        // clear any stale saved state so the order gets a brand new bill number.
+        const comingFromSubpage =
+          localStorage.getItem("ratebookOpened") === "true" ||
+          localStorage.getItem("receiptOpened") === "true" ||
+          localStorage.getItem("readyExtraForceRestore") === "true";
+        if (!comingFromSubpage && !localStorage.getItem("editOrderId")) {
+          localStorage.removeItem("readyExtraOrderState");
+        }
+
         // Initialize date and bill number
         // IMPORTANT: If we are returning from Ratebook/Receipt (workspace navigation),
         // do NOT generate new Bill No / Date — restoreOrderState will restore them.
         const savedStateAtInit = localStorage.getItem("readyExtraOrderState");
+        const isEditing = !!localStorage.getItem("editOrderId");
         // If saved state exists (Ratebook/Receipt flow), do not generate new values.
         if (!savedStateAtInit) {
-          if (orderDate && !orderDate.value) {
-            orderDate.valueAsDate = new Date();
+          if (orderDate) {
+            // Always refresh date for a genuinely new order
+            if (!isEditing) orderDate.valueAsDate = new Date();
           }
-          if (billNo && !billNo.value) {
-            billNo.value = generateBillNo();
+          if (!isEditing) {
+            // Use session-safe generator: only increments lastBillNo ONCE per page load
+            if (billNo) billNo.value = getSessionBillNo();
           }
-          // Ensure Order No is auto-generated if still empty after a short delay (e.g. DOM ready late)
+          // Ensure Order No is auto-generated if still empty after a short delay
           setTimeout(function () {
             if (billNo && !billNo.value && !localStorage.getItem("editOrderId")) {
-              billNo.value = generateBillNo();
+              billNo.value = getSessionBillNo();
             }
           }, 200);
         }
@@ -2016,10 +2030,28 @@
 
       /* AUTO BILL NO */
       function generateBillNo() {
+        // Each call reserves the next number. We save to "lastBillNo" immediately
+        // so concurrent tabs/pages don't collide.
         let last = localStorage.getItem("lastBillNo") || "0";
         let next = Number(last) + 1;
         localStorage.setItem("lastBillNo", String(next));
         return "SGJ/0/" + String(next).padStart(4, "0");
+      }
+
+      /* Get or generate the bill number for this page session.
+         Generates a new number ONLY on the first call per page load;
+         subsequent calls return the already-generated number so retries
+         and pageRefresh events don't keep incrementing lastBillNo. */
+      function getSessionBillNo() {
+        if (!window.__readyExtraBillNoForSession) {
+          window.__readyExtraBillNoForSession = generateBillNo();
+        }
+        return window.__readyExtraBillNoForSession;
+      }
+
+      /* Call this after a successful save so the next open gets a fresh number */
+      function clearSessionBillNo() {
+        window.__readyExtraBillNoForSession = null;
       }
 
       /* AUTO JOB NO - Same as Order No */
@@ -2204,24 +2236,23 @@
 
       function setPurchaseOptionalFieldsState(row, isPurchase) {
         if (!row) return;
-        [].forEach(function (cellIdx) {
-          var cell = row.cells[cellIdx];
-          if (!cell) return;
-          var input = cell.querySelector("input");
-          if (!input) return;
-          if (isPurchase) {
-            input.value = "";
-            input.placeholder = "";
-            input.setAttribute("readonly", "readonly");
-            input.classList.add("purchase-field-disabled");
-            input.tabIndex = -1;
-          } else {
-            input.removeAttribute("readonly");
-            input.classList.remove("purchase-field-disabled");
-            input.tabIndex = 0;
-            input.placeholder = "";
+        // Disable/enable Making column (index 14) based on Purchase type
+        var makingCell = row.cells[14];
+        if (makingCell) {
+          var makingInput = makingCell.querySelector("input");
+          if (makingInput) {
+            if (isPurchase) {
+              makingInput.value = "0";
+              makingInput.setAttribute("readonly", "readonly");
+              makingInput.classList.add("purchase-field-disabled");
+              makingInput.tabIndex = -1;
+            } else {
+              makingInput.removeAttribute("readonly");
+              makingInput.classList.remove("purchase-field-disabled");
+              makingInput.tabIndex = 0;
+            }
           }
-        });
+        }
       }
 
       /* TYPE → POPUP */
@@ -2234,6 +2265,9 @@
         const allowedTypes = ["Order", "Repair", "Sale", "Purchase"];
 
         setPurchaseOptionalFieldsState(row, sel.value === "Purchase");
+
+        // Recalculate totals so Total syncs with Est. Total for Purchase rows
+        if (row) syncSecondTotalFromRow(row);
 
         if (allowedTypes.includes(sel.value) && sel.value === "Order") {
           activeRow = row;
@@ -2371,16 +2405,29 @@
         }
       }
 
-      /* Second Total = Ready weight × (Rate + Making). Rate works alone (Making 0); same logic when Making added. (columns 12, 13, 14 → 15) */
+      /* Total = Ready Weight × Rate × Making. For Purchase rows: Total = Est. Total (col 9). */
       function syncSecondTotalFromRow(r) {
         if (!r || !r.cells) return;
         try {
-          const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
-          const rate = parseFloat(r.cells[13].children[0].value) || 0;   // Rate column
-          const making = parseFloat(r.cells[14].children[0].value) || 0; // Making (optional)
-          const secondTotal = readyWeight * (rate + making);
-          if (r.cells[15] && r.cells[15].children[0]) {
-            r.cells[15].children[0].value = secondTotal.toFixed(2);
+          // Detect Purchase row
+          const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
+          const isPurchase = typeSelect && typeSelect.value === "Purchase";
+
+          if (isPurchase) {
+            // For Purchase: Total (col 15) = Est. Total (col 9)
+            const estTotal = parseFloat(r.cells[9] && r.cells[9].children[0] ? r.cells[9].children[0].value : 0) || 0;
+            if (r.cells[15] && r.cells[15].children[0]) {
+              r.cells[15].children[0].value = estTotal.toFixed(2);
+            }
+          } else {
+            const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
+            const rate = parseFloat(r.cells[13].children[0].value) || 0; // Rate column
+            const making = parseFloat(r.cells[14].children[0].value) || 0; // Making column
+            // Formula: R.Wt × Rate × Making = Total
+            const secondTotal = readyWeight * rate * making;
+            if (r.cells[15] && r.cells[15].children[0]) {
+              r.cells[15].children[0].value = secondTotal.toFixed(2);
+            }
           }
         } catch (e) {
           console.error("Error in syncSecondTotalFromRow:", e);
@@ -2964,6 +3011,17 @@
         // Save ratebook entries from rows
         saveRatebookFromRows();
 
+        // IMPORTANT: Clear saved state so next open generates a fresh bill number
+        localStorage.removeItem("readyExtraOrderState");
+        localStorage.removeItem("ratebookOpened");
+        localStorage.removeItem("receiptOpened");
+        localStorage.removeItem("readyExtraForceRestore");
+        localStorage.removeItem("editOrderId");
+        localStorage.removeItem("editCustomerReadOnly");
+        localStorage.removeItem("editOrderPayload");
+        // Clear session bill number so next new order gets a fresh auto-incremented number
+        clearSessionBillNo();
+
         alert("Bill Save Successfully");
 
         // Update panel after saving
@@ -3050,8 +3108,9 @@
         if (relation) relation.value = "";
         if (station) station.value = "";
 
-        // Reset bill info
-        if (billNo) billNo.value = generateBillNo();
+        // Reset bill info - generate a fresh number for this new session
+        clearSessionBillNo(); // Clear session flag so a new number is generated
+        if (billNo) billNo.value = getSessionBillNo();
         if (orderDate) orderDate.valueAsDate = new Date();
         if (dueDate) dueDate.value = "";
         if (gstRate) gstRate.value = "";
@@ -3068,6 +3127,7 @@
         localStorage.removeItem("readyExtraOrderState");
         localStorage.removeItem("ratebookOpened");
         localStorage.removeItem("receiptOpened");
+        localStorage.removeItem("readyExtraForceRestore");
 
         // Re-enable Customer Name and Bill No fields
         if (custName) {
