@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Statement</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --primary: #007aff;
+            --primary-soft: #e8f0fe;
+            --text: #1d1d1f;
+            --muted: #6e6e73;
+            --border: #d1d6de;
+            --card: #ffffff;
+            --bg: #e6ebf2;
+            --radius: 12px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, .08);
+            --danger: #ff3b30;
+            --success: #34c759;
+            --warn-bg: #fff3cd;
+            --warn-text: #856404;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            font-size: 13px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── OUTER WRAPPER ── */
+        .stmt-wrap {
+            margin: 4px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 8px);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        /* When inside dashboard workspace */
+        .workspace .stmt-wrap {
+            margin: 0;
+            height: 100%;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        /* ── TOOLBAR ── */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-left {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .toolbar-left h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .toolbar-left .subtitle {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* ── CUSTOMER INFO CARD ── */
+        .info-card {
+            margin: 14px 20px 0;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #f0f7ff 0%, #eaf2ff 100%);
+            border: 1px solid #c7ddf8;
+            border-radius: 10px;
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .info-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .info-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* ── STATEMENTS HEADER ── */
+        .stmt-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .stmt-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .op-bal-tag {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .op-bal-tag b {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+            border-top: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        col.col-ind {
+            width: 32px;
+        }
+
+        col.col-date {
+            width: 100px;
+        }
+
+        col.col-nar {
+            width: auto;
+        }
+
+        col.col-cr {
+            width: 110px;
+        }
+
+        col.col-dr {
+            width: 110px;
+        }
+
+        col.col-bal {
+            width: 125px;
+        }
+
+        col.col-clr {
+            width: 80px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        thead th {
+            background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
+            border: 1px solid #c5c9ce;
+            padding: 18px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #1d1d1f;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        thead th.right {
+            text-align: right;
+        }
+
+        thead th.center {
+            text-align: center;
+        }
+
+        tbody td {
+            padding: 18px;
+            border: 1px solid #d1d6de;
+            font-size: 14px;
+            color: #333;
+            vertical-align: middle;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        tbody td.right {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        tbody td.center {
+            text-align: center;
+        }
+
+        tbody tr {
+            background: var(--card);
+            transition: background 0.1s;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fb;
+        }
+
+        tbody tr:hover:not(.today-row):not(.selected-row) {
+            background: #e8f2ff !important;
+            cursor: pointer;
+        }
+
+        tbody tr:hover:not(.today-row):not(.selected-row) td {
+            border-color: #b8d4f0;
+        }
+
+        tbody tr.selected-row:not(.today-row) {
+            background: #007aff !important;
+        }
+
+        tbody tr.selected-row:not(.today-row) td {
+            color: #fff !important;
+            border-color: #007aff;
+        }
+
+        tbody tr.selected-row:not(.today-row) .dr-tag {
+            color: #ffd0cc !important;
+        }
+
+        tbody tr.selected-row:not(.today-row) .cr-tag {
+            color: #c8ffd4 !important;
+        }
+
+        tbody tr.today-row td {
+            background: #fff;
+            color: #1d1d1f;
+            font-weight: 600;
+        }
+
+        /* ── ADD ROW ── */
+        tbody tr.add-row td {
+            padding: 10px 18px;
+            border: 1px dashed #b8cfea;
+            background: #f4f8ff;
+            color: #007aff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.15s, color 0.15s;
+            letter-spacing: 0.02em;
+            user-select: none;
+        }
+
+        tbody tr.add-row:hover td {
+            background: #e2eeff;
+            color: #0055cc;
+            border-color: #8ab8f0;
+        }
+
+        .dr-tag {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--danger);
+            margin-left: 3px;
+        }
+
+        .cr-tag {
+            font-size: 10px;
+            font-weight: 700;
+            color: #28a745;
+            margin-left: 3px;
+        }
+
+        .clr-mark {
+            font-size: 14px;
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        /* ── BALANCE BAR ── */
+        .balance-bar {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 30px;
+            border-top: 2px solid var(--border);
+            background: #f5f7fa;
+            flex-shrink: 0;
+            font-size: 13px;
+            flex-wrap: wrap;
+        }
+
+        .balance-bar .bal-item {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .balance-bar .bal-label {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .balance-bar .bal-value {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .bal-dr {
+            color: var(--danger);
+        }
+
+        .bal-cr {
+            color: #28a745;
+        }
+
+        /* ── SHORTCUT BAR ── */
+        .shortcut-bar {
+            padding: 5px 20px;
+            font-size: 11px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+            background: #fafbfc;
+            flex-shrink: 0;
+            letter-spacing: 0.02em;
+        }
+
+        .shortcut-bar kbd {
+            display: inline-block;
+            background: #e4e8ed;
+            border: 1px solid #c5c9ce;
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 2px;
+        }
+
+        /* ── ACTIONS BAR ── */
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            background: #fafbfc;
+            border-top: 1px solid var(--border);
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .actions-left,
+        .actions-right {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            font-family: inherit;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+            transition: all 0.18s;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 122, 255, .2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #0060d0;
+            border-color: #0060d0;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #cc2a22;
+            border-color: #cc2a22;
+        }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(2px);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--card);
+            border-radius: 16px;
+            min-width: 340px;
+            max-width: 94vw;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+            overflow: hidden;
+            animation: pop 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+        }
+
+        @keyframes pop {
+            from {
+                transform: scale(0.93) translateY(8px);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: #f0f2f7;
+            border-radius: 7px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 14px;
+            transition: all 0.12s;
+            font-family: inherit;
+        }
+
+        .modal-close:hover {
+            background: #e2e5ef;
+            color: var(--text);
+        }
+
+        .modal-body {
+            padding: 16px 20px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            color: var(--text);
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 12px 20px;
+            border-top: 1px solid var(--border);
+            background: #fafbfc;
+        }
+
+        /* Interest result */
+        .interest-result {
+            background: #f8f9fb;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .interest-result strong {
+            color: var(--danger);
+        }
+
+        /* ── CONTEXT MENU ── */
+        .ctx-menu {
+            display: none;
+            position: fixed;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, .14);
+            z-index: 10000;
+            min-width: 160px;
+            overflow: hidden;
+        }
+
+        .ctx-menu.open {
+            display: block;
+        }
+
+        .ctx-item {
+            padding: 9px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.1s;
+        }
+
+        .ctx-item:hover {
+            background: #f0f4fd;
+            color: var(--primary);
+        }
+
+        .ctx-item.danger {
+            color: var(--danger);
+        }
+
+        .ctx-item.danger:hover {
+            background: #fff0ef;
+        }
+
+        .ctx-sep {
+            height: 1px;
+            background: var(--border);
+            margin: 3px 0;
+        }
+
+        /* ── SCROLLBAR ── */
+        .table-wrap::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .table-wrap::-webkit-scrollbar-track {
+            background: #f0f2f5;
+            border-radius: 5px;
+        }
+
+        .table-wrap::-webkit-scrollbar-thumb {
+            background: #b0b4b8;
+            border-radius: 5px;
+        }
+
+        .table-wrap::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stmt-wrap">
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h2>Customer Statement</h2>
+                <div class="subtitle" id="toolbarSubtitle"></div>
+            </div>
+            <button class="btn" onclick="render()">🔄 Refresh</button>
+            <button class="btn btn-primary" onclick="openAddInvoice()">+ Add Invoice</button>
+            <button class="btn" onclick="openCalcInterest()">📊 Interest</button>
+            <button class="btn" onclick="saveAndClose()">↩ Back</button>
+            <button class="btn" onclick="window.print()">🖨 Print</button>
+        </div>
+
+        <!-- CUSTOMER INFO -->
+        <div class="info-card">
+            <div class="info-field">
+                <span class="info-label">LF No.</span>
+                <span class="info-value" id="dispLfNo">—</span>
+            </div>
+            <div class="info-field">
+                <span class="info-label">Name</span>
+                <span class="info-value" id="dispName">—</span>
+            </div>
+            <div class="info-field">
+                <span class="info-label">Station</span>
+                <span class="info-value" id="dispStation">—</span>
+            </div>
+        </div>
+
+        <!-- STATEMENTS HEADER -->
+        <div class="stmt-header">
+            <span class="stmt-title">Account Statements</span>
+            <span class="op-bal-tag">
+                Opening Balance : &nbsp;<b id="dispOpBal">0</b>&nbsp;&nbsp;
+                On : &nbsp;<b id="dispOpDate">—</b>
+            </span>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-wrap" id="tableWrap">
+            <table>
+                <colgroup>
+                    <col class="col-ind">
+                    <col class="col-date">
+                    <col class="col-nar">
+                    <col class="col-cr">
+                    <col class="col-dr">
+                    <col class="col-bal">
+                    <col class="col-clr">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th class="center">#</th>
+                        <th>Date</th>
+                        <th>Narration</th>
+                        <th class="right">Credit</th>
+                        <th class="right">Debit</th>
+                        <th class="right">Balance</th>
+                        <th class="center">Cleared</th>
+                    </tr>
+                </thead>
+                <tbody id="statementBody"></tbody>
+            </table>
+        </div>
+
+        <!-- BALANCE BAR -->
+        <div class="balance-bar">
+            <div class="bal-item">
+                <span class="bal-label">Current Balance :</span>
+                <span class="bal-value" id="dispCurrentBal">—</span>
+            </div>
+        </div>
+
+
+
+        <!-- ACTIONS BAR -->
+        <div class="actions-bar">
+            <div class="actions-left">
+                <button class="btn" onclick="clearSelected()">✅ Clear Bill</button>
+            </div>
+            <div class="actions-right">
+                <button class="btn btn-danger" onclick="deleteSelected()">🗑 Delete</button>
+                <button class="btn btn-primary" onclick="saveAndClose()">💾 Save &amp; Close</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ADD INVOICE MODAL -->
+    <div class="modal-overlay" id="addInvoiceModal">
+        <div class="modal">
+            <div class="modal-title">
+                <h3>Add Invoice / Transaction</h3>
+                <button class="modal-close" onclick="closeModal('addInvoiceModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="inv_date">
+                    </div>
+                    <div class="form-group">
+                        <label>Bill No / Narration</label>
+                        <input type="text" id="inv_nar" placeholder="e.g. SGJ/20 or cash jma">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="inv_type">
+                            <option value="debit">Debit (Invoice)</option>
+                            <option value="credit">Credit (Payment)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="inv_amount" placeholder="0" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('addInvoiceModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="addTransaction()">Add Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CALCULATE INTEREST MODAL -->
+    <div class="modal-overlay" id="calcInterestModal">
+        <div class="modal">
+            <div class="modal-title">
+                <h3>Calculate Interest</h3>
+                <button class="modal-close" onclick="closeModal('calcInterestModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>From Date</label>
+                        <input type="date" id="int_from">
+                    </div>
+                    <div class="form-group">
+                        <label>To Date</label>
+                        <input type="date" id="int_to">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Annual Interest Rate (%)</label>
+                    <input type="number" id="int_rate" value="18" step="0.1" min="0">
+                </div>
+                <div class="interest-result" id="interestResult" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('calcInterestModal')">Close</button>
+                <button class="btn btn-primary" onclick="calculateInterest()">Calculate</button>
+                <button class="btn btn-danger" onclick="applyInterest()" id="applyIntBtn" style="display:none;">Add as
+                    Debit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRM MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-title">
+                <h3>Confirm Delete</h3>
+                <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:var(--muted); line-height:1.5;">
+                    Are you sure you want to delete this entry? This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('deleteModal')">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Delete Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-title">
+                <h3>Edit Entry</h3>
+                <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="edit_date">
+                    </div>
+                    <div class="form-group">
+                        <label>Narration</label>
+                        <input type="text" id="edit_nar">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="edit_type">
+                            <option value="debit">Debit (Invoice)</option>
+                            <option value="credit">Credit (Payment)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <input type="number" id="edit_amount" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal('editModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEXT MENU -->
+    <div class="ctx-menu" id="ctxMenu">
+        <div class="ctx-item" onclick="ctxEdit()">✏️ Edit Entry</div>
+        <div class="ctx-item danger" onclick="ctxDelete()">🗑️ Delete Entry</div>
+        <div class="ctx-sep"></div>
+        <div class="ctx-item" onclick="ctxClearBill()">✅ Toggle Clear Bill</div>
+    </div>
+
+    <script>
+        // ─── STATE ───────────────────────────────────────────────────────────────────
+        const customerData = {
+            lfNo: "",
+            name: "",
+            station: "",
+            openingBalance: 0,
+            openingDate: ""
+        };
+
+        let transactions = [];
+        let nextId = 1;
+        let selectedIdx = null;
+        let ctxTargetIdx = null;
+        let pendingInterest = 0;
+        let deleteTargetIdx = null;
+
+        // ─── HELPERS ─────────────────────────────────────────────────────────────────
+        function fmt(n) {
+            if (n === 0) return "0";
+            return Number(n).toLocaleString('en-IN');
+        }
+        function fmtDate(str) {
+            if (!str) return "—";
+            const d = new Date(str);
+            if (isNaN(d)) return str;
+            return String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + d.getFullYear();
+        }
+        function fmtDateLabel(str) {
+            if (!str) return "—";
+            const d = new Date(str);
+            if (isNaN(d)) return str;
+            return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        function todayStr() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        // ─── RENDER ──────────────────────────────────────────────────────────────────
+        function render() {
+            const tbody = document.getElementById('statementBody');
+            tbody.innerHTML = '';
+
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+
+
+            let balance = customerData.openingBalance;
+
+            sorted.forEach((tx, i) => {
+                balance += tx.debit - tx.credit;
+                const absbal = Math.abs(balance);
+                const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+                const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
+
+                const tr = document.createElement('tr');
+                if (i === selectedIdx) tr.classList.add('selected-row');
+
+                tr.innerHTML = `
+                    <td class="center" style="color:var(--muted);font-size:11px;">${tx.cleared ? '✔' : String(i + 1)}</td>
+                    <td>${fmtDate(tx.date)}</td>
+                    <td title="${tx.narration}">${tx.narration}</td>
+                    <td class="right" style="color:${tx.credit > 0 ? '#28a745' : 'var(--muted)'};">${tx.credit ? fmt(tx.credit) : '—'}</td>
+                    <td class="right" style="color:${tx.debit > 0 ? 'var(--danger)' : 'var(--muted)'};">${tx.debit ? fmt(tx.debit) : '—'}</td>
+                    <td class="right">${fmt(absbal)} <span class="${tagClass}">${tag}</span></td>
+                    <td class="center">${tx.cleared ? '<span class="clr-mark">✔</span>' : ''}</td>
+                `;
+
+                tr.addEventListener('click', () => {
+                    selectedIdx = (selectedIdx === i) ? null : i;
+                    render();
+                });
+                tr.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    selectedIdx = i;
+                    ctxTargetIdx = i;
+                    render();
+                    showCtxMenu(e.clientX, e.clientY);
+                });
+                tr.addEventListener('dblclick', () => {
+                    selectedIdx = i;
+                    ctxTargetIdx = i;
+                    render();
+                    ctxEdit();
+                });
+
+                tbody.appendChild(tr);
+            });
+
+            // Today row — inline editable
+            const todayTr = document.createElement('tr');
+            todayTr.className = 'today-row';
+
+            // build each editable cell
+            function makeCell(cls, placeholder, initialVal, isNum) {
+                const td = document.createElement('td');
+                if (cls) td.className = cls;
+                const span = document.createElement('span');
+                span.contentEditable = 'true';
+                span.dataset.placeholder = placeholder;
+                span.textContent = initialVal || '';
+                span.style.cssText = `
+                    display:block; min-width:30px; outline:none;
+                    font-family:inherit; font-size:14px; color:inherit;
+                    border-bottom: 1px dashed #aac4e8;
+                `;
+                if (isNum) span.style.textAlign = 'right';
+                td.appendChild(span);
+                return { td, span };
+            }
+
+            // # column — static
+            const tdHash = document.createElement('td');
+            tdHash.className = 'center';
+            tdHash.style.cssText = 'font-size:13px; font-weight:700;';
+            tdHash.textContent = '»';
+
+            // Date
+            const { td: tdDate, span: spDate } = makeCell('', 'DD-MM-YYYY', fmtDate(todayStr()), false);
+            // Narration
+            const { td: tdNar, span: spNar } = makeCell('', 'Narration…', '', false);
+            // Credit
+            const { td: tdCr, span: spCr } = makeCell('right', '0.00', '', true);
+            // Debit
+            const { td: tdDr, span: spDr } = makeCell('right', '0.00', '', true);
+            // Balance — static display
+            const tdBal = document.createElement('td');
+            tdBal.className = 'right';
+            tdBal.style.fontWeight = '700';
+            const todayAbsbal = Math.abs(balance);
+            const todayTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+            tdBal.innerHTML = `${fmt(todayAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${todayTag}</span>`;
+            // Cleared — static
+            const tdClr = document.createElement('td');
+            tdClr.className = 'center';
+            tdClr.style.color = 'var(--muted)';
+            tdClr.textContent = '—';
+
+            todayTr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdClr);
+            tbody.appendChild(todayTr);
+
+            // ── Save inline row as a transaction ──────────────────────────────────────
+            function saveInlineRow() {
+                const narVal = spNar.textContent.trim();
+                const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
+                const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
+                if (!narVal && crRaw === 0 && drRaw === 0) return; // nothing entered
+
+                // Parse date from cell (supports DD-MM-YYYY or YYYY-MM-DD)
+                let dateVal = todayStr();
+                const dateTxt = spDate.textContent.trim();
+                if (dateTxt) {
+                    const parts = dateTxt.split(/[-\/]/);
+                    if (parts.length === 3) {
+                        if (parts[0].length === 4) dateVal = dateTxt; // YYYY-MM-DD
+                        else dateVal = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`; // DD-MM-YYYY → YYYY-MM-DD
+                    }
+                }
+
+                // Determine type: if Credit has value → Credit; Debit → Debit; both → Credit wins
+                let type = 'Debit', amount = drRaw;
+                if (crRaw > 0) { type = 'Credit'; amount = crRaw; }
+
+                const newTx = { id: nextId++, date: dateVal, narration: narVal || '', type, amount, cleared: false };
+                transactions.push(newTx);
+                saveTransactions();
+                render();
+            }
+
+            // Save on Enter (in any editable cell), Tab from last editable
+            [spDate, spNar, spCr, spDr].forEach((sp, idx, arr) => {
+                sp.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') { e.preventDefault(); saveInlineRow(); }
+                    if (e.key === 'Escape') { render(); }
+                    if (e.key === 'Tab' && idx === arr.length - 1) { e.preventDefault(); saveInlineRow(); }
+                });
+            });
+
+            // placeholder styling via CSS trick using data-placeholder
+            [spDate, spNar, spCr, spDr].forEach(sp => {
+                sp.addEventListener('focus', () => { if (!sp.textContent.trim()) sp.textContent = ''; });
+                sp.addEventListener('blur', () => { /* no auto-save on blur to avoid accidental saves */ });
+            });
+
+
+            // Balance display
+            const absbal = Math.abs(balance);
+            const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+            const balEl = document.getElementById('dispCurrentBal');
+            balEl.textContent = fmt(absbal) + (tag ? ' ' + tag : '');
+            balEl.className = 'bal-value ' + (balance > 0 ? 'bal-dr' : 'bal-cr');
+
+
+
+            // Header info
+            document.getElementById('dispName').textContent = customerData.name || '—';
+            document.getElementById('dispStation').textContent = customerData.station || '—';
+            document.getElementById('dispLfNo').textContent = customerData.lfNo || '—';
+            document.getElementById('dispOpBal').textContent = customerData.openingBalance || '0';
+            document.getElementById('dispOpDate').textContent = fmtDateLabel(customerData.openingDate);
+
+            // Toolbar subtitle
+            document.getElementById('toolbarSubtitle').textContent =
+                (customerData.name || '') + (customerData.station ? ' · ' + customerData.station : '');
+        }
+
+        // ─── MODALS ───────────────────────────────────────────────────────────────────
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+        function openAddInvoice() {
+            document.getElementById('inv_date').value = todayStr();
+            document.getElementById('inv_nar').value = '';
+            document.getElementById('inv_amount').value = '';
+            document.getElementById('inv_type').value = 'debit';
+            openModal('addInvoiceModal');
+            setTimeout(() => document.getElementById('inv_nar').focus(), 60);
+        }
+
+        function addTransaction() {
+            const date = document.getElementById('inv_date').value;
+            const nar = document.getElementById('inv_nar').value.trim();
+            const type = document.getElementById('inv_type').value;
+            const amt = parseFloat(document.getElementById('inv_amount').value) || 0;
+            if (!date) { alert('Please enter a date.'); return; }
+            if (!nar) { alert('Please enter a narration or bill number.'); return; }
+            if (amt <= 0) { alert('Please enter a valid amount.'); return; }
+            transactions.push({
+                id: nextId++, date, narration: nar,
+                debit: type === 'debit' ? amt : 0,
+                credit: type === 'credit' ? amt : 0,
+                cleared: false
+            });
+            closeModal('addInvoiceModal');
+            render();
+        }
+
+        // ─── INTEREST ────────────────────────────────────────────────────────────────
+        function openCalcInterest() {
+            document.getElementById('int_from').value = customerData.openingDate || todayStr();
+            document.getElementById('int_to').value = todayStr();
+            document.getElementById('int_rate').value = '18';
+            document.getElementById('interestResult').style.display = 'none';
+            document.getElementById('applyIntBtn').style.display = 'none';
+            pendingInterest = 0;
+            openModal('calcInterestModal');
+        }
+
+        function calculateInterest() {
+            const from = new Date(document.getElementById('int_from').value);
+            const to = new Date(document.getElementById('int_to').value);
+            const rate = parseFloat(document.getElementById('int_rate').value) || 0;
+            if (isNaN(from) || isNaN(to)) { alert('Enter valid dates.'); return; }
+            if (to < from) { alert('To date must be after From date.'); return; }
+            const days = Math.round((to - from) / (1000 * 60 * 60 * 24));
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            let bal = customerData.openingBalance;
+            sorted.forEach(tx => {
+                if (tx.date <= document.getElementById('int_from').value) bal += tx.debit - tx.credit;
+            });
+            const interest = Math.round(bal * rate / 100 * days / 365);
+            pendingInterest = interest;
+            const res = document.getElementById('interestResult');
+            res.style.display = 'block';
+            res.innerHTML = `
+                <b>Balance at start:</b> ${fmt(bal)} Dr<br>
+                <b>Days:</b> ${days}<br>
+                <b>Rate:</b> ${rate}% per annum<br>
+                <b>Interest:</b> <strong>₹ ${fmt(interest)}</strong>
+            `;
+            document.getElementById('applyIntBtn').style.display = 'inline-block';
+        }
+
+        function applyInterest() {
+            if (!pendingInterest) return;
+            const to = document.getElementById('int_to').value;
+            transactions.push({
+                id: nextId++, date: to, narration: 'Interest Debit',
+                debit: pendingInterest, credit: 0, cleared: false
+            });
+            closeModal('calcInterestModal');
+            render();
+        }
+
+        // ─── CLEAR BILL ──────────────────────────────────────────────────────────────
+        function clearSelected() {
+            if (selectedIdx === null) { alert('Please select a row first.'); return; }
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const tx = sorted[selectedIdx];
+            const orig = transactions.find(t => t.id === tx.id);
+            if (orig) orig.cleared = !orig.cleared;
+            render();
+        }
+
+        // ─── DELETE ──────────────────────────────────────────────────────────────────
+        function deleteSelected() {
+            if (selectedIdx === null) { alert('Please select a row first.'); return; }
+            ctxTargetIdx = selectedIdx;
+            deleteTargetIdx = selectedIdx;
+            openModal('deleteModal');
+        }
+
+        function ctxDelete() {
+            closeCtxMenu();
+            deleteTargetIdx = ctxTargetIdx;
+            openModal('deleteModal');
+        }
+
+        function confirmDelete() {
+            if (deleteTargetIdx === null) return;
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const tx = sorted[deleteTargetIdx];
+            transactions = transactions.filter(t => t.id !== tx.id);
+            selectedIdx = null;
+            deleteTargetIdx = null;
+            closeModal('deleteModal');
+            render();
+        }
+
+        // ─── EDIT ─────────────────────────────────────────────────────────────────────
+        function ctxEdit() {
+            closeCtxMenu();
+            if (ctxTargetIdx === null) return;
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const tx = sorted[ctxTargetIdx];
+            document.getElementById('edit_date').value = tx.date;
+            document.getElementById('edit_nar').value = tx.narration;
+            document.getElementById('edit_type').value = tx.debit > 0 ? 'debit' : 'credit';
+            document.getElementById('edit_amount').value = tx.debit > 0 ? tx.debit : tx.credit;
+            openModal('editModal');
+        }
+
+        function saveEdit() {
+            if (ctxTargetIdx === null) return;
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const tx = sorted[ctxTargetIdx];
+            const orig = transactions.find(t => t.id === tx.id);
+            if (!orig) return;
+            const type = document.getElementById('edit_type').value;
+            const amt = parseFloat(document.getElementById('edit_amount').value) || 0;
+            orig.date = document.getElementById('edit_date').value;
+            orig.narration = document.getElementById('edit_nar').value.trim();
+            orig.debit = type === 'debit' ? amt : 0;
+            orig.credit = type === 'credit' ? amt : 0;
+            closeModal('editModal');
+            render();
+        }
+
+        // ─── CLEAR BILL (ctx) ────────────────────────────────────────────────────────
+        function ctxClearBill() {
+            closeCtxMenu();
+            if (ctxTargetIdx === null) return;
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const tx = sorted[ctxTargetIdx];
+            const orig = transactions.find(t => t.id === tx.id);
+            if (orig) orig.cleared = !orig.cleared;
+            render();
+        }
+
+        // ─── CONTEXT MENU ────────────────────────────────────────────────────────────
+        function showCtxMenu(x, y) {
+            const menu = document.getElementById('ctxMenu');
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.classList.add('open');
+        }
+        function closeCtxMenu() { document.getElementById('ctxMenu').classList.remove('open'); }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#ctxMenu')) closeCtxMenu();
+        });
+
+        // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+                closeCtxMenu();
+            }
+            if (e.key === 'F5') { e.preventDefault(); render(); }
+            if (e.ctrlKey && e.key === 'd') { e.preventDefault(); if (selectedIdx !== null) { ctxTargetIdx = selectedIdx; ctxDelete(); } }
+            if (e.ctrlKey && e.key === 'c') { e.preventDefault(); clearSelected(); }
+            if (e.ctrlKey && e.key === 'p') { e.preventDefault(); window.print(); }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const max = transactions.length - 1;
+                selectedIdx = (selectedIdx === null) ? 0 : Math.min(selectedIdx + 1, max);
+                render();
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIdx = (selectedIdx === null) ? 0 : Math.max(selectedIdx - 1, 0);
+                render();
+            }
+        });
+
+        // ─── SAVE / CLOSE ────────────────────────────────────────────────────────────
+        function saveAndClose() {
+            try {
+                const key = 'stmt_' + (customerData.lfNo || customerData.name);
+                localStorage.setItem(key, JSON.stringify(transactions));
+            } catch (e) { }
+            if (window.parent && window.parent !== window) window.parent.history.back();
+            else window.history.back();
+        }
+
+        // ─── LOAD FROM URL / LOCALSTORAGE ────────────────────────────────────────────
+        (function loadFromUrl() {
+            const p = new URLSearchParams(window.location.search);
+            const paramId = p.get('id') || '';
+
+            // ── Priority 1: sessionStorage (set by customer-balance.html right before navigating)
+            //    This is the most reliable method — works even inside iframes where URL params
+            //    may not be accessible via window.location.search
+            let fromSession = null;
+            try {
+                const raw = sessionStorage.getItem('stmtCustomer');
+                if (raw) {
+                    fromSession = JSON.parse(raw);
+                    // Only use if the id matches (so stale data from a different customer is ignored)
+                    if (!paramId || String(fromSession.id) === String(paramId) || paramId === '') {
+                        if (fromSession.name) customerData.name = fromSession.name.trim();
+                        if (fromSession.lfno) customerData.lfNo = fromSession.lfno.trim();
+                        if (fromSession.station) customerData.station = fromSession.station.trim();
+                        if (fromSession.opbal) customerData.openingBalance = parseFloat(fromSession.opbal) || 0;
+                    }
+                }
+            } catch (e) { }
+
+            // ── Priority 2: URL params (fill any gaps not covered by sessionStorage)
+            if (p.get('name') && !customerData.name) customerData.name = decodeURIComponent(p.get('name')).trim();
+            if (p.get('lfno') && !customerData.lfNo) customerData.lfNo = decodeURIComponent(p.get('lfno')).trim();
+            if (p.get('station') && !customerData.station) customerData.station = decodeURIComponent(p.get('station')).trim();
+            if (p.get('opbal') && !customerData.openingBalance) customerData.openingBalance = parseFloat(p.get('opbal')) || 0;
+            if (p.get('opdate')) customerData.openingDate = p.get('opdate');
+            // Always apply name/station/lfno from URL params if present (override sessionStorage if URL has them)
+            if (p.get('name')) customerData.name = decodeURIComponent(p.get('name')).trim() || customerData.name;
+            if (p.get('lfno')) customerData.lfNo = decodeURIComponent(p.get('lfno')).trim() || customerData.lfNo;
+            if (p.get('station')) customerData.station = decodeURIComponent(p.get('station')).trim() || customerData.station;
+
+            // ── Priority 3: localStorage customers[] lookup by id (fills openingDate & any remaining gaps)
+            const id = paramId || (fromSession && fromSession.id ? String(fromSession.id) : '');
+            if (id) {
+                try {
+                    const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                    const cust = customers.find(c => String(c.id) === String(id)) ||
+                        (id.startsWith('idx-') ? customers[parseInt(id.replace('idx-', ''), 10)] : null);
+                    if (cust) {
+                        // Only fill fields still empty
+                        if (!customerData.name) customerData.name = (cust.name || '').trim();
+                        if (!customerData.station) customerData.station = (cust.station || '').trim();
+                        if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
+                        if (!customerData.openingBalance) customerData.openingBalance = parseFloat(cust.openingBalance) || 0;
+                        if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
+                    }
+                } catch (e) { }
+            }
+
+            // ── Step 4: Load saved transactions for this customer from localStorage
+            const stmtKey = 'stmt_' + (customerData.lfNo || customerData.name);
+            try {
+                const saved = localStorage.getItem(stmtKey);
+                if (saved) {
+                    transactions = JSON.parse(saved);
+                    nextId = transactions.length > 0
+                        ? Math.max(...transactions.map(t => t.id || 0)) + 1
+                        : 1;
+                }
+            } catch (e) { }
+        })();
+
+        // ─── INIT ────────────────────────────────────────────────────────────────────
+        render();
+    </script>
+</body>
+
+</html>

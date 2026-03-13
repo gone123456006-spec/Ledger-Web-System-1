@@ -6,9 +6,20 @@
   <title>Customer Balance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    * { box-sizing: border-box; font-family: Segoe UI, Arial, sans-serif; font-size: 14px; }
-    body { margin: 0; background: #e6ebf2; }
-    .workspace { background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important; }
+    * {
+      box-sizing: border-box;
+      font-family: Segoe UI, Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    body {
+      margin: 0;
+      background: #e6ebf2;
+    }
+
+    .workspace {
+      background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
+    }
 
     .customer-balance-wrap {
       margin: 15px;
@@ -22,7 +33,14 @@
       overflow: hidden;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
-    .workspace .customer-balance-wrap { margin: 0; height: 100%; max-height: 100%; border-radius: 0; box-shadow: none; }
+
+    .workspace .customer-balance-wrap {
+      margin: 0;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      box-shadow: none;
+    }
 
     .balance-toolbar {
       display: flex;
@@ -34,8 +52,20 @@
       background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
       flex-shrink: 0;
     }
-    .balance-toolbar h2 { margin: 0; font-size: 20px; font-weight: 600; color: #1d1d1f; flex: 1; }
-    .balance-toolbar .toolbar-subtitle { font-size: 14px; color: #6e6e73; }
+
+    .balance-toolbar h2 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #1d1d1f;
+      flex: 1;
+    }
+
+    .balance-toolbar .toolbar-subtitle {
+      font-size: 14px;
+      color: #6e6e73;
+    }
+
     .btn {
       padding: 10px 18px;
       border: 1px solid #d1d6de;
@@ -48,9 +78,26 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       transition: all 0.2s;
     }
-    .btn:hover { background: #007aff; border-color: #007aff; color: #fff; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2); }
-    .btn:active { transform: translateY(0); }
-    label { font-size: 14px; color: #3a3a3c; font-weight: 500; white-space: nowrap; }
+
+    .btn:hover {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    label {
+      font-size: 14px;
+      color: #3a3a3c;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
     input {
       height: 40px;
       padding: 8px 14px;
@@ -60,8 +107,16 @@
       background: #fff;
       min-width: 180px;
     }
-    input:focus { outline: none; border-color: #007aff; box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12); }
-    input::placeholder { color: #8e8e93; }
+
+    input:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    }
+
+    input::placeholder {
+      color: #8e8e93;
+    }
 
     .table-wrap {
       flex: 1;
@@ -69,8 +124,41 @@
       min-height: 0;
       background: #fff;
     }
-    table { width: 100%; min-width: 920px; border-collapse: collapse; background: #fff; table-layout: fixed; }
-    thead { position: sticky; top: 0; z-index: 10; background: #fff; box-shadow: 0 1px 0 0 #c5c9ce; }
+
+    table {
+      width: 100%;
+      min-width: 920px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    select {
+      height: 40px;
+      padding: 8px 14px;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      color: #1d1d1f;
+      cursor: pointer;
+      min-width: 140px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    select:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #fff;
+      box-shadow: 0 1px 0 0 #c5c9ce;
+    }
+
     thead th {
       background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
       border: 1px solid #c5c9ce;
@@ -83,8 +171,15 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
-    thead th.center { text-align: center; }
-    thead th.right { text-align: right; }
+
+    thead th.center {
+      text-align: center;
+    }
+
+    thead th.right {
+      text-align: right;
+    }
+
     tbody td {
       padding: 18px;
       border: 1px solid #d1d6de;
@@ -93,28 +188,168 @@
       color: #333;
       line-height: 1.35;
     }
-    tbody td:nth-child(4), tbody td:nth-child(5) { white-space: normal; word-break: break-word; }
-    tbody tr { transition: background 0.2s; background: #fff; }
-    tbody tr:nth-child(even) { background: #f8f9fb; }
-    tbody tr:hover { background: #e8f2ff; }
-    tbody tr:hover td { border-color: #b8d4f0; }
-    .center { text-align: center; }
-    .right { text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
-    .amount-rate-diff { font-size: 13px; font-weight: 600; color: #28a745; }
-    .empty-state { padding: 48px 24px; text-align: center; color: #6e6e73; font-size: 15px; line-height: 1.5; }
-    .footer { padding: 14px 20px; font-size: 14px; color: #6e6e73; border-top: 2px solid #d1d6de; background: #f5f7fa; flex-shrink: 0; }
-    .mark-cell { display: flex; align-items: center; justify-content: center; }
-    .mark-cell input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #007aff; margin: 0; }
-    .table-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
-    .table-wrap::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb { background: #b0b4b8; border-radius: 6px; }
+
+    tbody td:nth-child(4),
+    tbody td:nth-child(5) {
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    tbody tr {
+      transition: background 0.2s;
+      background: #fff;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8f9fb;
+    }
+
+    tbody tr:hover {
+      background: #e8f2ff;
+    }
+
+    tbody tr:hover td {
+      border-color: #b8d4f0;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .right {
+      text-align: right;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .amount-rate-diff {
+      font-size: 13px;
+      font-weight: 600;
+      color: #28a745;
+    }
+
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      color: #6e6e73;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      padding: 14px 20px;
+      font-size: 14px;
+      color: #6e6e73;
+      border-top: 2px solid #d1d6de;
+      background: #f5f7fa;
+      flex-shrink: 0;
+    }
+
+    .mark-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mark-cell input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: #007aff;
+      margin: 0;
+    }
+
+    .customer-link {
+      color: #007aff;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .customer-link:hover {
+      text-decoration: underline;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f0f2f5;
+      border-radius: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #b0b4b8;
+      border-radius: 6px;
+    }
+
     @media (max-width: 768px) {
-      .customer-balance-wrap { margin: 8px; height: calc(100vh - 16px); max-height: calc(100vh - 16px); }
-      .workspace .customer-balance-wrap { margin: 0; height: 100%; max-height: 100%; }
-      .balance-toolbar { padding: 14px; gap: 10px; }
-      .balance-toolbar h2 { font-size: 18px; }
-      input { min-width: 140px; font-size: 14px; }
-      tbody td, thead th { padding: 14px; font-size: 13px; }
+      .customer-balance-wrap {
+        margin: 8px;
+        height: calc(100vh - 16px);
+        max-height: calc(100vh - 16px);
+      }
+
+      .workspace .customer-balance-wrap {
+        margin: 0;
+        height: 100%;
+        max-height: 100%;
+      }
+
+      .balance-toolbar {
+        padding: 14px;
+        gap: 10px;
+      }
+
+      .balance-toolbar h2 {
+        font-size: 18px;
+      }
+
+      input {
+        min-width: 140px;
+        font-size: 14px;
+      }
+
+      tbody td,
+      thead th {
+        padding: 14px;
+        font-size: 13px;
+      }
+    }
+
+    .filter-btn {
+      padding: 8px 14px;
+      border: 1.5px solid #d1d6de;
+      background: #fff;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #3a3a3c;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      border-color: #007aff;
+      color: #007aff;
+      background: #f0f7ff;
+    }
+
+    .filter-btn.active {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.22);
+    }
+
+    .filter-sep {
+      width: 1px;
+      height: 28px;
+      background: #d1d6de;
+      flex-shrink: 0;
     }
   </style>
 </head>
@@ -126,7 +361,22 @@
       <span class="toolbar-subtitle">One row per customer — balance from Add Customer / Transfers</span>
       <button type="button" class="btn" onclick="loadTable()">🔄 Refresh</button>
       <label for="customerBalanceSearch">Search</label>
-      <input id="customerBalanceSearch" type="text" placeholder="Name, phone, mobile, station…" onkeyup="filterRows()">
+      <input id="customerBalanceSearch" type="text" placeholder="Name, phone, mobile…" onkeyup="filterRows()">
+
+      <select id="stationFilter" onchange="filterRows()">
+        <option value="">All Stations</option>
+      </select>
+
+      <div class="filter-sep"></div>
+      <button type="button" class="filter-btn" id="filterAll" onclick="setFilter('all')">All</button>
+      <button type="button" class="filter-btn" id="filterZero" onclick="setFilter('zero')">Zero Balance</button>
+
+      <div class="filter-sep"></div>
+      <button type="button" class="filter-btn" id="markAllBtn" onclick="markAll()"
+        style="background:#34c759;border-color:#34c759;color:#fff;" title="Check all visible rows">✓ Mark All</button>
+      <button type="button" class="filter-btn" id="unmarkAllBtn" onclick="unmarkAll()"
+        style="background:#ff3b30;border-color:#ff3b30;color:#fff;" title="Uncheck all visible rows">✕ Unmark
+        All</button>
     </div>
 
     <div class="table-wrap">
@@ -148,7 +398,8 @@
       </table>
     </div>
 
-    <div class="footer" id="customerBalanceFooter">Customer Balance — one row per customer. Add customers in Add Customer; balances update when you use Transfers in Ready Order.</div>
+    <div class="footer" id="customerBalanceFooter">Customer Balance — one row per customer. Add customers in Add
+      Customer; balances update when you use Transfers in Ready Order.</div>
   </div>
 
   <script>
@@ -264,21 +515,43 @@
         const relName = (r.relation + " " + (r.relationName || "")).trim() || "—";
         const tr = document.createElement("tr");
         tr.dataset.customerId = r.id != null ? r.id : i;
+        tr.dataset.amount = r.amount;   // store raw amount for filter
+        tr.dataset.marked = r.mark && r.mark !== '—' ? '1' : '0';
+        tr.dataset.station = (r.station || "—").trim().toLowerCase();
         const amountCell = r.amountMinusRateDiff != null
           ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + "</span>"
           : formatAmount(r.amount);
+        const safeName = encodeURIComponent(r.name || '');
+        const safeLfno = encodeURIComponent(r.lfno || '');
+        const safeStation = encodeURIComponent(r.station || '');
+        const safeOpBal = encodeURIComponent(r.amount || 0);
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
           '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-customer-id="' + id + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
           "<td>" + (r.lfno || "—") + "</td>" +
-          "<td>" + (r.name || "—") + "</td>" +
+          `<td><a href="#" onclick="openCustomerStatement('${id}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
           "<td>" + relName + "</td>" +
           "<td>" + (r.station || "—") + "</td>" +
           "<td>" + (r.phone || "—") + "</td>" +
           "<td>" + (r.mobile || "—") + "</td>" +
-          '<td class="right">' + amountCell + "</td>";
+          `<td class="right">${amountCell}</td>`;
         tbody.appendChild(tr);
       });
+
+      // Populate Station Dropdown
+      const stationSelect = document.getElementById("stationFilter");
+      if (stationSelect) {
+        const currentVal = stationSelect.value;
+        const stations = [...new Set(sorted.map(r => (r.station || "—").trim()))].filter(s => s !== "—" && s !== "").sort();
+        stationSelect.innerHTML = '<option value="">All Stations</option>' +
+          stations.map(s => `<option value="${s.toLowerCase()}">${s}</option>`).join("");
+        // Restore previous selection if it still exists
+        if (Array.from(stationSelect.options).some(opt => opt.value === currentVal)) {
+          stationSelect.value = currentVal;
+        }
+      }
+
+      filterRows(); // apply any active filters
 
       if (footer) footer.textContent = "Customer Balance — " + sorted.length + " customers. Amount = balance (updated by Transfers in Ready Order).";
     }
@@ -291,6 +564,18 @@
       if (idx < 0 || idx >= customers.length) return;
       customers[idx].mark = checkbox.checked ? "✓" : "—";
       saveCustomers(customers);
+    }
+
+    let activeFilter = 'all';   // 'all' | 'marked' | 'zero'
+
+    function setFilter(mode) {
+      activeFilter = mode;
+      // Toggle active class on buttons
+      ['all', 'marked', 'zero'].forEach(m => {
+        const btn = document.getElementById('filter' + m.charAt(0).toUpperCase() + m.slice(1));
+        if (btn) btn.classList.toggle('active', m === mode);
+      });
+      filterRows();
     }
 
     function filterRows() {
@@ -307,19 +592,111 @@
           if (!q) visible = 1;
           return;
         }
+        // Search filter
         const text = row.innerText.toLowerCase();
-        const show = !q || text.includes(q);
+        const matchesSearch = !q || text.includes(q);
+        // Amount filter
+        const amt = parseFloat(row.dataset.amount || '0') || 0;
+        const isMarked = row.dataset.marked === '1';
+        const rowStation = row.dataset.station || "";
+
+        let matchesFilter = true;
+        if (activeFilter === 'marked') matchesFilter = isMarked;
+        else if (activeFilter === 'zero') matchesFilter = amt === 0;
+
+        // Station filter
+        const stationEl = document.getElementById("stationFilter");
+        const selStation = stationEl ? stationEl.value : "";
+        const matchesStation = !selStation || rowStation === selStation;
+
+        const show = matchesSearch && matchesFilter && matchesStation;
         row.style.display = show ? "" : "none";
         if (show) visible++;
       });
-      const total = rows.length;
-      if (footer && !q) footer.textContent = "Customer Balance — " + total + " customers.";
-      else if (footer && q) footer.textContent = "Customer Balance — showing " + visible + " of " + total + " customers.";
+      if (footer) {
+        const total = rows.length;
+        const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : '';
+        if (!q && activeFilter === 'all') footer.textContent = "Customer Balance — " + visible + " customers.";
+        else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " customers" + filterLabel + ".";
+      }
+    }
+
+    function markAll() {
+      if (!tbody) return;
+      const customers = getCustomers();
+      tbody.querySelectorAll('tr').forEach(row => {
+        if (row.style.display === 'none') return;
+        const cb = row.querySelector('.mark-checkbox');
+        if (!cb || cb.checked) return;
+        cb.checked = true;
+        // Save to localStorage
+        const idStr = cb.getAttribute('data-customer-id');
+        let idx = customers.findIndex(c => String(c.id) === idStr);
+        if (idx < 0 && idStr && idStr.indexOf('idx-') === 0) idx = parseInt(idStr.replace('idx-', ''), 10);
+        if (idx >= 0 && idx < customers.length) {
+          customers[idx].mark = '\u2713';
+          row.dataset.marked = '1';
+        }
+      });
+      saveCustomers(customers);
+    }
+
+    function unmarkAll() {
+      if (!tbody) return;
+      const customers = getCustomers();
+      tbody.querySelectorAll('tr').forEach(row => {
+        if (row.style.display === 'none') return;
+        const cb = row.querySelector('.mark-checkbox');
+        if (!cb || !cb.checked) return;
+        cb.checked = false;
+        const idStr = cb.getAttribute('data-customer-id');
+        let idx = customers.findIndex(c => String(c.id) === idStr);
+        if (idx < 0 && idStr && idStr.indexOf('idx-') === 0) idx = parseInt(idStr.replace('idx-', ''), 10);
+        if (idx >= 0 && idx < customers.length) {
+          customers[idx].mark = '\u2014';
+          row.dataset.marked = '0';
+        }
+      });
+      saveCustomers(customers);
+    }
+
+    function openCustomerStatement(id, name, lfno, station, opbal) {
+      // Decode the encoded params back to plain strings
+      const plainName = name ? decodeURIComponent(name) : '';
+      const plainLfno = lfno ? decodeURIComponent(lfno) : '';
+      const plainStation = station ? decodeURIComponent(station) : '';
+      const plainOpbal = opbal ? decodeURIComponent(opbal) : '0';
+
+      // Save to sessionStorage so QR page can always read it — even inside iframe
+      try {
+        sessionStorage.setItem('stmtCustomer', JSON.stringify({
+          id, name: plainName, lfno: plainLfno, station: plainStation, opbal: plainOpbal
+        }));
+      } catch (e) { }
+
+      // Also build a URL with params as backup
+      const params = new URLSearchParams();
+      params.set('id', id);
+      if (plainName) params.set('name', plainName);
+      if (plainLfno) params.set('lfno', plainLfno);
+      if (plainStation) params.set('station', plainStation);
+      if (plainOpbal) params.set('opbal', plainOpbal);
+      const qs = params.toString();
+
+      if (window.parent && window.parent.loadPage) {
+        window.parent.loadPage('pages/customer-balance-QR.html?' + qs);
+      } else {
+        window.location.href = 'customer-balance-QR.html?' + qs;
+      }
     }
 
     window.saveMarkCheckbox = saveMarkCheckbox;
     window.loadTable = loadTable;
     window.filterRows = filterRows;
+    window.setFilter = setFilter;
+    window.markAll = markAll;
+    window.unmarkAll = unmarkAll;
+    window.openCustomerStatement = openCustomerStatement;
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", loadTable);
