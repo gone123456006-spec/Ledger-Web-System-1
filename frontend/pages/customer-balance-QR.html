@@ -678,8 +678,9 @@
                 <h2>Customer Statement</h2>
                 <div class="subtitle" id="toolbarSubtitle"></div>
             </div>
+            <button class="btn btn-success" onclick="addRow()">+ Add Row</button>
             <button class="btn" onclick="render()">🔄 Refresh</button>
-            <button class="btn btn-primary" onclick="openAddInvoice()">+ Add Invoice</button>
+            <button class="btn" onclick="openAddInvoice()">+ Add Entry (Popup)</button>
             <button class="btn" onclick="openCalcInterest()">📊 Interest</button>
             <button class="btn" onclick="saveAndClose()">↩ Back</button>
             <button class="btn" onclick="window.print()">🖨 Print</button>
@@ -914,11 +915,42 @@
         let ctxTargetIdx = null;
         let pendingInterest = 0;
         let deleteTargetIdx = null;
+        let draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
 
         // ─── HELPERS ─────────────────────────────────────────────────────────────────
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = `
+                position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+                background: #323232; color: #fff; padding: 10px 20px; border-radius: 8px;
+                font-size: 13px; z-index: 20000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: toastIn 0.3s ease-out;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastOut 0.3s ease-in forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Add toast animations to head
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes toastIn { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+            @keyframes toastOut { from { bottom: 20px; opacity: 1; } to { bottom: -50px; opacity: 0; } }
+        `;
+        document.head.appendChild(style);
+
         function fmt(n) {
-            if (n === 0) return "0";
-            return Number(n).toLocaleString('en-IN');
+            if (!n || isNaN(n)) return '0.00';
+            return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+        }
+        function saveTransactions() {
+            try {
+                const key = 'stmt_' + (customerData.lfNo || customerData.name);
+                localStorage.setItem(key, JSON.stringify(transactions));
+            } catch (e) { }
         }
         function fmtDate(str) {
             if (!str) return "—";
@@ -987,9 +1019,8 @@
                 tbody.appendChild(tr);
             });
 
-            // Today row — inline editable
-            const todayTr = document.createElement('tr');
-            todayTr.className = 'today-row';
+            // If we have an empty drafting row system, it's always the last row
+            // We just ensure it's rendered at the end of the loop.
 
             // build each editable cell
             function makeCell(cls, placeholder, initialVal, isNum) {
@@ -1009,77 +1040,93 @@
                 return { td, span };
             }
 
-            // # column — static
-            const tdHash = document.createElement('td');
-            tdHash.className = 'center';
-            tdHash.style.cssText = 'font-size:13px; font-weight:700;';
-            tdHash.textContent = '»';
+            // ── Draft rows (multi-row support) ───────────────────────────────────────
+            draftRows.forEach((draft, dIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'today-row';
 
-            // Date
-            const { td: tdDate, span: spDate } = makeCell('', 'DD-MM-YYYY', fmtDate(todayStr()), false);
-            // Narration
-            const { td: tdNar, span: spNar } = makeCell('', 'Narration…', '', false);
-            // Credit
-            const { td: tdCr, span: spCr } = makeCell('right', '0.00', '', true);
-            // Debit
-            const { td: tdDr, span: spDr } = makeCell('right', '0.00', '', true);
-            // Balance — static display
-            const tdBal = document.createElement('td');
-            tdBal.className = 'right';
-            tdBal.style.fontWeight = '700';
-            const todayAbsbal = Math.abs(balance);
-            const todayTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-            tdBal.innerHTML = `${fmt(todayAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${todayTag}</span>`;
-            // Cleared — static
-            const tdClr = document.createElement('td');
-            tdClr.className = 'center';
-            tdClr.style.color = 'var(--muted)';
-            tdClr.textContent = '—';
+                const tdHash = document.createElement('td');
+                tdHash.className = 'center';
+                tdHash.style.cssText = 'font-size:13px; font-weight:700;';
+                tdHash.textContent = '»';
 
-            todayTr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdClr);
-            tbody.appendChild(todayTr);
+                const { td: tdDate, span: spDate } = makeCell('', 'DD-MM-YYYY', draft.date || fmtDate(todayStr()), false);
+                const { td: tdNar, span: spNar } = makeCell('', 'Narration…', draft.nar, false);
+                const { td: tdCr, span: spCr } = makeCell('right', '0.00', draft.cr, true);
+                const { td: tdDr, span: spDr } = makeCell('right', '0.00', draft.dr, true);
 
-            // ── Save inline row as a transaction ──────────────────────────────────────
-            function saveInlineRow() {
-                const narVal = spNar.textContent.trim();
-                const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
-                const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
-                if (!narVal && crRaw === 0 && drRaw === 0) return; // nothing entered
+                const tdBal = document.createElement('td');
+                tdBal.className = 'right';
+                tdBal.style.fontWeight = '700';
+                const rowAbsbal = Math.abs(balance);
+                const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+                tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
 
-                // Parse date from cell (supports DD-MM-YYYY or YYYY-MM-DD)
-                let dateVal = todayStr();
-                const dateTxt = spDate.textContent.trim();
-                if (dateTxt) {
-                    const parts = dateTxt.split(/[-\/]/);
-                    if (parts.length === 3) {
-                        if (parts[0].length === 4) dateVal = dateTxt; // YYYY-MM-DD
-                        else dateVal = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`; // DD-MM-YYYY → YYYY-MM-DD
+                const tdClr = document.createElement('td');
+                tdClr.className = 'center';
+                tdClr.style.color = 'var(--muted)';
+                tdClr.textContent = '—';
+
+                tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdClr);
+                tbody.appendChild(tr);
+
+                // Inline save logic for this specific draft row
+                function saveThisDraft() {
+                    const narVal = spNar.textContent.trim();
+                    const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
+                    const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
+                    if (!narVal && crRaw === 0 && drRaw === 0) return;
+
+                    let dateVal = todayStr();
+                    const dateTxt = spDate.textContent.trim();
+                    if (dateTxt) {
+                        const parts = dateTxt.split(/[-\/]/);
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) dateVal = dateTxt;
+                            else dateVal = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        }
                     }
+
+                    transactions.push({
+                        id: nextId++, date: dateVal, narration: narVal || '',
+                        debit: drRaw, credit: crRaw, cleared: false
+                    });
+
+                    // Remove this draft row from the array
+                    draftRows.splice(dIdx, 1);
+                    // Ensure there's always at least one empty row if they want that
+                    if (draftRows.length === 0) draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
+                    
+                    saveTransactions();
+                    render();
+                    showToast('✅ Row saved');
                 }
 
-                // Determine type: if Credit has value → Credit; Debit → Debit; both → Credit wins
-                let type = 'Debit', amount = drRaw;
-                if (crRaw > 0) { type = 'Credit'; amount = crRaw; }
-
-                const newTx = { id: nextId++, date: dateVal, narration: narVal || '', type, amount, cleared: false };
-                transactions.push(newTx);
-                saveTransactions();
-                render();
-            }
-
-            // Save on Enter (in any editable cell), Tab from last editable
-            [spDate, spNar, spCr, spDr].forEach((sp, idx, arr) => {
-                sp.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') { e.preventDefault(); saveInlineRow(); }
-                    if (e.key === 'Escape') { render(); }
-                    if (e.key === 'Tab' && idx === arr.length - 1) { e.preventDefault(); saveInlineRow(); }
+                // Keyboard listeners and state sync
+                [spDate, spNar, spCr, spDr].forEach((sp, idx, arr) => {
+                    sp.addEventListener('input', () => {
+                        if (idx === 0) draft.date = sp.textContent;
+                        if (idx === 1) draft.nar = sp.textContent;
+                        if (idx === 2) draft.cr = sp.textContent;
+                        if (idx === 3) draft.dr = sp.textContent;
+                    });
+                    sp.addEventListener('keydown', e => {
+                        if (e.key === 'Enter') { e.preventDefault(); saveThisDraft(); }
+                        if (e.key === 'Escape') {
+                            if (draftRows.length > 1) {
+                                draftRows.splice(dIdx, 1);
+                                render();
+                            } else {
+                                // Just clear if it's the last one
+                                draft.date = ''; draft.nar = ''; draft.cr = ''; draft.dr = '';
+                                render();
+                            }
+                        }
+                        if (e.key === 'Tab' && idx === arr.length - 1) { e.preventDefault(); saveThisDraft(); }
+                    });
+                    // placeholder styling 
+                    sp.addEventListener('focus', () => { if (!sp.textContent.trim()) sp.textContent = ''; });
                 });
-            });
-
-            // placeholder styling via CSS trick using data-placeholder
-            [spDate, spNar, spCr, spDr].forEach(sp => {
-                sp.addEventListener('focus', () => { if (!sp.textContent.trim()) sp.textContent = ''; });
-                sp.addEventListener('blur', () => { /* no auto-save on blur to avoid accidental saves */ });
             });
 
 
@@ -1122,17 +1169,19 @@
             const nar = document.getElementById('inv_nar').value.trim();
             const type = document.getElementById('inv_type').value;
             const amt = parseFloat(document.getElementById('inv_amount').value) || 0;
-            if (!date) { alert('Please enter a date.'); return; }
-            if (!nar) { alert('Please enter a narration or bill number.'); return; }
-            if (amt <= 0) { alert('Please enter a valid amount.'); return; }
+            if (!date) { showToast('⚠️ Please enter a date.'); return; }
+            if (!nar) { showToast('⚠️ Please enter a narration or bill number.'); return; }
+            if (amt <= 0) { showToast('⚠️ Please enter a valid amount.'); return; }
             transactions.push({
                 id: nextId++, date, narration: nar,
                 debit: type === 'debit' ? amt : 0,
                 credit: type === 'credit' ? amt : 0,
                 cleared: false
             });
+            saveTransactions();
             closeModal('addInvoiceModal');
             render();
+            showToast('✅ Transaction added');
         }
 
         // ─── INTEREST ────────────────────────────────────────────────────────────────
@@ -1150,8 +1199,8 @@
             const from = new Date(document.getElementById('int_from').value);
             const to = new Date(document.getElementById('int_to').value);
             const rate = parseFloat(document.getElementById('int_rate').value) || 0;
-            if (isNaN(from) || isNaN(to)) { alert('Enter valid dates.'); return; }
-            if (to < from) { alert('To date must be after From date.'); return; }
+            if (isNaN(from) || isNaN(to)) { showToast('⚠️ Enter valid dates.'); return; }
+            if (to < from) { showToast('⚠️ To date must be after From date.'); return; }
             const days = Math.round((to - from) / (1000 * 60 * 60 * 24));
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             let bal = customerData.openingBalance;
@@ -1178,23 +1227,29 @@
                 id: nextId++, date: to, narration: 'Interest Debit',
                 debit: pendingInterest, credit: 0, cleared: false
             });
+            saveTransactions();
             closeModal('calcInterestModal');
             render();
+            showToast('✅ Interest applied');
         }
 
         // ─── CLEAR BILL ──────────────────────────────────────────────────────────────
         function clearSelected() {
-            if (selectedIdx === null) { alert('Please select a row first.'); return; }
+            if (selectedIdx === null) { showToast('⚠️ Please select a row first.'); return; }
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             const tx = sorted[selectedIdx];
             const orig = transactions.find(t => t.id === tx.id);
-            if (orig) orig.cleared = !orig.cleared;
+            if (orig) {
+                orig.cleared = !orig.cleared;
+                saveTransactions();
+                showToast(orig.cleared ? '✅ Marked as cleared' : '↩️ Cleared mark removed');
+            }
             render();
         }
 
         // ─── DELETE ──────────────────────────────────────────────────────────────────
         function deleteSelected() {
-            if (selectedIdx === null) { alert('Please select a row first.'); return; }
+            if (selectedIdx === null) { showToast('⚠️ Please select a row first.'); return; }
             ctxTargetIdx = selectedIdx;
             deleteTargetIdx = selectedIdx;
             openModal('deleteModal');
@@ -1211,10 +1266,12 @@
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             const tx = sorted[deleteTargetIdx];
             transactions = transactions.filter(t => t.id !== tx.id);
+            saveTransactions();
             selectedIdx = null;
             deleteTargetIdx = null;
             closeModal('deleteModal');
             render();
+            showToast('🗑 Row deleted');
         }
 
         // ─── EDIT ─────────────────────────────────────────────────────────────────────
@@ -1242,8 +1299,10 @@
             orig.narration = document.getElementById('edit_nar').value.trim();
             orig.debit = type === 'debit' ? amt : 0;
             orig.credit = type === 'credit' ? amt : 0;
+            saveTransactions();
             closeModal('editModal');
             render();
+            showToast('✅ Changes saved');
         }
 
         // ─── CLEAR BILL (ctx) ────────────────────────────────────────────────────────
@@ -1253,7 +1312,11 @@
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             const tx = sorted[ctxTargetIdx];
             const orig = transactions.find(t => t.id === tx.id);
-            if (orig) orig.cleared = !orig.cleared;
+            if (orig) {
+                orig.cleared = !orig.cleared;
+                saveTransactions();
+                showToast(orig.cleared ? '✅ Marked as cleared' : '↩️ Cleared mark removed');
+            }
             render();
         }
 
@@ -1295,12 +1358,19 @@
 
         // ─── SAVE / CLOSE ────────────────────────────────────────────────────────────
         function saveAndClose() {
-            try {
-                const key = 'stmt_' + (customerData.lfNo || customerData.name);
-                localStorage.setItem(key, JSON.stringify(transactions));
-            } catch (e) { }
-            if (window.parent && window.parent !== window) window.parent.history.back();
-            else window.history.back();
+            saveTransactions();
+            showToast('💾 Saved!');
+            setTimeout(() => {
+                if (typeof window.loadPage === 'function') {
+                    window.loadPage('pages/customer-balance.html');
+                } else if (window.parent && typeof window.parent.loadPage === 'function') {
+                    window.parent.loadPage('pages/customer-balance.html');
+                } else if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.close();
+                }
+            }, 600);
         }
 
         // ─── LOAD FROM URL / LOCALSTORAGE ────────────────────────────────────────────
@@ -1368,8 +1438,49 @@
             } catch (e) { }
         })();
 
+        function addRow() {
+            draftRows.push({ date: '', nar: '', cr: '', dr: '' });
+            render();
+            setTimeout(() => {
+                const allDrafts = document.querySelectorAll('.today-row');
+                const lastRow = allDrafts[allDrafts.length - 1];
+                if (lastRow) {
+                    const sp = lastRow.querySelector('span[contenteditable]');
+                    if (sp) {
+                        sp.focus();
+                        const range = document.createRange();
+                        const sel = window.getSelection();
+                        range.selectNodeContents(sp);
+                        range.collapse(false);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    }
+                }
+            }, 60);
+        }
+
         // ─── INIT ────────────────────────────────────────────────────────────────────
         render();
+
+        // ─── EXPORT GLOBALS (FOR DASHBOARD SPA) ───────────────────────────────────────
+        window.render = render;
+        window.openCalcInterest = openCalcInterest;
+        window.doPrint = () => window.print();
+        window.deleteSelected = deleteSelected;
+        window.saveAndClose = saveAndClose;
+        window.openAddInvoice = openAddInvoice;
+        window.closeModal = closeModal;
+        window.addTransaction = addTransaction;
+        window.calculateInterest = calculateInterest;
+        window.applyInterest = applyInterest;
+        window.confirmDelete = confirmDelete;
+        window.saveEdit = saveEdit;
+        window.ctxEdit = ctxEdit;
+        window.ctxDelete = ctxDelete;
+        window.ctxClearBill = ctxClearBill;
+        window.clearSelected = clearSelected;
+        window.showCtxMenu = showCtxMenu;
+        window.closeCtxMenu = closeCtxMenu;
     </script>
 </body>
 

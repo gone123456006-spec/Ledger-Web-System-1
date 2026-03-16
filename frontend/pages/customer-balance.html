@@ -368,7 +368,8 @@
       </select>
 
       <div class="filter-sep"></div>
-      <button type="button" class="filter-btn" id="filterAll" onclick="setFilter('all')">All</button>
+      <button type="button" class="filter-btn active" id="filterNonzero" onclick="setFilter('nonzero')">With
+        Balance</button>
       <button type="button" class="filter-btn" id="filterZero" onclick="setFilter('zero')">Zero Balance</button>
 
       <div class="filter-sep"></div>
@@ -566,12 +567,12 @@
       saveCustomers(customers);
     }
 
-    let activeFilter = 'all';   // 'all' | 'marked' | 'zero'
+    let activeFilter = 'nonzero';   // 'nonzero' (default) | 'all' | 'marked' | 'zero'
 
     function setFilter(mode) {
       activeFilter = mode;
       // Toggle active class on buttons
-      ['all', 'marked', 'zero'].forEach(m => {
+      ['all', 'nonzero', 'marked', 'zero'].forEach(m => {
         const btn = document.getElementById('filter' + m.charAt(0).toUpperCase() + m.slice(1));
         if (btn) btn.classList.toggle('active', m === mode);
       });
@@ -601,8 +602,10 @@
         const rowStation = row.dataset.station || "";
 
         let matchesFilter = true;
-        if (activeFilter === 'marked') matchesFilter = isMarked;
-        else if (activeFilter === 'zero') matchesFilter = amt === 0;
+        if (activeFilter === 'nonzero') matchesFilter = amt > 0;
+        else if (activeFilter === 'marked') matchesFilter = isMarked;
+        else if (activeFilter === 'zero') matchesFilter = amt <= 0;
+        // 'all' shows everything
 
         // Station filter
         const stationEl = document.getElementById("stationFilter");
@@ -615,8 +618,8 @@
       });
       if (footer) {
         const total = rows.length;
-        const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : '';
-        if (!q && activeFilter === 'all') footer.textContent = "Customer Balance — " + visible + " customers.";
+        const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All Customers)' : '';
+        if (!q && activeFilter === 'nonzero') footer.textContent = "Customer Balance — " + visible + " customers (zero balance hidden)";
         else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " customers" + filterLabel + ".";
       }
     }
