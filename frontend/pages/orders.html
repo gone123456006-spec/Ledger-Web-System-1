@@ -321,8 +321,6 @@
             <th>Customer</th>
             <th>Order Date</th>
             <th>Due Date</th>
-            <th>Type</th>
-            <th class="right">Pc</th>
             <th class="right">Gr.Wt</th>
             <th class="right">Net (Rs)</th>
             <th class="right">Advance (Rs)</th>
@@ -444,8 +442,6 @@
         <td>${order.customer || order.customerName || "-"}</td>
         <td>${order.orderDate || "-"}</td>
         <td>${order.dueDate || "-"}</td>
-        <td>${orderType}</td>
-        <td class="right">${totalPc.toFixed(0)}</td>
         <td class="right">${totalGrWt.toFixed(3)}</td>
         <td class="right">${parseFloat(order.netAmount || 0).toFixed(2)}</td>
         <td class="right">${parseFloat(order.advance || 0).toFixed(2)}</td>
