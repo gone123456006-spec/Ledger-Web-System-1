@@ -440,10 +440,10 @@
           const totalAdvance = cashAdvance + purchaseTotal;
           const displayBalance = displayNet - totalAdvance;
 
-          const isPending = order.status === "PENDING";
+          const isMarked = order.marked === true;
           row.innerHTML = `
         <td class="center">
-          <input type="checkbox" ${isPending ? 'checked' : ''} onchange="selectRow(this); toggleOrderStatus(this, ${order.id}); event.stopPropagation();" onclick="event.stopPropagation();">
+          <input type="checkbox" ${isMarked ? 'checked' : ''} onchange="selectRow(this); toggleOrderStatus(this, ${order.id}); event.stopPropagation();" onclick="event.stopPropagation();">
         </td>
         <td>${order.orderNo || order.billNo || "-"}</td>
         <td>${order.customer || order.customerName || "-"}</td>
@@ -458,7 +458,7 @@
         </td>
       `;
 
-          if (isPending) row.classList.add("selected");
+          if (isMarked) row.classList.add("selected");
 
           // Make row clickable to edit order (but not if clicking Edit button)
           row.style.cursor = "pointer";
@@ -751,6 +751,7 @@
         }
 
         const order = orders[orderIndex];
+        order.marked = cb.checked;
         if (cb.checked) {
           order.status = "PENDING";
         } else {

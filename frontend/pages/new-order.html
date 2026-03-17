@@ -2477,7 +2477,8 @@
             netAmount: billTotal.toFixed(2),
             advance: getPaidAmount(AppState.elements.billNo.value).toFixed(2),
             balance: (billTotal - getPaidAmount(AppState.elements.billNo.value)).toFixed(2),
-            status: AppState.editMode ? (AppState.currentOrderStatus || null) : null,
+            status: AppState.editMode ? (AppState.currentOrderStatus || 'PENDING') : 'PENDING',
+            marked: AppState.editMode ? (AppState.currentOrderMarked || false) : false,
             items: rows,
             timestamp: new Date().toISOString()
           };
@@ -2659,6 +2660,7 @@
           AppState.editMode = true;
           AppState.editOrderId = order.id;
           AppState.currentOrderStatus = order.status || null;
+          AppState.currentOrderMarked = order.marked || false;
 
           const customerName = (order.customer || order.customerName || '').toString().trim();
           const customerIdRaw = order.customerId != null && order.customerId !== '' ? order.customerId : null;
