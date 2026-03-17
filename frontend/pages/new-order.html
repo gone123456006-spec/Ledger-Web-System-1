@@ -1009,7 +1009,7 @@
           <thead>
             <tr>
               <th style="min-width: 115px;">Type</th>
-              <th>Order No.</th>
+              <th style="display: none;">Order No.</th>
               <th>Item Name</th>
               <th>Stamp</th>
               <th>Remarks</th>
@@ -1525,7 +1525,7 @@
             <button class="edit-details-btn" onclick="openOrderDetailsPopup(this)" title="Edit Order Details" style="display:none; padding:4px; background:none; border:none; cursor:pointer; font-size:14px;">✏️</button>
           </div>
         </td>
-        <td><input readonly value="${(AppState.elements.billNo && AppState.elements.billNo.value) || ''}"></td>
+        <td style="display: none;"><input readonly value="${(AppState.elements.billNo && AppState.elements.billNo.value) || ''}"></td>
         <td><input placeholder="Item Name"></td>
         <td>
           <select class="stamp-select">
