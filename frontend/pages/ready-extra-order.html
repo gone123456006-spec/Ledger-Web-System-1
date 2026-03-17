@@ -2427,9 +2427,11 @@
           } else {
             const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
             const rate = parseFloat(r.cells[13].children[0].value) || 0; // Rate column
-            const making = parseFloat(r.cells[14].children[0].value) || 0; // Making column
-            // Formula: R.Wt × Rate × Making = Total
-            const secondTotal = readyWeight * rate * making;
+            const making = parseFloat(r.cells[14].children[0].value) || 0; // Making percentage column
+            // Formula: (R.Wt * Rate) + (R.Wt * Rate * Making / 100) = Total
+            const base = readyWeight * rate;
+            const labor = base * (making / 100);
+            const secondTotal = base + labor;
             if (r.cells[15] && r.cells[15].children[0]) {
               r.cells[15].children[0].value = secondTotal.toFixed(2);
             }

@@ -567,9 +567,9 @@
 
       tr.innerHTML = `
         <td><span class="badge pending">⏳ PENDING</span></td>
-        <td><strong>${order.orderNo || order.billNo || "—"}</strong></td>
-        <td>${customerName}</td>
-        <td>${order.customerRelation || "—"}</td>
+        <td><strong>${escapeHtml(order.orderNo || order.billNo)}</strong></td>
+        <td>${escapeHtml(customerName)}</td>
+        <td>${escapeHtml(order.customerRelation)}</td>
         <td>${formatDate(order.orderDate)}</td>
         <td>${formatDate(order.dueDate)}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
@@ -604,6 +604,16 @@
       } catch (e) {
         return dateStr;
       }
+    }
+
+    function escapeHtml(str) {
+      if (str == null || str === '') return '—';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     /* =========================
