@@ -460,6 +460,7 @@
       if (n == null || n === "") return "—";
       const num = typeof n === "number" ? n : Number(n);
       if (Number.isNaN(num)) return "—";
+      if (num === 0) return "0";
       return num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
@@ -478,7 +479,16 @@
       const rows = customers.map((c) => {
         const name = (c.name || "").trim();
         const customerEntries = balances.filter((b) => norm(b.customer) === norm(name));
-        const amount = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
+        // Prefer currentBalance (synced from statement) over openingBalance for display
+        const amount = (c.currentBalance != null && c.currentBalance !== "")
+          ? Number(c.currentBalance)
+          : ((c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0);
+        // Prefer currentBalanceType, else openingBalanceType
+        const balanceType = (c.currentBalance != null && c.currentBalance !== "")
+          ? (c.currentBalanceType || 'Dr')
+          : (c.openingBalanceType || 'Dr');
+        // Always use original openingBalance as the starting point for statement page
+        const originalOpBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
         const amountMinusRateDiffSum = customerEntries.reduce((sum, b) => {
           const v = b.amountMinusRateDiff != null && b.amountMinusRateDiff !== "" ? Number(b.amountMinusRateDiff) : NaN;
           return Number.isNaN(v) ? sum : sum + v;
@@ -493,6 +503,8 @@
           phone: c.phone || "—",
           mobile: c.mobile || "—",
           amount,
+          balanceType,
+          originalOpBal,
           amountMinusRateDiff,
           mark: c.mark || "—",
           id: c.id != null ? c.id : null
@@ -519,13 +531,14 @@
         tr.dataset.amount = r.amount;   // store raw amount for filter
         tr.dataset.marked = r.mark && r.mark !== '—' ? '1' : '0';
         tr.dataset.station = (r.station || "—").trim().toLowerCase();
+        const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType==='Dr'?'#d93025':'#1a73e8'}">${r.balanceType}</span>` : '';
         const amountCell = r.amountMinusRateDiff != null
-          ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + "</span>"
-          : formatAmount(r.amount);
+          ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + '</span>' + drCrTag
+          : formatAmount(r.amount) + drCrTag;
         const safeName = encodeURIComponent(r.name || '');
         const safeLfno = encodeURIComponent(r.lfno || '');
         const safeStation = encodeURIComponent(r.station || '');
-        const safeOpBal = encodeURIComponent(r.amount || 0);
+        const safeOpBal = encodeURIComponent(r.originalOpBal != null ? r.originalOpBal : 0);
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
           '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-customer-id="' + id + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +

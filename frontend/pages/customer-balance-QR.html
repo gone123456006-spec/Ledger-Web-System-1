@@ -5,21 +5,26 @@
     <meta charset="UTF-8">
     <title>Customer Statement</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #007aff;
-            --primary-soft: #e8f0fe;
-            --text: #1d1d1f;
-            --muted: #6e6e73;
-            --border: #d1d6de;
+            --primary: #2563eb;
+            --primary-soft: #eff6ff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
             --card: #ffffff;
-            --bg: #e6ebf2;
-            --radius: 12px;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, .08);
-            --danger: #ff3b30;
-            --success: #34c759;
-            --warn-bg: #fff3cd;
-            --warn-text: #856404;
+            --bg: #f8fafc;
+            --radius: 16px;
+            --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warn-bg: #fefce8;
+            --warn-text: #854d0e;
+            --font-main: 'Outfit', sans-serif;
         }
 
         *,
@@ -31,26 +36,27 @@
         }
 
         body {
-            font-family: "Segoe UI", Roboto, Arial, sans-serif;
+            font-family: var(--font-main);
             background: var(--bg);
             color: var(--text);
-            font-size: 13px;
+            font-size: 16px;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ── OUTER WRAPPER ── */
         .stmt-wrap {
-            margin: 4px;
+            margin: 10px;
             background: var(--card);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 8px);
-            box-shadow: var(--shadow-sm);
+            height: calc(100vh - 20px);
+            box-shadow: var(--shadow-md);
             overflow: hidden;
         }
 
@@ -66,10 +72,10 @@
         .toolbar {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 14px 20px;
+            gap: 12px;
+            padding: 16px 24px;
             border-bottom: 1px solid var(--border);
-            background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
+            background: #ffffff;
             flex-shrink: 0;
             flex-wrap: wrap;
         }
@@ -82,47 +88,49 @@
         }
 
         .toolbar-left h2 {
-            font-size: 18px;
+            font-size: 26px;
             font-weight: 700;
             color: var(--text);
+            letter-spacing: -0.02em;
             white-space: nowrap;
         }
 
         .toolbar-left .subtitle {
-            font-size: 12px;
+            font-size: 15px;
             color: var(--muted);
             margin-top: 2px;
         }
 
         /* ── CUSTOMER INFO CARD ── */
         .info-card {
-            margin: 14px 20px 0;
-            padding: 12px 16px;
-            background: linear-gradient(135deg, #f0f7ff 0%, #eaf2ff 100%);
-            border: 1px solid #c7ddf8;
-            border-radius: 10px;
+            margin: 16px 24px 0;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
             display: flex;
-            gap: 32px;
+            gap: 40px;
             flex-wrap: wrap;
             flex-shrink: 0;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
         }
 
         .info-field {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 4px;
         }
 
         .info-label {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
         }
 
         .info-value {
-            font-size: 13px;
+            font-size: 17px;
             font-weight: 600;
             color: var(--text);
         }
@@ -132,20 +140,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 20px 8px;
+            padding: 16px 24px 12px;
             flex-shrink: 0;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 10px;
         }
 
         .stmt-title {
-            font-size: 13px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--text);
         }
 
         .op-bal-tag {
-            font-size: 12px;
+            font-size: 15px;
             color: var(--muted);
         }
 
@@ -160,41 +168,65 @@
             overflow: auto;
             min-height: 0;
             border-top: 1px solid var(--border);
+            position: relative;
         }
 
         table {
             width: 100%;
-            min-width: 700px;
+            min-width: 800px;
             border-collapse: collapse;
             table-layout: fixed;
         }
 
         col.col-ind {
-            width: 32px;
+            width: 45px;
         }
 
         col.col-date {
-            width: 100px;
+            width: 110px;
         }
 
         col.col-nar {
-            width: auto;
+            width: 250px;
         }
 
         col.col-cr {
-            width: 110px;
+            width: 130px;
         }
 
         col.col-dr {
-            width: 110px;
+            width: 130px;
         }
 
         col.col-bal {
-            width: 125px;
+            width: 150px;
+        }
+
+        col.col-int {
+            width: 120px;
         }
 
         col.col-clr {
-            width: 80px;
+            width: 90px;
+        }
+
+        .int-cal-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            color: #7c3aed;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        th.col-int-th {
+            background: #f5f3ff !important;
+            color: #7c3aed !important;
+        }
+
+        /* Hide Interest Cal column when not calculated */
+        table.hide-int-col .int-cal-cell,
+        table.hide-int-col th.col-int-th {
+            display: none;
         }
 
         thead {
@@ -204,14 +236,14 @@
         }
 
         thead th {
-            background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
-            border: 1px solid #c5c9ce;
-            padding: 18px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            padding: 16px 20px;
             font-weight: 600;
-            font-size: 13px;
-            color: #1d1d1f;
+            font-size: 14px;
+            color: var(--muted);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.08em;
             text-align: left;
             white-space: nowrap;
         }
@@ -225,15 +257,16 @@
         }
 
         tbody td {
-            padding: 18px;
-            border: 1px solid #d1d6de;
-            font-size: 14px;
-            color: #333;
+            padding: 20px 22px;
+            border: 1px solid var(--border);
+            font-size: 16px;
+            color: var(--text);
             vertical-align: middle;
-            line-height: 1.35;
+            line-height: 1.5;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            transition: all 0.15s;
         }
 
         tbody td.right {
@@ -251,98 +284,99 @@
         }
 
         tbody tr:nth-child(even) {
-            background: #f8f9fb;
+            background: #fafafa;
         }
 
         tbody tr:hover:not(.today-row):not(.selected-row) {
-            background: #e8f2ff !important;
+            background: #f1f5f9 !important;
             cursor: pointer;
         }
 
         tbody tr:hover:not(.today-row):not(.selected-row) td {
-            border-color: #b8d4f0;
+            border-color: #cbd5e1;
         }
 
         tbody tr.selected-row:not(.today-row) {
-            background: #007aff !important;
+            background: var(--primary) !important;
         }
 
         tbody tr.selected-row:not(.today-row) td {
             color: #fff !important;
-            border-color: #007aff;
+            border-color: var(--primary);
         }
 
         tbody tr.selected-row:not(.today-row) .dr-tag {
-            color: #ffd0cc !important;
+            color: #fecaca !important;
         }
 
         tbody tr.selected-row:not(.today-row) .cr-tag {
-            color: #c8ffd4 !important;
+            color: #bbf7d0 !important;
         }
 
         tbody tr.today-row td {
             background: #fff;
-            color: #1d1d1f;
+            color: var(--text);
             font-weight: 600;
         }
 
         /* ── ADD ROW ── */
         tbody tr.add-row td {
-            padding: 10px 18px;
-            border: 1px dashed #b8cfea;
-            background: #f4f8ff;
-            color: #007aff;
-            font-size: 13px;
+            padding: 14px 24px;
+            border: 1px dashed #94a3b8;
+            background: #f8fafc;
+            color: var(--primary);
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             text-align: center;
-            transition: background 0.15s, color 0.15s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: 0.02em;
             user-select: none;
         }
 
         tbody tr.add-row:hover td {
-            background: #e2eeff;
-            color: #0055cc;
-            border-color: #8ab8f0;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: var(--primary);
+            box-shadow: inset 0 0 10px rgba(37, 99, 235, 0.05);
         }
 
         .dr-tag {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--danger);
-            margin-left: 3px;
+            margin-left: 4px;
         }
 
         .cr-tag {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 700;
-            color: #28a745;
-            margin-left: 3px;
+            color: var(--success);
+            margin-left: 4px;
         }
 
         .clr-mark {
-            font-size: 14px;
-            color: #28a745;
+            font-size: 16px;
+            color: var(--success);
             font-weight: 700;
         }
 
         /* ── BALANCE BAR ── */
         .balance-bar {
-            padding: 10px 20px;
+            padding: 12px 24px;
             display: flex;
             justify-content: flex-end;
-            gap: 30px;
+            gap: 40px;
             border-top: 2px solid var(--border);
-            background: #f5f7fa;
+            background: #ffffff;
             flex-shrink: 0;
-            font-size: 13px;
+            font-size: 14px;
             flex-wrap: wrap;
         }
 
         .balance-bar .bal-item {
             display: flex;
-            gap: 6px;
+            gap: 10px;
             align-items: center;
         }
 
@@ -353,7 +387,8 @@
 
         .balance-bar .bal-value {
             font-weight: 700;
-            font-size: 14px;
+            font-size: 22px;
+            letter-spacing: -0.01em;
         }
 
         .bal-dr {
@@ -361,41 +396,42 @@
         }
 
         .bal-cr {
-            color: #28a745;
+            color: var(--success);
         }
 
         /* ── SHORTCUT BAR ── */
         .shortcut-bar {
-            padding: 5px 20px;
-            font-size: 11px;
+            padding: 8px 24px;
+            font-size: 12px;
             color: var(--muted);
             border-top: 1px solid var(--border);
-            background: #fafbfc;
+            background: #ffffff;
             flex-shrink: 0;
             letter-spacing: 0.02em;
         }
 
         .shortcut-bar kbd {
             display: inline-block;
-            background: #e4e8ed;
-            border: 1px solid #c5c9ce;
-            border-radius: 4px;
-            padding: 1px 5px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 6px;
             font-family: inherit;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
-            color: #333;
-            margin: 0 2px;
+            color: var(--text);
+            margin: 0 4px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
         }
 
         /* ── ACTIONS BAR ── */
         .actions-bar {
             display: flex;
             justify-content: space-between;
-            padding: 10px 20px;
-            background: #fafbfc;
+            padding: 16px 24px;
+            background: #ffffff;
             border-top: 1px solid var(--border);
-            gap: 8px;
+            gap: 12px;
             flex-shrink: 0;
             flex-wrap: wrap;
         }
@@ -403,35 +439,38 @@
         .actions-left,
         .actions-right {
             display: flex;
-            gap: 8px;
+            gap: 12px;
         }
 
         /* ── BUTTONS ── */
         .btn {
-            padding: 8px 16px;
+            padding: 12px 24px;
             border: 1px solid var(--border);
-            background: var(--card);
+            background: #ffffff;
             cursor: pointer;
-            border-radius: 8px;
-            font-size: 13px;
+            border-radius: 12px;
+            font-size: 16px;
             font-weight: 500;
             color: var(--text);
             font-family: inherit;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
-            transition: all 0.18s;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn:hover {
-            background: var(--primary);
-            border-color: var(--primary);
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0, 122, 255, .2);
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn:active {
-            transform: translateY(0);
+            transform: translateY(0) scale(0.98);
         }
 
         .btn-primary {
@@ -441,8 +480,23 @@
         }
 
         .btn-primary:hover {
-            background: #0060d0;
-            border-color: #0060d0;
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #fff;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #16a34a;
+            border-color: #16a34a;
+            color: #fff;
+            box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.3);
         }
 
         .btn-danger {
@@ -452,8 +506,10 @@
         }
 
         .btn-danger:hover {
-            background: #cc2a22;
-            border-color: #cc2a22;
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #fff;
+            box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
         }
 
         /* ── MODAL ── */
@@ -461,11 +517,12 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(2px);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
             z-index: 9000;
             align-items: center;
             justify-content: center;
+            padding: 20px;
         }
 
         .modal-overlay.open {
@@ -474,17 +531,17 @@
 
         .modal {
             background: var(--card);
-            border-radius: 16px;
-            min-width: 340px;
-            max-width: 94vw;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, .2);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
             overflow: hidden;
-            animation: pop 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+            animation: pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         @keyframes pop {
             from {
-                transform: scale(0.93) translateY(8px);
+                transform: scale(0.95) translateY(10px);
                 opacity: 0;
             }
 
@@ -498,78 +555,78 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px 14px;
+            padding: 20px 24px;
             border-bottom: 1px solid var(--border);
         }
 
         .modal-title h3 {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--text);
+            letter-spacing: -0.01em;
         }
 
         .modal-close {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             border: none;
-            background: #f0f2f7;
-            border-radius: 7px;
+            background: #f1f5f9;
+            border-radius: 10px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--muted);
-            font-size: 14px;
-            transition: all 0.12s;
-            font-family: inherit;
+            transition: all 0.2s;
         }
 
         .modal-close:hover {
-            background: #e2e5ef;
-            color: var(--text);
+            background: #e2e8f0;
+            color: var(--danger);
+            transform: rotate(90deg);
         }
 
         .modal-body {
-            padding: 16px 20px;
+            padding: 24px;
         }
 
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
             color: var(--muted);
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.05em;
         }
 
         .form-group input,
         .form-group select {
             width: 100%;
-            padding: 8px 12px;
+            padding: 12px 16px;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 13px;
-            background: #fff;
+            border-radius: 12px;
+            font-size: 15px;
+            background: #ffffff;
             color: var(--text);
             font-family: inherit;
             outline: none;
-            transition: border-color 0.15s, box-shadow 0.15s;
+            transition: all 0.2s;
         }
 
         .form-group input:focus,
         .form-group select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+            box-shadow: 0 0 0 4px var(--primary-soft);
         }
 
         .form-row {
             display: flex;
-            gap: 10px;
+            gap: 16px;
         }
 
         .form-row .form-group {
@@ -579,21 +636,22 @@
         .modal-footer {
             display: flex;
             justify-content: flex-end;
-            gap: 8px;
-            padding: 12px 20px;
+            gap: 12px;
+            padding: 16px 24px;
             border-top: 1px solid var(--border);
-            background: #fafbfc;
+            background: #f8fafc;
         }
 
         /* Interest result */
         .interest-result {
-            background: #f8f9fb;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-top: 10px;
-            font-size: 13px;
-            line-height: 1.7;
+            background: var(--primary-soft);
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1e40af;
         }
 
         .interest-result strong {
@@ -604,13 +662,15 @@
         .ctx-menu {
             display: none;
             position: fixed;
-            background: var(--card);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, .14);
+            border-radius: 14px;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
             z-index: 10000;
-            min-width: 160px;
+            min-width: 200px;
             overflow: hidden;
+            padding: 6px;
         }
 
         .ctx-menu.open {
@@ -618,19 +678,20 @@
         }
 
         .ctx-item {
-            padding: 9px 16px;
-            font-size: 13px;
+            padding: 10px 14px;
+            font-size: 14px;
+            border-radius: 8px;
             cursor: pointer;
             color: var(--text);
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: background 0.1s;
+            gap: 10px;
+            transition: all 0.15s;
         }
 
         .ctx-item:hover {
-            background: #f0f4fd;
-            color: var(--primary);
+            background: var(--primary);
+            color: #ffffff;
         }
 
         .ctx-item.danger {
@@ -638,33 +699,100 @@
         }
 
         .ctx-item.danger:hover {
-            background: #fff0ef;
+            background: var(--danger);
+            color: #fff;
         }
 
         .ctx-sep {
             height: 1px;
             background: var(--border);
-            margin: 3px 0;
+            margin: 6px;
         }
 
-        /* ── SCROLLBAR ── */
-        .table-wrap::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+        .interest-section {
+            margin: 0 24px 16px;
+            padding: 20px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
         }
 
-        .table-wrap::-webkit-scrollbar-track {
-            background: #f0f2f5;
-            border-radius: 5px;
+        .interest-section legend {
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
-        .table-wrap::-webkit-scrollbar-thumb {
-            background: #b0b4b8;
-            border-radius: 5px;
+        .int-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
         }
 
-        .table-wrap::-webkit-scrollbar-thumb:hover {
-            background: #888;
+        .int-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .int-field label {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+            white-space: nowrap;
+        }
+
+        .int-field input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            width: 80px;
+            outline: none;
+        }
+
+        .int-field input[type="date"] {
+            width: 160px;
+        }
+
+        .int-field input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-soft);
+        }
+
+        .btn-play {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 18px;
+        }
+
+        /* Highlight for Interest Rows */
+        tbody tr.interest-row {
+            background-color: #f5f3ff !important;
+            /* Soft purple */
+        }
+
+        tbody tr.interest-row td {
+            color: #5b21b6 !important;
+            font-weight: 600;
+        }
+
+        tbody tr.interest-row:hover td {
+            background-color: #ede9fe !important;
         }
     </style>
 </head>
@@ -680,7 +808,6 @@
             </div>
             <button class="btn btn-success" onclick="addRow()">+ Add Row</button>
             <button class="btn" onclick="render()">🔄 Refresh</button>
-            <button class="btn" onclick="openAddInvoice()">+ Add Entry (Popup)</button>
             <button class="btn" onclick="openCalcInterest()">📊 Interest</button>
             <button class="btn" onclick="saveAndClose()">↩ Back</button>
             <button class="btn" onclick="window.print()">🖨 Print</button>
@@ -711,6 +838,30 @@
             </span>
         </div>
 
+        <!-- INTEREST SECTION -->
+        <fieldset id="interestSection" class="interest-section" style="display:none;">
+            <legend>Interest</legend>
+            <div class="int-row">
+                <div class="int-field">
+                    <label>Rate</label>
+                    <input type="number" id="int_rate_inline" value="2" step="0.1">
+                </div>
+                <div class="int-field">
+                    <label>Compound Month</label>
+                    <input type="number" id="int_comp_inline" placeholder="Empty for none">
+                </div>
+                <div class="int-field">
+                    <label>Upto</label>
+                    <input type="date" id="int_to_inline">
+                </div>
+                <button class="btn btn-primary btn-play" onclick="calculateAllInterest()"
+                    title="Calculate Interest">▶</button>
+                <button id="applyIntInline" class="btn btn-success" style="display:none;"
+                    onclick="applyInterestInline()">✅ Add as Debit</button>
+            </div>
+            <div id="interestResultInline" class="interest-result" style="display:none;"></div>
+        </fieldset>
+
         <!-- TABLE -->
         <div class="table-wrap" id="tableWrap">
             <table>
@@ -721,6 +872,7 @@
                     <col class="col-cr">
                     <col class="col-dr">
                     <col class="col-bal">
+                    <col class="col-int">
                     <col class="col-clr">
                 </colgroup>
                 <thead>
@@ -731,6 +883,7 @@
                         <th class="right">Credit</th>
                         <th class="right">Debit</th>
                         <th class="right">Balance</th>
+                        <th class="right col-int-th" id="thIntCal">Interest Cal</th>
                         <th class="center">Cleared</th>
                     </tr>
                 </thead>
@@ -761,139 +914,10 @@
 
     </div>
 
-    <!-- ADD INVOICE MODAL -->
-    <div class="modal-overlay" id="addInvoiceModal">
-        <div class="modal">
-            <div class="modal-title">
-                <h3>Add Invoice / Transaction</h3>
-                <button class="modal-close" onclick="closeModal('addInvoiceModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="inv_date">
-                    </div>
-                    <div class="form-group">
-                        <label>Bill No / Narration</label>
-                        <input type="text" id="inv_nar" placeholder="e.g. SGJ/20 or cash jma">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select id="inv_type">
-                            <option value="debit">Debit (Invoice)</option>
-                            <option value="credit">Credit (Payment)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Amount</label>
-                        <input type="number" id="inv_amount" placeholder="0" min="0">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal('addInvoiceModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="addTransaction()">Add Entry</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- CALCULATE INTEREST MODAL -->
-    <div class="modal-overlay" id="calcInterestModal">
-        <div class="modal">
-            <div class="modal-title">
-                <h3>Calculate Interest</h3>
-                <button class="modal-close" onclick="closeModal('calcInterestModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>From Date</label>
-                        <input type="date" id="int_from">
-                    </div>
-                    <div class="form-group">
-                        <label>To Date</label>
-                        <input type="date" id="int_to">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Annual Interest Rate (%)</label>
-                    <input type="number" id="int_rate" value="18" step="0.1" min="0">
-                </div>
-                <div class="interest-result" id="interestResult" style="display:none;"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal('calcInterestModal')">Close</button>
-                <button class="btn btn-primary" onclick="calculateInterest()">Calculate</button>
-                <button class="btn btn-danger" onclick="applyInterest()" id="applyIntBtn" style="display:none;">Add as
-                    Debit</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- DELETE CONFIRM MODAL -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal">
-            <div class="modal-title">
-                <h3>Confirm Delete</h3>
-                <button class="modal-close" onclick="closeModal('deleteModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <p style="font-size:13px; color:var(--muted); line-height:1.5;">
-                    Are you sure you want to delete this entry? This action cannot be undone.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal('deleteModal')">Cancel</button>
-                <button class="btn btn-danger" onclick="confirmDelete()">Delete Entry</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- EDIT MODAL -->
-    <div class="modal-overlay" id="editModal">
-        <div class="modal">
-            <div class="modal-title">
-                <h3>Edit Entry</h3>
-                <button class="modal-close" onclick="closeModal('editModal')">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="edit_date">
-                    </div>
-                    <div class="form-group">
-                        <label>Narration</label>
-                        <input type="text" id="edit_nar">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Type</label>
-                        <select id="edit_type">
-                            <option value="debit">Debit (Invoice)</option>
-                            <option value="credit">Credit (Payment)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Amount</label>
-                        <input type="number" id="edit_amount" min="0">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn" onclick="closeModal('editModal')">Cancel</button>
-                <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
-            </div>
-        </div>
-    </div>
 
     <!-- CONTEXT MENU -->
     <div class="ctx-menu" id="ctxMenu">
-        <div class="ctx-item" onclick="ctxEdit()">✏️ Edit Entry</div>
         <div class="ctx-item danger" onclick="ctxDelete()">🗑️ Delete Entry</div>
         <div class="ctx-sep"></div>
         <div class="ctx-item" onclick="ctxClearBill()">✅ Toggle Clear Bill</div>
@@ -906,7 +930,8 @@
             name: "",
             station: "",
             openingBalance: 0,
-            openingDate: ""
+            openingDate: "",
+            id: null
         };
 
         let transactions = [];
@@ -916,6 +941,8 @@
         let pendingInterest = 0;
         let deleteTargetIdx = null;
         let draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
+        // Map: tx.id -> calculated row interest (populated by calculateAllInterest)
+        let rowInterestMap = {};
 
         // ─── HELPERS ─────────────────────────────────────────────────────────────────
         function showToast(msg) {
@@ -950,6 +977,53 @@
             try {
                 const key = 'stmt_' + (customerData.lfNo || customerData.name);
                 localStorage.setItem(key, JSON.stringify(transactions));
+                // Also persist the interest calculation map so it survives page reload
+                if (Object.keys(rowInterestMap).length > 0) {
+                    localStorage.setItem(key + '_intMap', JSON.stringify(rowInterestMap));
+                } else {
+                    localStorage.removeItem(key + '_intMap');
+                }
+            } catch (e) { }
+
+            // ── Sync net balance back to customer record ──────────────────────────
+            // Compute current net balance: opening + sum of (debit - credit)
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            let balance = customerData.openingBalance || 0;
+            sorted.forEach(tx => { balance += (tx.debit || 0) - (tx.credit || 0); });
+            const netBalance = Math.abs(balance);
+            const netType = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : 'Dr');
+
+            // Update in 'customers' list
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                const norm = s => (s || '').trim().toLowerCase();
+                let updated = false;
+                customers.forEach(c => {
+                    const matchById = customerData.id && String(c.id) === String(customerData.id);
+                    const matchByName = !customerData.id && norm(c.name) === norm(customerData.name);
+                    if (matchById || matchByName) {
+                        c.currentBalance = netBalance;
+                        c.currentBalanceType = netType;
+                        updated = true;
+                    }
+                });
+                if (updated) localStorage.setItem('customers', JSON.stringify(customers));
+            } catch (e) { }
+
+            // Update in 'jewellers' list (in case it's a jeweller)
+            try {
+                const jewellers = JSON.parse(localStorage.getItem('jewellers') || '[]');
+                const norm = s => (s || '').trim().toLowerCase();
+                let updated = false;
+                jewellers.forEach(j => {
+                    const matchByName = norm(j.name) === norm(customerData.name);
+                    if (matchByName) {
+                        j.currentBalance = netBalance;
+                        j.currentBalanceType = netType;
+                        updated = true;
+                    }
+                });
+                if (updated) localStorage.setItem('jewellers', JSON.stringify(jewellers));
             } catch (e) { }
         }
         function fmtDate(str) {
@@ -970,35 +1044,121 @@
         }
 
         // ─── RENDER ──────────────────────────────────────────────────────────────────
+        // ─── RENDER ──────────────────────────────────────────────────────────────────
         function render() {
             const tbody = document.getElementById('statementBody');
             tbody.innerHTML = '';
 
+            // Toggle Interest Cal column visibility via CSS class on the table
+            const tableEl = tbody.closest('table');
+            const hasIntCalc = Object.keys(rowInterestMap).length > 0;
+            if (tableEl) {
+                tableEl.classList.toggle('hide-int-col', !hasIntCalc);
+            }
+
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-
-
             let balance = customerData.openingBalance;
 
+            // Updated helper to make editable cell
+            function makeCell(initialVal, isNum, onBlur) {
+                const td = document.createElement('td');
+                if (isNum) td.className = 'right';
+                const span = document.createElement('span');
+                span.contentEditable = 'true';
+                span.textContent = initialVal || '';
+                span.style.cssText = `
+                    display:block; min-width:30px; outline:none;
+                    font-family:inherit; font-size:14px; color:inherit;
+                    border-bottom: 1px dashed transparent;
+                `;
+                if (isNum) span.style.textAlign = 'right';
+
+                span.addEventListener('focus', () => {
+                    span.style.borderBottomColor = '#aac4e8';
+                });
+                span.addEventListener('blur', () => {
+                    span.style.borderBottomColor = 'transparent';
+                    if (onBlur) onBlur(span.textContent);
+                });
+
+                td.appendChild(span);
+                return { td, span };
+            }
+
             sorted.forEach((tx, i) => {
+                const tr = document.createElement('tr');
+                if (i === selectedIdx) tr.classList.add('selected-row');
+                if (tx.narration === 'Interest') tr.classList.add('interest-row');
+
+                const tdIdx = document.createElement('td');
+                tdIdx.className = 'center';
+                tdIdx.style.cssText = 'color:var(--muted);font-size:11px;';
+                tdIdx.textContent = tx.cleared ? '✔' : String(i + 1);
+
+                // Inline editing handlers for existing transactions
+                const updateTx = (field, val) => {
+                    const orig = transactions.find(t => t.id === tx.id);
+                    if (!orig) return;
+
+                    if (field === 'date') {
+                        const parts = val.trim().split(/[-\/]/);
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) orig.date = val.trim();
+                            else orig.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        }
+                    } else if (field === 'narration') {
+                        orig.narration = val.trim();
+                    } else if (field === 'credit') {
+                        orig.credit = parseFloat(val.replace(/,/g, '')) || 0;
+                    } else if (field === 'debit') {
+                        orig.debit = parseFloat(val.replace(/,/g, '')) || 0;
+                    }
+                    saveTransactions();
+                    render();
+                };
+
+                const { td: tdDate, span: spDate } = makeCell(fmtDate(tx.date), false, (v) => updateTx('date', v));
+                const { td: tdNar, span: spNar } = makeCell(tx.narration, false, (v) => updateTx('narration', v));
+                const { td: tdCr, span: spCr } = makeCell(tx.credit ? fmt(tx.credit) : '', true, (v) => updateTx('credit', v));
+                const { td: tdDr, span: spDr } = makeCell(tx.debit ? fmt(tx.debit) : '', true, (v) => updateTx('debit', v));
+
+                tr.appendChild(tdIdx);
+                tr.appendChild(tdDate);
+                tr.appendChild(tdNar);
+                tr.appendChild(tdCr);
+                tr.appendChild(tdDr);
+
                 balance += tx.debit - tx.credit;
                 const absbal = Math.abs(balance);
                 const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
                 const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
 
-                const tr = document.createElement('tr');
-                if (i === selectedIdx) tr.classList.add('selected-row');
+                const tdBal = document.createElement('td');
+                tdBal.className = 'right';
+                tdBal.innerHTML = `${fmt(absbal)} <span class="${tagClass}">${tag}</span>`;
+                tr.appendChild(tdBal);
 
-                tr.innerHTML = `
-                    <td class="center" style="color:var(--muted);font-size:11px;">${tx.cleared ? '✔' : String(i + 1)}</td>
-                    <td>${fmtDate(tx.date)}</td>
-                    <td title="${tx.narration}">${tx.narration}</td>
-                    <td class="right" style="color:${tx.credit > 0 ? '#28a745' : 'var(--muted)'};">${tx.credit ? fmt(tx.credit) : '—'}</td>
-                    <td class="right" style="color:${tx.debit > 0 ? 'var(--danger)' : 'var(--muted)'};">${tx.debit ? fmt(tx.debit) : '—'}</td>
-                    <td class="right">${fmt(absbal)} <span class="${tagClass}">${tag}</span></td>
-                    <td class="center">${tx.cleared ? '<span class="clr-mark">✔</span>' : ''}</td>
-                `;
+                // Interest Cal column cell
+                const tdIntCal = document.createElement('td');
+                tdIntCal.className = 'int-cal-cell';
+                const intData = rowInterestMap[tx.id];
+                if (intData != null && intData.amount !== 0) {
+                    tdIntCal.textContent = fmt(Math.abs(intData.amount));
+                    tdIntCal.title = `${intData.days} days @ ${intData.rate}% on ₹${fmt(Math.abs(intData.principal))}`;
+                } else if (intData === null) {
+                    tdIntCal.textContent = 'N/A';
+                } else {
+                    tdIntCal.textContent = '—';
+                }
+                tr.appendChild(tdIntCal);
 
-                tr.addEventListener('click', () => {
+                const tdClr = document.createElement('td');
+                tdClr.className = 'center';
+                tdClr.innerHTML = tx.cleared ? '<span class="clr-mark">✔</span>' : '';
+                tr.appendChild(tdClr);
+
+                tr.addEventListener('click', (e) => {
+                    if (e.target.contentEditable === 'true') return;
                     selectedIdx = (selectedIdx === i) ? null : i;
                     render();
                 });
@@ -1009,38 +1169,21 @@
                     render();
                     showCtxMenu(e.clientX, e.clientY);
                 });
-                tr.addEventListener('dblclick', () => {
-                    selectedIdx = i;
-                    ctxTargetIdx = i;
-                    render();
-                    ctxEdit();
-                });
 
                 tbody.appendChild(tr);
+
+                // Arrow navigation and Enter to save
+                [spDate, spNar, spCr, spDr].forEach((sp) => {
+                    sp.addEventListener('keydown', e => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            sp.blur();
+                        }
+                    });
+                });
             });
 
-            // If we have an empty drafting row system, it's always the last row
-            // We just ensure it's rendered at the end of the loop.
-
-            // build each editable cell
-            function makeCell(cls, placeholder, initialVal, isNum) {
-                const td = document.createElement('td');
-                if (cls) td.className = cls;
-                const span = document.createElement('span');
-                span.contentEditable = 'true';
-                span.dataset.placeholder = placeholder;
-                span.textContent = initialVal || '';
-                span.style.cssText = `
-                    display:block; min-width:30px; outline:none;
-                    font-family:inherit; font-size:14px; color:inherit;
-                    border-bottom: 1px dashed #aac4e8;
-                `;
-                if (isNum) span.style.textAlign = 'right';
-                td.appendChild(span);
-                return { td, span };
-            }
-
-            // ── Draft rows (multi-row support) ───────────────────────────────────────
+            // ── Draft rows (for adding new) ───────────────────────────────────────
             draftRows.forEach((draft, dIdx) => {
                 const tr = document.createElement('tr');
                 tr.className = 'today-row';
@@ -1050,28 +1193,7 @@
                 tdHash.style.cssText = 'font-size:13px; font-weight:700;';
                 tdHash.textContent = '»';
 
-                const { td: tdDate, span: spDate } = makeCell('', 'DD-MM-YYYY', draft.date || fmtDate(todayStr()), false);
-                const { td: tdNar, span: spNar } = makeCell('', 'Narration…', draft.nar, false);
-                const { td: tdCr, span: spCr } = makeCell('right', '0.00', draft.cr, true);
-                const { td: tdDr, span: spDr } = makeCell('right', '0.00', draft.dr, true);
-
-                const tdBal = document.createElement('td');
-                tdBal.className = 'right';
-                tdBal.style.fontWeight = '700';
-                const rowAbsbal = Math.abs(balance);
-                const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-                tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
-
-                const tdClr = document.createElement('td');
-                tdClr.className = 'center';
-                tdClr.style.color = 'var(--muted)';
-                tdClr.textContent = '—';
-
-                tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdClr);
-                tbody.appendChild(tr);
-
-                // Inline save logic for this specific draft row
-                function saveThisDraft() {
+                const saveThisDraft = () => {
                     const narVal = spNar.textContent.trim();
                     const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
                     const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
@@ -1092,18 +1214,20 @@
                         debit: drRaw, credit: crRaw, cleared: false
                     });
 
-                    // Remove this draft row from the array
                     draftRows.splice(dIdx, 1);
-                    // Ensure there's always at least one empty row if they want that
                     if (draftRows.length === 0) draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
-                    
+
                     saveTransactions();
                     render();
                     showToast('✅ Row saved');
-                }
+                };
 
-                // Keyboard listeners and state sync
-                [spDate, spNar, spCr, spDr].forEach((sp, idx, arr) => {
+                const { td: tdDate, span: spDate } = makeCell(draft.date || fmtDate(todayStr()), false);
+                const { td: tdNar, span: spNar } = makeCell(draft.nar, false);
+                const { td: tdCr, span: spCr } = makeCell(draft.cr, true);
+                const { td: tdDr, span: spDr } = makeCell(draft.dr, true);
+
+                [spDate, spNar, spCr, spDr].forEach((sp, idx) => {
                     sp.addEventListener('input', () => {
                         if (idx === 0) draft.date = sp.textContent;
                         if (idx === 1) draft.nar = sp.textContent;
@@ -1111,124 +1235,216 @@
                         if (idx === 3) draft.dr = sp.textContent;
                     });
                     sp.addEventListener('keydown', e => {
-                        if (e.key === 'Enter') { e.preventDefault(); saveThisDraft(); }
-                        if (e.key === 'Escape') {
-                            if (draftRows.length > 1) {
-                                draftRows.splice(dIdx, 1);
-                                render();
-                            } else {
-                                // Just clear if it's the last one
-                                draft.date = ''; draft.nar = ''; draft.cr = ''; draft.dr = '';
-                                render();
-                            }
+                        if (e.key === 'Enter' || e.key === 'Tab' && idx === 3) {
+                            e.preventDefault();
+                            saveThisDraft();
                         }
-                        if (e.key === 'Tab' && idx === arr.length - 1) { e.preventDefault(); saveThisDraft(); }
+                        if (e.key === 'Escape') {
+                            if (draftRows.length > 1) { draftRows.splice(dIdx, 1); render(); }
+                            else { draft.date = ''; draft.nar = ''; draft.cr = ''; draft.dr = ''; render(); }
+                        }
                     });
-                    // placeholder styling 
-                    sp.addEventListener('focus', () => { if (!sp.textContent.trim()) sp.textContent = ''; });
                 });
+
+                const tdBal = document.createElement('td');
+                tdBal.className = 'right';
+                tdBal.style.fontWeight = '700';
+                const rowAbsbal = Math.abs(balance);
+                const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+                tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
+
+                // Draft row: empty interest cal cell
+                const tdDraftInt = document.createElement('td');
+                tdDraftInt.className = 'int-cal-cell';
+                tdDraftInt.textContent = '—';
+
+                const tdClr = document.createElement('td');
+                tdClr.className = 'center';
+                tdClr.style.color = 'var(--muted)';
+                tdClr.textContent = '—';
+
+                tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdDraftInt, tdClr);
+                tbody.appendChild(tr);
             });
 
-
-            // Balance display
+            // Footer displays
             const absbal = Math.abs(balance);
             const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
             const balEl = document.getElementById('dispCurrentBal');
-            balEl.textContent = fmt(absbal) + (tag ? ' ' + tag : '');
-            balEl.className = 'bal-value ' + (balance > 0 ? 'bal-dr' : 'bal-cr');
+            if (balEl) {
+                balEl.textContent = fmt(absbal) + (tag ? ' ' + tag : '');
+                balEl.className = 'bal-value ' + (balance > 0 ? 'bal-dr' : 'bal-cr');
+            }
 
-
-
-            // Header info
             document.getElementById('dispName').textContent = customerData.name || '—';
             document.getElementById('dispStation').textContent = customerData.station || '—';
             document.getElementById('dispLfNo').textContent = customerData.lfNo || '—';
             document.getElementById('dispOpBal').textContent = customerData.openingBalance || '0';
             document.getElementById('dispOpDate').textContent = fmtDateLabel(customerData.openingDate);
-
-            // Toolbar subtitle
-            document.getElementById('toolbarSubtitle').textContent =
-                (customerData.name || '') + (customerData.station ? ' · ' + customerData.station : '');
+            document.getElementById('toolbarSubtitle').textContent = (customerData.name || '') + (customerData.station ? ' · ' + customerData.station : '');
         }
 
         // ─── MODALS ───────────────────────────────────────────────────────────────────
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-        function openAddInvoice() {
-            document.getElementById('inv_date').value = todayStr();
-            document.getElementById('inv_nar').value = '';
-            document.getElementById('inv_amount').value = '';
-            document.getElementById('inv_type').value = 'debit';
-            openModal('addInvoiceModal');
-            setTimeout(() => document.getElementById('inv_nar').focus(), 60);
-        }
-
-        function addTransaction() {
-            const date = document.getElementById('inv_date').value;
-            const nar = document.getElementById('inv_nar').value.trim();
-            const type = document.getElementById('inv_type').value;
-            const amt = parseFloat(document.getElementById('inv_amount').value) || 0;
-            if (!date) { showToast('⚠️ Please enter a date.'); return; }
-            if (!nar) { showToast('⚠️ Please enter a narration or bill number.'); return; }
-            if (amt <= 0) { showToast('⚠️ Please enter a valid amount.'); return; }
-            transactions.push({
-                id: nextId++, date, narration: nar,
-                debit: type === 'debit' ? amt : 0,
-                credit: type === 'credit' ? amt : 0,
-                cleared: false
-            });
-            saveTransactions();
-            closeModal('addInvoiceModal');
-            render();
-            showToast('✅ Transaction added');
-        }
 
         // ─── INTEREST ────────────────────────────────────────────────────────────────
         function openCalcInterest() {
-            document.getElementById('int_from').value = customerData.openingDate || todayStr();
-            document.getElementById('int_to').value = todayStr();
-            document.getElementById('int_rate').value = '18';
-            document.getElementById('interestResult').style.display = 'none';
-            document.getElementById('applyIntBtn').style.display = 'none';
-            pendingInterest = 0;
-            openModal('calcInterestModal');
+            const sec = document.getElementById('interestSection');
+            if (sec.style.display === 'none') {
+                sec.style.display = 'block';
+                document.getElementById('int_to_inline').value = todayStr();
+                document.getElementById('interestResultInline').style.display = 'none';
+                document.getElementById('applyIntInline').style.display = 'none';
+            } else {
+                sec.style.display = 'none';
+            }
         }
 
-        function calculateInterest() {
-            const from = new Date(document.getElementById('int_from').value);
-            const to = new Date(document.getElementById('int_to').value);
-            const rate = parseFloat(document.getElementById('int_rate').value) || 0;
-            if (isNaN(from) || isNaN(to)) { showToast('⚠️ Enter valid dates.'); return; }
-            if (to < from) { showToast('⚠️ To date must be after From date.'); return; }
-            const days = Math.round((to - from) / (1000 * 60 * 60 * 24));
+        function calculateAllInterest() {
+            const uptoStr = document.getElementById('int_to_inline').value;
+            const uptoDate = new Date(uptoStr);
+            const rate = parseFloat(document.getElementById('int_rate_inline').value) || 0;
+            const compMonth = parseInt(document.getElementById('int_comp_inline').value) || 0;
+
+            if (isNaN(uptoDate)) { showToast('⚠️ Enter valid Upto date.'); return; }
+
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            let bal = customerData.openingBalance;
-            sorted.forEach(tx => {
-                if (tx.date <= document.getElementById('int_from').value) bal += tx.debit - tx.credit;
-            });
-            const interest = Math.round(bal * rate / 100 * days / 365);
-            pendingInterest = interest;
-            const res = document.getElementById('interestResult');
+            const startDate = new Date(customerData.openingDate || (sorted.length > 0 ? sorted[0].date : todayStr()));
+
+            if (uptoDate < startDate) { showToast('⚠️ Upto date must be after opening date.'); return; }
+
+            // ── Row-wise interest calculation ────────────────────────────────────────
+            // For simple interest: each row contributes interest from its date until uptoDate
+            // For compounding: we only show row breakdown for simple mode; compounding shows '—'
+            rowInterestMap = {};
+            if (compMonth === 0) {
+                // Opening balance row (stored as id=0 sentinel)
+                const opDays = Math.round((uptoDate - startDate) / (1000 * 60 * 60 * 24));
+                if (opDays > 0 && customerData.openingBalance !== 0) {
+                    rowInterestMap['__op__'] = { amount: (customerData.openingBalance * (rate / 100)) * (opDays / 30), days: opDays, rate: rate, principal: customerData.openingBalance };
+                }
+                sorted.forEach(tx => {
+                    const txDate = new Date(tx.date);
+                    if (txDate > uptoDate) { rowInterestMap[tx.id] = { amount: 0 }; return; }
+                    const days = Math.round((uptoDate - txDate) / (1000 * 60 * 60 * 24));
+                    if (days <= 0) { rowInterestMap[tx.id] = { amount: 0 }; return; }
+                    const amount = tx.debit - tx.credit;
+                    if (amount === 0) { rowInterestMap[tx.id] = { amount: 0 }; return; }
+                    rowInterestMap[tx.id] = { amount: (amount * (rate / 100)) * (days / 30), days: days, rate: rate, principal: amount };
+                });
+            } else {
+                // In compounding mode, per-row breakdown is complex; mark all as N/A
+                sorted.forEach(tx => { rowInterestMap[tx.id] = null; });
+            }
+
+            // Show the Interest Cal column via render()
+            // (render() reads rowInterestMap and toggles CSS class on table)
+            render();
+
+
+            let details = [];
+            let totalInterest = 0;
+
+            if (compMonth > 0) {
+                // COMPOUNDING MODE: Running Balance Method
+                let currentBal = customerData.openingBalance;
+                let lastDate = new Date(startDate);
+                let currentAccumulatedInterest = 0;
+
+                const allEvents = [];
+                sorted.forEach(tx => {
+                    const d = new Date(tx.date);
+                    if (d <= uptoDate && d >= startDate) allEvents.push({ type: 'tx', date: d, data: tx });
+                });
+
+                let dIter = new Date(startDate);
+                while (true) {
+                    dIter.setMonth(dIter.getMonth() + compMonth);
+                    if (dIter > uptoDate) break;
+                    allEvents.push({ type: 'comp', date: new Date(dIter) });
+                }
+
+                allEvents.sort((a, b) => (a.date - b.date) || (a.type === 'tx' ? -1 : 1));
+
+                allEvents.forEach(ev => {
+                    const days = Math.round((ev.date - lastDate) / (1000 * 60 * 60 * 24));
+                    if (days > 0) {
+                        const periodInt = (currentBal * (rate / 100)) * (days / 30);
+                        currentAccumulatedInterest += periodInt;
+                    }
+
+                    if (ev.type === 'tx') {
+                        currentBal += ev.data.debit - ev.data.credit;
+                    } else {
+                        const roundedInt = Math.round(currentAccumulatedInterest);
+                        details.push(`<b>${fmtDate(ev.date)}</b>: Compounded ₹${fmt(roundedInt)} into principal`);
+                        currentBal += roundedInt;
+                        currentAccumulatedInterest = 0;
+                    }
+                    lastDate = new Date(ev.date);
+                });
+
+                const finalDays = Math.round((uptoDate - lastDate) / (1000 * 60 * 60 * 24));
+                if (finalDays > 0) {
+                    currentAccumulatedInterest += (currentBal * (rate / 100)) * (finalDays / 30);
+                }
+                totalInterest = currentBal + currentAccumulatedInterest - (customerData.openingBalance + sorted.reduce((acc, tx) => acc + (tx.debit - tx.credit), 0));
+                // Simplified display for compounding
+                details.push(`<b>Final Balance</b>: ₹${fmt(currentBal)}`);
+                details.push(`<b>Final Period Days</b>: ${finalDays}`);
+                totalInterest = Math.round(currentAccumulatedInterest + (currentBal - (customerData.openingBalance + sorted.reduce((s, t) => s + (t.debit - t.credit), 0))));
+            } else {
+                // SIMPLE MODE: Row-wise Breakdown
+                // 1. Opening Balance
+                const opDays = Math.round((uptoDate - startDate) / (1000 * 60 * 60 * 24));
+                if (opDays > 0 && customerData.openingBalance !== 0) {
+                    const opInt = (customerData.openingBalance * (rate / 100)) * (opDays / 30);
+                    totalInterest += opInt;
+                    details.push(`<b>Opening Balance</b>: ${fmt(customerData.openingBalance)} for ${opDays} days → ₹${fmt(opInt)}`);
+                }
+
+                // 2. Transactions
+                sorted.forEach((tx, idx) => {
+                    const txDate = new Date(tx.date);
+                    if (txDate > uptoDate) return;
+                    const days = Math.round((uptoDate - txDate) / (1000 * 60 * 60 * 24));
+                    if (days <= 0) return;
+                    const amount = tx.debit - tx.credit;
+                    if (amount === 0) return;
+                    const txInt = (amount * (rate / 100)) * (days / 30);
+                    totalInterest += txInt;
+                    const type = amount > 0 ? 'Dr' : 'Cr';
+                    details.push(`<b>Row #${idx + 1}</b> (${type} ${fmt(Math.abs(amount))}): ${days} days → ${txInt >= 0 ? '' : '-'}₹${fmt(Math.abs(txInt))}`);
+                });
+            }
+
+            pendingInterest = Math.round(totalInterest);
+            const res = document.getElementById('interestResultInline');
             res.style.display = 'block';
             res.innerHTML = `
-                <b>Balance at start:</b> ${fmt(bal)} Dr<br>
-                <b>Days:</b> ${days}<br>
-                <b>Rate:</b> ${rate}% per annum<br>
-                <b>Interest:</b> <strong>₹ ${fmt(interest)}</strong>
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:600; color:var(--text); font-size:15px;">Net Interest Payable</span>
+                        <span style="font-weight:400; font-size:12px; color:var(--muted);">${compMonth > 0 ? 'Compounding' : 'Simple'} Method (hover rows for details)</span>
+                    </div>
+                    <span style="font-size:22px; font-weight:800; color:var(--danger);">₹ ${fmt(pendingInterest)}</span>
+                </div>
             `;
-            document.getElementById('applyIntBtn').style.display = 'inline-block';
+            document.getElementById('applyIntInline').style.display = 'inline-block';
+            res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
-        function applyInterest() {
+        function applyInterestInline() {
             if (!pendingInterest) return;
-            const to = document.getElementById('int_to').value;
+            const to = document.getElementById('int_to_inline').value;
             transactions.push({
-                id: nextId++, date: to, narration: 'Interest Debit',
+                id: nextId++, date: to, narration: 'Interest',
                 debit: pendingInterest, credit: 0, cleared: false
             });
             saveTransactions();
-            closeModal('calcInterestModal');
+            document.getElementById('interestSection').style.display = 'none';
             render();
             showToast('✅ Interest applied');
         }
@@ -1248,19 +1464,6 @@
         }
 
         // ─── DELETE ──────────────────────────────────────────────────────────────────
-        function deleteSelected() {
-            if (selectedIdx === null) { showToast('⚠️ Please select a row first.'); return; }
-            ctxTargetIdx = selectedIdx;
-            deleteTargetIdx = selectedIdx;
-            openModal('deleteModal');
-        }
-
-        function ctxDelete() {
-            closeCtxMenu();
-            deleteTargetIdx = ctxTargetIdx;
-            openModal('deleteModal');
-        }
-
         function confirmDelete() {
             if (deleteTargetIdx === null) return;
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
@@ -1269,56 +1472,26 @@
             saveTransactions();
             selectedIdx = null;
             deleteTargetIdx = null;
-            closeModal('deleteModal');
             render();
             showToast('🗑 Row deleted');
         }
 
-        // ─── EDIT ─────────────────────────────────────────────────────────────────────
-        function ctxEdit() {
-            closeCtxMenu();
-            if (ctxTargetIdx === null) return;
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            const tx = sorted[ctxTargetIdx];
-            document.getElementById('edit_date').value = tx.date;
-            document.getElementById('edit_nar').value = tx.narration;
-            document.getElementById('edit_type').value = tx.debit > 0 ? 'debit' : 'credit';
-            document.getElementById('edit_amount').value = tx.debit > 0 ? tx.debit : tx.credit;
-            openModal('editModal');
+        // ─── DELETE ──────────────────────────────────────────────────────────────────
+        function deleteSelected() {
+            if (selectedIdx === null) { showToast('⚠️ Please select a row first.'); return; }
+            if (!confirm('Are you sure you want to delete this row?')) return;
+            deleteTargetIdx = selectedIdx;
+            confirmDelete();
         }
 
-        function saveEdit() {
-            if (ctxTargetIdx === null) return;
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            const tx = sorted[ctxTargetIdx];
-            const orig = transactions.find(t => t.id === tx.id);
-            if (!orig) return;
-            const type = document.getElementById('edit_type').value;
-            const amt = parseFloat(document.getElementById('edit_amount').value) || 0;
-            orig.date = document.getElementById('edit_date').value;
-            orig.narration = document.getElementById('edit_nar').value.trim();
-            orig.debit = type === 'debit' ? amt : 0;
-            orig.credit = type === 'credit' ? amt : 0;
-            saveTransactions();
-            closeModal('editModal');
-            render();
-            showToast('✅ Changes saved');
-        }
-
-        // ─── CLEAR BILL (ctx) ────────────────────────────────────────────────────────
-        function ctxClearBill() {
+        function ctxDelete() {
             closeCtxMenu();
             if (ctxTargetIdx === null) return;
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            const tx = sorted[ctxTargetIdx];
-            const orig = transactions.find(t => t.id === tx.id);
-            if (orig) {
-                orig.cleared = !orig.cleared;
-                saveTransactions();
-                showToast(orig.cleared ? '✅ Marked as cleared' : '↩️ Cleared mark removed');
-            }
-            render();
+            if (!confirm('Are you sure you want to delete this row?')) return;
+            deleteTargetIdx = ctxTargetIdx;
+            confirmDelete();
         }
+
 
         // ─── CONTEXT MENU ────────────────────────────────────────────────────────────
         function showCtxMenu(x, y) {
@@ -1392,6 +1565,7 @@
                         if (fromSession.lfno) customerData.lfNo = fromSession.lfno.trim();
                         if (fromSession.station) customerData.station = fromSession.station.trim();
                         if (fromSession.opbal) customerData.openingBalance = parseFloat(fromSession.opbal) || 0;
+                        if (fromSession.id) customerData.id = fromSession.id;
                     }
                 }
             } catch (e) { }
@@ -1409,6 +1583,7 @@
 
             // ── Priority 3: localStorage customers[] lookup by id (fills openingDate & any remaining gaps)
             const id = paramId || (fromSession && fromSession.id ? String(fromSession.id) : '');
+            if (id) customerData.id = id;
             if (id) {
                 try {
                     const customers = JSON.parse(localStorage.getItem('customers') || '[]');
@@ -1421,6 +1596,7 @@
                         if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
                         if (!customerData.openingBalance) customerData.openingBalance = parseFloat(cust.openingBalance) || 0;
                         if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
+                        if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
             }
@@ -1434,6 +1610,13 @@
                     nextId = transactions.length > 0
                         ? Math.max(...transactions.map(t => t.id || 0)) + 1
                         : 1;
+                }
+            } catch (e) { }
+            // ── Step 5: Restore interest calculation map if it was saved
+            try {
+                const savedIntMap = localStorage.getItem(stmtKey + '_intMap');
+                if (savedIntMap) {
+                    rowInterestMap = JSON.parse(savedIntMap);
                 }
             } catch (e) { }
         })();
@@ -1465,23 +1648,21 @@
         // ─── EXPORT GLOBALS (FOR DASHBOARD SPA) ───────────────────────────────────────
         window.render = render;
         window.openCalcInterest = openCalcInterest;
+        window.calculateAllInterest = calculateAllInterest;
+        window.applyInterestInline = applyInterestInline;
         window.doPrint = () => window.print();
         window.deleteSelected = deleteSelected;
         window.saveAndClose = saveAndClose;
-        window.openAddInvoice = openAddInvoice;
         window.closeModal = closeModal;
-        window.addTransaction = addTransaction;
-        window.calculateInterest = calculateInterest;
-        window.applyInterest = applyInterest;
         window.confirmDelete = confirmDelete;
-        window.saveEdit = saveEdit;
-        window.ctxEdit = ctxEdit;
         window.ctxDelete = ctxDelete;
-        window.ctxClearBill = ctxClearBill;
+        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => a.date.localeCompare(b.date)); const tx = s[ctxTargetIdx]; const orig = transactions.find(t => t.id === tx.id); if (orig) { orig.cleared = !orig.cleared; saveTransactions(); } render(); };
         window.clearSelected = clearSelected;
         window.showCtxMenu = showCtxMenu;
         window.closeCtxMenu = closeCtxMenu;
+        window.addRow = addRow;
     </script>
+
 </body>
 
 </html>

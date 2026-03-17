@@ -374,7 +374,7 @@
         </div>
         <div class="field">
           <label for="lfno">LF No</label>
-          <input id="lfno" placeholder="LF number">
+          <input id="lfno" placeholder="Auto Generated" readonly>
         </div>
         <div class="field">
           <label for="openingDate">Opening Date</label>
@@ -386,7 +386,13 @@
         <h4>Account</h4>
         <div class="field">
           <label for="openingBalance">Opening Balance</label>
-          <input type="number" id="openingBalance" step="0.01" placeholder="0.00">
+          <div class="row">
+            <input type="number" id="openingBalance" step="0.01" placeholder="0.00">
+            <select id="openingBalanceType">
+              <option value="Dr">Dr</option>
+              <option value="Cr">Cr</option>
+            </select>
+          </div>
         </div>
         <div class="field">
           <label for="goldBalance">Gold Balance</label>
@@ -423,7 +429,8 @@
         </div>
         <div class="field">
           <label for="station">Station</label>
-          <input type="text" id="station" placeholder="Enter station">
+          <input type="text" id="station" list="stationList" placeholder="Enter station">
+          <datalist id="stationList"></datalist>
         </div>
         <div class="field">
           <label for="phone">Phone <span class="required">*</span></label>
@@ -518,7 +525,8 @@
         station: $("station"),
         phone: $("phone"),
         mobile: $("mobile"),
-        email: $("email")
+        email: $("email"),
+        openingBalanceType: $("openingBalanceType")
       };
       if (!fields.name || !fields.phone) return false;
       return true;
@@ -531,18 +539,62 @@
         localStorage.removeItem('showCustomerList');
         setTimeout(openList, 100);
       }
+      loadStations();
       const editId = localStorage.getItem(EDIT_KEY);
       const editJewellerId = localStorage.getItem(EDIT_KEY_JEWELLER);
       const editAgentId = localStorage.getItem(EDIT_KEY_AGENT);
       if (editId) loadForEdit("Customer", editId);
       else if (editJewellerId) loadForEdit("Jeweller", editJewellerId);
       else if (editAgentId) loadForEdit("Agent", editAgentId);
-      else resetForm();
+      else { resetForm(); if (fields.name) setTimeout(() => fields.name.focus(), 100); }
+
+      // Keyboard navigation: Enter and Arrow keys to move between fields
+      form.addEventListener("keydown", e => {
+        const isControl = e.target.tagName === "BUTTON" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT";
+        const isNumber = e.target.type === "number";
+        
+        const fields = Array.from(form.elements).filter(el => 
+          !el.readOnly && !el.disabled && el.tagName !== "FIELDSET" && el.type !== "hidden" && el.tagName !== "BUTTON"
+        );
+        const idx = fields.indexOf(e.target);
+
+        if (e.key === "Enter" && e.target.tagName !== "BUTTON" && e.target.tagName !== "TEXTAREA") {
+          e.preventDefault();
+          if (idx > -1 && idx < fields.length - 1) fields[idx + 1].focus();
+        } else if (e.key === "ArrowDown" && !isControl && !isNumber) {
+          e.preventDefault();
+          if (idx > -1 && idx < fields.length - 1) fields[idx + 1].focus();
+        } else if (e.key === "ArrowUp" && !isControl && !isNumber) {
+          e.preventDefault();
+          if (idx > -1 && idx > 0) fields[idx - 1].focus();
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+          e.preventDefault();
+          submitForm();
+        }
+      });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCustomerPage);
     else setTimeout(initCustomerPage, 50);
     window.addEventListener('pageRefresh', () => setTimeout(initCustomerPage, 100));
+
+    function loadStations() {
+      const stations = JSON.parse(localStorage.getItem("stations") || "[]");
+      const dl = $("stationList");
+      if (dl) {
+        dl.innerHTML = stations.map(s => `<option value="${s.name}">`).join('');
+      }
+    }
+
+    function getNextLfNo() {
+      const customers = getCustomers();
+      const jewellers = getJewellers();
+      const all = [...customers, ...jewellers];
+      const max = all.length ? Math.max(...all.map(x => num(x.lfno))) : 0;
+      return max + 1;
+    }
 
     function num(v) { return Number(v) || 0; }
 
@@ -579,7 +631,8 @@
       localStorage.removeItem(EDIT_KEY_AGENT);
       if (fields.cid) { fields.cid.value = ""; fields.cid.placeholder = "Auto Generated"; }
       if (fields.type && fields.type.options.length) fields.type.value = "Customer";
-      if (focusName && fields.name) fields.name.focus();
+      if (fields.lfno) fields.lfno.value = getNextLfNo();
+      if (fields.name) setTimeout(() => fields.name.focus(), 50);
     }
 
     function saveCustomer() {
@@ -602,6 +655,7 @@
         lfno: fields.lfno.value.trim(),
         openingDate: fields.openingDate.value,
         openingBalance: num(fields.openingBalance.value),
+        openingBalanceType: fields.openingBalanceType.value,
         goldBalance: num(fields.goldBalance.value),
         silverBalance: num(fields.silverBalance.value),
         maxLimit: num(fields.maxLimit.value),
@@ -638,6 +692,7 @@
         lfno: fields.lfno.value.trim(),
         openingDate: fields.openingDate.value,
         openingBalance: num(fields.openingBalance.value),
+        openingBalanceType: fields.openingBalanceType.value,
         goldBalance: num(fields.goldBalance.value),
         silverBalance: num(fields.silverBalance.value),
         maxLimit: num(fields.maxLimit.value),
@@ -673,7 +728,8 @@
         email: fields.email.value.trim(),
         notes: (fields.address && fields.address.value) ? fields.address.value.trim() : "",
         station: fields.station.value.trim(),
-        openingBalance: num(fields.openingBalance.value)
+        openingBalance: num(fields.openingBalance.value),
+        openingBalanceType: fields.openingBalanceType.value
       };
       if (isEdit) {
         const index = agents.findIndex(a => a.id === id);
@@ -723,6 +779,32 @@
       const fmtDate = (d) => { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString(); };
       const fmtNum = (n) => (n != null && n !== "") ? Number(n) : "—";
       const fmtBal = (n) => (n != null && n !== "") ? (typeof n === "number" ? n : Number(n)) : "—";
+      
+      const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      const norm = (s) => (s || "").trim().toLowerCase();
+
+      const getCalculatedBalance = (name, opBal, opType, currentBal, currentBalType) => {
+        // If a statement-synced currentBalance exists, use it directly
+        if (currentBal != null && currentBal !== '') {
+          const val = Number(currentBal);
+          if (val === 0) return '0';
+          const t = currentBalType || (val > 0 ? 'Dr' : 'Cr');
+          return Math.abs(val) + ' (' + t + ')';
+        }
+        let baseAmount = (opBal != null && opBal !== '') ? Number(opBal) : 0;
+        if (opType === 'Cr') baseAmount = -baseAmount;
+        const customerEntries = balances.filter((b) => norm(b.customer) === norm(name));
+        const amountMinusRateDiffSum = customerEntries.reduce((sum, b) => {
+          const v = b.amountMinusRateDiff != null && b.amountMinusRateDiff !== '' ? Number(b.amountMinusRateDiff) : NaN;
+          return Number.isNaN(v) ? sum : sum + v;
+        }, 0);
+        let finalBal = baseAmount;
+        if (amountMinusRateDiffSum > 0 || amountMinusRateDiffSum < 0) finalBal = amountMinusRateDiffSum;
+        if (finalBal === 0 && baseAmount !== 0) return Math.abs(baseAmount) + (opType ? ' (' + opType + ')' : '');
+        if (finalBal === 0) return '\u2014';
+        const isDr = finalBal > 0;
+        return Math.abs(finalBal) + (isDr ? ' (Dr)' : ' (Cr)');
+      };
 
       if (listType === "Customer") {
         const title = $("listSectionTitle"); if (title) title.textContent = "Customer List";
@@ -730,8 +812,9 @@
           .filter(c => (c.name || "").toLowerCase().includes(search) || (c.mobile || "").includes(search))
           .forEach(c => {
             const nameEsc = (c.name || "").replace(/'/g, "&#39;");
+            const dispBal = getCalculatedBalance(c.name, c.openingBalance, c.openingBalanceType, c.currentBalance, c.currentBalanceType);
             tbody.innerHTML += `<tr ondblclick="selectCustomerForOrder('${nameEsc}')">
-    <td>${c.cid || ""}</td><td>${c.name || ""}</td><td>${c.mobile || ""}</td><td>${c.station || ""}</td><td>${fmtBal(c.openingBalance)}</td><td>${fmtBal(c.silverBalance)}</td><td>${fmtBal(c.goldBalance)}</td><td>${fmtDate(c.openingDate)}</td><td>${c.aadhar || "—"}</td><td>${c.pan || "—"}</td>
+    <td>${c.cid || ""}</td><td>${c.name || ""}</td><td>${c.mobile || ""}</td><td>${c.station || ""}</td><td>${dispBal}</td><td>${fmtBal(c.silverBalance)}</td><td>${fmtBal(c.goldBalance)}</td><td>${fmtDate(c.openingDate)}</td><td>${c.aadhar || "—"}</td><td>${c.pan || "—"}</td>
     <td><button onclick="editCustomer(${c.id})">Edit</button><button onclick="deleteCustomer(${c.id})">Delete</button><button onclick="selectCustomerForOrder('${nameEsc}')">Select</button></td></tr>`;
           });
       } else if (listType === "Jeweller") {
@@ -739,8 +822,9 @@
         getJewellers()
           .filter(j => (j.name || "").toLowerCase().includes(search) || (j.mobile || "").includes(search))
           .forEach(j => {
+            const dispBal = getCalculatedBalance(j.name, j.openingBalance, j.openingBalanceType, j.currentBalance, j.currentBalanceType);
             tbody.innerHTML += `<tr>
-    <td>${j.cid || ""}</td><td>${j.name || ""}</td><td>${j.mobile || ""}</td><td>${j.station || ""}</td><td>${fmtBal(j.openingBalance)}</td><td>${fmtBal(j.silverBalance)}</td><td>${fmtBal(j.goldBalance)}</td><td>${fmtDate(j.openingDate)}</td><td>${j.aadhar || "—"}</td><td>${j.pan || "—"}</td>
+    <td>${j.cid || ""}</td><td>${j.name || ""}</td><td>${j.mobile || ""}</td><td>${j.station || ""}</td><td>${dispBal}</td><td>${fmtBal(j.silverBalance)}</td><td>${fmtBal(j.goldBalance)}</td><td>${fmtDate(j.openingDate)}</td><td>${j.aadhar || "—"}</td><td>${j.pan || "—"}</td>
     <td><button onclick="editJeweller(${j.id})">Edit</button><button onclick="deleteJeweller(${j.id})">Delete</button></td></tr>`;
           });
       } else {
@@ -748,8 +832,9 @@
         getAgents()
           .filter(a => (a.name || "").toLowerCase().includes(search) || (a.mobile || "").includes(search) || (a.email || "").toLowerCase().includes(search))
           .forEach(a => {
+            const dispBal = getCalculatedBalance(a.name, a.openingBalance, a.openingBalanceType, a.currentBalance, a.currentBalanceType);
             tbody.innerHTML += `<tr>
-    <td>${a.cid || a.agentId || ""}</td><td>${a.name || ""}</td><td>${a.mobile || ""}</td><td>${a.station || a.email || "—"}</td><td>${fmtBal(a.openingBalance)}</td><td>${fmtBal(a.silverBalance)}</td><td>${fmtBal(a.goldBalance)}</td><td>${fmtDate(a.openingDate)}</td><td>${a.aadhar || "—"}</td><td>${a.pan || "—"}</td>
+    <td>${a.cid || a.agentId || ""}</td><td>${a.name || ""}</td><td>${a.mobile || ""}</td><td>${a.station || a.email || "—"}</td><td>${dispBal}</td><td>${fmtBal(a.silverBalance)}</td><td>${fmtBal(a.goldBalance)}</td><td>${fmtDate(a.openingDate)}</td><td>${a.aadhar || "—"}</td><td>${a.pan || "—"}</td>
     <td><button onclick="editAgent(${a.id})">Edit</button><button onclick="deleteAgent(${a.id})">Delete</button></td></tr>`;
           });
       }
@@ -807,7 +892,7 @@
         if (fields.address) fields.address.value = record.notes || "";
         if (fields.type) fields.type.value = "Agent";
       } else {
-        ["cid","name","relation","relationName","lfno","openingDate","openingBalance","goldBalance","silverBalance","maxLimit","aadhar","pan","address","station","phone","mobile","email"].forEach(k => {
+        ["cid","name","relation","relationName","lfno","openingDate","openingBalance","openingBalanceType","goldBalance","silverBalance","maxLimit","aadhar","pan","address","station","phone","mobile","email"].forEach(k => {
           if (fields[k] && record[k] !== undefined) fields[k].value = record[k];
         });
         if (fields.type) fields.type.value = entryType;
