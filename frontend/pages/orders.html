@@ -411,27 +411,34 @@
           const row = document.createElement("tr");
           row.dataset.orderId = order.id;
 
-          // Calculate Pc and Gr.Wt from items if not directly stored
-          let totalPc = order.pc || 0;
-          let totalGrWt = parseFloat(order.grWt || 0);
+          // Calculate Order-specific totals and Purchase total
+          let displayGrWt = 0;
+          let displayNet = 0;
+          let purchaseTotal = 0;
 
-          // If not in order data, calculate from items
-          if (!totalPc && order.items && order.items.length > 0) {
+          if (order.items && order.items.length > 0) {
             order.items.forEach(item => {
-              // Pc is at index 7, Gr.Wt (Est. Total Wt) is at index 9 in new-order.html
-              const pc = parseFloat(item.values[7] || 0);
+              const type = item.type || "Order";
+              // Gr.Wt is index 9, Net is index 12
               const grWt = parseFloat(item.values[9] || 0);
-              totalPc += pc;
-              totalGrWt += grWt;
+              const net = parseFloat(item.values[12] || 0);
+
+              if (type === "Order") {
+                displayGrWt += grWt;
+                displayNet += net;
+              } else if (type === "Purchase") {
+                purchaseTotal += net;
+              }
             });
+          } else {
+            // Fallback for orders without item details (legacy)
+            displayGrWt = parseFloat(order.grWt || 0);
+            displayNet = parseFloat(order.netAmount || 0);
           }
 
-          // Get type from order or from first item
-          let orderType = order.type || "Order";
-          if (!orderType && order.items && order.items.length > 0) {
-            const firstItemType = order.items[0].type;
-            if (firstItemType) orderType = firstItemType;
-          }
+          const cashAdvance = parseFloat(order.advance || 0);
+          const totalAdvance = cashAdvance + purchaseTotal;
+          const displayBalance = displayNet - totalAdvance;
 
           const isPending = order.status === "PENDING";
           row.innerHTML = `
@@ -442,10 +449,10 @@
         <td>${order.customer || order.customerName || "-"}</td>
         <td>${order.orderDate || "-"}</td>
         <td>${order.dueDate || "-"}</td>
-        <td class="right">${totalGrWt.toFixed(3)}</td>
-        <td class="right">${parseFloat(order.netAmount || 0).toFixed(2)}</td>
-        <td class="right">${parseFloat(order.advance || 0).toFixed(2)}</td>
-        <td class="right">${parseFloat(order.balance || 0).toFixed(2)}</td>
+        <td class="right">${displayGrWt.toFixed(3)}</td>
+        <td class="right">${displayNet.toFixed(2)}</td>
+        <td class="right">${totalAdvance.toFixed(2)}</td>
+        <td class="right">${displayBalance.toFixed(2)}</td>
         <td class="center">
           <button class="btn" onclick="editOrder(${order.id}); event.stopPropagation();" style="padding:4px 12px; font-size:12px;">Edit</button>
         </td>

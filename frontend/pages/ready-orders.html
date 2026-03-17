@@ -843,29 +843,32 @@
         return;
       }
 
-      // Calculate totals from items
-      let totalPc = order.pc || 0;
-      let totalGrWt = parseFloat(order.grWt || 0);
+      // Calculate Order-specific totals
+      let displayWeight = 0;
+      let displayAmount = 0;
       let itemNames = [];
 
       if (order.items && Array.isArray(order.items) && order.items.length > 0) {
         order.items.forEach(item => {
           if (!item || !item.values) return;
 
-          // Get item name - support multiple structures
-          const itemName = item.values[1] || item.values[2] || "";
-          if (itemName && itemName.trim()) itemNames.push(itemName.trim());
+          const type = item.values[0] || "Order";
+          const weight = parseFloat(item.values[9] || item.values[5] || item.values[8] || 0);
+          const amount = parseFloat(item.values[12] || item.values[13] || 0);
 
-          // Calculate totals if not already stored
-          if (!order.pc) {
-            const pc = parseFloat(item.values[4] || item.values[7] || 0);
-            totalPc += pc;
-          }
-          if (!order.grWt) {
-            const grWt = parseFloat(item.values[5] || item.values[8] || 0);
-            totalGrWt += grWt;
+          if (type === "Order") {
+            displayWeight += weight;
+            displayAmount += amount;
+            
+            // Get item name for Order items (index 2 in latest structure)
+            const itemName = item.values[2] || item.values[1] || "";
+            if (itemName && itemName.trim()) itemNames.push(itemName.trim());
           }
         });
+      } else {
+        // Fallback for orders without item details (legacy)
+        displayWeight = parseFloat(order.grWt || 0);
+        displayAmount = parseFloat(order.netAmount || 0);
       }
 
       // Format item names
@@ -911,8 +914,8 @@
     <td><strong>${order.orderNo || order.billNo || "\u2014"}</strong></td>
     <td>${customerName}</td>
     <td title="${itemNamesStr}" style="max-width:250px;overflow:hidden;text-overflow:ellipsis;">${displayItemNames}</td>
-    <td class="right">${totalGrWt.toFixed(3)}</td>
-    <td class="right"><strong>\u20b9${parseFloat(order.netAmount || 0).toFixed(2)}</strong></td>
+    <td class="right">${displayWeight.toFixed(3)}</td>
+    <td class="right"><strong>\u20b9${displayAmount.toFixed(2)}</strong></td>
     <td class="center">
       <button class="action-btn" onclick="editOrder(${order.id}); event.stopPropagation();">✏️ Edit</button>
     </td>
