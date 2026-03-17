@@ -1317,7 +1317,17 @@
         return `₹ ${safeNumber(amount).toFixed(2)}`;
       }
 
-      function generateBillNo() {
+      // Preview the next order number WITHOUT incrementing the counter.
+      // Call this everywhere EXCEPT at actual save time.
+      function peekNextBillNo() {
+        const last = localStorage.getItem('lastBillNo') || '0';
+        const next = Number(last) + 1;
+        return `SGJ/0/${String(next).padStart(4, '0')}`;
+      }
+
+      // Officially claim the next order number by incrementing the counter.
+      // Call this ONLY inside saveOrder() for brand-new (non-edit) orders.
+      function claimBillNo() {
         const last = localStorage.getItem('lastBillNo') || '0';
         const next = Number(last) + 1;
         localStorage.setItem('lastBillNo', String(next));
@@ -1504,13 +1514,16 @@
         // Type column: show all four types (Order, Repair, Sale, Purchase) so every added row has full type list
         tr.innerHTML = `
         <td>
-          <select onchange="handleTypeChange(this)">
-            <option value="" selected>-- Select --</option>
-            <option value="Order">Order</option>
-            <option value="Repair">Repair</option>
-            <option value="Sale">Sale</option>
-            <option value="Purchase">Purchase</option>
-          </select>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <select onchange="handleTypeChange(this)" style="flex:1; min-width:80px;">
+              <option value="" selected>-- Select --</option>
+              <option value="Order">Order</option>
+              <option value="Repair">Repair</option>
+              <option value="Sale">Sale</option>
+              <option value="Purchase">Purchase</option>
+            </select>
+            <button class="edit-details-btn" onclick="openOrderDetailsPopup(this)" title="Edit Order Details" style="display:none; padding:4px; background:none; border:none; cursor:pointer; font-size:14px;">✏️</button>
+          </div>
         </td>
         <td><input readonly value="${(AppState.elements.billNo && AppState.elements.billNo.value) || ''}"></td>
         <td><input placeholder="Item Name"></td>
@@ -1632,6 +1645,10 @@
         }
         if (row) {
           setPurchaseOptionalFieldsState(row, type === 'Purchase');
+          const editBtn = row.querySelector('.edit-details-btn');
+          if (editBtn) {
+            editBtn.style.display = type === 'Order' ? 'block' : 'none';
+          }
         }
         updateInfoPanel();
         scheduleAutoSave();
@@ -2385,6 +2402,17 @@
         showLoading(true);
 
         try {
+          // For brand-new orders (not edits), officially claim the next order number now.
+          // This is the ONLY place the counter is incremented — never on page load or reset.
+          if (!AppState.editMode) {
+            const claimed = claimBillNo();
+            AppState.elements.billNo.value = claimed;
+            // Also update the read-only bill-no cell in every table row
+            AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
+              const billInput = tr.cells[1]?.children[0];
+              if (billInput) billInput.value = claimed;
+            });
+          }
           const billTotal = calculateBillTotal();
           const rows = [];
 
@@ -2449,7 +2477,7 @@
             netAmount: billTotal.toFixed(2),
             advance: getPaidAmount(AppState.elements.billNo.value).toFixed(2),
             balance: (billTotal - getPaidAmount(AppState.elements.billNo.value)).toFixed(2),
-            status: 'PENDING',
+            status: AppState.editMode ? (AppState.currentOrderStatus || null) : null,
             items: rows,
             timestamp: new Date().toISOString()
           };
@@ -2569,6 +2597,14 @@
               if (rowData.deliveryDate) tr.dataset.deliveryDate = rowData.deliveryDate;
               if (rowData.daysToDelivery) tr.dataset.daysToDelivery = rowData.daysToDelivery;
               if (rowData.sample) tr.dataset.sample = rowData.sample;
+              
+              const sel = tr.cells[0]?.querySelector('select');
+              setPurchaseOptionalFieldsState(tr, sel && sel.value === 'Purchase');
+              const editBtn = tr.querySelector('.edit-details-btn');
+              if (editBtn && sel) {
+                editBtn.style.display = sel.value === 'Order' ? 'block' : 'none';
+              }
+
               setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
             });
           }
@@ -2622,6 +2658,7 @@
 
           AppState.editMode = true;
           AppState.editOrderId = order.id;
+          AppState.currentOrderStatus = order.status || null;
 
           const customerName = (order.customer || order.customerName || '').toString().trim();
           const customerIdRaw = order.customerId != null && order.customerId !== '' ? order.customerId : null;
@@ -2778,6 +2815,10 @@
           AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
             const sel = tr.cells[0]?.querySelector('select');
             setPurchaseOptionalFieldsState(tr, sel && sel.value === 'Purchase');
+            const editBtn = tr.querySelector('.edit-details-btn');
+            if (editBtn && sel) {
+              editBtn.style.display = sel.value === 'Order' ? 'block' : 'none';
+            }
           });
 
           // Update panels
@@ -2813,7 +2854,7 @@
       function clearOrderFormAndState() {
         // Clear all input fields
         if (AppState.elements.custName) AppState.elements.custName.value = '';
-        if (AppState.elements.billNo) AppState.elements.billNo.value = generateBillNo();
+        if (AppState.elements.billNo) AppState.elements.billNo.value = peekNextBillNo();
         if (AppState.elements.orderDate) AppState.elements.orderDate.valueAsDate = new Date();
         if (AppState.elements.dueDate) AppState.elements.dueDate.value = '';
         if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
@@ -3010,7 +3051,7 @@
               AppState.elements.orderDate.valueAsDate = new Date();
             }
             if (AppState.elements.billNo && !AppState.elements.billNo.value) {
-              AppState.elements.billNo.value = generateBillNo();
+              AppState.elements.billNo.value = peekNextBillNo();
             }
           }
 
@@ -3027,7 +3068,7 @@
           if (!pendingEditOrderId) {
             setTimeout(function () {
               if (AppState.elements.billNo && !AppState.elements.billNo.value) {
-                AppState.elements.billNo.value = generateBillNo();
+                AppState.elements.billNo.value = peekNextBillNo();
               }
             }, 200);
           }

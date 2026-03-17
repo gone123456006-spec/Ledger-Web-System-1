@@ -2236,23 +2236,28 @@
 
       function setPurchaseOptionalFieldsState(row, isPurchase) {
         if (!row) return;
-        // Disable/enable Making column (index 14) based on Purchase type
-        var makingCell = row.cells[14];
-        if (makingCell) {
-          var makingInput = makingCell.querySelector("input");
-          if (makingInput) {
-            if (isPurchase) {
-              makingInput.value = "0";
-              makingInput.setAttribute("readonly", "readonly");
-              makingInput.classList.add("purchase-field-disabled");
-              makingInput.tabIndex = -1;
-            } else {
-              makingInput.removeAttribute("readonly");
-              makingInput.classList.remove("purchase-field-disabled");
-              makingInput.tabIndex = 0;
+        // Disable and hide columns 10, 11, 12, 13, 14 for Purchase type
+        const targetIndices = [10, 11, 12, 13, 14];
+        targetIndices.forEach(idx => {
+          var cell = row.cells[idx];
+          if (cell) {
+            var input = cell.querySelector("input");
+            if (input) {
+              if (isPurchase) {
+                input.value = "0";
+                input.setAttribute("readonly", "readonly");
+                input.classList.add("purchase-field-disabled");
+                input.tabIndex = -1;
+                input.style.visibility = "hidden";
+              } else {
+                input.removeAttribute("readonly");
+                input.classList.remove("purchase-field-disabled");
+                input.tabIndex = 0;
+                input.style.visibility = "visible";
+              }
             }
           }
-        }
+        });
       }
 
       /* TYPE → POPUP */

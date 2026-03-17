@@ -811,6 +811,7 @@
             </th>
             <th class="center" style="width:68px;">Mark</th>
             <th class="center">Status</th>
+            <th>Type</th>
             <th class="right">Qty</th>
             <th>Item Name</th>
             <th>Sample Details</th>
@@ -990,8 +991,12 @@
           (order.items || []).forEach((item, idx) => {
             if (!item || !item.values) return;
             const v = item.values;
+            const type = v[0] || 'Order';
+            if (type !== 'Order') return;
+
             rows.push({
               orderId: order.id, itemIdx: idx,
+              type: type,
               qty: parseFloat(v[7]) || 0,
               itemName: (v[2] || '').trim() || '—',
               sampleDetails: item.sample || order.sampleDetails || '—',
@@ -1021,7 +1026,7 @@
             const tr = document.createElement('tr');
             if (r.assigned) tr.style.opacity = '0.62';
             tr.dataset.orderId = r.orderId;
-            tr.dataset.search = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
+            tr.dataset.search = [r.type, r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
             tr.innerHTML = `
             <td class="center cb-cell">
               <input type="checkbox" class="row-cb" ${r.assigned ? 'disabled' : ''}
@@ -1043,6 +1048,7 @@
                 ? `<span class="badge badge-assigned">&#10004; ${esc(r.assignedTo)}</span>`
                 : `<span class="badge badge-pending" id="badge-${r.orderId}-${r.itemIdx}">Pending</span>`}
             </td>
+            <td>${esc(r.type)}</td>
             <td class="right">${r.qty}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.itemName)}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.sampleDetails)}</td>

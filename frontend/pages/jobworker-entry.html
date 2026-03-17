@@ -161,6 +161,13 @@
       padding-right: 32px;
     }
 
+    #jwName {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2364748b'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 18px;
+    }
+
     .row input:focus,
     .row select:focus,
     .row textarea:focus {
@@ -396,13 +403,17 @@
           <label>Name <span class="required-star">*</span></label>
           <div class="name-wrap">
             <div class="jw-dropdown-wrap">
-              <input id="jwName" list="jwNameList" placeholder="Select from Job Worker list only"
-                oninput="onJwNameInput(); filterJwDropdown();" onchange="onJwNameInput()" onfocus="showJwDropdown()"
+              <input id="jwName" placeholder="Select from Job Worker list only" autocomplete="off"
+                oninput="filterJwDropdown()" onfocus="showJwDropdown()"
                 required>
-              <datalist id="jwNameList"></datalist>
               <div id="jwDropdown" class="jw-dropdown" role="listbox"></div>
             </div>
-            <button class="icon-btn" title="Add new Job Worker (Ctrl+M)" onclick="addJobworker()">➕</button>
+            <button class="icon-btn" title="Add new Job Worker (Ctrl+M)" onclick="addJobworker()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -498,12 +509,6 @@
 
       function loadJobworkers() {
         _jwData = JSON.parse(localStorage.getItem('jobworkers') || '[]');
-        const dl = document.getElementById('jwNameList');
-        if (!dl) return;
-        dl.innerHTML = _jwData.map(function (jw) {
-          var name = (jw.name || '').replace(/"/g, '&quot;');
-          return '<option value="' + name + '" data-id="' + (jw.id != null ? jw.id : '') + '">';
-        }).join('');
       }
 
       function refreshJobworkerList() {
@@ -517,13 +522,16 @@
         if (!el) return;
         list = list || _jwData;
         if (list.length === 0) {
-          var msg = isFiltered ? 'No matching name in Job Worker list.' : 'No names in Job Worker list. Add from Job Worker List first.';
+          var msg = isFiltered ? 'No matching name found.' : 'No Job Workers available.';
           el.innerHTML = '<div class="jw-dropdown-empty">' + msg + '</div>';
           return;
         }
         el.innerHTML = list.map(function (jw) {
           var name = (jw.name || '—').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-          return '<div role="option" data-name="' + name + '" onclick="selectJwFromNode(this)">' + name + '</div>';
+          var station = (jw.station || '').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+          return '<div role="option" data-name="' + name + '" onclick="selectJwName(\'' + name + '\')">' + 
+                 name + (station ? ' <span style="font-size:12px; color:#64748b; margin-left:8px;">(' + station + ')</span>' : '') + 
+                 '</div>';
         }).join('');
       }
 
@@ -533,21 +541,6 @@
       }
       window.selectJwFromNode = selectJwFromNode;
 
-      function showJwDropdown() {
-        loadJobworkers();
-        fillJwDropdown(_jwData);
-        var el = document.getElementById('jwDropdown');
-        if (el) el.classList.add('show');
-      }
-
-      function filterJwDropdown() {
-        var q = (document.getElementById('jwName').value || '').trim().toLowerCase();
-        var list = q ? _jwData.filter(function (j) { return (j.name || '').toLowerCase().indexOf(q) !== -1; }) : _jwData;
-        fillJwDropdown(list, !!q);
-        var el = document.getElementById('jwDropdown');
-        if (el) el.classList.add('show');
-      }
-
       function selectJwName(name) {
         var input = document.getElementById('jwName');
         if (input) {
@@ -555,14 +548,31 @@
           onJwNameInput();
         }
         var el = document.getElementById('jwDropdown');
-        if (el) el.classList.remove('show');
+        if (el) el.style.display = 'none';
       }
       window.selectJwName = selectJwName;
+
+      function showJwDropdown() {
+        loadJobworkers();
+        fillJwDropdown(_jwData);
+        var el = document.getElementById('jwDropdown');
+        if (el) el.style.display = 'block';
+      }
+      window.showJwDropdown = showJwDropdown;
+
+      function filterJwDropdown() {
+        var q = (document.getElementById('jwName').value || '').trim().toLowerCase();
+        var list = q ? _jwData.filter(function (j) { return (j.name || '').toLowerCase().indexOf(q) !== -1; }) : _jwData;
+        fillJwDropdown(list, !!q);
+        var el = document.getElementById('jwDropdown');
+        if (el) el.style.display = 'block';
+      }
+      window.filterJwDropdown = filterJwDropdown;
 
       document.addEventListener('click', function (e) {
         var wrap = document.querySelector('.jw-dropdown-wrap');
         var dd = document.getElementById('jwDropdown');
-        if (dd && wrap && !wrap.contains(e.target)) dd.classList.remove('show');
+        if (dd && wrap && !wrap.contains(e.target)) dd.style.display = 'none';
       });
 
       // ── ON NAME SELECT/TYPE: FETCH DETAILS FROM JOB WORKER LIST ─────────

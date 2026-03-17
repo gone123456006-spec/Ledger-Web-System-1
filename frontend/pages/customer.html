@@ -334,6 +334,62 @@
       #customerListSection .list-controls select { flex: 1; min-width: 0; }
       #customerListSection #searchCustomer { max-width: none; }
     }
+
+    /* Custom Searchable Dropdown */
+    .search-dropdown-wrap {
+      position: relative;
+      flex: 1;
+    }
+    .search-dropdown-list {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+      z-index: 1000;
+      display: none;
+      margin-top: 4px;
+      padding: 4px 0;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .search-dropdown-item {
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .search-dropdown-item:hover {
+      background: #f1f3f4;
+      color: var(--primary);
+    }
+    .search-dropdown-item span {
+        font-size: 12px;
+        color: var(--muted);
+        margin-left: 8px;
+    }
+    .search-dropdown-empty {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      font-style: italic;
+      text-align: center;
+    }
+    #station {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 40px;
+    }
   </style>
 </head>
 
@@ -398,14 +454,20 @@
           <label for="goldBalance">Gold Balance</label>
           <div class="row">
             <input type="number" id="goldBalance" step="0.001" placeholder="0">
-            <select id="goldUnit" aria-label="Unit"><option>gm</option></select>
+            <select id="goldBalanceType" aria-label="Gold Balance Type">
+              <option value="Dr">Dr</option>
+              <option value="Cr">Cr</option>
+            </select>
           </div>
         </div>
         <div class="field">
           <label for="silverBalance">Silver Balance</label>
           <div class="row">
             <input type="number" id="silverBalance" step="0.001" placeholder="0">
-            <select id="silverUnit" aria-label="Unit"><option>gm</option></select>
+            <select id="silverBalanceType" aria-label="Silver Balance Type">
+              <option value="Dr">Dr</option>
+              <option value="Cr">Cr</option>
+            </select>
           </div>
         </div>
         <div class="field">
@@ -429,8 +491,21 @@
         </div>
         <div class="field">
           <label for="station">Station</label>
-          <input type="text" id="station" list="stationList" placeholder="Enter station">
-          <datalist id="stationList"></datalist>
+          <div class="row">
+            <div class="search-dropdown-wrap" id="stationDropdownWrap">
+              <input type="text" id="station" placeholder="Enter station" autocomplete="off" onfocus="showStationDropdown()" oninput="filterStationDropdown()">
+              <div id="stationDropdown" class="search-dropdown-list"></div>
+            </div>
+            <button type="button" aria-label="Add New Station" title="Add New Station" onclick="openStationPopup()"
+                    style="display:flex; align-items:center; justify-content:center; width:38px; height:100%; min-height:42px; background:#f8f9fa; border:1px solid var(--border, #dadce0); border-radius:4px; cursor:pointer; flex-shrink:0; transition:all 0.2s;" 
+                    onmouseover="this.style.background='#e8eaed'; this.style.borderColor='#bebfc1';" 
+                    onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='var(--border, #dadce0)';">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#5f6368;">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </div>
         </div>
         <div class="field">
           <label for="phone">Phone <span class="required">*</span></label>
@@ -493,6 +568,73 @@
     <button type="button" onclick="openList()">Customer List</button>
   </div>
 
+  <!-- Station Popup -->
+  <div id="stationPopupOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(2px);">
+    <div style="background:#fff; width:500px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:var(--font, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif); overflow:hidden; border:1px solid var(--border);">
+      <div style="background:#f8f9fa; padding:12px 20px; font-weight:600; text-align:center; border-bottom:1px solid var(--border); font-size:16px; color:#1a1a1a;">
+        Station
+      </div>
+      <div style="padding:24px 32px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; align-items:center;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Station <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="popStationName" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
+        </div>
+        <div style="display:flex; align-items:center;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Country <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="popStationCountry" value="India" readonly style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#f8f9fa; color:var(--muted); cursor:not-allowed;">
+        </div>
+        <div style="display:flex; align-items:center;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">State <span style="color:var(--danger)">*</span></label>
+          <select id="popStationState" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff; cursor:pointer;">
+            <option value="">-- Select State --</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Goa">Goa</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Himachal Pradesh">Himachal Pradesh</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Manipur">Manipur</option>
+            <option value="Meghalaya">Meghalaya</option>
+            <option value="Mizoram">Mizoram</option>
+            <option value="Nagaland">Nagaland</option>
+            <option value="Odisha">Odisha</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Sikkim">Sikkim</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="Tripura">Tripura</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="Uttarakhand">Uttarakhand</option>
+            <option value="West Bengal">West Bengal</option>
+          </select>
+        </div>
+        <div style="display:flex; align-items:center;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">City</label>
+          <input type="text" id="popStationCity" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
+        </div>
+        <div style="display:flex; align-items:center;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Pin code</label>
+          <input type="text" id="popStationPin" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;" maxlength="6" inputmode="numeric">
+        </div>
+      </div>
+      <div style="background:#f8f9fa; padding:16px 20px; display:flex; justify-content:center; gap:12px; border-top:1px solid var(--border);">
+        <button type="button" onclick="saveStationFromPopup(true)" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And Close</button>
+        <button type="button" onclick="saveStationFromPopup(false)" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And New</button>
+        <button type="button" onclick="resetStationPopup()" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Reset</button>
+        <button type="button" onclick="closeStationPopup()" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORE_KEY = "customers";
     const STORE_KEY_JEWELLERS = "jewellers";
@@ -503,6 +645,96 @@
     const $ = id => document.getElementById(id);
     let form = null;
     let fields = {};
+
+    function openStationPopup() {
+      $("stationPopupOverlay").style.display = "flex";
+      resetStationPopup();
+      setTimeout(() => { $("popStationName").focus(); }, 100);
+    }
+    function closeStationPopup() {
+      $("stationPopupOverlay").style.display = "none";
+    }
+    function resetStationPopup() {
+      $("popStationName").value = "";
+      $("popStationState").value = "";
+      $("popStationCity").value = "";
+      $("popStationPin").value = "";
+    }
+    function saveStationFromPopup(closeAfter) {
+      const name = $("popStationName").value.trim();
+      const state = $("popStationState").value.trim();
+      if (!name) { alert("Station name is required."); $("popStationName").focus(); return; }
+      if (!state) { alert("State is required."); $("popStationState").focus(); return; }
+      
+      let stations = JSON.parse(localStorage.getItem("stations") || "[]");
+      if (stations.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        alert("Station already exists.");
+        $("popStationName").focus();
+        return;
+      }
+      
+      const newStation = {
+        name: name,
+        country: $("popStationCountry").value.trim(),
+        state: state,
+        city: $("popStationCity").value.trim(),
+        pincode: $("popStationPin").value.trim()
+      };
+      
+      stations.push(newStation);
+      localStorage.setItem("stations", JSON.stringify(stations));
+      
+      loadStations();
+      if (fields && fields.station) {
+         fields.station.value = name;
+      }
+      
+      if (closeAfter) {
+        closeStationPopup();
+      } else {
+        resetStationPopup();
+        $("popStationName").focus();
+      }
+    }
+
+    function showStationDropdown() {
+      const dropdown = $("stationDropdown");
+      if (dropdown) {
+        dropdown.style.display = "block";
+        filterStationDropdown();
+      }
+    }
+
+    function filterStationDropdown() {
+      const input = $("station").value.toLowerCase();
+      const stations = JSON.parse(localStorage.getItem("stations") || "[]");
+      const filtered = stations.filter(s => s.name.toLowerCase().includes(input));
+      renderStationDropdown(filtered);
+    }
+
+    function renderStationDropdown(list) {
+      const dropdown = $("stationDropdown");
+      if (!dropdown) return;
+      
+      if (list.length === 0) {
+        dropdown.innerHTML = '<div class="search-dropdown-empty">No stations found</div>';
+      } else {
+        dropdown.innerHTML = list.map(s => `
+          <div class="search-dropdown-item" onclick="selectStation('${s.name}')">
+            ${s.name} ${s.state ? `<span>(${s.state})</span>` : ''}
+          </div>
+        `).join('');
+      }
+    }
+
+    function selectStation(name) {
+      const input = $("station");
+      if (input) {
+        input.value = name;
+        if (fields && fields.station) fields.station.value = name;
+      }
+      $("stationDropdown").style.display = "none";
+    }
 
     function initElements() {
       form = $("customerForm");
@@ -515,9 +747,11 @@
         type: $("type"),
         lfno: $("lfno"),
         openingDate: $("openingDate"),
-        openingBalance: $("openingBalance"),
+        openingBalanceType: $("openingBalanceType"),
         goldBalance: $("goldBalance"),
+        goldBalanceType: $("goldBalanceType"),
         silverBalance: $("silverBalance"),
+        silverBalanceType: $("silverBalanceType"),
         maxLimit: $("maxLimit"),
         aadhar: $("aadhar"),
         pan: $("pan"),
@@ -574,6 +808,15 @@
           submitForm();
         }
       });
+
+      // Handle outside clicks to close dropdown
+      document.addEventListener("click", e => {
+        const wrap = $("stationDropdownWrap");
+        const dropdown = $("stationDropdown");
+        if (wrap && !wrap.contains(e.target) && dropdown) {
+          dropdown.style.display = "none";
+        }
+      });
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCustomerPage);
@@ -581,10 +824,8 @@
     window.addEventListener('pageRefresh', () => setTimeout(initCustomerPage, 100));
 
     function loadStations() {
-      const stations = JSON.parse(localStorage.getItem("stations") || "[]");
-      const dl = $("stationList");
-      if (dl) {
-        dl.innerHTML = stations.map(s => `<option value="${s.name}">`).join('');
+      if ($("stationDropdown") && $("stationDropdown").style.display === "block") {
+        filterStationDropdown();
       }
     }
 
@@ -657,7 +898,9 @@
         openingBalance: num(fields.openingBalance.value),
         openingBalanceType: fields.openingBalanceType.value,
         goldBalance: num(fields.goldBalance.value),
+        goldBalanceType: fields.goldBalanceType.value,
         silverBalance: num(fields.silverBalance.value),
+        silverBalanceType: fields.silverBalanceType.value,
         maxLimit: num(fields.maxLimit.value),
         aadhar: fields.aadhar.value.trim(),
         pan: fields.pan.value.trim(),
@@ -892,7 +1135,7 @@
         if (fields.address) fields.address.value = record.notes || "";
         if (fields.type) fields.type.value = "Agent";
       } else {
-        ["cid","name","relation","relationName","lfno","openingDate","openingBalance","openingBalanceType","goldBalance","silverBalance","maxLimit","aadhar","pan","address","station","phone","mobile","email"].forEach(k => {
+        ["cid","name","relation","relationName","lfno","openingDate","openingBalance","openingBalanceType","goldBalance","goldBalanceType","silverBalance","silverBalanceType","maxLimit","aadhar","pan","address","station","phone","mobile","email"].forEach(k => {
           if (fields[k] && record[k] !== undefined) fields[k].value = record[k];
         });
         if (fields.type) fields.type.value = entryType;
@@ -936,6 +1179,13 @@
     window.selectCustomerForOrder = selectCustomerForOrder;
     window.renderCustomerList = renderCustomerList;
     window.initCustomerPage = initCustomerPage;
+    window.openStationPopup = openStationPopup;
+    window.closeStationPopup = closeStationPopup;
+    window.resetStationPopup = resetStationPopup;
+    window.saveStationFromPopup = saveStationFromPopup;
+    window.showStationDropdown = showStationDropdown;
+    window.filterStationDropdown = filterStationDropdown;
+    window.selectStation = selectStation;
   </script>
 </body>
 </html>

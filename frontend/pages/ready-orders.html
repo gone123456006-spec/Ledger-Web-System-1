@@ -653,7 +653,6 @@
             <th>Bill No</th>
             <th>Customer</th>
             <th>Items</th>
-            <th class="right">Total Qty</th>
             <th class="right">Weight (g)</th>
             <th class="right">Amount (₹)</th>
             <th class="center">Action</th>
@@ -912,7 +911,6 @@
     <td><strong>${order.orderNo || order.billNo || "\u2014"}</strong></td>
     <td>${customerName}</td>
     <td title="${itemNamesStr}" style="max-width:250px;overflow:hidden;text-overflow:ellipsis;">${displayItemNames}</td>
-    <td class="right">${totalPc.toFixed(0)}</td>
     <td class="right">${totalGrWt.toFixed(3)}</td>
     <td class="right"><strong>\u20b9${parseFloat(order.netAmount || 0).toFixed(2)}</strong></td>
     <td class="center">
@@ -952,7 +950,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
     <tr>
-      <td colspan="10" style="border:none;">
+      <td colspan="9" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-text">No Ready Orders</div>
@@ -969,7 +967,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
     <tr>
-      <td colspan="10" style="border:none;">
+      <td colspan="9" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">⚠️</div>
           <div class="empty-state-text">Error Loading Orders</div>

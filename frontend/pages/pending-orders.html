@@ -399,8 +399,6 @@
             <th>Customer</th>
             <th>Order Date</th>
             <th>Due Date</th>
-            <th>Type</th>
-            <th class="right">Pc</th>
             <th class="right">Gr.Wt</th>
             <th class="right">Net (Rs)</th>
             <th class="right">Advance (Rs)</th>
@@ -583,8 +581,6 @@
         <td>${customerName}</td>
         <td>${formatDate(order.orderDate)}</td>
         <td>${formatDate(order.dueDate)}</td>
-        <td>${orderType}</td>
-        <td class="right">${totalPc.toFixed(0)}</td>
         <td class="right">${totalGrWt.toFixed(3)}</td>
         <td class="right"><strong>₹${parseFloat(order.netAmount || 0).toFixed(2)}</strong></td>
         <td class="right">₹${parseFloat(order.advance || 0).toFixed(2)}</td>
@@ -625,7 +621,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
         <tr>
-          <td colspan="12" style="border:none;">
+          <td colspan="10" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⏳</div>
               <div class="empty-state-text">No Pending Orders</div>
@@ -642,7 +638,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="12" style="border:none;">
+          <td colspan="10" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⚠️</div>
               <div class="empty-state-text">Error Loading Orders</div>
