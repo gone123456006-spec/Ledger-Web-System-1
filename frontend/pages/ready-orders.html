@@ -649,12 +649,14 @@
           <tr>
             <th>Status</th>
             <th>Job Worker</th>
+            <th>Order No</th>
             <th>Order Date</th>
-            <th>Bill No</th>
             <th>Customer</th>
-            <th>Items</th>
+            <th>Relation Name</th>
             <th class="right">Weight (g)</th>
-            <th class="right">Amount (₹)</th>
+            <th class="right">Net (Rs)</th>
+            <th class="right">Advance</th>
+            <th class="right">Balance</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -846,6 +848,7 @@
       // Calculate Order-specific totals
       let displayWeight = 0;
       let displayAmount = 0;
+      let purchaseTotal = 0;
       let itemNames = [];
 
       if (order.items && Array.isArray(order.items) && order.items.length > 0) {
@@ -863,6 +866,8 @@
             // Get item name for Order items (index 2 in latest structure)
             const itemName = item.values[2] || item.values[1] || "";
             if (itemName && itemName.trim()) itemNames.push(itemName.trim());
+          } else if (type === "Purchase") {
+            purchaseTotal += amount;
           }
         });
       } else {
@@ -877,8 +882,14 @@
         ? itemNames.slice(0, 3).join(", ") + ` <strong>(+${itemNames.length - 3} more)</strong>`
         : itemNamesStr;
 
-      // Get customer name
+      // Get customer details
       const customerName = order.customer || order.customerName || "—";
+      const relationName = order.customerRelation || "—";
+
+      // Calculate totals consistent with Order List
+      const cashAdvance = parseFloat(order.advance || 0);
+      const totalAdvance = cashAdvance + purchaseTotal;
+      const displayBalance = displayAmount - totalAdvance;
 
       // Create row
       const tr = document.createElement("tr");
@@ -910,12 +921,16 @@
           ? `<span class="jw-link" onclick="event.stopPropagation(); roOpenJwModal('', '${jobWorkerDisplay.replace(/'/g, "\\'")}')"> ${jobWorkerDisplay}</span>`
           : jobWorkerDisplay}
     </td>
-    <td>${formatDate(order.orderDate || order.date)}</td>
     <td><strong>${order.orderNo || order.billNo || "\u2014"}</strong></td>
+    <td>${formatDate(order.orderDate || order.date)}</td>
     <td>${customerName}</td>
-    <td title="${itemNamesStr}" style="max-width:250px;overflow:hidden;text-overflow:ellipsis;">${displayItemNames}</td>
+    <td>${relationName}</td>
     <td class="right">${displayWeight.toFixed(3)}</td>
     <td class="right"><strong>\u20b9${displayAmount.toFixed(2)}</strong></td>
+    <td class="right">\u20b9${totalAdvance.toFixed(2)}</td>
+    <td class="right" style="font-weight:700; color:${displayBalance > 0 ? '#d32f2f' : '#2e7d32'};">
+      \u20b9${displayBalance.toFixed(2)}
+    </td>
     <td class="center">
       <button class="action-btn" onclick="editOrder(${order.id}); event.stopPropagation();">✏️ Edit</button>
     </td>
@@ -953,7 +968,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
     <tr>
-      <td colspan="9" style="border:none;">
+      <td colspan="11" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-text">No Ready Orders</div>
@@ -970,7 +985,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
     <tr>
-      <td colspan="9" style="border:none;">
+      <td colspan="11" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">⚠️</div>
           <div class="empty-state-text">Error Loading Orders</div>

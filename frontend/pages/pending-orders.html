@@ -397,6 +397,7 @@
             <th>Status</th>
             <th>Order No</th>
             <th>Customer</th>
+            <th>Relation Name</th>
             <th>Order Date</th>
             <th>Due Date</th>
             <th class="right">Gr.Wt</th>
@@ -568,6 +569,7 @@
         <td><span class="badge pending">⏳ PENDING</span></td>
         <td><strong>${order.orderNo || order.billNo || "—"}</strong></td>
         <td>${customerName}</td>
+        <td>${order.customerRelation || "—"}</td>
         <td>${formatDate(order.orderDate)}</td>
         <td>${formatDate(order.dueDate)}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
@@ -610,7 +612,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
         <tr>
-          <td colspan="10" style="border:none;">
+          <td colspan="11" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⏳</div>
               <div class="empty-state-text">No Pending Orders</div>
@@ -627,7 +629,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="10" style="border:none;">
+          <td colspan="11" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⚠️</div>
               <div class="empty-state-text">Error Loading Orders</div>

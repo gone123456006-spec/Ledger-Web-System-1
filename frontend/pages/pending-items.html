@@ -820,6 +820,7 @@
             <th class="right">Est. Total Wt</th>
             <th>Order No.</th>
             <th>Customer</th>
+            <th>Relation Name</th>
             <th>Order Date</th>
             <th>Due Date</th>
           </tr>
@@ -1004,6 +1005,7 @@
               estUnitWt: parseFloat(v[8]) || 0,
               estTotalWt: parseFloat(v[9]) || 0,
               orderNo, customer,
+              customerRelation: order.customerRelation || '—',
               orderDate: order.orderDate || '', dueDate: order.dueDate || '',
               assigned: item.processAssigned === true,
               assignedTo: item.assignedToName || ''
@@ -1012,7 +1014,7 @@
         });
 
         if (rows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="12" style="border:none;">
+          tbody.innerHTML = `<tr><td colspan="15" style="border:none;">
           <div class="empty-state">
             <div class="icon">⏳</div>
             <div class="title">No Pending Items</div>
@@ -1057,6 +1059,7 @@
             <td class="right">${r.estTotalWt.toFixed(3)}</td>
             <td>${esc(r.orderNo)}</td>
             <td>${esc(r.customer)}</td>
+            <td>${esc(r.customerRelation)}</td>
             <td>${fmt(r.orderDate)}</td>
             <td>${fmt(r.dueDate)}</td>`;
             tbody.appendChild(tr);
@@ -1069,7 +1072,7 @@
         filterTable(); updateUI();
       } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="15"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
         ftText.textContent = 'Error';
       }
     }
@@ -1284,6 +1287,7 @@
               orderId: oId,
               orderNo: order.orderNo || order.billNo || '—',
               customerName: order.customer || order.customerName || '—',
+              customerRelation: order.customerRelation || '—',
               itemIdx: iIdx,
               itemName: item.values[2] || '—',
               qty: parseFloat(item.values[7]) || 0,

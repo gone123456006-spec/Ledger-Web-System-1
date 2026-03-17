@@ -319,6 +319,7 @@
             <th class="center">Mark</th>
             <th>Order No</th>
             <th>Customer</th>
+            <th>Relation Name</th>
             <th>Order Date</th>
             <th>Due Date</th>
             <th class="right">Gr.Wt</th>
@@ -447,6 +448,7 @@
         </td>
         <td>${order.orderNo || order.billNo || "-"}</td>
         <td>${order.customer || order.customerName || "-"}</td>
+        <td>${order.customerRelation || "-"}</td>
         <td>${order.orderDate || "-"}</td>
         <td>${order.dueDate || "-"}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
@@ -752,11 +754,6 @@
 
         const order = orders[orderIndex];
         order.marked = cb.checked;
-        if (cb.checked) {
-          order.status = "PENDING";
-        } else {
-          order.status = null;
-        }
 
         localStorage.setItem("orders", JSON.stringify(orders));
 
