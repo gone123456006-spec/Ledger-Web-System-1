@@ -2755,9 +2755,9 @@
           }, 100);
           setTimeout(() => applyCustomerFieldsToForm(), 250);
 
-          // Lock customer field when editing from orders page
-          const isCustomerReadOnly = localStorage.getItem('editCustomerReadOnly');
-          setCustomerEditLock(isCustomerReadOnly === 'true');
+          // Customer is always editable when editing
+          setCustomerEditLock(false);
+
 
           // Load bill info – ensure no field remains empty if data exists
           if (order.orderNo != null && order.orderNo !== '') AppState.elements.billNo.value = String(order.orderNo);

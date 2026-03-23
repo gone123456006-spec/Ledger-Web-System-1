@@ -281,7 +281,7 @@
             '<td class="col-station">' + (j.station || '—') + '</td>' +
             '<td class="col-phone">' + (j.phone || '—') + '</td>' +
             '<td class="col-phone">' + (j.mobile || '—') + '</td>' +
-            '<td class="col-action"><button type="button" class="btn-edit" onclick="editJobworker(' + (j.id || 0) + ')" title="Edit">Edit</button></td>' +
+            '<td class="col-action"><button type="button" class="btn-edit" onclick="editJobworker(\'' + (j.id || '') + '\')" title="Edit">Edit</button></td>' +
             '</tr>';
         }).join('');
       }

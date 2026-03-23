@@ -1119,6 +1119,11 @@
         </div>
 
         <div class="row">
+          <label>Bill No.</label>
+          <input id="sgjBillNo" readonly>
+        </div>
+
+        <div class="row">
           <label>Date</label>
           <input type="date" id="orderDate">
         </div>
@@ -1304,6 +1309,7 @@
         <p style="margin:5px 0;"><strong>Customer:</strong> <span id="iCustomer"></span></p>
         <p style="margin:5px 0;"><strong>Order Date:</strong> <span id="iOrderDate"></span></p>
         <p style="margin:5px 0;"><strong>Order No:</strong> <span id="iBillNo"></span></p>
+        <p style="margin:5px 0;"><strong>Bill No:</strong> <span id="iSgjBillNo"></span></p>
       </div>
       <div class="invoice-header-right" style="text-align:right;">
         <p style="margin:5px 0;"><strong>Invoice Date:</strong> <span id="iInvoiceDate"></span></p>
@@ -1683,6 +1689,7 @@
         orderDate = searchRoot.querySelector("#orderDate");
         dueDate = searchRoot.querySelector("#dueDate");
         billNo = searchRoot.querySelector("#billNo");
+        window.sgjBillNo = searchRoot.querySelector("#sgjBillNo");
         gstRate = searchRoot.querySelector("#gstRate");
         itemBody = searchRoot.querySelector("#ready-order-item-table tbody");
         orderApp = searchRoot.querySelector("#orderApp");
@@ -1745,11 +1752,15 @@
           if (!isEditing) {
             // Use session-safe generator: only increments lastBillNo ONCE per page load
             if (billNo) billNo.value = getSessionBillNo();
+            if (window.sgjBillNo) window.sgjBillNo.value = getSessionSgjBillNo();
           }
           // Ensure Order No is auto-generated if still empty after a short delay
           setTimeout(function () {
             if (billNo && !billNo.value && !localStorage.getItem("editOrderId")) {
               billNo.value = getSessionBillNo();
+            }
+            if (window.sgjBillNo && !window.sgjBillNo.value && !localStorage.getItem("editOrderId")) {
+              window.sgjBillNo.value = getSessionSgjBillNo();
             }
           }, 200);
         }
@@ -2027,6 +2038,25 @@
       }
 
       // BillNo change listener is now set up in initOrderPage()
+
+      /* AUTO SGJ BILL NO */
+      function generateSgjBillNo() {
+        let last = localStorage.getItem("lastSgjBillNo") || "0";
+        let next = Number(last) + 1;
+        localStorage.setItem("lastSgjBillNo", String(next));
+        return "SGJBILL/" + String(next).padStart(3, "0");
+      }
+
+      function getSessionSgjBillNo() {
+        if (!window.__readyExtraSgjBillNoForSession) {
+          window.__readyExtraSgjBillNoForSession = generateSgjBillNo();
+        }
+        return window.__readyExtraSgjBillNoForSession;
+      }
+
+      function clearSessionSgjBillNo() {
+        window.__readyExtraSgjBillNoForSession = null;
+      }
 
       /* AUTO BILL NO */
       function generateBillNo() {
@@ -2675,6 +2705,7 @@
         const billData = {
           date: orderDate.value,
           billNo: billNo.value,
+          sgjBillNo: window.sgjBillNo ? window.sgjBillNo.value : "",
           customer: getCustomerName(),
           customerId: custName.value,
           totalAmount: billTotal,
@@ -2809,6 +2840,7 @@
         const orderData = {
           id: orderId,
           orderNo: billNo.value,
+          sgjBillNo: window.sgjBillNo ? window.sgjBillNo.value : "",
           customer: getCustomerName(),
           customerId: custName.value,
           orderDate: orderDate.value,
@@ -3028,6 +3060,7 @@
         localStorage.removeItem("editOrderPayload");
         // Clear session bill number so next new order gets a fresh auto-incremented number
         clearSessionBillNo();
+        if (typeof clearSessionSgjBillNo === "function") clearSessionSgjBillNo();
 
         alert("Bill Save Successfully");
 
@@ -3117,7 +3150,9 @@
 
         // Reset bill info - generate a fresh number for this new session
         clearSessionBillNo(); // Clear session flag so a new number is generated
+        if (typeof clearSessionSgjBillNo === "function") clearSessionSgjBillNo();
         if (billNo) billNo.value = getSessionBillNo();
+        if (window.sgjBillNo) window.sgjBillNo.value = getSessionSgjBillNo();
         if (orderDate) orderDate.valueAsDate = new Date();
         if (dueDate) dueDate.value = "";
         if (gstRate) gstRate.value = "";
@@ -3233,15 +3268,35 @@
           billNo.style.backgroundColor = "#f5f5f7";
           billNo.style.cursor = "not-allowed";
         }
+        if (window.sgjBillNo) {
+          if (order.sgjBillNo) {
+            // Use the already-saved Bill No for this order
+            window.sgjBillNo.value = order.sgjBillNo;
+          } else {
+            // Generate a new Bill No. for orders that predate this feature
+            const newSgjBillNo = generateSgjBillNo();
+            window.sgjBillNo.value = newSgjBillNo;
+            // Persist it back so future edits show the same number
+            try {
+              const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+              const idx = orders.findIndex(o => o && String(o.id) === String(orderId));
+              if (idx >= 0) {
+                orders[idx].sgjBillNo = newSgjBillNo;
+                localStorage.setItem("orders", JSON.stringify(orders));
+              }
+            } catch (e) { console.error("Could not persist sgjBillNo:", e); }
+          }
+        }
         if (gstRate) gstRate.value = order.gst || "";
 
-        // Make Customer Name read-only when editing from orders page
-        const isCustomerReadOnly = localStorage.getItem("editCustomerReadOnly");
-        if (isCustomerReadOnly === "true" && custName) {
-          custName.disabled = true;
-          custName.style.backgroundColor = "#f5f5f7";
-          custName.style.cursor = "not-allowed";
+
+        // Customer name is always editable when editing
+        if (custName) {
+          custName.disabled = false;
+          custName.style.backgroundColor = "";
+          custName.style.cursor = "";
         }
+
 
         // Clear stale return-state flags that can overwrite edit data
         localStorage.removeItem("ratebookOpened");
@@ -3411,6 +3466,9 @@
         if (iBillNo) iBillNo.textContent = billNo.value || "—";
 
         const searchRoot = getSearchRoot();
+        const iSgjBillNo = searchRoot.querySelector("#iSgjBillNo");
+        if (iSgjBillNo && window.sgjBillNo) iSgjBillNo.textContent = window.sgjBillNo.value || "—";
+
         const invoiceDateEl = searchRoot.querySelector("#iInvoiceDate");
         if (invoiceDateEl) invoiceDateEl.textContent = new Date().toLocaleDateString();
 

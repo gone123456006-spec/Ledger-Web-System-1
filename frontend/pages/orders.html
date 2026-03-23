@@ -670,11 +670,8 @@
         // Store complete order snapshot
         localStorage.setItem("editOrderPayload", JSON.stringify(orderSnapshot));
         
-        // Store customer data separately for easy access
-        localStorage.setItem("selectedCustomerData", JSON.stringify(customerInfo));
-        
-        // Set customer field as read-only when editing from orders page
-        localStorage.setItem("editCustomerReadOnly", "true");
+        // Customer is always editable; do not set read-only flag
+
         
         // Set flag to indicate we're coming from orders page
         localStorage.setItem("returnToOrders", "true");
