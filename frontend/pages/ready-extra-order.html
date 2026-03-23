@@ -1197,7 +1197,7 @@
 
       <button onclick="openPayment()"> Payment</button>
       <button onclick="openRateBook()"> Rate Book</button>
-      <button class="btn-transfer" onclick="transferToCustomerBalance()"> Transfers</button>
+      <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button onclick="saveOrder()"> Save</button>
       <button onclick="saveAndNew()"> Save & New</button>
       <button onclick="resetOrder()"> Reset</button>
@@ -1228,7 +1228,7 @@
             <button class="panel-add-btn" onclick="openPayment()">+ Add</button>
           </div>
           <div class="panel-content" id="paymentPanelContent">
-            <div class="panel-summary">
+            <div class="panel-summary" style="background-color: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #fed7aa; margin-bottom: 16px;">
               <div class="summary-item">
                 <span class="summary-label">Order Total:</span>
                 <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
@@ -1242,7 +1242,7 @@
                 <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
               </div>
               <div class="summary-item">
-                <span class="summary-label">Paid:</span>
+                <span class="summary-label">Advanced:</span>
                 <span class="summary-value paid" id="panelPaid">₹ 0.00</span>
               </div>
               <div class="summary-item"
@@ -1250,34 +1250,40 @@
                 <span class="summary-label">Net Amount:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
               </div>
-              <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
-                <div class="summary-item">
-                  <span class="summary-label">Order (add):</span>
-                  <span class="summary-value" id="panelOrderSaleAdd">₹ 0.00</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">Sale (add):</span>
-                  <span class="summary-value" id="panelSaleAdd">₹ 0.00</span>
-                </div>
-                <div class="summary-item purchase-minus">
-                  <span class="summary-label">Purchase (minus):</span>
-                  <span class="summary-value" id="panelPurchaseMinus">₹ 0.00</span>
-                </div>
-                <div class="summary-item">
-                  <span class="summary-label">Amount:</span>
-                  <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
-                </div>
+            </div>
+
+            <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
+              <div class="summary-item">
+                <span class="summary-label">Order (add):</span>
+                <span class="summary-value" id="panelOrderSaleAdd">₹ 0.00</span>
               </div>
-              <div class="summary-item" id="panelRateDiffWrap"
-                style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
-                <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
+              <div class="summary-item">
+                <span class="summary-label">Sale (add):</span>
+                <span class="summary-value" id="panelSaleAdd">₹ 0.00</span>
               </div>
-              <div class="summary-item" id="panelAmountMinusRateDiffWrap"
-                style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
-                <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
-                <span class="summary-value" id="panelAmountMinusRateDiff"
-                  style="color:#28a745; font-weight:bold;"></span>
+              <div class="summary-item purchase-minus">
+                <span class="summary-label">Purchase (minus):</span>
+                <span class="summary-value" id="panelPurchaseMinus">₹ 0.00</span>
               </div>
+              <div class="summary-item purchase-minus">
+                <span class="summary-label">Paid (minus):</span>
+                <span class="summary-value" id="panelPaidMinus">₹ 0.00</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Amount:</span>
+                <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
+              </div>
+            </div>
+
+            <div class="summary-item" id="panelRateDiffWrap"
+              style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
+              <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
+            </div>
+            <div class="summary-item" id="panelAmountMinusRateDiffWrap"
+              style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
+              <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
+              <span class="summary-value" id="panelAmountMinusRateDiff"
+                style="color:#28a745; font-weight:bold;"></span>
             </div>
             <div class="panel-list" id="paymentList">
               <div class="empty-state">No payments yet</div>
@@ -1618,6 +1624,56 @@
       <div class="popup-actions">
         <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()">Save</button>
         <button onclick="closeRatebookDetailsPopup()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BILL TRANSFER POPUP -->
+  <div id="bill-transfer-popup" class="popup-bg ready-order-popup" style="display:none;" onclick="if(event.target===this) closeBillTransferPopup()">
+    <div class="popup-box" style="max-width:550px; padding: 0; overflow: hidden; border-radius: 4px;">
+      <div style="background: #666; color: #fff; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">Bill Transfer</div>
+      <div style="padding: 16px; background: #f9fdfd;">
+        <!-- Transfer To -->
+        <fieldset style="border: 1px solid #e0e0e0; margin-bottom: 12px; padding: 12px; background: #fff;">
+          <legend style="color: #333; font-size: 13px; font-weight: 500; margin-left: 8px; padding: 0 4px;">Transfer To</legend>
+          <div class="popup-row" style="margin-bottom: 8px;">
+            <label style="width: 80px; font-size: 13px; color: #333;">Name*</label>
+            <div style="display:flex; flex:1; align-items:center; gap: 4px;">
+              <select id="transferCustName" style="flex:1; border: 1px solid #007aff; outline: none; padding: 4px; font-size: 13px;" onchange="updateTransferCustDetails()"></select>
+              <button onclick="openCustomer()" style="width:24px; height:24px; border-radius:50%; border:none; background:#007aff; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1;">+</button>
+            </div>
+          </div>
+          <div class="popup-row" style="margin-bottom: 8px;">
+            <label style="width: 80px;"></label>
+            <span style="font-size: 12px; font-style: italic; color: #333;">Cur Bal : <span id="transferCurBal"></span></span>
+          </div>
+          <div class="popup-row" style="margin-bottom: 8px; background: #f0f0f0; padding: 4px;">
+            <label style="width: 80px; font-size: 13px; color: #333;">Relation</label>
+            <input id="transferRelation" readonly style="flex:1; background: transparent; border: none; outline: none; font-size: 13px; color: #333;">
+          </div>
+          <div class="popup-row" style="margin-bottom: 0; background: #f0f0f0; padding: 4px;">
+            <label style="width: 80px; font-size: 13px; color: #333;">Station*</label>
+            <input id="transferStation" readonly style="flex:1; background: transparent; border: none; outline: none; font-size: 13px; color: #333;">
+          </div>
+        </fieldset>
+
+        <!-- Transfer Detail -->
+        <fieldset style="border: 1px solid #e0e0e0; padding: 12px; margin-bottom: 16px; background: #fff;">
+          <legend style="color: #333; font-size: 13px; font-weight: 500; margin-left: 8px; padding: 0 4px;">Transfer Detail</legend>
+          <div class="popup-row" style="margin-bottom: 12px;">
+            <label style="width: 80px; font-size: 13px; color: #333;">On Date*</label>
+            <input type="date" id="transferDate" style="flex:1; border: 1px solid #ccc; padding: 4px; font-size: 13px;">
+          </div>
+          <div class="popup-row" style="align-items: flex-start; margin-bottom: 0;">
+            <label style="width: 80px; font-size: 13px; color: #333;">Narration</label>
+            <textarea id="transferNarration" style="flex:1; border: 1px solid #ccc; padding: 4px; min-height: 60px; font-size: 13px;"></textarea>
+          </div>
+        </fieldset>
+
+        <div style="text-align: center; display: flex; justify-content: center; gap: 12px;">
+          <button onclick="confirmBillTransfer()" style="padding: 6px 24px; background: #d0e0ec; border: 1px solid #a0bace; border-radius: 2px; cursor: pointer; color: #333; font-weight: 500; font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);">Transfer</button>
+          <button onclick="closeBillTransferPopup()" style="padding: 6px 24px; background: #d0e0ec; border: 1px solid #a0bace; border-radius: 2px; cursor: pointer; color: #333; font-weight: 500; font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2547,8 +2603,90 @@
         return (rows || []).reduce((sum, row) => sum + rbSafeNum(row && row.values ? row.values[6] : 0, 0), 0);
       }
 
+      /* =====================
+         BILL TRANSFER POPUP
+      ===================== */
+      function openBillTransferPopup() {
+        if (!custName || !billNo || !itemBody) {
+          if (!initElements()) {
+            alert("Form not initialized. Please refresh the page.");
+            return;
+          }
+        }
+        if (!custName.value) { alert("Select customer first"); return; }
+        if (!billNo.value) { alert("Order number is required"); return; }
+
+        // Load customers into dropdown
+        const transferCustName = document.getElementById("transferCustName");
+        const list = JSON.parse(localStorage.getItem("customers") || "[]");
+        
+        transferCustName.innerHTML = `<option value="">-- Select Transfer To Customer --</option>`;
+        list.forEach(c => {
+          const o = document.createElement("option");
+          o.value = c.id;
+          o.textContent = c.name;
+          o.dataset.data = JSON.stringify(c);
+          transferCustName.appendChild(o);
+        });
+
+        // Clear fields
+        document.getElementById("transferCurBal").textContent = "0.00";
+        document.getElementById("transferRelation").value = "";
+        document.getElementById("transferStation").value = "";
+        
+        document.getElementById("transferDate").value = orderDate && orderDate.value ? orderDate.value : new Date().toISOString().split("T")[0];
+
+        // Generate Narration
+        let totalPc = 0;
+        let orderType = "Order";
+        itemBody.querySelectorAll("tr").forEach(tr => {
+          const typeSelect = tr.cells[0] && tr.cells[0].querySelector("select");
+          const type = typeSelect ? typeSelect.value : "Order";
+          const pc = parseFloat(tr.cells[4] && tr.cells[4].children[0] ? tr.cells[4].children[0].value : 0) || 0;
+          totalPc += pc;
+          if (type && type !== "") orderType = type;
+        });
+
+        document.getElementById("transferNarration").value = `${orderType} - ${totalPc} pcs`;
+
+        document.getElementById("bill-transfer-popup").style.display = "flex";
+      }
+
+      function updateTransferCustDetails() {
+        const sel = document.getElementById("transferCustName");
+        if (!sel || !sel.selectedOptions[0] || !sel.selectedOptions[0].dataset.data) {
+          document.getElementById("transferCurBal").textContent = "0.00";
+          document.getElementById("transferRelation").value = "";
+          document.getElementById("transferStation").value = "";
+          return;
+        }
+        const c = JSON.parse(sel.selectedOptions[0].dataset.data);
+        document.getElementById("transferCurBal").textContent = parseFloat(c.openingBalance || 0).toFixed(2);
+        document.getElementById("transferRelation").value = (c.relation || "") + " " + (c.relationName || "");
+        document.getElementById("transferStation").value = c.station || "";
+      }
+
+      function closeBillTransferPopup() {
+        document.getElementById("bill-transfer-popup").style.display = "none";
+      }
+
+      function confirmBillTransfer() {
+        const sel = document.getElementById("transferCustName");
+        if (!sel.value) {
+          alert("Please select a target customer to transfer to.");
+          return;
+        }
+
+        const transferTarget = JSON.parse(sel.selectedOptions[0].dataset.data);
+        const transDate = document.getElementById("transferDate").value;
+        const transNarration = document.getElementById("transferNarration").value;
+
+        transferToCustomerBalance(transferTarget, transDate, transNarration);
+        closeBillTransferPopup();
+      }
+
       /* TRANSFER TO CUSTOMER BALANCE – saves current order data to Customer Balance (customerBalances + customer openingBalance) */
-      function transferToCustomerBalance() {
+      function transferToCustomerBalance(targetCustOverride = null, dateOverride = null, narrationOverride = null) {
         try {
           if (!custName || !billNo || !itemBody) {
             if (!initElements()) {
@@ -2920,7 +3058,7 @@
             const oldCustomer = customers.find(c => (c.name || "").trim().toLowerCase() === oldCustNameNorm);
 
             if (oldCustomer) {
-              const oldAmount = parseFloat(oldEntry.amount || 0);
+              const oldAmount = parseFloat(oldEntry.finalBalanceAmount || oldEntry.amount || 0);
               const currentBal = parseFloat(oldCustomer.openingBalance || 0);
               oldCustomer.openingBalance = (currentBal - oldAmount).toFixed(2);
 
@@ -2950,12 +3088,14 @@
             rateDiffResultSave = parseFloat(numStrSave) || 0;
           }
         }
-        const amountMinusRateDiffSave = rateBookDiffStoredSave ? (billTotal - Math.abs(rateDiffResultSave)) : null;
+        const finalBalanceAmount = billTotal - advanceTotal - Math.abs(rateDiffResultSave);
 
         const balanceEntry = {
           orderNo: billNo.value,
           customer: targetCustomerName,
           amount: billTotal.toFixed(2),
+          netAmount: billTotal.toFixed(2),
+          finalBalanceAmount: finalBalanceAmount.toFixed(2),
           date: orderDate.value,
           timestamp: orderTimestamp,
           readyWeight: totalGrWt.toFixed(3),
@@ -2972,7 +3112,7 @@
           lfno: targetCust?.lfno || "—",
           cid: targetCust?.cid || "—"
         };
-        if (amountMinusRateDiffSave != null) balanceEntry.amountMinusRateDiff = parseFloat(amountMinusRateDiffSave).toFixed(2);
+        if (finalBalanceAmount != null) balanceEntry.amountMinusRateDiff = parseFloat(finalBalanceAmount).toFixed(2);
         delete balanceEntry.rate;
 
         if (balanceIndex >= 0) {
@@ -2984,7 +3124,8 @@
 
         // 3. APPLY NEW TRANSFER TO CUSTOMER
         if (targetCust) {
-          const amountVal = parseFloat(balanceEntry.amount || 0);
+          // Add the final calculated balance to the customer's opening balance as requested
+          const amountVal = parseFloat(balanceEntry.finalBalanceAmount || 0);
           const currentBal = parseFloat(targetCust.openingBalance || 0);
           targetCust.openingBalance = (currentBal + amountVal).toFixed(2);
           targetCust.timestamp = new Date().toISOString();
@@ -4761,17 +4902,19 @@
         setPanel("#panelPaid", formatCurrency(paid));
         setPanel("#panelBalance", formatCurrency(balance));
 
-        // Breakdown: Order (add), Sale (add), Purchase (minus), Amount – from second Total column only
+        // Breakdown: Order (add), Sale (add), Purchase (minus), Paid (minus), Amount – from second Total column only
         const panelWrap = root.querySelector("#panelPurchaseSaleDetailWrap");
         const orderSaleAddEl = root.querySelector("#panelOrderSaleAdd");
         const saleAddEl = root.querySelector("#panelSaleAdd");
         const purchaseMinusEl = root.querySelector("#panelPurchaseMinus");
+        const paidMinusEl = root.querySelector("#panelPaidMinus");
         const netDetailEl = root.querySelector("#panelNetDetail");
-        const detailNet = detailOrderTotal + detailSaleTotal - detailPurchaseTotal;
+        const detailNet = detailOrderTotal + detailSaleTotal - detailPurchaseTotal - paid;
         if (panelWrap) panelWrap.style.display = "";
         if (orderSaleAddEl) orderSaleAddEl.textContent = formatCurrency(detailOrderTotal);
         if (saleAddEl) saleAddEl.textContent = formatCurrency(detailSaleTotal);
         if (purchaseMinusEl) purchaseMinusEl.textContent = formatCurrency(detailPurchaseTotal);
+        if (paidMinusEl) paidMinusEl.textContent = formatCurrency(paid);
         if (netDetailEl) netDetailEl.textContent = formatCurrency(detailNet);
 
         var paymentListEl = root.querySelector("#paymentList");
@@ -5398,6 +5541,11 @@
         window.addRatebookRow = addRatebookRow;
         window.saveRatebookDetailsFromPopup = saveRatebookDetailsFromPopup;
         window.updateRateBookingRow = updateRateBookingRow;
+        window.openBillTransferPopup = openBillTransferPopup;
+        window.closeBillTransferPopup = closeBillTransferPopup;
+        window.confirmBillTransfer = confirmBillTransfer;
+        window.updateTransferCustDetails = updateTransferCustDetails;
+
         window.closeDashboard = closeDashboard;
       }
 
@@ -5430,7 +5578,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'showInvoice', 'back', 'openPayment', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'showInvoice', 'back', 'openPayment', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();

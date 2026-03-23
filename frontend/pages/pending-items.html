@@ -816,6 +816,7 @@
             <th>Item Name</th>
             <th>Sample Details</th>
             <th>Design</th>
+            <th>Size</th>
             <th class="right">Est. Unit Wt</th>
             <th class="right">Est. Total Wt</th>
             <th>Order No.</th>
@@ -1002,6 +1003,7 @@
               itemName: (v[2] || '').trim() || '—',
               sampleDetails: item.sample || order.sampleDetails || '—',
               design: (v[5] || '').trim() || '—',
+              size: (v[6] || '').trim() || '—',
               estUnitWt: parseFloat(v[8]) || 0,
               estTotalWt: parseFloat(v[9]) || 0,
               orderNo, customer,
@@ -1014,7 +1016,7 @@
         });
 
         if (rows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="15" style="border:none;">
+          tbody.innerHTML = `<tr><td colspan="16" style="border:none;">
           <div class="empty-state">
             <div class="icon">⏳</div>
             <div class="title">No Pending Items</div>
@@ -1055,6 +1057,7 @@
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.itemName)}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.sampleDetails)}</td>
             <td>${esc(r.design)}</td>
+            <td>${esc(r.size)}</td>
             <td class="right">${r.estUnitWt.toFixed(3)}</td>
             <td class="right">${r.estTotalWt.toFixed(3)}</td>
             <td>${esc(r.orderNo)}</td>
@@ -1072,7 +1075,7 @@
         filterTable(); updateUI();
       } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="15"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
         ftText.textContent = 'Error';
       }
     }
@@ -1295,6 +1298,7 @@
               estTotalWt: parseFloat(item.values[9]) || 0,
               sampleDetails: item.sample || order.sampleDetails || '—',
               design: item.values[5] || '—',
+              size: item.values[6] || '—',
               jobworkerId: selectedJwId,
               jobworkerName: selectedJwName,
               assignedDate: now,

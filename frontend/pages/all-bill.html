@@ -329,18 +329,16 @@
       <table id="balanceTable">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Mark (CID)</th>
-            <th>LF No.</th>
+            <th class="center">Status</th>
             <th>Bill No.</th>
-            <th>Name</th>
-            <th>Relation</th>
-            <th>Relation Name</th>
-            <th>Station</th>
-            <th>Phone No.</th>
-            <th>Mobile Number</th>
-            <th class="right">Amount (₹)</th>
-            <th>Type</th>
+            <th>Order No.</th>
+            <th>Customer</th>
+            <th>Bill Date</th>
+            <th class="right">Net (₹)</th>
+            <th class="right">Advance (₹)</th>
+            <th class="right">Paid (₹)</th>
+            <th class="right">Weight (g)</th>
+            <th class="right">Balance (₹)</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -410,27 +408,101 @@
           const typeVal = (balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order");
           const custEsc = (balance.customer || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
+          const isTransferred = balance.transferred === true;
+          const statusLabel = isTransferred
+            ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">✓ Saved</span>`
+            : `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Pending</span>`;
+
+          // Try to pull richer figures from the linked order
+          const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+          const allBillsArray = JSON.parse(localStorage.getItem('bills') || '[]');
+          
+          let linkedOrder = allOrders.find(o =>
+            o.orderNo === balance.orderNo || o.billNo === balance.orderNo
+          );
+          
+          if (!linkedOrder) {
+            linkedOrder = allBillsArray.find(o =>
+              o.orderNo === balance.orderNo || o.billNo === balance.orderNo
+            );
+          }
+
+          let orderTotal = 0;
+          let purchaseTotal = 0;
+          let saleTotal = 0;
+          let totalWeight = 0;
+
+          const linkedItems = linkedOrder ? (linkedOrder.items || linkedOrder.rows || []) : [];
+
+          if (linkedItems && linkedItems.length > 0) {
+            linkedItems.forEach(it => {
+              const vals = it.values || [];
+              const type = it.type || 'Order';
+              // Determine if this is a Ready Extra Order (GST) based on column count (GST has 16-17 columns)
+              const isGst = vals.length >= 16;
+              const totalIdx = isGst ? 15 : 12;
+              const weightIdx = isGst ? 12 : 9; // R. Wt for GST, Total Wt for standard
+
+              const valTotal = parseFloat(vals[totalIdx] || 0);
+              const valWeight = parseFloat(vals[weightIdx] || 0);
+
+              if (type === 'Purchase') {
+                purchaseTotal += valTotal;
+              } else if (type === 'Sale') {
+                saleTotal += valTotal;
+                totalWeight += valWeight;
+              } else {
+                orderTotal += valTotal;
+                totalWeight += valWeight;
+              }
+            });
+          }
+
+          // Net amount (Total of all rows' 'Total' column, index 15)
+          let netAmt = orderTotal + saleTotal;
+          if (netAmt === 0) {
+             netAmt = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0);
+          }
+
+          // Advance & Paid (Total of payments)
+          const advanceAmt = parseFloat(linkedOrder ? (linkedOrder.advance || linkedOrder.paid || 0) : (balance.advance || 0));
+          const paidAmt = advanceAmt; 
+
+          // Weight (Total R. Wt, index 12 or 9)
+          let grWt = totalWeight;
+          if (grWt === 0) {
+            grWt = parseFloat(balance.grWt || (linkedOrder && linkedOrder.grWt) || 0);
+          }
+
+          // Calculate Rate Difference if available
+          let rateDiffResult = 0;
+          const rateDiffStored = (linkedOrder && linkedOrder.rateBookDiffSummary) ? linkedOrder.rateBookDiffSummary : (balance.rateBookDiffSummary || "");
+          if (rateDiffStored) {
+            const match = rateDiffStored.match(/=\s*([-\u2212]?\s*[\d.]+)/);
+            if (match) {
+              const numStr = match[1].replace(/\u2212/g, "-").replace(/\s/g, "");
+              rateDiffResult = parseFloat(numStr) || 0;
+            }
+          }
+
+          // Balance (Amount: Total - Purchase - Paid - Math.abs(RateDiff))
+          // For standard orders, balance might already be pre-calculated by `saveOrder`, but this formula relies on the net amount
+          const balAmt = netAmt - purchaseTotal - paidAmt - Math.abs(rateDiffResult);
+
           row.innerHTML = `
-        <td>${balance.date || "—"}</td>
-        <td>${balance.cid || "—"}</td>
-        <td>${balance.lfno || "—"}</td>
-        <td>${balance.orderNo || "—"}</td>
-        <td>${balance.customer || "—"}</td>
-        <td>${balance.relation || "—"}</td>
-        <td>${balance.relationName || "—"}</td>
-        <td>${balance.station || "—"}</td>
-        <td>${balance.phone || "—"}</td>
-        <td>${balance.mobile || "—"}</td>
-        <td class="right">${parseFloat(balance.amount || 0).toFixed(2)}</td>
-        <td>${typeVal}</td>
+        <td class="center">${statusLabel}</td>
+        <td style="font-weight:600;color:#2a50d8;">${balance.orderNo || balance.billNo || '—'}</td>
+        <td>${balance.orderNo || '—'}</td>
+        <td>${balance.customer || '—'}</td>
+        <td>${balance.date || '—'}</td>
+        <td class="right">${netAmt.toFixed(2)}</td>
+        <td class="right">${advanceAmt.toFixed(2)}</td>
+        <td class="right">${paidAmt.toFixed(2)}</td>
+        <td class="right">${grWt.toFixed(3)}</td>
+        <td class="right" style="color:${balAmt < 0 ? '#dc3545' : balAmt === 0 ? '#198754' : '#1d1d1f'}; font-weight:600;">${balAmt.toFixed(2)}</td>
         <td class="center">
           <div class="action-buttons">
             <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:6px 14px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Edit</button>
-            ${balance.transferred ?
-              `<button disabled style="padding:6px 14px;border-radius:8px;border:none;background:#6c757d;color:#fff;font-size:12px;cursor:not-allowed;font-weight:500;">Saved</button>` :
-              `<button onclick="transferBill(${index})" style="padding:6px 14px;border-radius:8px;border:none;background:#198754;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Save</button>`
-            }
-            <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${custEsc}')" style="padding:6px 14px;border-radius:8px;border:none;background:#dc3545;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Remove</button>
           </div>
         </td>
       `;
@@ -478,7 +550,7 @@
       rows.forEach(row => {
         const rowText = row.innerText.toLowerCase();
         const cells = row.querySelectorAll("td");
-        const customerCell = cells[4] ? cells[4].textContent.toLowerCase() : "";
+        const customerCell = cells[3] ? cells[3].textContent.toLowerCase() : "";
 
         let show = true;
 
