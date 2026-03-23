@@ -2681,8 +2681,15 @@
         const transDate = document.getElementById("transferDate").value;
         const transNarration = document.getElementById("transferNarration").value;
 
-        transferToCustomerBalance(transferTarget, transDate, transNarration);
+        // Perform a full SAVE of the order, but target the transfer customer and suppress internal alerts
+        saveOrder(false, true, transferTarget, transDate, transNarration);
+        
+        // After save, close the popup and redirect like the normal save button would (if we want that)
         closeBillTransferPopup();
+        
+        // Manually show success since saveOrder was silent
+        alert("Bill Transferred and Saved Successfully!");
+        if (typeof closeDashboard === 'function') closeDashboard();
       }
 
       /* TRANSFER TO CUSTOMER BALANCE – saves current order data to Customer Balance (customerBalances + customer openingBalance) */
@@ -2809,7 +2816,7 @@
       window.transferToCustomerBalance = transferToCustomerBalance;
 
       /* SAVE ORDER */
-      function saveOrder(resetAfterSave = false) {
+      function saveOrder(resetAfterSave = false, silent = false, targetCustOverride = null, dateOverride = null, narrationOverride = null) {
         if (!custName || !billNo || !itemBody) {
           if (!initElements()) {
             alert("Form not initialized. Please refresh the page.");
@@ -3016,8 +3023,8 @@
 
         const newBillData = {
           billNo: billNo.value,
-          customer: getCustomerName(),
-          customerId: custName.value,
+          customer: targetCustOverride ? targetCustOverride.name : getCustomerName(),
+          customerId: targetCustOverride ? targetCustOverride.id : custName.value,
           date: orderDate.value,
           dueDate: dueDate.value || "",
           amount: billTotal.toFixed(2),
@@ -3076,8 +3083,8 @@
         // 2. PREPARE NEW ENTRY
         // Get customer details for transfer
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-        const targetCustomerName = getCustomerName();
-        const targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+        const targetCustomerName = targetCustOverride ? targetCustOverride.name : getCustomerName();
+        const targetCust = targetCustOverride || customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
 
         const rateBookDiffStoredSave = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
         let rateDiffResultSave = 0;
@@ -3096,13 +3103,13 @@
           amount: billTotal.toFixed(2),
           netAmount: billTotal.toFixed(2),
           finalBalanceAmount: finalBalanceAmount.toFixed(2),
-          date: orderDate.value,
+          date: dateOverride || orderDate.value || new Date().toISOString().split("T")[0],
           timestamp: orderTimestamp,
           readyWeight: totalGrWt.toFixed(3),
           neg: 0,
           readyMetal: orderType === "Order" ? "Gold" : orderType,
           payment: advanceTotal > 0 ? "Partial" : "Pending",
-          narration: `${orderType} - ${totalPc} pcs`,
+          narration: narrationOverride || `${orderType} - ${totalPc} pcs`,
           transferred: true, // AUTOMATICALLY MARK AS TRANSFERRED
           phone: targetCust?.phone || custName.value || "—",
           mobile: targetCust?.mobile || targetCust?.phone || "—",
@@ -3203,16 +3210,18 @@
         clearSessionBillNo();
         if (typeof clearSessionSgjBillNo === "function") clearSessionSgjBillNo();
 
-        alert("Bill Save Successfully");
+        if (!silent) alert("Bill Save Successfully");
 
         // Update panel after saving
         updateInfoPanel();
 
         // Close page and go to Dashboard after save
-        if (typeof closeDashboard === 'function') {
-          closeDashboard();
-        } else if (resetAfterSave) {
-          resetOrder(true); // Fallback: reset form if Save & New
+        if (!silent) {
+          if (typeof closeDashboard === 'function') {
+            closeDashboard();
+          } else if (resetAfterSave) {
+            resetOrder(true); // Fallback: reset form if Save & New
+          }
         }
       }
 
