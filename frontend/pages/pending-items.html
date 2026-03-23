@@ -138,6 +138,26 @@
       cursor: not-allowed;
     }
 
+    .btn-unassign {
+      background: #ef4444;
+      border-color: #ef4444;
+      color: #fff;
+      transition: all 0.2s;
+    }
+
+    .btn-unassign:hover:not(:disabled) {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+    }
+
+    .btn-unassign:disabled {
+      background: #fca5a5;
+      border-color: #fca5a5;
+      color: #fff;
+      cursor: not-allowed;
+    }
+
     .btn-count {
       background: rgba(255, 255, 255, 0.25);
       border-radius: 6px;
@@ -792,7 +812,15 @@
         </svg>
         Refresh
       </button>
-      <button class="btn btn-assign" id="assignBtn" onclick="openAssignModal()">
+      <button class="btn btn-unassign" id="unassignBtn" onclick="confirmUnassign()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Unassign Selected
+        <span class="btn-count" id="btnUnassignCount">0</span>
+      </button>
+      <button class="btn btn-assign" id="assignBtn" onclick="openAssignModal()" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <polyline points="20 6 9 17 4 12" />
         </svg>
@@ -955,22 +983,38 @@
 
     /* ── UI STATE ── */
     function updateUI() {
-      const n = document.querySelectorAll('.row-cb:not(:disabled):checked').length;
+      const checkedPending = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked').length;
+      const checkedAssigned = document.querySelectorAll('.row-cb[data-assigned="true"]:checked').length;
+      const totalChecked = checkedPending + checkedAssigned;
+      
       const pill = document.getElementById('selPill');
-      const count = document.getElementById('btnCount');
+      const assignCount = document.getElementById('btnCount');
+      const unassignCount = document.getElementById('btnUnassignCount');
+
       if (pill) {
-        pill.style.display = n > 0 ? 'inline-block' : 'none';
-        pill.textContent = n + ' selected';
+        pill.style.display = totalChecked > 0 ? 'inline-block' : 'none';
+        pill.textContent = totalChecked + ' selected';
       }
-      if (count) {
-        count.style.display = n > 0 ? 'inline-block' : 'none';
-        count.textContent = n;
-      }
+
       const assignBtn = document.getElementById('assignBtn');
       if (assignBtn) {
-        assignBtn.disabled = n === 0;
+        assignBtn.disabled = checkedPending === 0;
+        if (assignCount) {
+          assignCount.style.display = checkedPending > 0 ? 'inline-block' : 'none';
+          assignCount.textContent = checkedPending;
+        }
       }
-      const all = [...document.querySelectorAll('.row-cb:not(:disabled)')].filter(c => c.closest('tr') && c.closest('tr').style.display !== 'none');
+
+      const unassignBtn = document.getElementById('unassignBtn');
+      if (unassignBtn) {
+        unassignBtn.disabled = checkedAssigned === 0;
+        if (unassignCount) {
+          unassignCount.style.display = checkedAssigned > 0 ? 'inline-block' : 'none';
+          unassignCount.textContent = checkedAssigned;
+        }
+      }
+
+      const all = [...document.querySelectorAll('.row-cb')].filter(c => c.closest('tr') && c.closest('tr').style.display !== 'none');
       const sa = document.getElementById('selectAll');
       if (sa) {
         sa.checked = all.length > 0 && all.every(c => c.checked);
@@ -1033,7 +1077,7 @@
             tr.dataset.search = [r.type, r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
             tr.innerHTML = `
             <td class="center cb-cell">
-              <input type="checkbox" class="row-cb" ${r.assigned ? 'disabled' : ''}
+              <input type="checkbox" class="row-cb" ${r.assigned ? 'data-assigned="true"' : ''}
                 data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}" onchange="onCbChange(this)">
             </td>
             <td class="center" style="padding:10px 8px;">
@@ -1097,7 +1141,7 @@
     }
 
     function toggleAll(src) {
-      document.querySelectorAll('.row-cb:not(:disabled)').forEach(cb => {
+      document.querySelectorAll('.row-cb').forEach(cb => {
         const tr = cb.closest('tr');
         if (!tr || tr.style.display === 'none') return;
         cb.checked = src.checked; onCbChange(cb);
@@ -1114,8 +1158,8 @@
 
     /* ── MODAL OPEN/CLOSE ── */
     function openAssignModal() {
-      const checked = document.querySelectorAll('.row-cb:not(:disabled):checked');
-      if (checked.length === 0) { showToast('⚠️ Please select at least one item first', 'warn'); return; }
+      const checked = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked');
+      if (checked.length === 0) { showToast('⚠️ Please select at least one pending item first', 'warn'); return; }
       selectedJwId = null; selectedJwName = null;
       const n = checked.length;
       document.getElementById('assignSummary').textContent = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
@@ -1199,7 +1243,7 @@
 
         // After closing popup, open the Assign Modal with this worker pre-selected
         setTimeout(() => {
-          const checked = document.querySelectorAll('.row-cb:not(:disabled):checked');
+          const checked = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked');
           const n = checked.length;
           document.getElementById('assignSummary').textContent = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
           document.getElementById('stripText').textContent = `${n} item${n > 1 ? 's' : ''} selected for assignment`;
@@ -1259,7 +1303,7 @@
     /* ── CONFIRM ASSIGN ── */
     function confirmAssign() {
       if (!selectedJwId || !selectedJwName || isAssigning) return;
-      const checkedCbs = document.querySelectorAll('.row-cb:not(:disabled):checked');
+      const checkedCbs = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked');
       if (checkedCbs.length === 0) { closeAssignModal(); return; }
 
       isAssigning = true;
@@ -1346,6 +1390,49 @@
       }, 650);
     }
 
+    /* ── UNASSIGN ── */
+    function confirmUnassign() {
+      const checkedCbs = document.querySelectorAll('.row-cb[data-assigned="true"]:checked');
+      if (checkedCbs.length === 0) return;
+      
+      if (!confirm(`Are you sure you want to unassign ${checkedCbs.length} item(s)?`)) return;
+
+      try {
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        let itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+        let count = 0;
+
+        checkedCbs.forEach(cb => {
+          const oId = cb.dataset.orderId;
+          const iIdx = parseInt(cb.dataset.itemIdx, 10);
+          
+          // Revert in orders
+          const order = orders.find(o => String(o.id) === String(oId));
+          if (order && order.items && order.items[iIdx]) {
+            order.items[iIdx].processAssigned = false;
+            delete order.items[iIdx].assignedToId;
+            delete order.items[iIdx].assignedToName;
+            delete order.items[iIdx].assignedDate;
+            count++;
+          }
+          
+          // Remove from itemProcess array
+          itemProcess = itemProcess.filter(ip => !(String(ip.orderId) === String(oId) && parseInt(ip.itemIdx, 10) === iIdx));
+        });
+
+        localStorage.setItem('orders', JSON.stringify(orders));
+        localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
+
+        document.getElementById('selectAll').checked = false;
+        loadPendingItems();
+        try { window.dispatchEvent(new Event('storage')); } catch (e) {}
+        showToast(`✅ ${count} item${count > 1 ? 's' : ''} unassigned successfully`, 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('❌ Unassign failed. Please try again.', 'warn');
+      }
+    }
+
     /* ── INIT ── */
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => setTimeout(loadPendingItems, 50));
@@ -1369,6 +1456,7 @@
     window.openAssignModal = openAssignModal;
     window.closeAssignModal = closeAssignModal;
     window.confirmAssign = confirmAssign;
+    window.confirmUnassign = confirmUnassign;
     window.selectJw = selectJw;
     window.onCbChange = onCbChange;
     window.toggleAll = toggleAll;
