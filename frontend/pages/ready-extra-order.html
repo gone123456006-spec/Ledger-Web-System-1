@@ -1507,20 +1507,14 @@
         </select>
       </div>
       <div class="popup-row">
-        <label>Amount *</label>
-        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required
-          oninput="calculatePaymentBalance()">
+        <label>Amount Paid *</label>
+        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
       </div>
       <div class="popup-row">
         <label>Narration</label>
         <textarea id="paymentNarration" placeholder="Enter narration..."></textarea>
       </div>
-      <div class="popup-row"
-        style="display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--border);">
-        <div><strong>Order Total: ₹<span id="popupBillTotal">0.00</span></strong></div>
-        <div><strong>Amount: ₹<span id="popupAmountDisplay">0.00</span></strong></div>
-        <div><strong style="color:#dc3545;">Net Amount: ₹<span id="popupBalance">0.00</span></strong></div>
-      </div>
+
       <div class="popup-actions">
         <button onclick="savePaymentFromPopup()">Save Payment</button>
         <button onclick="closePaymentPopup()">Cancel</button>
@@ -2556,11 +2550,18 @@
         return total;
       }
 
-      /* GET PAID AMOUNT FOR BILL */
-      function getPaidAmount(billNo) {
+      /* GET PAID AMOUNT FOR BILL (from payments storage) */
+      function getPaidAmount(billNo, typeFilter = null) {
         const payments = JSON.parse(localStorage.getItem("payments") || "[]");
         return payments
-          .filter(p => p.billNo === billNo)
+          .filter(p => {
+            const billMatch = p.billNo === billNo;
+            if (!billMatch) return false;
+            if (typeFilter === 'Paid') return p.type === 'Paid';
+            // Advanced = explicit 'Advanced' OR no type (legacy)
+            if (typeFilter === 'Advanced') return p.type !== 'Paid';
+            return true; // All payments for this bill
+          })
           .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
       }
 
@@ -3648,14 +3649,23 @@
 
         // Calculate payment info
         const total = g;
-        const paid = getPaidAmount(billNo.value);
-        const balance = total - paid;
 
         if (iGrand) iGrand.textContent = total.toFixed(2);
+
+        const billNoVal = billNo ? billNo.value : "";
+        const advanced = getPaidAmount(billNoVal, 'Advanced');
+        const paid = getPaidAmount(billNoVal, 'Paid');
+
         const iPaidEl = searchRoot.querySelector("#iPaid");
         const iBalanceEl = searchRoot.querySelector("#iBalance");
-        if (iPaidEl) iPaidEl.textContent = paid.toFixed(2);
-        if (iBalanceEl) iBalanceEl.textContent = balance.toFixed(2);
+
+        if (iPaidEl) {
+          iPaidEl.textContent = (advanced + paid).toFixed(2);
+        }
+        if (iBalanceEl) {
+          const grandTotal = Number(iGrand ? iGrand.textContent : 0) || 0;
+          iBalanceEl.textContent = (grandTotal - advanced - paid).toFixed(2);
+        }
 
         // Ratebook difference (uses latest Ratebook rate per Stamp)
         const iRatebookTotalEl = searchRoot.querySelector("#iRatebookTotal");
@@ -4145,13 +4155,13 @@
 
       function calculatePaymentBalance() {
         var total = calculateBillTotal();
-        var paid = billNo && billNo.value ? getPaidAmount(billNo.value) : 0;
+        var advanced = billNo && billNo.value ? getPaidAmount(billNo.value, 'Advanced') : 0;
+        var paid = billNo && billNo.value ? getPaidAmount(billNo.value, 'Paid') : 0;
         var root = getSearchRoot();
         var amtEl = root ? root.querySelector("#paymentAmount") : null;
         var amount = Number(amtEl && amtEl.value ? amtEl.value : 0);
-        var balance = total - paid - amount;
+        var balance = total - advanced - paid - amount;
 
-        if (paymentAmountDisplay) paymentAmountDisplay.textContent = amount.toFixed(2);
         if (paymentBalance) {
           paymentBalance.textContent = balance.toFixed(2);
           paymentBalance.style.color = balance <= 0 ? "#28a745" : "#dc3545";
@@ -4191,6 +4201,7 @@
           amount: amt,
           mode: modeSelect ? modeSelect.value : "Cash",
           narration: narrationInput ? narrationInput.value : "",
+          type: "Paid",
           date: new Date().toISOString().split("T")[0],
           timestamp: new Date().toISOString()
         });
@@ -4897,8 +4908,9 @@
 
         const mainOrderPlusSale = mainOrderTotal + mainSaleTotal;
         const mainNetTotal = mainOrderPlusSale - mainPurchaseTotal;
-        const paid = getPaidAmount(billNo.value);
-        const balance = mainNetTotal - paid;
+        const advanced = getPaidAmount(billNo.value, 'Advanced');
+        const paid = getPaidAmount(billNo.value, 'Paid');
+        const balance = mainNetTotal - advanced - paid;
 
         const root = getSearchRoot();
         const setPanel = function (id, text) {
@@ -4908,7 +4920,7 @@
         setPanel("#panelOrderTotal", formatCurrency(mainOrderPlusSale));
         setPanel("#panelPurchaseTotal", formatCurrency(mainPurchaseTotal));
         setPanel("#panelBillTotal", formatCurrency(mainNetTotal));
-        setPanel("#panelPaid", formatCurrency(paid));
+        setPanel("#panelPaid", formatCurrency(advanced));
         setPanel("#panelBalance", formatCurrency(balance));
 
         // Breakdown: Order (add), Sale (add), Purchase (minus), Paid (minus), Amount – from second Total column only
@@ -4918,7 +4930,7 @@
         const purchaseMinusEl = root.querySelector("#panelPurchaseMinus");
         const paidMinusEl = root.querySelector("#panelPaidMinus");
         const netDetailEl = root.querySelector("#panelNetDetail");
-        const detailNet = detailOrderTotal + detailSaleTotal - detailPurchaseTotal - paid;
+        const detailNet = detailOrderTotal + detailSaleTotal - detailPurchaseTotal - advanced - paid;
         if (panelWrap) panelWrap.style.display = "";
         if (orderSaleAddEl) orderSaleAddEl.textContent = formatCurrency(detailOrderTotal);
         if (saleAddEl) saleAddEl.textContent = formatCurrency(detailSaleTotal);

@@ -313,6 +313,24 @@
     }
 
     /* =========================
+       GET PAID AMOUNT HELPER
+    ========================= */
+    function getPaidAmount(billNo, typeFilter = null) {
+      if (!billNo) return 0;
+      const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+      return payments
+        .filter(p => {
+          const billMatch = p.billNo === billNo;
+          if (!billMatch) return false;
+          if (typeFilter === 'Paid') return p.type === 'Paid';
+          // Advanced = explicit 'Advanced' OR no type (legacy)
+          if (typeFilter === 'Advanced') return p.type !== 'Paid';
+          return true; // All payments for this bill
+        })
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    }
+
+    /* =========================
        LOAD BALANCES
     ========================= */
     function loadBalances() {
@@ -405,8 +423,9 @@
           }
 
           // Advance & Paid (Total of payments)
-          const advanceAmt = parseFloat(linkedOrder ? (linkedOrder.advance || linkedOrder.paid || 0) : (balance.advance || 0));
-          const paidAmt = advanceAmt; 
+          const billNoVal = balance.orderNo || balance.billNo || "";
+          const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
+          const paidAmt = getPaidAmount(billNoVal, 'Paid');
 
           // Weight (Total R. Wt, index 12 or 9)
           let grWt = totalWeight;
@@ -425,9 +444,8 @@
             }
           }
 
-          // Balance (Amount: Total - Purchase - Paid - Math.abs(RateDiff))
-          // For standard orders, balance might already be pre-calculated by `saveOrder`, but this formula relies on the net amount
-          const balAmt = netAmt - purchaseTotal - paidAmt - Math.abs(rateDiffResult);
+          // Balance (Amount: Total - Purchase - Advanced - Paid - Math.abs(RateDiff))
+          const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
 
           row.innerHTML = `
         <td class="center">${statusLabel}</td>
