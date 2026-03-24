@@ -370,6 +370,37 @@
         font-size: 16px;
       }
     }
+
+    /* STATION POPUP */
+    .stn-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
+    .stn-popup { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); width: 420px; max-width: 95vw; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn .2s ease; }
+    .stn-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
+    .stn-header .stn-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); line-height: 1; }
+    .stn-search { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+    .stn-search input { width: 100%; height: 36px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .stn-search input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .stn-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+    .stn-item { padding: 10px 20px; font-size: 14px; cursor: pointer; color: var(--text); transition: background .12s; }
+    .stn-item:hover { background: #f0f4ff; color: var(--primary); }
+    .stn-add { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .stn-add input { flex: 1; height: 36px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .stn-add input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    .stn-add button { height: 36px; padding: 0 14px; border-radius: 8px; border: none; background: var(--primary); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .stn-add button:hover { background: var(--primary-hover); }
+    .stn-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* CUSTOM STATION DROPDOWN */
+    .search-dropdown-wrap { position: relative; flex: 1; min-width: 0; }
+    .search-dropdown-list {
+      position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto;
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1000; display: none; margin-top: 6px; padding: 6px 0;
+      animation: fadeIn 0.15s ease-out;
+    }
+    .search-dropdown-item { padding: 10px 16px; font-size: 14px; cursor: pointer; transition: all 0.15s; border-radius: 4px; margin: 0 6px; }
+    .search-dropdown-item:hover { background: #f0f4ff; color: var(--primary); }
+    .search-dropdown-item span { font-size: 12px; color: var(--muted); margin-left: 8px; font-style: italic; }
+    .search-dropdown-empty { padding: 12px 16px; font-size: 13px; color: var(--muted); text-align: center; font-style: italic; }
   </style>
 </head>
 
@@ -420,7 +451,8 @@
 
           <div class="row">
             <label>LF No <span class="required-star">*</span></label>
-            <input id="jwLfNo" type="number" placeholder="Ledger folio number" required>
+            <input id="jwLfNo" type="text" placeholder="Auto-generated" readonly
+              style="background:#f5f5f7;cursor:not-allowed;">
           </div>
         </div>
 
@@ -461,9 +493,11 @@
 
         <div class="row">
           <label>Station <span class="required-star">*</span></label>
-          <input id="jwStation" list="stationList" placeholder="City / Station">
-          <datalist id="stationList"></datalist>
-          <button class="icon-btn" title="Refresh stations" onclick="loadStations()">🌐</button>
+          <div class="search-dropdown-wrap" id="jwStationWrap">
+            <input id="jwStation" placeholder="Type station name..." autocomplete="off" onfocus="showJwStationDropdown()" oninput="filterJwStationDropdown()" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%235f6368%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; padding-right: 40px; cursor: pointer;">
+            <div id="jwStationDropdown" class="search-dropdown-list"></div>
+          </div>
+          <button class="icon-btn" title="Save typed station to list" onclick="saveJwStationInline()" style="background:#eef4ff; font-size:16px; font-weight:700; color:var(--primary);">+</button>
         </div>
 
         <div class="row">
@@ -494,6 +528,8 @@
 
   </div>
 
+
+
   <script>
     (function () {
 
@@ -505,31 +541,107 @@
         setTimeout(() => t.classList.remove('show'), 3000);
       }
 
+      // ── AUTO LF No ─────────────────────────────────
+      function generateLfNo() {
+        const list = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        if (!list.length) return '1';
+        let max = 0;
+        list.forEach(function (j) {
+          const n = parseInt(j.lfNo, 10);
+          if (!isNaN(n) && n > max) max = n;
+        });
+        return String(max + 1);
+      }
+
+      // ── STATION DROPDOWN UI ─────────────────────────
+      function getJwStations() {
+        const stored = JSON.parse(localStorage.getItem('stations') || '[]');
+        const cust = JSON.parse(localStorage.getItem('customers') || '[]').map(function (c) { return c.station; }).filter(Boolean);
+        const workers = JSON.parse(localStorage.getItem('jobworkers') || '[]').map(function (j) { return j.station; }).filter(Boolean);
+        const all = stored.map(s => s.name || s).concat(cust).concat(workers);
+        const unique = [];
+        all.forEach(function (s) { if (unique.indexOf(s) === -1) unique.push(s); });
+        return unique.sort();
+      }
+
+      function showJwStationDropdown() {
+        var dd = document.getElementById('jwStationDropdown');
+        if (dd) { dd.style.display = 'block'; filterJwStationDropdown(); }
+      }
+
+      function filterJwStationDropdown() {
+        var inputVal = (document.getElementById('jwStation').value || '').toLowerCase();
+        var allStns = getJwStations();
+        var filtered = inputVal ? allStns.filter(function(s) { return s.toLowerCase().indexOf(inputVal) !== -1; }) : allStns;
+        renderJwStationDropdown(filtered);
+      }
+
+      function renderJwStationDropdown(list) {
+        var dd = document.getElementById('jwStationDropdown');
+        if (!dd) return;
+        if (!list.length) {
+          dd.innerHTML = '<div class="search-dropdown-empty">No matching stations.<br>Type and click "+" to add.</div>';
+        } else {
+          dd.innerHTML = list.map(function(s) {
+            var safe = s.replace(/'/g, "\\'");
+            return '<div class="search-dropdown-item" onclick="selectJwStation(\'' + safe + '\')">' + s + '</div>';
+          }).join('');
+        }
+      }
+
+      window.showJwStationDropdown = showJwStationDropdown;
+      window.filterJwStationDropdown = filterJwStationDropdown;
+
+      window.selectJwStation = function(name) {
+        document.getElementById('jwStation').value = name;
+        var dd = document.getElementById('jwStationDropdown');
+        if (dd) dd.style.display = 'none';
+      };
+
+      // Hide dropdown on outside click
+      document.addEventListener('click', function(e) {
+        var wrap = document.getElementById('jwStationWrap');
+        if (wrap && !wrap.contains(e.target)) {
+          var dd = document.getElementById('jwStationDropdown');
+          if (dd) dd.style.display = 'none';
+        }
+      });
+
+      window.saveJwStationInline = function() {
+        const input = document.getElementById('jwStation');
+        const name = (input ? input.value : '').trim();
+        if (!name) { showToast('Type a station name first', 'error'); return; }
+        const stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        if (stations.some(function(s) { return (s.name || s).toLowerCase() === name.toLowerCase(); })) {
+          showToast('Station already in list', 'error'); return;
+        }
+        stations.push({ name: name });
+        localStorage.setItem('stations', JSON.stringify(stations));
+        showToast('Station "' + name + '" saved!', 'success');
+      };
+
+      function loadStations() { /* No-op on load because dropdown builds dynamically on click */ }
+
+
       // ── AUTO ID GENERATION ─────────────────────────
       function generateJWId() {
         const last = localStorage.getItem('lastJobworkerId') || '0';
         const next = Number(last) + 1;
-        // We don't commit until save
         return 'SGJ/Jobworker/' + next;
       }
 
-      // ── STATION SUGGESTIONS ────────────────────────
-      function loadStations() {
-        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-        const jobworkers = JSON.parse(localStorage.getItem('jobworkers') || '[]');
-        const all = [...customers, ...jobworkers];
-        const stations = [...new Set(all.map(x => x.station).filter(Boolean))].sort();
-        const dl = document.getElementById('stationList');
-        dl.innerHTML = stations.map(s => `<option value="${s}">`).join('');
-      }
+      // ── STATION ────────────────────────────────────
+      function loadStations() { refreshJwStationList(); }
 
       // ── SET DATE DEFAULTS ──────────────────────────
       function setDefaults() {
         var root = getFormRoot();
         var dateEl = root.querySelector('#jwObDate');
         var idEl = root.querySelector('#jwId');
+        var lfEl = root.querySelector('#jwLfNo');
         if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
         if (idEl) idEl.value = generateJWId();
+        if (lfEl && !lfEl.value) lfEl.value = generateLfNo();
       }
 
       // ── VALIDATE ───────────────────────────────────
@@ -661,7 +773,7 @@
         localStorage.removeItem('editJobworkerPayload');
         editId = null;
         var root = getFormRoot();
-        ['jwName', 'jwRelationName', 'jwLfNo', 'jwObMetal', 'jwObChain', 'jwObNag', 'jwObMaal',
+        ['jwName', 'jwRelationName', 'jwObMetal', 'jwObChain', 'jwObNag', 'jwObMaal',
           'jwAddress', 'jwStation', 'jwPhone', 'jwMobile', 'jwEmail'].forEach(function (id) {
             var el = root.querySelector('#' + id);
             if (el) el.value = '';
@@ -670,6 +782,8 @@
         if (relSelect) relSelect.selectedIndex = 0;
         var jwIdEl = root.querySelector('#jwId');
         if (jwIdEl) jwIdEl.value = generateJWId();
+        var lfEl = root.querySelector('#jwLfNo');
+        if (lfEl) lfEl.value = generateLfNo();
         var dateEl = root.querySelector('#jwObDate');
         if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
 
@@ -739,5 +853,7 @@
     })();
   </script>
 </body>
+
+</html>
 
 </html>

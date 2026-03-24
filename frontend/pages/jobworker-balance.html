@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,19 +17,68 @@
       --radius: 12px;
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
     }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
-    body { margin: 0; background: var(--bg); color: var(--text); }
-    .app { width: 100%; max-width: none; margin: 0; padding: 16px 12px; }
-    .page-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .box { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); padding: 16px; }
-    .box-title { font-size: 15px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-    .list-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 16px 12px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .box {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+    }
+
+    .box-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .list-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
     .list-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 13px;
       table-layout: fixed;
     }
+
     .list-table th,
     .list-table td {
       padding: 12px 14px;
@@ -36,189 +86,499 @@
       border: 1px solid var(--border);
       vertical-align: middle;
     }
-    .list-table th { background: #f1f5f9; color: var(--muted); font-weight: 600; white-space: nowrap; }
-    .list-table tbody tr:hover { background: #f8faff; }
-    .list-table .col-mark { width: 5%; text-align: center; }
-    .list-table .col-id { width: 10%; }
-    .list-table .col-name { width: 10%; }
-    .list-table .col-lf { width: 6%; text-align: right; }
-    .list-table .col-relation { width: 10%; }
-    .list-table .col-station { width: 8%; }
-    .list-table .col-num { width: 7%; text-align: right; }
-    .empty-list { text-align: center; padding: 32px; color: var(--muted); }
-    .search-wrap { margin-bottom: 12px; }
-    .search-wrap input { width: 100%; max-width: 320px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; }
-    .search-wrap input:focus { outline: none; border-color: var(--primary); }
-    .list-table .balance-mark { cursor: pointer; width: 16px; height: 16px; }
+
+    .list-table th {
+      background: #f1f5f9;
+      color: var(--muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .list-table tbody tr:hover {
+      background: #f8faff;
+    }
+
+    .list-table .col-mark {
+      width: 5%;
+      text-align: center;
+    }
+
+    .list-table .col-id {
+      width: 10%;
+    }
+
+    .list-table .col-name {
+      width: 10%;
+    }
+
+    .list-table .col-lf {
+      width: 6%;
+      text-align: right;
+    }
+
+    .list-table .col-relation {
+      width: 10%;
+    }
+
+    .list-table .col-station {
+      width: 8%;
+    }
+
+    .list-table .col-num {
+      width: 7%;
+      text-align: right;
+    }
+
+    .empty-list {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+    }
+
+    .search-wrap {
+      margin-bottom: 12px;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      max-width: 320px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .search-wrap input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .list-table .balance-mark {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+    }
 
     /* ── JW CLICKABLE NAME ── */
-    .jw-link { color: #00508c; font-weight: 700; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; transition: color 0.15s; }
-    .jw-link:hover { color: #0070d8; text-decoration: underline solid; }
+    .jw-link {
+      color: #00508c;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline dotted;
+      text-underline-offset: 3px;
+      transition: color 0.15s;
+    }
 
-    /* ── JW INFO MODAL ── */
-    .jw-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(2px); z-index: 9100; align-items: center; justify-content: center; }
-    .jw-modal-overlay.open { display: flex; }
-    .jw-modal { background: #fff; width: 98%; height: 96%; border-radius: 14px; box-shadow: 0 20px 50px rgba(0, 0, 0, .15); animation: jwPop 0.2s cubic-bezier(0.34, 1.4, 0.64, 1); display: flex; flex-direction: column; max-height: 98%; overflow: hidden; border: 1px solid #e2e8f0; }
-    @keyframes jwPop { from { transform: scale(0.93) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-    .jw-modal-header { display: flex; align-items: center; gap: 14px; padding: 18px 22px 14px; border-bottom: 2px solid #e2e8f0; background: linear-gradient(to bottom, #fafbfc, #f5f7fa); flex-shrink: 0; }
-    .jw-modal-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; font-size: 19px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .jw-modal-title { flex: 1; text-align: left; }
-    .jw-modal-title h3 { margin: 0; font-size: 17px; font-weight: 700; color: #1e293b; }
-    .jw-modal-title p { margin: 3px 0 0; font-size: 12px; color: #64748b; }
-    .jw-modal-close { width: 32px; height: 32px; border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; cursor: pointer; font-size: 17px; color: #64748b; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
-    .jw-modal-close:hover { background: #f1f5f9; color: #1e293b; }
-    .jw-modal-body { overflow: auto; flex: 1; }
-    .jw-bal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    .jw-bal-table th, .jw-bal-table td { padding: 11px 14px; text-align: left; border: 1px solid #e2e8f0; vertical-align: middle; }
-    .jw-bal-table th { background: #f1f5f9; color: #64748b; font-weight: 600; white-space: nowrap; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; }
-    .jw-bal-table td { color: #1e293b; }
-    .jw-bal-table .num { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: #0f5132; }
-    .jw-bal-table .num-neutral { color: #374151; font-weight: 500; }
-    .jw-modal-section-title { padding: 12px 22px 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #64748b; background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left; }
-    .jw-modal-footer { padding: 11px 20px; font-size: 13px; color: #64748b; border-top: 2px solid #e2e8f0; background: #f8fafc; flex-shrink: 0; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-    .jw-stat-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-    .jw-stat-chip.process { background: #e1f0fa; color: #0060a8; border: 1px solid #9ccaf0; }
-    .jw-stat-chip.ready { background: #d1f2eb; color: #0f5132; border: 1px solid #a3cfbb; }
-    .badge.ready-done { background: #d1f2eb; color: #0f5132; border: 1px solid #a3cfbb; display:inline-block; padding:3px 8px; border-radius:12px; font-size:11px;}
-    .badge.process { background: #e1f0fa; color: #0060a8; border: 1px solid #9ccaf0; display:inline-block; padding:3px 8px; border-radius:12px; font-size:11px;}
-    .action-btn { padding: 6px 14px; border-radius: 8px; border: none; background: #007aff; color: #fff; font-size: 12px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
-    .action-btn:hover { background: #0056b3; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0, 122, 255, 0.3); }
-    .action-btn:active { transform: translateY(0); }
+    .jw-link:hover {
+      color: #0070d8;
+      text-decoration: underline solid;
+    }
+
+    /* ── LEDGER CARD MODAL ── */
+    .lc-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 9100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lc-overlay.open {
+      display: flex;
+    }
+
+    .lc-modal {
+      background: #fff;
+      width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      border-radius: 0;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: none;
+      animation: jwPop 0.2s ease;
+    }
+
+    @keyframes jwPop {
+      from {
+        transform: scale(0.98) translateY(4px);
+        opacity: 0
+      }
+
+      to {
+        transform: none;
+        opacity: 1
+      }
+    }
+
+    /* header */
+    .lc-hdr {
+      background: #f0f4ff;
+      border-bottom: 2px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      flex-shrink: 0;
+    }
+
+    .lc-hdr-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #1e293b;
+      margin-right: auto;
+    }
+
+    .lc-hdr-field {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .lc-hdr-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #64748b;
+    }
+
+    .lc-hdr-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .lc-close {
+      margin-left: 24px;
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .lc-close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+
+    /* table */
+    .lc-body {
+      flex: 1;
+      overflow: auto;
+    }
+
+    .lc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .lc-table th {
+      background: #f1f5f9;
+      color: #64748b;
+      font-weight: 600;
+      padding: 9px 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .lc-table td {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      color: #1e293b;
+      vertical-align: middle;
+    }
+
+    .lc-table tbody tr:hover {
+      background: #f8faff;
+    }
+
+    .lc-table .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+
+    .lc-table .num-val {
+      color: #0f5132;
+      font-weight: 600;
+    }
+
+    .lc-table .num-zero {
+      color: #94a3b8;
+    }
+
+    .lc-table .tot-row td {
+      background: #f0fdf4;
+      font-weight: 700;
+      font-size: 13px;
+      border-top: 2px solid #a7f3d0;
+    }
+
+    .lc-empty {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    /* footer stats */
+    .lc-footer {
+      border-top: 2px solid var(--border);
+      padding: 10px 20px;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .lc-stat {
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .lc-stat strong {
+      color: #1e293b;
+    }
+
+    .lc-purity {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .lc-purity input {
+      width: 56px;
+      padding: 3px 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .lc-btns {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .lc-btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: .15s;
+    }
+
+    .lc-btn:hover {
+      background: #f1f5f9;
+    }
+
+    .lc-btn.primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+
+    .lc-btn.primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .lc-btn.danger {
+      background: #ef4444;
+      color: #fff;
+      border-color: #ef4444;
+    }
+
+    .lc-btn.danger:hover {
+      background: #dc2626;
+    }
+
+    /* Editable Input overrides for Table */
+    .lc-input {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      padding: 4px 6px;
+      font-size: 13px;
+      font-family: inherit;
+      color: inherit;
+      border-radius: 4px;
+      transition: 0.1s;
+    }
+
+    .lc-input:focus {
+      background: #fff;
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    .lc-input.num-val {
+      text-align: right;
+      color: #0f5132;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .lc-input.date-val {
+      width: 110px;
+    }
+
+    /* Hide number input arrows */
+    .lc-input::-webkit-outer-spin-button,
+    .lc-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+    }
+
+    .lc-input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    /* Delete Row button */
+    .lc-row-del {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 4px;
+      opacity: 0.3;
+      transition: 0.2s;
+      margin-left: 4px;
+      border-radius: 4px;
+    }
+
+    .lc-row-del:hover {
+      opacity: 1;
+      transform: scale(1.1);
+      background: #fee2e2;
+    }
+
+    .lc-narr-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
   </style>
-</head>
-<body>
-  <div class="app">
-    <div class="page-title">
-      <span>Jobworker Balance</span>
-      <button type="button" class="primary" onclick="addBalanceRow()" style="padding:8px 16px;">Add row</button>
-    </div>
-
-    <div class="box">
-      <div class="box-title">Balance (own data – not linked to Job Worker List)</div>
-      <div class="search-wrap">
-        <input type="text" id="searchInput" placeholder="Search by name, id, LF, station..." oninput="filterTable()">
-      </div>
-      <div class="list-table-wrap">
-        <table class="list-table">
-          <thead>
-            <tr>
-              <th class="col-mark">Mark</th>
-              <th class="col-id">Jobworker Id</th>
-              <th class="col-name">Name</th>
-              <th class="col-lf">LF</th>
-              <th class="col-relation">Relation with Name</th>
-              <th class="col-station">Station</th>
-              <th class="col-num">Metal</th>
-              <th class="col-num">Chain</th>
-              <th class="col-num">Nag</th>
-              <th class="col-num">Maal</th>
-              <th class="col-action" style="width:7%; text-align:center;">Action</th>
-            </tr>
-          </thead>
-          <tbody id="balanceTableBody"></tbody>
-        </table>
-      </div>
-      <div id="balanceEmpty" class="empty-list" style="display:none;">No balance rows. Click Add row to add.</div>
-    </div>
+  <span>Jobworker Balance</span>
   </div>
 
-  <!-- JW INFO MODAL -->
-  <div class="jw-modal-overlay" id="roJwModalOverlay" onclick="if(event.target===this)roCloseJwModal()">
-    <div class="jw-modal">
-      <div class="jw-modal-header">
-        <div class="jw-modal-avatar" id="roJwModalAvatar">J</div>
-        <div class="jw-modal-title">
-          <h3 id="roJwModalName">Job Worker</h3>
-          <p id="roJwModalSub">Job Worker Details</p>
+  <div class="box">
+    <div class="box-title">Balance (own data – not linked to Job Worker List)</div>
+    <div class="search-wrap" style="display: flex; gap: 12px; align-items: center;">
+      <input type="text" id="searchInput" placeholder="Search by name, id, LF, station..." oninput="filterTable()"
+        style="flex: 1;">
+      <select id="balanceFilter" onchange="filterTable()"
+        style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; background: #fff; cursor: pointer; color: var(--text);">
+        <option value="all">All Balances</option>
+        <option value="non-zero">Non-Zero Balance</option>
+        <option value="zero">Zero Balance</option>
+      </select>
+    </div>
+    <div class="list-table-wrap">
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th class="col-mark">Mark</th>
+            <th class="col-id">Jobworker Id</th>
+            <th class="col-name">Name</th>
+            <th class="col-lf">LF</th>
+            <th class="col-relation">Relation with Name</th>
+            <th class="col-station">Station</th>
+            <th class="col-num">Metal</th>
+            <th class="col-num">Chain</th>
+            <th class="col-num">Nag</th>
+            <th class="col-num">Maal</th>
+          </tr>
+        </thead>
+        <tbody id="balanceTableBody"></tbody>
+      </table>
+    </div>
+    <div id="balanceEmpty" class="empty-list" style="display:none;">No balance rows.</div>
+  </div>
+  </div>
+
+  <!-- LEDGER CARD MODAL -->
+  <div class="lc-overlay" id="lcOverlay">
+    <div class="lc-modal">
+      <!-- Header: JW Details -->
+      <div class="lc-hdr">
+        <span class="lc-hdr-title">JobWorker Details</span>
+        <div class="lc-hdr-field"><span class="lc-hdr-label">LF No</span><span class="lc-hdr-val" id="lcLfNo">—</span>
         </div>
-        <button class="jw-modal-close" onclick="roCloseJwModal()">&#x2715;</button>
+        <div class="lc-hdr-field"><span class="lc-hdr-label">Name</span><span class="lc-hdr-val" id="lcName">—</span>
+        </div>
+        <div class="lc-hdr-field"><span class="lc-hdr-label">Station</span><span class="lc-hdr-val"
+            id="lcStation">—</span></div>
+        <button class="lc-close" onclick="lcClose()">&#x2715;</button>
       </div>
-      <div class="jw-modal-body">
-        <div class="jw-modal-section-title">Balance Information</div>
-        <table class="jw-bal-table">
+      <!-- Entries Table -->
+      <div class="lc-body">
+        <table class="lc-table">
           <thead>
             <tr>
-              <th>JW ID</th>
-              <th>Name</th>
-              <th>Relation</th>
-              <th>Date</th>
-              <th style="text-align:right">Metal (g)</th>
-              <th style="text-align:right">Chain (g)</th>
-              <th style="text-align:right">Neg (g)</th>
-              <th style="text-align:right">Maal (g)</th>
-              <th>Address</th>
-              <th>Station</th>
-              <th>Phone</th>
-              <th>Mobile</th>
+              <th style="width:110px">Date</th>
+              <th class="num" style="width:90px">Metal</th>
+              <th class="num" style="width:90px">Chain</th>
+              <th class="num" style="width:90px">Neg</th>
+              <th class="num" style="width:90px">Maal</th>
+              <th>Narration</th>
             </tr>
           </thead>
-          <tbody id="roJwModalTableBody"></tbody>
-        </table>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div class="jw-modal-section-title" style="margin-top:0;">Assigned Items in Process</div>
-          <select id="roJwModalItemsFilter" onchange="roFilterJwModalItems()" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:normal; color:#334155; background:#fff; cursor:pointer;">
-            <option value="ALL">All Status</option>
-            <option value="PROCESS">In Process</option>
-            <option value="READY">Ready</option>
-          </select>
-        </div>
-        <table class="jw-bal-table">
-          <thead>
-            <tr>
-              <th style="text-align:center">Status</th>
-              <th style="text-align:right">Qty</th>
-              <th>Item Name</th>
-              <th>Sample Details</th>
-              <th>Design</th>
-              <th style="text-align:right">Est. Unit Wt</th>
-              <th style="text-align:right">Est. Total Wt</th>
-              <th>Order No.</th>
-              <th>Customer</th>
-              <th>Assigned Date</th>
-            </tr>
-          </thead>
-          <tbody id="roJwModalItemsBody"></tbody>
+          <tbody id="lcEntriesBody"></tbody>
         </table>
       </div>
-      <div class="jw-modal-footer" id="roJwModalFooter">
-        <span style="font-weight:600;color:#1e293b;">Loading…</span>
+      <!-- Footer bar -->
+      <div class="lc-footer">
+        <div class="lc-stat">Total Metal: <strong id="lcTotalMetal">0.000</strong></div>
+        <div class="lc-stat lc-purity">Purity: <input id="lcPurity" type="number" min="1" max="100" value="100"
+            oninput="lcUpdateNet()"> %</div>
+        <div class="lc-stat">-Net: <strong id="lcNet">0.000</strong></div>
+        <div class="lc-stat">Pending: <strong id="lcPending">0.000</strong></div>
+        <div class="lc-stat">On: <strong id="lcOnDate"></strong></div>
+        <div class="lc-btns">
+          <button class="lc-btn danger" onclick="lcClearAccount()">Clear Account</button>
+          <button class="lc-btn primary" onclick="lcSaveAndClose()">Save And Close</button>
+          <button class="lc-btn" onclick="lcPrint()">Print</button>
+        </div>
       </div>
     </div>
   </div>
 
-          <!-- EDIT BALANCE MODAL -->
-  <div class="jw-modal-overlay" id="editBalanceModalOverlay" style="z-index:9200;">
-    <div class="jw-modal" style="width: 450px; height: auto; max-height: 90vh; border-radius: 12px; padding: 0;">
-      <div class="jw-modal-header" style="padding: 16px 20px;">
-        <h3 style="margin:0; font-size: 16px; font-weight: 600; color: #1e293b;">Edit Balance Row</h3>
-        <button class="jw-modal-close" style="margin-left:auto;" onclick="closeEditModal()">&#x2715;</button>
-      </div>
-      <div class="jw-modal-body" style="padding: 20px;">
-        <input type="hidden" id="editBalanceId">
-        <div style="display:flex; gap:12px; margin-bottom: 12px;">
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Jobworker ID</label><input type="text" id="editJwId" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" onfocus="this.select()"></div>
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">LF</label><input type="text" id="editLfNo" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" onfocus="this.select()"></div>
-        </div>
-        <div style="margin-bottom: 12px;"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Name</label><input type="text" id="editJwName" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" onfocus="this.select()"></div>
-        <div style="display:flex; gap:12px; margin-bottom: 12px;">
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Relation with Name</label><input type="text" id="editJwRelation" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" onfocus="this.select()"></div>
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Station</label><input type="text" id="editJwStation" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px;" onfocus="this.select()"></div>
-        </div>
-        <div style="display:flex; gap:12px; margin-bottom: 12px;">
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Metal (g)</label><input type="number" step="0.001" id="editJwMetal" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align:right;" onfocus="this.select()"></div>
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Chain (g)</label><input type="number" step="0.001" id="editJwChain" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align:right;" onfocus="this.select()"></div>
-        </div>
-        <div style="display:flex; gap:12px; margin-bottom: 16px;">
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Nag (g)</label><input type="number" step="0.001" id="editJwNag" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align:right;" onfocus="this.select()"></div>
-          <div style="flex:1"><label style="display:block; font-size: 12px; margin-bottom: 4px; color: var(--muted); font-weight: 500;">Maal (g)</label><input type="number" step="0.001" id="editJwMaal" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; text-align:right;" onfocus="this.select()"></div>
-        </div>
-      </div>
-      <div class="jw-modal-footer" style="padding: 14px 20px; justify-content: flex-end; gap: 10px;">
-        <button style="padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px; background: #fff; font-weight: 500; cursor: pointer; color: #334155; font-size: 13px;" onclick="closeEditModal()">Cancel</button>
-        <button style="padding: 8px 16px; border: none; border-radius: 8px; background: var(--primary); font-weight: 600; cursor: pointer; color: #fff; font-size: 13px;" onclick="saveEditBalance()">Save Changes</button>
-      </div>
-    </div>
-  </div>
+
 
   <script>
     (function () {
@@ -232,25 +592,7 @@
         localStorage.setItem(STORE_KEY, JSON.stringify(list));
       }
 
-      function addBalanceRow() {
-        var list = getBalances();
-        list.push({
-          id: Date.now(),
-          mark: false,
-          jwId: '',
-          name: '',
-          lfNo: '',
-          relation: '',
-          station: '',
-          metal: 0,
-          chain: 0,
-          nag: 0,
-          maal: 0
-        });
-        saveBalances(list);
-        loadTable();
-      }
-      window.addBalanceRow = addBalanceRow;
+
 
       function toggleMark(id) {
         var list = getBalances();
@@ -288,24 +630,38 @@
             '<td class="col-num">' + (r.chain != null ? Number(r.chain).toFixed(3) : '—') + '</td>' +
             '<td class="col-num">' + (r.nag != null ? Number(r.nag).toFixed(3) : '—') + '</td>' +
             '<td class="col-num">' + (r.maal != null ? Number(r.maal).toFixed(3) : '—') + '</td>' +
-            '<td class="col-action" style="text-align:center;" onclick="event.stopPropagation()">' +
-              '<button type="button" class="action-btn" onclick="editBalanceRow(\'' + id + '\')">✏️ Edit</button>' +
-            '</td>' +
             '</tr>';
         }).join('');
       }
 
       function filterTable() {
         var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-        var rows = q
-          ? _allRows.filter(function (r) {
-              return (r.jwId || '').toLowerCase().indexOf(q) !== -1 ||
-                     (r.name || '').toLowerCase().indexOf(q) !== -1 ||
-                     (r.lfNo || '').toLowerCase().indexOf(q) !== -1 ||
-                     (r.relation || '').toLowerCase().indexOf(q) !== -1 ||
-                     (r.station || '').toLowerCase().indexOf(q) !== -1;
-            })
-          : _allRows;
+        var balFilter = document.getElementById('balanceFilter') ? document.getElementById('balanceFilter').value : 'all';
+
+        var rows = _allRows.filter(function (r) {
+          // Check text search
+          var matchSearch = !q || (
+            (r.jwId || '').toLowerCase().indexOf(q) !== -1 ||
+            (r.name || '').toLowerCase().indexOf(q) !== -1 ||
+            (r.lfNo || '').toLowerCase().indexOf(q) !== -1 ||
+            (r.relation || '').toLowerCase().indexOf(q) !== -1 ||
+            (r.station || '').toLowerCase().indexOf(q) !== -1
+          );
+
+          // Check balance filter
+          var m = parseFloat(r.metal) || 0;
+          var c = parseFloat(r.chain) || 0;
+          var n = parseFloat(r.nag) || 0;
+          var ml = parseFloat(r.maal) || 0;
+
+          var isZero = (m === 0 && c === 0 && n === 0 && ml === 0);
+
+          var matchBal = true;
+          if (balFilter === 'zero') matchBal = isZero;
+          else if (balFilter === 'non-zero') matchBal = !isZero;
+
+          return matchSearch && matchBal;
+        });
         renderTable(rows);
       }
 
@@ -321,180 +677,261 @@
       });
 
       /* =========================
-         JW MODAL
+         LEDGER CARD MODAL
       ========================= */
-      function roEscapeHtml(str) {
-        if (str == null || str === '') return '—';
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      }
+      var _lcJwId = null;
+      var _lcJwName = null;
+      var _lcEntries = [];
 
-      function roFormatDate(dateStr) {
-        if (!dateStr) return '—';
-        try {
-          var d = new Date(dateStr);
-          if (isNaN(d.getTime())) return dateStr;
-          return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        } catch (e) { return dateStr; }
-      }
+      function num(v) { var n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
 
-      function roOpenJwModal(jwId, jwName) {
+      function lcFmt(v) { return v || ''; }
+      function lcFmtNum(v) { v = parseFloat(v); return Number.isFinite(v) && v !== 0 ? v.toFixed(3) : ''; }
+
+      // Sync JW balance directly (replaces logic from jobworker-entry)
+      function lcSyncToBalance() {
+        var entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        var forJw = entries.filter(function (e) {
+          return (_lcJwId && String(e.jobworkerId) === String(_lcJwId)) ||
+            (e.jobworkerName || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase();
+        });
+        var sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
+        forJw.forEach(function (e) {
+          sumM += num(e.metal); sumC += num(e.chain); sumN += num(e.nag); sumMl += num(e.maal);
+        });
+
+        var bals = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
+        var bIdx = bals.findIndex(function (b) {
+          return (_lcJwId && b.jwId === _lcJwId) ||
+            (_lcJwName && (b.name || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase());
+        });
+
+        // Need original JobWorker record to get obMetal etc...
         var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
-        var jw = jws.find(function(j) { return String(j.id) === String(jwId) || String(j.jwId) === String(jwId); }) ||
-          jws.find(function(j) { return (j.name || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase(); }) || null;
+        var jw = jws.find(function (j) { return String(j.id) === String(_lcJwId) || String(j.jwId) === String(_lcJwId); }) ||
+          jws.find(function (j) { return (j.name || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase(); }) || {};
 
-        var displayName = jw ? (jw.name || jwName) : jwName;
-        var nameEl = document.getElementById('roJwModalName');
-        var subEl = document.getElementById('roJwModalSub');
-        var avatarEl = document.getElementById('roJwModalAvatar');
-        if (nameEl) nameEl.textContent = displayName || 'Job Worker';
-        if (avatarEl) avatarEl.textContent = (displayName || 'J').charAt(0).toUpperCase();
+        var obM = num(jw.obMetal), obC = num(jw.obChain), obN = num(jw.obNag), obMl = num(jw.obMaal);
+        var finM = obM + sumM, finC = obC + sumC, finN = obN + sumN, finMl = obMl + sumMl;
+        var relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim();
 
-        var tbodyEl = document.getElementById('roJwModalTableBody');
-        if (tbodyEl) {
-          if (!jw) {
-            tbodyEl.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:#94a3b8;">No balance record found for "' + roEscapeHtml(jwName) + '"</td></tr>';
-          } else {
-            var balances = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
-            var jwBal = balances.find(function(b) { return (b.jwId || '').trim() === (jw.jwId || '').trim() || (b.name || '').trim().toLowerCase() === (jw.name || '').trim().toLowerCase(); });
-            var relText = [jw.relationType, jw.relationName].filter(Boolean).join(' ') || '—';
-            var dateText = (jw.obDate || jw.date || '').slice(0, 10) || '—';
-            var fmt = function(v, d) { d = d || 3; return v != null && v !== '' ? Number(v).toFixed(d) : '—'; };
-            tbodyEl.innerHTML = '<tr>' +
-              '<td>' + roEscapeHtml(jw.jwId || '—') + '</td>' +
-              '<td style="font-weight:700;">' + roEscapeHtml(jw.name || '—') + '</td>' +
-              '<td>' + roEscapeHtml(relText) + '</td>' +
-              '<td>' + roEscapeHtml(dateText) + '</td>' +
-              '<td class="num">' + fmt(jwBal ? jwBal.metal : jw.obMetal) + '</td>' +
-              '<td class="num">' + fmt(jwBal ? jwBal.chain : jw.obChain) + '</td>' +
-              '<td class="num">' + fmt(jwBal ? jwBal.nag : jw.obNag) + '</td>' +
-              '<td class="num">' + fmt(jwBal ? jwBal.maal : jw.obMaal) + '</td>' +
-              '<td title="' + roEscapeHtml(jw.address || '') + '">' + roEscapeHtml(jw.address || '—') + '</td>' +
-              '<td>' + roEscapeHtml(jw.station || '—') + '</td>' +
-              '<td>' + roEscapeHtml(jw.phone || '—') + '</td>' +
-              '<td>' + roEscapeHtml(jw.mobile || '—') + '</td>' +
-            '</tr>';
-          }
+        if (bIdx >= 0) {
+          bals[bIdx].metal = finM;
+          bals[bIdx].chain = finC;
+          bals[bIdx].nag = finN;
+          bals[bIdx].maal = finMl;
+          bals[bIdx].relation = relation;
+          bals[bIdx].station = jw.station || '';
+          bals[bIdx].lfNo = jw.lfNo || '';
+        } else {
+          bals.push({
+            id: Date.now(), mark: false, jwId: jw.jwId || '', name: jw.name || _lcJwName, lfNo: jw.lfNo || '',
+            relation: relation, station: jw.station || '', metal: finM, chain: finC, nag: finN, maal: finMl
+          });
         }
+        localStorage.setItem('jobworkerBalances', JSON.stringify(bals));
+      }
 
-        var allItems = JSON.parse(localStorage.getItem('itemProcess') || '[]');
-        var items = allItems.filter(function(e) {
+      function lcBuildRowHtml(e, isLast) {
+        var safeNarration = (e.narration || '').replace(/"/g, '&quot;');
+        return '<tr class="lc-entry-row">' +
+          '<td><input type="date" class="lc-input date-val" value="' + (e.date || '') + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.metal) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.chain) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.nag) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.maal) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
+          '<td class="lc-narr-cell">' +
+          '<input type="text" class="lc-input lc-narr-input" value="' + safeNarration + '" onkeydown="lcHandleEnter(event, this)">' +
+          '<button type="button" class="lc-row-del" onclick="lcDelRow(this)" title="Remove Row">&#x2715;</button>' +
+          '</td>' +
+          '</tr>';
+      }
+
+      window.lcDelRow = function (btn) {
+        if (!confirm("Are you sure you want to remove this row? The changes will be permanently applied when you Save and Close.")) return;
+        var row = btn.closest('tr');
+        row.remove();
+        lcComputeTotals();
+      };
+
+      window.roOpenJwModal = function (jwId, jwName) {
+        _lcJwId = jwId;
+        _lcJwName = jwName;
+
+        // Find jw record
+        var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        var jw = jws.find(function (j) {
+          return String(j.id) === String(jwId) || String(j.jwId) === String(jwId);
+        }) || jws.find(function (j) {
+          return (j.name || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase();
+        }) || null;
+
+        // Fill header
+        document.getElementById('lcLfNo').textContent = jw ? (jw.lfNo || '—') : '—';
+        document.getElementById('lcName').textContent = jw ? (jw.name || jwName || '—') : (jwName || '—');
+        document.getElementById('lcStation').textContent = jw ? (jw.station || '—') : '—';
+
+        // Load entries
+        var allEntries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        _lcEntries = allEntries.filter(function (e) {
           return (jwId && String(e.jobworkerId) === String(jwId)) ||
-                 (e.jobworkerName || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase();
+            (e.jobworkerName || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase();
+        }).sort(function (a, b) { return (a.date || '') < (b.date || '') ? -1 : 1; });
+
+        // Render entries
+        var tbody = document.getElementById('lcEntriesBody');
+        var rowsHtml = '';
+        if (_lcEntries.length) {
+          rowsHtml = _lcEntries.map(function (e, idx) { return lcBuildRowHtml(e, false); }).join('');
+        }
+        // Always provide at least one blank row on load for quick entry
+        rowsHtml += lcBuildRowHtml({ date: new Date().toISOString().slice(0, 10) }, true);
+
+        tbody.innerHTML = rowsHtml;
+        lcComputeTotals(true);
+        document.getElementById('lcOnDate').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        document.getElementById('lcOverlay').classList.add('open');
+      };
+
+      window.lcComputeTotals = function (initial) {
+        var tbody = document.getElementById('lcEntriesBody');
+        if (!tbody) return;
+        var rows = tbody.querySelectorAll('.lc-entry-row');
+        var totM = 0, totC = 0, totN = 0, totMl = 0;
+        rows.forEach(function (tr) {
+          var inputs = tr.querySelectorAll('input');
+          totM += num(inputs[1].value);
+          totC += num(inputs[2].value);
+          totN += num(inputs[3].value);
+          totMl += num(inputs[4].value);
         });
-        var inProcess = items.filter(function(e) { return e.status !== 'READY'; }).length;
-        var ready = items.filter(function(e) { return e.status === 'READY'; }).length;
 
-        if (subEl) subEl.textContent = items.length + ' item' + (items.length !== 1 ? 's' : '') + ' assigned in Item Process';
+        // Rebuild Totals row at the bottom (remove old one first)
+        var oldTot = tbody.querySelector('.tot-row');
+        if (oldTot) oldTot.remove();
+        var totTr = document.createElement('tr');
+        totTr.className = 'tot-row';
+        totTr.innerHTML = '<td><strong>Total</strong></td>' +
+          '<td class="num"><strong>' + totM.toFixed(3) + '</strong></td>' +
+          '<td class="num"><strong>' + totC.toFixed(3) + '</strong></td>' +
+          '<td class="num"><strong>' + totN.toFixed(3) + '</strong></td>' +
+          '<td class="num"><strong>' + totMl.toFixed(3) + '</strong></td>' +
+          '<td></td>';
+        tbody.appendChild(totTr);
 
-        var itemsBodyEl = document.getElementById('roJwModalItemsBody');
-        if (itemsBodyEl) {
-          var filterEl = document.getElementById('roJwModalItemsFilter');
-          if (filterEl) filterEl.value = 'ALL';
+        // Footer stats
+        document.getElementById('lcTotalMetal').textContent = totM.toFixed(3);
+        lcUpdateNet();
+      };
 
-          if (items.length === 0) {
-            itemsBodyEl.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>';
-          } else {
-            itemsBodyEl.innerHTML = items.map(function(r) {
-              var isReady = r.status === 'READY';
-              var statusVal = isReady ? 'READY' : 'PROCESS';
-              return '<tr class="ro-jw-modal-item-row" data-status="' + statusVal + '">' +
-                '<td style="text-align:center">' + (isReady ? '<span class="badge ready-done">✓ Ready</span>' : '<span class="badge process">In Process</span>') + '</td>' +
-                '<td class="num num-neutral">' + (r.qty || 0).toFixed(0) + '</td>' +
-                '<td style="max-width:160px;white-space:normal;word-break:break-word;">' + roEscapeHtml(r.itemName) + '</td>' +
-                '<td style="max-width:160px;white-space:normal;word-break:break-word;">' + roEscapeHtml(r.sampleDetails) + '</td>' +
-                '<td>' + roEscapeHtml(r.design) + '</td>' +
-                '<td class="num num-neutral">' + (r.estUnitWt || 0).toFixed(3) + '</td>' +
-                '<td class="num num-neutral">' + (r.estTotalWt || 0).toFixed(3) + '</td>' +
-                '<td style="font-weight:700;color:#2a50d8;">' + roEscapeHtml(r.orderNo) + '</td>' +
-                '<td>' + roEscapeHtml(r.customerName) + '</td>' +
-                '<td style="font-size:12px;color:#64748b;white-space:nowrap;">' + roFormatDate(r.assignedDate) + '</td>' +
-              '</tr>';
-            }).join('');
+      window.lcHandleEnter = function (e, inputEl) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var tr = inputEl.closest('tr');
+          var tbody = document.getElementById('lcEntriesBody');
+          var rows = Array.from(tbody.querySelectorAll('.lc-entry-row'));
+          if (rows.indexOf(tr) === rows.length - 1) {
+            // It's the last row, add new row
+            var newRow = document.createElement('tr');
+            newRow.className = 'lc-entry-row';
+            newRow.innerHTML = lcBuildRowHtml({ date: new Date().toISOString().slice(0, 10) }).replace('<tr class="lc-entry-row">', '').replace('</tr>', '');
+            tbody.insertBefore(newRow, tbody.querySelector('.tot-row'));
+            newRow.querySelector('input').focus();
           }
         }
+      };
 
-        var footerEl = document.getElementById('roJwModalFooter');
-        if (footerEl) {
-          footerEl.innerHTML = '<span class="jw-stat-chip process">⚙ ' + inProcess + ' In Process</span>' +
-            '<span class="jw-stat-chip ready">✓ ' + ready + ' Ready</span>' +
-            '<span style="margin-left:auto;font-weight:600;color:#1e293b;">' + items.length + ' total item' + (items.length !== 1 ? 's' : '') + '</span>';
-        }
+      window.lcClose = function () {
+        document.getElementById('lcOverlay').classList.remove('open');
+      };
 
-        document.getElementById('roJwModalOverlay').classList.add('open');
-      }
-
-      function roCloseJwModal() {
-        var el = document.getElementById('roJwModalOverlay');
-        if (el) el.classList.remove('open');
-      }
-      window.roOpenJwModal = roOpenJwModal;
-      window.roCloseJwModal = roCloseJwModal;
-
-      function roFilterJwModalItems() {
-        var filter = document.getElementById('roJwModalItemsFilter').value;
-        var rows = document.querySelectorAll('#roJwModalItemsBody tr.ro-jw-modal-item-row');
-        rows.forEach(function(row) {
-          if (filter === 'ALL' || row.getAttribute('data-status') === filter) {
-            row.style.display = '';
-          } else {
-            row.style.display = 'none';
+      window.lcUpdateNet = function () {
+        var tbody = document.getElementById('lcEntriesBody');
+        if (!tbody) return;
+        var rows = tbody.querySelectorAll('.lc-entry-row');
+        var totM = 0, totC = 0, totN = 0, totMl = 0;
+        rows.forEach(function (tr) {
+          var inputs = tr.querySelectorAll('input');
+          if (inputs && inputs.length >= 5) {
+            totM += num(inputs[1].value);
+            totC += num(inputs[2].value);
+            totN += num(inputs[3].value);
+            totMl += num(inputs[4].value);
           }
         });
-      }
-      window.roFilterJwModalItems = roFilterJwModalItems;
+        var purity = parseFloat(document.getElementById('lcPurity').value) || 100;
+        var minusNet = (totC + totN - totMl) * (purity / 100);
+        var pending = totM + minusNet;
+        document.getElementById('lcPending').textContent = pending.toFixed(3);
+        document.getElementById('lcNet').textContent = minusNet.toFixed(3);
+      };
 
-      /* =========================
-         EDIT MODAL
-      ========================= */
-      function editBalanceRow(id) {
-        var list = getBalances();
-        var r = list.filter(function(x) { return String(x.id) === String(id); })[0];
-        if (!r) return;
-        document.getElementById('editBalanceId').value = r.id;
-        document.getElementById('editJwId').value = r.jwId || '';
-        document.getElementById('editJwName').value = r.name || '';
-        document.getElementById('editLfNo').value = r.lfNo || '';
-        document.getElementById('editJwRelation').value = r.relation || '';
-        document.getElementById('editJwStation').value = r.station || '';
-        document.getElementById('editJwMetal').value = r.metal || 0;
-        document.getElementById('editJwChain').value = r.chain || 0;
-        document.getElementById('editJwNag').value = r.nag || 0;
-        document.getElementById('editJwMaal').value = r.maal || 0;
-        
-        document.getElementById('editBalanceModalOverlay').classList.add('open');
-      }
-      window.editBalanceRow = editBalanceRow;
+      window.lcSaveAndClose = function () {
+        var tbody = document.getElementById('lcEntriesBody');
+        var rows = tbody.querySelectorAll('.lc-entry-row');
 
-      function closeEditModal() {
-        document.getElementById('editBalanceModalOverlay').classList.remove('open');
-      }
-      window.closeEditModal = closeEditModal;
+        // Remove all previous entries for this Jobworker
+        var allEntries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        allEntries = allEntries.filter(function (e) {
+          return !((_lcJwId && String(e.jobworkerId) === String(_lcJwId)) ||
+            (e.jobworkerName || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase());
+        });
 
-      function saveEditBalance() {
-        var id = document.getElementById('editBalanceId').value;
-        var list = getBalances();
-        var idx = -1;
-        for (var i = 0; i < list.length; i++) {
-          if (String(list[i].id) === String(id)) { idx = i; break; }
-        }
-        if (idx > -1) {
-          list[idx].jwId = document.getElementById('editJwId').value.trim();
-          list[idx].name = document.getElementById('editJwName').value.trim();
-          list[idx].lfNo = document.getElementById('editLfNo').value.trim();
-          list[idx].relation = document.getElementById('editJwRelation').value.trim();
-          list[idx].station = document.getElementById('editJwStation').value.trim();
-          list[idx].metal = parseFloat(document.getElementById('editJwMetal').value) || 0;
-          list[idx].chain = parseFloat(document.getElementById('editJwChain').value) || 0;
-          list[idx].nag = parseFloat(document.getElementById('editJwNag').value) || 0;
-          list[idx].maal = parseFloat(document.getElementById('editJwMaal').value) || 0;
-          saveBalances(list);
-          loadTable();
-          closeEditModal();
-        }
-      }
-      window.saveEditBalance = saveEditBalance;
+        // Add the new entries from the table
+        rows.forEach(function (tr) {
+          var inputs = tr.querySelectorAll('input');
+          var date = inputs[0].value;
+          var m = num(inputs[1].value);
+          var c = num(inputs[2].value);
+          var n = num(inputs[3].value);
+          var ml = num(inputs[4].value);
+          var narr = inputs[5].value.trim();
+
+          if (m === 0 && c === 0 && n === 0 && ml === 0 && narr === '') return; // Skip completely blank rows
+
+          allEntries.push({
+            id: Date.now() + Math.random(),
+            jobworkerId: _lcJwId || Date.now(),
+            jobworkerName: _lcJwName || 'Unknown',
+            date: date || new Date().toISOString().slice(0, 10),
+            metal: m, chain: c, nag: n, maal: ml, narration: narr,
+            createdAt: new Date().toISOString()
+          });
+        });
+
+        localStorage.setItem('jobworkerEntries', JSON.stringify(allEntries));
+        lcSyncToBalance();
+        loadTable();
+        lcClose();
+      };
+
+      window.lcClearAccount = function () {
+        if (!confirm('Clear all entries for this job worker? This cannot be undone.')) return;
+        var tbody = document.getElementById('lcEntriesBody');
+        var rows = tbody.querySelectorAll('.lc-entry-row');
+        rows.forEach(function (tr) {
+          var inputs = tr.querySelectorAll('input');
+          if (inputs[1]) inputs[1].value = '';
+          if (inputs[2]) inputs[2].value = '';
+          if (inputs[3]) inputs[3].value = '';
+          if (inputs[4]) inputs[4].value = '';
+          if (inputs[5]) inputs[5].value = '';
+        });
+        lcComputeTotals();
+      };
+
+      window.lcPrint = function () { window.print(); };
+
+      // Keep old close refs working
+      window.roCloseJwModal = window.lcClose;
+
+
+
+
+
 
     })();
   </script>
-</body>
+  </body>
+
 </html>

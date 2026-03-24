@@ -813,7 +813,8 @@
         Refresh
       </button>
       <button class="btn btn-unassign" id="unassignBtn" onclick="confirmUnassign()" disabled>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
@@ -835,7 +836,7 @@
         <thead>
           <tr>
             <th class="center cb-cell" style="width:46px;">
-              <input type="checkbox" id="selectAll" onchange="toggleAll(this)">
+              <input type="checkbox" id="selectAll" data-persist="ignore" onchange="toggleAll(this)">
             </th>
             <th class="center" style="width:68px;">Mark</th>
             <th class="center">Status</th>
@@ -960,6 +961,7 @@
     let selectedJwName = null;
     let toastTimer = null;
     let isAssigning = false;
+    let _pageReady = false; // blocks popup from auto-opening during page restoration
 
     /* helpers */
     function fmt(d) {
@@ -986,7 +988,7 @@
       const checkedPending = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked').length;
       const checkedAssigned = document.querySelectorAll('.row-cb[data-assigned="true"]:checked').length;
       const totalChecked = checkedPending + checkedAssigned;
-      
+
       const pill = document.getElementById('selPill');
       const assignCount = document.getElementById('btnCount');
       const unassignCount = document.getElementById('btnUnassignCount');
@@ -1077,17 +1079,17 @@
             tr.dataset.search = [r.type, r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
             tr.innerHTML = `
             <td class="center cb-cell">
-              <input type="checkbox" class="row-cb" ${r.assigned ? 'data-assigned="true"' : ''}
+              <input type="checkbox" class="row-cb" data-persist="ignore" ${r.assigned ? 'data-assigned="true"' : ''}
                 data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}" onchange="onCbChange(this)">
             </td>
             <td class="center" style="padding:10px 8px;">
               ${r.assigned
                 ? `<span style="font-size:18px;color:#16a34a;">&#10003;</span>`
                 : `<label class="mark-cb-wrap" title="Mark to open Job Worker Entry">
-                    <input type="checkbox" class="mark-cb"
+                    <input type="checkbox" class="mark-cb" data-persist="ignore"
                       id="mark-${r.orderId}-${r.itemIdx}"
                       data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
-                      onchange="onMarkCbChange(this)">
+                      onchange="onMarkCbChange(this, event)">
                     <span class="mark-cb-box"></span>
                   </label>`}
             </td>
@@ -1190,7 +1192,9 @@
     }
 
     /* Called when a Mark checkbox is clicked */
-    function onMarkCbChange(cb) {
+    function onMarkCbChange(cb, event) {
+      if (event && !event.isTrusted) { cb.checked = false; return; } // ignore if triggered by script
+      if (!_pageReady) { cb.checked = false; return; } // ignore during page restoration
       if (!cb.checked) return; // only act on check, not uncheck
       _currentMarkCb = cb;
       const orderId = cb.dataset.orderId;
@@ -1394,7 +1398,7 @@
     function confirmUnassign() {
       const checkedCbs = document.querySelectorAll('.row-cb[data-assigned="true"]:checked');
       if (checkedCbs.length === 0) return;
-      
+
       if (!confirm(`Are you sure you want to unassign ${checkedCbs.length} item(s)?`)) return;
 
       try {
@@ -1405,7 +1409,7 @@
         checkedCbs.forEach(cb => {
           const oId = cb.dataset.orderId;
           const iIdx = parseInt(cb.dataset.itemIdx, 10);
-          
+
           // Revert in orders
           const order = orders.find(o => String(o.id) === String(oId));
           if (order && order.items && order.items[iIdx]) {
@@ -1415,7 +1419,7 @@
             delete order.items[iIdx].assignedDate;
             count++;
           }
-          
+
           // Remove from itemProcess array
           itemProcess = itemProcess.filter(ip => !(String(ip.orderId) === String(oId) && parseInt(ip.itemIdx, 10) === iIdx));
         });
@@ -1425,7 +1429,7 @@
 
         document.getElementById('selectAll').checked = false;
         loadPendingItems();
-        try { window.dispatchEvent(new Event('storage')); } catch (e) {}
+        try { window.dispatchEvent(new Event('storage')); } catch (e) { }
         showToast(`✅ ${count} item${count > 1 ? 's' : ''} unassigned successfully`, 'success');
       } catch (err) {
         console.error(err);
@@ -1434,9 +1438,17 @@
     }
 
     /* ── INIT ── */
+    // Close popup on every page load to ensure clean state
+    (function() {
+      var ov = document.getElementById('entryPopupOverlay');
+      var fr = document.getElementById('entryFrame');
+      if (ov) ov.classList.remove('open');
+      if (fr) fr.src = 'about:blank';
+    })();
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => setTimeout(loadPendingItems, 50));
-    } else { setTimeout(loadPendingItems, 50); }
+      document.addEventListener('DOMContentLoaded', () => setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50));
+    } else { setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50); }
 
     window.addEventListener('storage', e => { if (e.key === 'orders') loadPendingItems(); });
     window.addEventListener('orderStatusChanged', loadPendingItems);

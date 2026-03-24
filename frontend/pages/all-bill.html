@@ -239,37 +239,7 @@
       white-space: nowrap;
     }
 
-    /* Add new entry form */
-    .add-entry-form {
-      padding: 12px 16px;
-      border-bottom: 1px solid #e5e7eb;
-      background: linear-gradient(to bottom, #f0f7ff, #e8f2ff);
-      flex-shrink: 0;
-    }
-    .add-entry-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #1d1d1f;
-      margin-bottom: 10px;
-    }
-    .add-entry-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-    .add-entry-row label { min-width: 0; }
-    .add-entry-row input { min-width: 90px; }
-    .add-entry-row .btn-save {
-      background: #198754;
-      border-color: #198754;
-      color: #fff;
-    }
-    .add-entry-row .btn-save:hover {
-      background: #157347;
-      border-color: #157347;
-      color: #fff;
-    }
+
   </style>
 </head>
 
@@ -290,39 +260,9 @@
 
       <label>Search</label>
       <input type="text" id="searchBox" placeholder="Search..." onkeyup="searchTable()">
-
-      <button class="btn" type="button" onclick="toggleAddForm()" id="btnToggleAdd">+ Add new entry</button>
     </div>
 
-    <!-- ADD NEW ENTRY FORM (saves to Customer Balance) -->
-    <div id="addEntryForm" class="add-entry-form" style="display:none;">
-      <div class="add-entry-title">New entry — save to Customer Balance</div>
-      <div class="add-entry-row">
-        <label>Date</label>
-        <input type="date" id="newDate" title="Date">
-        <label>Mark (CID)</label>
-        <input type="text" id="newCid" placeholder="Mark (CID)">
-        <label>LF No.</label>
-        <input type="text" id="newLfno" placeholder="LF No.">
-        <label>Bill No.</label>
-        <input type="text" id="newBillNo" placeholder="Bill No.">
-        <label>Name</label>
-        <input type="text" id="newName" placeholder="Name">
-        <label>Relation</label>
-        <input type="text" id="newRelation" placeholder="Relation">
-        <label>Relation Name</label>
-        <input type="text" id="newRelationName" placeholder="Relation Name">
-        <label>Station</label>
-        <input type="text" id="newStation" placeholder="Station">
-        <label>Phone No.</label>
-        <input type="text" id="newPhone" placeholder="Phone No.">
-        <label>Mobile Number</label>
-        <input type="text" id="newMobile" placeholder="Mobile Number">
-        <label>Amount (₹)</label>
-        <input type="number" id="newAmount" step="0.01" placeholder="0.00">
-        <button class="btn btn-save" type="button" onclick="saveNewToCustomerBalance()">Save</button>
-      </div>
-    </div>
+
 
     <!-- TABLE: Date, Mark (CID), LF No., Bill No., Name, Relation, Relation Name, Station, Phone No., Mobile Number, Amount -->
     <div class="table-wrap">
@@ -502,7 +442,8 @@
         <td class="right" style="color:${balAmt < 0 ? '#dc3545' : balAmt === 0 ? '#198754' : '#1d1d1f'}; font-weight:600;">${balAmt.toFixed(2)}</td>
         <td class="center">
           <div class="action-buttons">
-            <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:6px 14px;border-radius:8px;border:none;background:#0d6efd;color:#fff;font-size:12px;cursor:pointer;transition:all 0.2s;font-weight:500;">Edit</button>
+            <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:4px 10px; border-radius:6px; border:none; background:#0d6efd; color:#fff; font-size:11px; cursor:pointer; font-weight:500;">Edit</button>
+            <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${custEsc}')" style="padding:4px 10px; border-radius:6px; border:none; background:#dc3545; color:#fff; font-size:11px; cursor:pointer; font-weight:500;">Remove</button>
           </div>
         </td>
       `;
@@ -1061,111 +1002,7 @@
       }
     }
 
-    /* =========================
-       ADD NEW ENTRY (save to Customer Balance)
-    ========================= */
-    function toggleAddForm() {
-      const workspace = document.querySelector(".workspace");
-      const root = workspace || document;
-      const form = root.querySelector("#addEntryForm");
-      const btn = root.querySelector("#btnToggleAdd");
-      if (!form || !btn) return;
-      const isVisible = form.style.display !== "none";
-      form.style.display = isVisible ? "none" : "block";
-      btn.textContent = isVisible ? "+ Add new entry" : "− Hide form";
-      if (!isVisible) {
-        const dateInput = root.querySelector("#newDate");
-        if (dateInput) dateInput.value = new Date().toISOString().split("T")[0];
-      }
-    }
 
-    function saveNewToCustomerBalance() {
-      const workspace = document.querySelector(".workspace");
-      const root = workspace || document;
-      const dateEl = root.querySelector("#newDate");
-      const cidEl = root.querySelector("#newCid");
-      const lfnoEl = root.querySelector("#newLfno");
-      const billNoEl = root.querySelector("#newBillNo");
-      const nameEl = root.querySelector("#newName");
-      const relationEl = root.querySelector("#newRelation");
-      const relationNameEl = root.querySelector("#newRelationName");
-      const stationEl = root.querySelector("#newStation");
-      const phoneEl = root.querySelector("#newPhone");
-      const mobileEl = root.querySelector("#newMobile");
-      const amountEl = root.querySelector("#newAmount");
-
-      if (!billNoEl || !nameEl || !amountEl) {
-        alert("Form elements not found.");
-        return;
-      }
-
-      const date = dateEl ? dateEl.value : "";
-      const billNo = (billNoEl.value || "").trim();
-      const name = (nameEl.value || "").trim();
-      const amount = parseFloat(amountEl.value) || 0;
-
-      if (!name) {
-        alert("Name is required.");
-        nameEl.focus();
-        return;
-      }
-      if (!date) {
-        alert("Date is required.");
-        if (dateEl) dateEl.focus();
-        return;
-      }
-
-      const entry = {
-        date: date,
-        cid: cidEl ? (cidEl.value || "—").trim() : "—",
-        lfno: lfnoEl ? (lfnoEl.value || "—").trim() : "—",
-        orderNo: billNo || "—",
-        customer: name,
-        relation: relationEl ? (relationEl.value || "—").trim() : "—",
-        relationName: relationNameEl ? (relationNameEl.value || "—").trim() : "—",
-        station: stationEl ? (stationEl.value || "—").trim() : "—",
-        phone: phoneEl ? (phoneEl.value || "—").trim() : "—",
-        mobile: mobileEl ? (mobileEl.value || "—").trim() : "—",
-        amount: amount.toFixed(2),
-        timestamp: new Date().toISOString(),
-        transferred: false,
-        readyMetal: "Order"
-      };
-
-      const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-      balances.push(entry);
-      localStorage.setItem("customerBalances", JSON.stringify(balances));
-
-      if (dateEl) dateEl.value = "";
-      if (cidEl) cidEl.value = "";
-      if (lfnoEl) lfnoEl.value = "";
-      if (billNoEl) billNoEl.value = "";
-      if (nameEl) nameEl.value = "";
-      if (relationEl) relationEl.value = "";
-      if (relationNameEl) relationNameEl.value = "";
-      if (stationEl) stationEl.value = "";
-      if (phoneEl) phoneEl.value = "";
-      if (mobileEl) mobileEl.value = "";
-      if (amountEl) amountEl.value = "";
-
-      loadBalances();
-      window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
-      if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
-      if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
-      alert("Saved to Customer Balance. Opening Customer Balance sheet...");
-      // Navigate to Customer Balance page so user sees the saved data
-      setTimeout(() => {
-        if (typeof loadPage === "function") {
-          loadPage("pages/customer-balance.html");
-        } else if (window.parent && typeof window.parent.loadPage === "function") {
-          window.parent.loadPage("pages/customer-balance.html");
-        } else if (window.top && typeof window.top.loadPage === "function") {
-          window.top.loadPage("pages/customer-balance.html");
-        } else {
-          window.location.href = "customer-balance.html";
-        }
-      }, 300);
-    }
 
     /* =========================
        ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
@@ -1181,8 +1018,6 @@
       window.transferBill = transferBill;
       window.transferAllToCustomerBalance = transferAllToCustomerBalance;
       window.removeBill = removeBill;
-      window.toggleAddForm = toggleAddForm;
-      window.saveNewToCustomerBalance = saveNewToCustomerBalance;
     }
 
     ensureFunctionsGlobal();

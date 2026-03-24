@@ -672,7 +672,7 @@
         var station = (jw.station || '').trim();
         var balances = JSON.parse(localStorage.getItem(BALANCE_STORE) || '[]');
         var existing = balances.filter(function (r) {
-          return (r.jwId || '').trim() === jwId || (r.name || '').trim().toLowerCase() === name.toLowerCase();
+          return (jwId && (r.jwId || '').trim() === jwId) || (name && (r.name || '').trim().toLowerCase() === name.toLowerCase());
         })[0];
         if (existing) {
           existing.jwId = jwId;
