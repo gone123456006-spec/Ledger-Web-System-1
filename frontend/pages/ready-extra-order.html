@@ -1132,7 +1132,7 @@
           <input type="date" id="dueDate">
         </div>
 
-        <div class="row">
+        <div class="row" style="display: none;">
           <label>GST %</label>
           <input id="gstRate">
         </div>
@@ -1194,6 +1194,7 @@
     <!-- ACTIONS -->
     <div class="actions">
       <button onclick="addRow()"> Add Row</button>
+      <button id="globalEditBtn" onclick="toggleGlobalEdit()"> Edit</button>
 
       <button onclick="openPayment()"> Payment</button>
       <button onclick="openRateBook()"> Rate Book</button>
@@ -1228,7 +1229,8 @@
             <button class="panel-add-btn" onclick="openPayment()">+ Add</button>
           </div>
           <div class="panel-content" id="paymentPanelContent">
-            <div class="panel-summary" style="background-color: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #fed7aa; margin-bottom: 16px;">
+            <div class="panel-summary"
+              style="background-color: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #fed7aa; margin-bottom: 16px;">
               <div class="summary-item">
                 <span class="summary-label">Order Total:</span>
                 <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
@@ -1282,8 +1284,7 @@
             <div class="summary-item" id="panelAmountMinusRateDiffWrap"
               style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
               <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
-              <span class="summary-value" id="panelAmountMinusRateDiff"
-                style="color:#28a745; font-weight:bold;"></span>
+              <span class="summary-value" id="panelAmountMinusRateDiff" style="color:#28a745; font-weight:bold;"></span>
             </div>
             <div class="panel-list" id="paymentList">
               <div class="empty-state">No payments yet</div>
@@ -1623,50 +1624,63 @@
   </div>
 
   <!-- BILL TRANSFER POPUP -->
-  <div id="bill-transfer-popup" class="popup-bg ready-order-popup" style="display:none;" onclick="if(event.target===this) closeBillTransferPopup()">
+  <div id="bill-transfer-popup" class="popup-bg ready-order-popup" style="display:none;"
+    onclick="if(event.target===this) closeBillTransferPopup()">
     <div class="popup-box" style="max-width:550px; padding: 0; overflow: hidden; border-radius: 4px;">
-      <div style="background: #666; color: #fff; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">Bill Transfer</div>
+      <div style="background: #666; color: #fff; text-align: center; padding: 8px; font-weight: bold; font-size: 14px;">
+        Bill Transfer</div>
       <div style="padding: 16px; background: #f9fdfd;">
         <!-- Transfer To -->
         <fieldset style="border: 1px solid #e0e0e0; margin-bottom: 12px; padding: 12px; background: #fff;">
-          <legend style="color: #333; font-size: 13px; font-weight: 500; margin-left: 8px; padding: 0 4px;">Transfer To</legend>
+          <legend style="color: #333; font-size: 13px; font-weight: 500; margin-left: 8px; padding: 0 4px;">Transfer To
+          </legend>
           <div class="popup-row" style="margin-bottom: 8px;">
             <label style="width: 80px; font-size: 13px; color: #333;">Name*</label>
             <div style="display:flex; flex:1; align-items:center; gap: 4px;">
-              <select id="transferCustName" style="flex:1; border: 1px solid #007aff; outline: none; padding: 4px; font-size: 13px;" onchange="updateTransferCustDetails()"></select>
-              <button onclick="openCustomer()" style="width:24px; height:24px; border-radius:50%; border:none; background:#007aff; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1;">+</button>
+              <select id="transferCustName"
+                style="flex:1; border: 1px solid #007aff; outline: none; padding: 4px; font-size: 13px;"
+                onchange="updateTransferCustDetails()"></select>
+              <button onclick="openCustomer()"
+                style="width:24px; height:24px; border-radius:50%; border:none; background:#007aff; color:#fff; cursor:pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1;">+</button>
             </div>
           </div>
           <div class="popup-row" style="margin-bottom: 8px;">
             <label style="width: 80px;"></label>
-            <span style="font-size: 12px; font-style: italic; color: #333;">Cur Bal : <span id="transferCurBal"></span></span>
+            <span style="font-size: 12px; font-style: italic; color: #333;">Cur Bal : <span
+                id="transferCurBal"></span></span>
           </div>
           <div class="popup-row" style="margin-bottom: 8px; background: #f0f0f0; padding: 4px;">
             <label style="width: 80px; font-size: 13px; color: #333;">Relation</label>
-            <input id="transferRelation" readonly style="flex:1; background: transparent; border: none; outline: none; font-size: 13px; color: #333;">
+            <input id="transferRelation" readonly
+              style="flex:1; background: transparent; border: none; outline: none; font-size: 13px; color: #333;">
           </div>
           <div class="popup-row" style="margin-bottom: 0; background: #f0f0f0; padding: 4px;">
             <label style="width: 80px; font-size: 13px; color: #333;">Station*</label>
-            <input id="transferStation" readonly style="flex:1; background: transparent; border: none; outline: none; font-size: 13px; color: #333;">
+            <input id="transferStation" readonly
+              style="flex:1; background: transparent; border: none; outline: none; font-size: 13px; color: #333;">
           </div>
         </fieldset>
 
         <!-- Transfer Detail -->
         <fieldset style="border: 1px solid #e0e0e0; padding: 12px; margin-bottom: 16px; background: #fff;">
-          <legend style="color: #333; font-size: 13px; font-weight: 500; margin-left: 8px; padding: 0 4px;">Transfer Detail</legend>
+          <legend style="color: #333; font-size: 13px; font-weight: 500; margin-left: 8px; padding: 0 4px;">Transfer
+            Detail</legend>
           <div class="popup-row" style="margin-bottom: 12px;">
             <label style="width: 80px; font-size: 13px; color: #333;">On Date*</label>
             <input type="date" id="transferDate" style="flex:1; border: 1px solid #ccc; padding: 4px; font-size: 13px;">
           </div>
           <div class="popup-row" style="align-items: flex-start; margin-bottom: 0;">
             <label style="width: 80px; font-size: 13px; color: #333;">Narration</label>
-            <textarea id="transferNarration" style="flex:1; border: 1px solid #ccc; padding: 4px; min-height: 60px; font-size: 13px;"></textarea>
+            <textarea id="transferNarration"
+              style="flex:1; border: 1px solid #ccc; padding: 4px; min-height: 60px; font-size: 13px;"></textarea>
           </div>
         </fieldset>
 
         <div style="text-align: center; display: flex; justify-content: center; gap: 12px;">
-          <button onclick="confirmBillTransfer()" style="padding: 6px 24px; background: #d0e0ec; border: 1px solid #a0bace; border-radius: 2px; cursor: pointer; color: #333; font-weight: 500; font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);">Transfer</button>
-          <button onclick="closeBillTransferPopup()" style="padding: 6px 24px; background: #d0e0ec; border: 1px solid #a0bace; border-radius: 2px; cursor: pointer; color: #333; font-weight: 500; font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);">Cancel</button>
+          <button onclick="confirmBillTransfer()"
+            style="padding: 6px 24px; background: #d0e0ec; border: 1px solid #a0bace; border-radius: 2px; cursor: pointer; color: #333; font-weight: 500; font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);">Transfer</button>
+          <button onclick="closeBillTransferPopup()"
+            style="padding: 6px 24px; background: #d0e0ec; border: 1px solid #a0bace; border-radius: 2px; cursor: pointer; color: #333; font-weight: 500; font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);">Cancel</button>
         </div>
       </div>
     </div>
@@ -2272,11 +2286,11 @@
 <td><input readonly></td>
 <td><input placeholder="Item Name"></td>
 <td><input readonly placeholder="Stamp" class="order-detail-readonly"></td>
-<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
-<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
-<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
-<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
-<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
+<td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td class="total"><input type="number" step="0.01" readonly placeholder="0.00" class="order-detail-readonly"></td>
 <td><input type="text" placeholder="R. metal" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Ready metal"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Neg: subtracted from Ready Weight"></td>
@@ -2300,6 +2314,24 @@
             setTimeout(() => {
               updateRatebookPanel();
             }, 100);
+          });
+        }
+
+        // Apply global edit state if active
+        const globalEditBtn = document.getElementById('globalEditBtn');
+        if (globalEditBtn && globalEditBtn.dataset.editing === "true") {
+          const orderDetailIndices = [3, 4, 5, 6, 7]; // Lbr.% (8) removed from edit list
+          orderDetailIndices.forEach(idx => {
+            const cell = tr.cells[idx];
+            if (cell) {
+              const input = cell.querySelector("input");
+              if (input) {
+                input.removeAttribute("readonly");
+                input.classList.remove("order-detail-readonly");
+                input.style.border = "1px solid #ffc107";
+                input.style.borderRadius = "4px";
+              }
+            }
           });
         }
 
@@ -2335,6 +2367,99 @@
                 input.tabIndex = 0;
                 input.style.visibility = "visible";
               }
+            }
+          }
+        });
+
+        // Respect global edit state
+        const globalEditBtn = document.getElementById('globalEditBtn');
+        const isGlobalEditing = globalEditBtn && globalEditBtn.dataset.editing === "true";
+
+        const orderDetailIndices = [3, 4, 5, 6, 7]; // Lbr.% (8) removed from edit list
+        orderDetailIndices.forEach(idx => {
+          var cell = row.cells[idx];
+          if (cell) {
+            var input = cell.querySelector("input");
+            if (input) {
+              if (isGlobalEditing && isPurchase) { // ONLY unlocked if Global Edit is active AND row is Purchase
+                input.removeAttribute("readonly");
+                input.classList.remove("order-detail-readonly");
+                input.style.border = "1px solid #ffc107";
+                input.style.borderRadius = "4px";
+              } else {
+                input.setAttribute("readonly", "readonly");
+                input.classList.add("order-detail-readonly");
+                input.style.border = "";
+                input.style.borderRadius = "";
+              }
+            }
+          }
+        });
+
+        // HIDE Lbr.% (8) if it is a Purchase row
+        var lbrCell = row.cells[8];
+        if (lbrCell) {
+          var input = lbrCell.querySelector("input");
+          if (input) {
+            input.style.visibility = isPurchase ? "hidden" : "visible";
+            input.value = isPurchase ? "0" : input.value;
+            input.setAttribute("readonly", "readonly"); // it's never editable if purchase
+          }
+        }
+      }
+
+      function toggleGlobalEdit() {
+        const btn = document.getElementById('globalEditBtn');
+        if (!btn) return;
+
+        const becomingActive = btn.dataset.editing !== "true";
+        btn.dataset.editing = becomingActive ? "true" : "false";
+
+        if (becomingActive) {
+          btn.style.background = "#ffc107";
+          btn.style.color = "#000";
+          btn.style.borderColor = "#ffc107";
+          btn.textContent = " Stop Edit";
+        } else {
+          btn.style.background = "";
+          btn.style.color = "";
+          btn.style.borderColor = "";
+          btn.textContent = " Edit";
+        }
+
+        const rows = document.querySelectorAll("#ready-order-item-table tbody tr");
+        rows.forEach(row => {
+          const typeSelect = row.cells[0]?.querySelector("select");
+          const isPurchase = typeSelect && typeSelect.value === "Purchase";
+
+          const orderDetailIndices = [3, 4, 5, 6, 7]; // Lbr.% (8) is hidden for purchase
+          orderDetailIndices.forEach(idx => {
+            const cell = row.cells[idx];
+            if (cell) {
+              const input = cell.querySelector("input");
+              if (input) {
+                if (becomingActive && isPurchase) { // ONLY UNLOCK PURCHASE ROWS
+                  input.removeAttribute("readonly");
+                  input.classList.remove("order-detail-readonly");
+                  input.style.border = "1px solid #ffc107";
+                  input.style.borderRadius = "4px";
+                } else {
+                  input.setAttribute("readonly", "readonly");
+                  input.classList.add("order-detail-readonly");
+                  input.style.border = "";
+                  input.style.borderRadius = "";
+                }
+              }
+            }
+          });
+
+          // Ensure Lbr.% (8) visibility matches row type
+          var lbrCell = row.cells[8];
+          if (lbrCell) {
+            var input = lbrCell.querySelector("input");
+            if (input) {
+              input.style.visibility = isPurchase ? "hidden" : "visible";
+              if (isPurchase) input.setAttribute("readonly", "readonly");
             }
           }
         });
@@ -2570,10 +2695,10 @@
         const stmtKey = 'stmt_' + (customer.lfno || customer.name);
         let transactions = [];
         try { transactions = JSON.parse(localStorage.getItem(stmtKey) || "[]"); } catch (e) { transactions = []; }
-        
+
         // Remove old transactions for this bill to update with new totals
         transactions = transactions.filter(t => !(t.narration && (t.narration.includes("Bill No: " + billNoVal) || t.narration.includes("for Bill " + billNoVal))));
-        
+
         let nextId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id || 0)) + 1 : 1;
         const dateVal = bill.date || new Date().toISOString().split("T")[0];
         const billTotal = parseFloat(bill.netAmount || bill.amount || 0);
@@ -2644,7 +2769,7 @@
         // Load customers into dropdown
         const transferCustName = document.getElementById("transferCustName");
         const list = JSON.parse(localStorage.getItem("customers") || "[]");
-        
+
         transferCustName.innerHTML = `<option value="">-- Select Transfer To Customer --</option>`;
         list.forEach(c => {
           const o = document.createElement("option");
@@ -2658,7 +2783,7 @@
         document.getElementById("transferCurBal").textContent = "0.00";
         document.getElementById("transferRelation").value = "";
         document.getElementById("transferStation").value = "";
-        
+
         document.getElementById("transferDate").value = orderDate && orderDate.value ? orderDate.value : new Date().toISOString().split("T")[0];
 
         // Generate Narration
@@ -2708,10 +2833,10 @@
 
         // Perform a full SAVE of the order, but target the transfer customer and suppress internal alerts
         saveOrder(false, true, transferTarget, transDate, transNarration);
-        
+
         // After save, close the popup and redirect like the normal save button would (if we want that)
         closeBillTransferPopup();
-        
+
         // Manually show success since saveOrder was silent
         alert("Bill Transferred and Saved Successfully!");
         if (typeof closeDashboard === 'function') closeDashboard();
@@ -5654,6 +5779,7 @@
         window.closeBillTransferPopup = closeBillTransferPopup;
         window.confirmBillTransfer = confirmBillTransfer;
         window.updateTransferCustDetails = updateTransferCustDetails;
+        window.toggleGlobalEdit = toggleGlobalEdit;
 
         window.closeDashboard = closeDashboard;
       }

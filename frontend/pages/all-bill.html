@@ -441,9 +441,13 @@
           const typeVal = (balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order");
           const custEsc = (balance.customer || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-          const isTransferred = balance.transferred === true;
-          const statusLabel = isTransferred
-            ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">✓ Saved</span>`
+          // Fetch overall customer balance to display in the All Bill table (and for status label)
+          const overallBal = getCustomerBalance(balance.customer);
+          const formattedOverallBal = Math.abs(overallBal).toFixed(2) + (overallBal >= 0 ? " Dr" : " Cr");
+
+          const isClear = overallBal === 0;
+          const statusLabel = isClear
+            ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Clear</span>`
             : `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Pending</span>`;
 
           // Try to pull richer figures from the linked order
@@ -523,10 +527,6 @@
           const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           // Store computed balance so Customer Balance page reads IDENTICAL value
           balance.computedBalAmt = balAmt;
-
-          // Fetch overall customer balance to display in the All Bill table
-          const overallBal = getCustomerBalance(balance.customer);
-          const formattedOverallBal = Math.abs(overallBal).toFixed(2) + (overallBal >= 0 ? " Dr" : " Cr");
 
           row.innerHTML = `
         <td class="center">${statusLabel}</td>

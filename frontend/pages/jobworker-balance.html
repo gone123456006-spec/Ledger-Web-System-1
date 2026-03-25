@@ -563,10 +563,10 @@
       </div>
       <!-- Footer bar -->
       <div class="lc-footer">
-        <div class="lc-stat">Total Metal: <strong id="lcTotalMetal">0.000</strong></div>
+        <div class="lc-stat">T. Metal: <strong id="lcTotalMetal">0.000</strong></div>
         <div class="lc-stat lc-purity">Purity: <input id="lcPurity" type="number" min="1" max="100" value="100"
             oninput="lcUpdateNet()"> %</div>
-        <div class="lc-stat">-Net: <strong id="lcNet">0.000</strong></div>
+        <div class="lc-stat">Net Wt: <strong id="lcNet">0.000</strong></div>
         <div class="lc-stat">Pending: <strong id="lcPending">0.000</strong></div>
         <div class="lc-stat">On: <strong id="lcOnDate"></strong></div>
         <div class="lc-btns">
@@ -820,7 +820,9 @@
         tbody.appendChild(totTr);
 
         // Footer stats
-        document.getElementById('lcTotalMetal').textContent = totM.toFixed(3);
+        var purity = parseFloat(document.getElementById('lcPurity').value) || 100;
+        var tMetal = totM - totC - totN;
+        document.getElementById('lcTotalMetal').textContent = tMetal.toFixed(3);
         lcUpdateNet();
       };
 
@@ -860,10 +862,12 @@
           }
         });
         var purity = parseFloat(document.getElementById('lcPurity').value) || 100;
-        var minusNet = (totC + totN - totMl) * (purity / 100);
-        var pending = totM + minusNet;
+        var tMetal = totM - totC - totN;
+        var netWt = tMetal * (purity / 100);
+        var pending = netWt - totMl;
         document.getElementById('lcPending').textContent = pending.toFixed(3);
-        document.getElementById('lcNet').textContent = minusNet.toFixed(3);
+        document.getElementById('lcNet').textContent = netWt.toFixed(3);
+        document.getElementById('lcTotalMetal').textContent = tMetal.toFixed(3);
       };
 
       window.lcSaveAndClose = function () {

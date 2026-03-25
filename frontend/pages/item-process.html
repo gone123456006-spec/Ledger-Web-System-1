@@ -190,6 +190,33 @@
             box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
         }
 
+        .filter-btn {
+            padding: 8px 14px;
+            border: 1.5px solid #d1d6de;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3a3a3c;
+            transition: all 0.18s;
+            white-space: nowrap;
+            height: 40px;
+        }
+
+        .filter-btn:hover {
+            border-color: #007aff;
+            color: #007aff;
+            background: #f0f7ff;
+        }
+
+        .filter-btn.active {
+            background: #007aff;
+            border-color: #007aff;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.22);
+        }
+
         /* =========================
        TABLE
     ========================= */
@@ -815,6 +842,11 @@
         <div class="process-toolbar">
             <h2>⚙️ Item Process</h2>
             <span class="sel-pill" id="ipSelPill">0 selected</span>
+
+            <button type="button" class="filter-btn active" id="fBtnProcess" onclick="setIpFilter('PROCESS')">In Process</button>
+            <button type="button" class="filter-btn" id="fBtnReady" onclick="setIpFilter('READY')">Ready</button>
+            <button type="button" class="filter-btn" id="fBtnAll" onclick="setIpFilter('ALL')">All</button>
+
             <input type="text" id="searchBox" placeholder="🔍 Search by item, job worker, order..."
                 onkeyup="ipFilterTable()">
             <select id="jwFilter" onchange="ipFilterTable()">
@@ -1110,7 +1142,6 @@
                     tr.dataset.jobworker = (r.jobworkerName || '').trim();
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
-                    if (isReady) tr.classList.add('row-selected');
 
                     tr.innerHTML = `
                         <td class="center cb-cell">
@@ -1118,7 +1149,6 @@
                                 data-process-id="${escapeHtml(r.id)}"
                                 data-order-id="${escapeHtml(r.orderId)}"
                                 data-status="${escapeHtml(r.status || '')}"
-                                ${isReady ? 'checked' : ''}
                                 onchange="ipOnCbChange(this)">
                         </td>
                         <td class="center">
@@ -1162,6 +1192,18 @@
             }
         }
 
+        let activeIpFilter = 'PROCESS'; // Default to In Process
+        function setIpFilter(f) {
+            activeIpFilter = f;
+            const btnP = document.getElementById('fBtnProcess');
+            if(btnP) btnP.classList.toggle('active', f === 'PROCESS');
+            const btnR = document.getElementById('fBtnReady');
+            if(btnR) btnR.classList.toggle('active', f === 'READY');
+            const btnA = document.getElementById('fBtnAll');
+            if(btnA) btnA.classList.toggle('active', f === 'ALL');
+            ipFilterTable();
+        }
+
         function ipFilterTable() {
             if (!tbody || !tbody.querySelector('tr[data-search]')) return;
             const searchEl = document.getElementById('searchBox');
@@ -1172,7 +1214,15 @@
             tbody.querySelectorAll('tr[data-search]').forEach(tr => {
                 const matchesSearch = !query || tr.dataset.search.includes(query);
                 const matchesJw = !jwQuery || tr.dataset.jobworker === jwQuery;
-                tr.style.display = (matchesSearch && matchesJw) ? '' : 'none';
+                
+                const cb = tr.querySelector('.ip-row-cb');
+                const st = cb ? cb.dataset.status : '';
+                
+                let matchesType = true;
+                if (activeIpFilter === 'PROCESS') matchesType = st !== 'READY';
+                else if (activeIpFilter === 'READY') matchesType = st === 'READY';
+
+                tr.style.display = (matchesSearch && matchesJw && matchesType) ? '' : 'none';
             });
             ipUpdateUI();
         }
@@ -1544,6 +1594,7 @@
         /* Expose all functions to window (required when loaded via dashboard loadPage IIFE wrapper) */
         window.loadProcessItems = loadProcessItems;
         window.ipFilterTable = ipFilterTable;
+        window.setIpFilter = setIpFilter;
         window.ipToggleAll = ipToggleAll;
         window.ipOnCbChange = ipOnCbChange;
         window.openMarkReadyModal = openMarkReadyModal;
