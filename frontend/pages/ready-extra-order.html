@@ -2565,6 +2565,30 @@
           .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
       }
 
+      function syncBillToStatement(customer, bill, billNoVal) {
+        if (!customer || !billNoVal) return;
+        const stmtKey = 'stmt_' + (customer.lfno || customer.name);
+        let transactions = [];
+        try { transactions = JSON.parse(localStorage.getItem(stmtKey) || "[]"); } catch (e) { transactions = []; }
+        
+        // Remove old transactions for this bill to update with new totals
+        transactions = transactions.filter(t => !(t.narration && (t.narration.includes("Bill No: " + billNoVal) || t.narration.includes("for Bill " + billNoVal))));
+        
+        let nextId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id || 0)) + 1 : 1;
+        const dateVal = bill.date || new Date().toISOString().split("T")[0];
+        const billTotal = parseFloat(bill.netAmount || bill.amount || 0);
+        transactions.push({ id: nextId++, date: dateVal, narration: "Bill No: " + billNoVal, debit: billTotal, credit: 0, cleared: false });
+        const advanced = getPaidAmount(billNoVal, 'Advanced');
+        const paid = getPaidAmount(billNoVal, 'Paid');
+        if (advanced > 0) { transactions.push({ id: nextId++, date: dateVal, narration: "Advanced for Bill " + billNoVal, debit: 0, credit: advanced, cleared: false }); }
+        if (paid > 0) { transactions.push({ id: nextId++, date: dateVal, narration: "Paid (minus) for Bill " + billNoVal, debit: 0, credit: paid, cleared: false }); }
+        localStorage.setItem(stmtKey, JSON.stringify(transactions));
+        let balance = parseFloat(customer.openingBalance || 0);
+        transactions.forEach(tx => { balance += (tx.debit || 0) - (tx.credit || 0); });
+        customer.currentBalance = Math.abs(balance);
+        customer.currentBalanceType = balance >= 0 ? 'Dr' : 'Cr';
+      }
+
       /* =========================
          RATEBOOK WEIGHT BALANCE (Customer)
          Weight is adjusted on Order/Delivery saves.
@@ -2743,7 +2767,24 @@
 
           const customers = JSON.parse(localStorage.getItem("customers") || "[]");
           const targetCustomerName = getCustomerName();
-          const targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+          let targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+          if (!targetCust && targetCustomerName) {
+            targetCust = {
+              cid: cid || "—",
+              name: targetCustomerName,
+              openingBalance: "0.00",
+              phone: phone || "—",
+              mobile: mobile || "—",
+              station: station || "—",
+              relation: relation || "—",
+              relationName: relationName || "—",
+              lfno: lfno || "—",
+              timestamp: new Date().toISOString(),
+              openingDate: dateOverride || orderDate.value || new Date().toISOString().split("T")[0],
+              transferredBills: []
+            };
+            customers.push(targetCust);
+          }
 
           const rateBookDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
           let rateDiffResult = 0;
@@ -2788,9 +2829,23 @@
           localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
 
           if (targetCust) {
-            const amountVal = parseFloat(balanceEntry.amount || 0);
-            const currentBal = parseFloat(targetCust.openingBalance || 0);
-            targetCust.openingBalance = (currentBal + amountVal).toFixed(2);
+            // Update currentBalance directly from all bills (no auto statement rows)
+            const allCustBals = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+            const custNorm = (targetCust.name || "").trim().toLowerCase();
+            const custBills = allCustBals.filter(b => (b.customer || "").trim().toLowerCase() === custNorm);
+            let runningBal = parseFloat(targetCust.openingBalance || 0);
+            const paymentsAll = JSON.parse(localStorage.getItem("payments") || "[]");
+            custBills.forEach(b => {
+              const bno = b.orderNo || b.billNo || "";
+              const bAmt = parseFloat(b.amount || b.netAmount || 0);
+              const bAdv = paymentsAll.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              const bPaid = paymentsAll.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              let bRateDiff = 0;
+              if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+              runningBal += bAmt - bAdv - bPaid - bRateDiff;
+            });
+            targetCust.currentBalance = Math.abs(runningBal);
+            targetCust.currentBalanceType = runningBal >= 0 ? 'Dr' : 'Cr';
             targetCust.timestamp = new Date().toISOString();
             if (!targetCust.transferredBills) targetCust.transferredBills = [];
             if (!targetCust.transferredBills.includes(billNo.value)) {
@@ -3131,24 +3186,57 @@
         localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
 
         // 3. APPLY NEW TRANSFER TO CUSTOMER
-        if (targetCust) {
-          // Add the final calculated balance to the customer's opening balance as requested
-          const amountVal = parseFloat(balanceEntry.finalBalanceAmount || 0);
-          const currentBal = parseFloat(targetCust.openingBalance || 0);
-          targetCust.openingBalance = (currentBal + amountVal).toFixed(2);
-          targetCust.timestamp = new Date().toISOString();
+        let custToUpdate = targetCust;
+        if (!custToUpdate && targetCustomerName) {
+          // Create new customer if not found
+          custToUpdate = {
+            cid: balanceEntry.cid || "—",
+            name: targetCustomerName,
+            openingBalance: "0.00",
+            phone: balanceEntry.phone || "—",
+            mobile: balanceEntry.mobile || "—",
+            station: balanceEntry.station || "—",
+            relation: balanceEntry.relation || "—",
+            relationName: balanceEntry.relationName || "—",
+            lfno: balanceEntry.lfno || "—",
+            timestamp: new Date().toISOString(),
+            openingDate: balanceEntry.date || new Date().toISOString().split("T")[0],
+            transferredBills: []
+          };
+          customers.push(custToUpdate);
+        }
 
-          // Track transferred bill to prevent future duplicates (though our logic handles it)
-          if (!targetCust.transferredBills) targetCust.transferredBills = [];
-          if (!targetCust.transferredBills.includes(billNo.value)) {
-            targetCust.transferredBills.push(billNo.value);
+        if (custToUpdate) {
+          // Update currentBalance directly from all bills (no auto statement rows)
+          const allCustBals2 = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+          const custNorm2 = (custToUpdate.name || "").trim().toLowerCase();
+          const custBills2 = allCustBals2.filter(b => (b.customer || "").trim().toLowerCase() === custNorm2);
+          let runningBal2 = parseFloat(custToUpdate.openingBalance || 0);
+          const paymentsAll2 = JSON.parse(localStorage.getItem("payments") || "[]");
+          custBills2.forEach(b => {
+            const bno = b.orderNo || b.billNo || "";
+            const bAmt = parseFloat(b.amount || b.netAmount || 0);
+            const bAdv = paymentsAll2.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+            const bPaid = paymentsAll2.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+            let bRateDiff = 0;
+            if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+            runningBal2 += bAmt - bAdv - bPaid - bRateDiff;
+          });
+          custToUpdate.currentBalance = Math.abs(runningBal2);
+          custToUpdate.currentBalanceType = runningBal2 >= 0 ? 'Dr' : 'Cr';
+          custToUpdate.timestamp = new Date().toISOString();
+
+          // Track transferred bill
+          if (!custToUpdate.transferredBills) custToUpdate.transferredBills = [];
+          if (!custToUpdate.transferredBills.includes(billNo.value)) {
+            custToUpdate.transferredBills.push(billNo.value);
           }
 
           // Update missing fields
-          if ((!targetCust.phone || targetCust.phone === "—") && balanceEntry.phone !== "—") targetCust.phone = balanceEntry.phone;
-          if ((!targetCust.mobile || targetCust.mobile === "—") && balanceEntry.mobile !== "—") targetCust.mobile = balanceEntry.mobile;
+          if ((!custToUpdate.phone || custToUpdate.phone === "—") && balanceEntry.phone !== "—") custToUpdate.phone = balanceEntry.phone;
+          if ((!custToUpdate.mobile || custToUpdate.mobile === "—") && balanceEntry.mobile !== "—") custToUpdate.mobile = balanceEntry.mobile;
 
-          delete targetCust.rate;
+          delete custToUpdate.rate;
           localStorage.setItem("customers", JSON.stringify(customers));
 
           // Dispatch customer update event

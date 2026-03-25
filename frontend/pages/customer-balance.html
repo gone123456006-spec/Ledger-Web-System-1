@@ -392,7 +392,7 @@
             <th style="width:12%;">Station</th>
             <th style="width:11%;">Phone no.</th>
             <th style="width:11%;">Mobile</th>
-            <th class="right" style="width:17%;">Amount</th>
+            <th class="right" style="width:17%;">Balance</th>
           </tr>
         </thead>
         <tbody id="customerBalanceTableBody"></tbody>
@@ -456,6 +456,20 @@
       return (r + " " + n).trim();
     }
 
+    function getPaidAmount(billNo, typeFilter = null) {
+      if (!billNo) return 0;
+      const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+      return payments
+        .filter(p => {
+          const billMatch = p.billNo === billNo;
+          if (!billMatch) return false;
+          if (typeFilter === 'Paid') return p.type === 'Paid';
+          if (typeFilter === 'Advanced') return p.type !== 'Paid';
+          return true;
+        })
+        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    }
+
     function formatAmount(n) {
       if (n == null || n === "") return "—";
       const num = typeof n === "number" ? n : Number(n);
@@ -478,22 +492,59 @@
       // One row per customer from Add Customer list — data saves and shows here
       const rows = customers.map((c) => {
         const name = (c.name || "").trim();
-        const customerEntries = balances.filter((b) => norm(b.customer) === norm(name));
-        // Prefer currentBalance (synced from statement) over openingBalance for display
-        const amount = (c.currentBalance != null && c.currentBalance !== "")
-          ? Number(c.currentBalance)
-          : ((c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0);
-        // Prefer currentBalanceType, else openingBalanceType
-        const balanceType = (c.currentBalance != null && c.currentBalance !== "")
-          ? (c.currentBalanceType || 'Dr')
-          : (c.openingBalanceType || 'Dr');
-        // Always use original openingBalance as the starting point for statement page
-        const originalOpBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
-        const amountMinusRateDiffSum = customerEntries.reduce((sum, b) => {
-          const v = b.amountMinusRateDiff != null && b.amountMinusRateDiff !== "" ? Number(b.amountMinusRateDiff) : NaN;
-          return Number.isNaN(v) ? sum : sum + v;
-        }, 0);
-        const amountMinusRateDiff = (amountMinusRateDiffSum > 0 || amountMinusRateDiffSum < 0) ? amountMinusRateDiffSum : null;
+        // Match by name (primary) or by cid (fallback for name mismatches)
+        const customerEntries = balances.filter((b) =>
+          norm(b.customer) === norm(name) ||
+          (c.cid && b.cid && norm(b.cid) === norm(c.cid))
+        );
+
+        // Start with opening balance
+        const openingBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
+        let dynamicSum = openingBal;
+
+        if (customerEntries.length > 0) {
+          // Use computedBalAmt written by All Bill (guaranteed identical values)
+          // Falls back to simple calc if All Bill hasn't been loaded yet
+          customerEntries.forEach(balance => {
+            if (balance.computedBalAmt != null) {
+              // All Bill already computed this — use it directly
+              dynamicSum += Number(balance.computedBalAmt);
+            } else {
+              // Fallback: simple calc using stored amount minus payments
+              const billNoVal = balance.orderNo || balance.billNo || "";
+              const netAmt = parseFloat(balance.amount || balance.netAmount || 0);
+              const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
+              const paidAmt = getPaidAmount(billNoVal, 'Paid');
+              let rateDiffResult = 0;
+              if (balance.amountMinusRateDiff != null && balance.amount != null) {
+                rateDiffResult = Math.abs(parseFloat(balance.amount) - parseFloat(balance.amountMinusRateDiff));
+              }
+              dynamicSum += netAmt - advanceAmt - paidAmt - rateDiffResult;
+            }
+          });
+        } else if (c.currentBalance != null && c.currentBalance !== "") {
+          // No bills matched by name — use currentBalance that syncBillToStatement already computed
+          const finalAmount = Number(c.currentBalance);
+          const finalType = c.currentBalanceType || 'Dr';
+          return {
+            name,
+            lfno: c.lfno || "—",
+            relation: c.relation || "—",
+            relationName: c.relationName || "—",
+            station: c.station || "—",
+            phone: c.phone || "—",
+            mobile: c.mobile || "—",
+            amount: Math.abs(finalAmount),
+            balanceType: finalType,
+            originalOpBal: openingBal,
+            amountMinusRateDiff: null,
+            mark: c.mark || "—",
+            id: c.id != null ? c.id : null
+          };
+        }
+
+        const originalOpBal = openingBal;
+
         return {
           name,
           lfno: c.lfno || "—",
@@ -502,10 +553,10 @@
           station: c.station || "—",
           phone: c.phone || "—",
           mobile: c.mobile || "—",
-          amount,
-          balanceType,
+          amount: Math.abs(dynamicSum),
+          balanceType: dynamicSum >= 0 ? 'Dr' : 'Cr',
           originalOpBal,
-          amountMinusRateDiff,
+          amountMinusRateDiff: null,
           mark: c.mark || "—",
           id: c.id != null ? c.id : null
         };
@@ -531,7 +582,7 @@
         tr.dataset.amount = r.amount;   // store raw amount for filter
         tr.dataset.marked = r.mark && r.mark !== '—' ? '1' : '0';
         tr.dataset.station = (r.station || "—").trim().toLowerCase();
-        const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType==='Dr'?'#d93025':'#1a73e8'}">${r.balanceType}</span>` : '';
+        const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType === 'Dr' ? '#d93025' : '#1a73e8'}">${r.balanceType}</span>` : '';
         const amountCell = r.amountMinusRateDiff != null
           ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + '</span>' + drCrTag
           : formatAmount(r.amount) + drCrTag;
@@ -722,6 +773,38 @@
     window.addEventListener("pageRefresh", function () { setTimeout(loadTable, 100); });
     window.addEventListener("customersUpdated", function () { setTimeout(loadTable, 100); });
     window.addEventListener("customerBalancesUpdated", function () { setTimeout(loadTable, 100); });
+
+    // Also listen on parent and top windows (for workspace iframe setup)
+    if (window.parent && window.parent !== window) {
+      window.parent.addEventListener("customersUpdated", function () { setTimeout(loadTable, 100); });
+      window.parent.addEventListener("customerBalancesUpdated", function () { setTimeout(loadTable, 100); });
+    }
+    if (window.top && window.top !== window) {
+      window.top.addEventListener("customersUpdated", function () { setTimeout(loadTable, 100); });
+      window.top.addEventListener("customerBalancesUpdated", function () { setTimeout(loadTable, 100); });
+    }
+
+    // Poll localStorage for changes (catches same-window updates)
+    let lastCustomersHash = "";
+    let lastBalancesHash = "";
+    setInterval(function () {
+      try {
+        const custStr = localStorage.getItem("customers") || "";
+        const balStr = localStorage.getItem("customerBalances") || "";
+        if (custStr !== lastCustomersHash || balStr !== lastBalancesHash) {
+          lastCustomersHash = custStr;
+          lastBalancesHash = balStr;
+          loadTable();
+        }
+      } catch (e) { }
+    }, 1500);
+
+    // React to storage changes from other tabs/windows
+    window.addEventListener("storage", function (e) {
+      if (e.key === "customers" || e.key === "customerBalances" || e.key === "bills" || e.key === "payments") {
+        setTimeout(loadTable, 100);
+      }
+    });
   </script>
 </body>
 

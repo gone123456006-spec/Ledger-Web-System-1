@@ -331,6 +331,81 @@
     }
 
     /* =========================
+       GET CUSTOMER OVERALL BALANCE
+    ========================= */
+    function getCustomerBalance(customerName) {
+      if (!customerName) return 0;
+      const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+      const norm = (s) => (s || "").trim().toLowerCase();
+      
+      const c = customers.find(cust => norm(cust.name) === norm(customerName));
+      let openingBal = 0;
+      if (c && c.openingBalance != null && c.openingBalance !== "") {
+        openingBal = Number(c.openingBalance);
+      }
+      
+      const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+      const customerEntries = balances.filter((b) =>
+        norm(b.customer) === norm(customerName) ||
+        (c && c.cid && b.cid && norm(b.cid) === norm(c.cid))
+      );
+      
+      let dynamicSum = openingBal;
+      
+      if (customerEntries.length > 0) {
+        const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const allBillsArray = JSON.parse(localStorage.getItem('bills') || '[]');
+
+        customerEntries.forEach(balance => {
+          let linkedOrder = allOrders.find(o => o.orderNo === balance.orderNo || o.billNo === balance.orderNo);
+          if (!linkedOrder) {
+            linkedOrder = allBillsArray.find(o => o.orderNo === balance.orderNo || o.billNo === balance.orderNo);
+          }
+          
+          let orderTotal = 0; let purchaseTotal = 0; let saleTotal = 0;
+          const linkedItems = linkedOrder ? (linkedOrder.items || linkedOrder.rows || []) : [];
+          if (linkedItems && linkedItems.length > 0) {
+            linkedItems.forEach(it => {
+              const vals = it.values || [];
+              const type = it.type || 'Order';
+              const isGst = vals.length >= 16;
+              const totalIdx = isGst ? 15 : 12;
+              const valTotal = parseFloat(vals[totalIdx] || 0);
+              if (type === 'Purchase') purchaseTotal += valTotal;
+              else if (type === 'Sale') saleTotal += valTotal;
+              else orderTotal += valTotal;
+            });
+          }
+          
+          let netAmt = orderTotal + saleTotal;
+          if (netAmt === 0) {
+            netAmt = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0);
+          }
+          
+          const billNoVal = balance.orderNo || balance.billNo || "";
+          const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
+          const paidAmt = getPaidAmount(billNoVal, 'Paid');
+          
+          let rateDiffResult = 0;
+          const rateDiffStored = (linkedOrder && linkedOrder.rateBookDiffSummary) ? linkedOrder.rateBookDiffSummary : (balance.rateBookDiffSummary || "");
+          if (rateDiffStored) {
+            const match = rateDiffStored.match(/=\s*([-\u2212]?\s*[\d.]+)/);
+            if (match) {
+              const numStr = match[1].replace(/\u2212/g, "-").replace(/\s/g, "");
+              rateDiffResult = parseFloat(numStr) || 0;
+            }
+          }
+          
+          const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          dynamicSum += balAmt;
+        });
+      } else if (c && c.currentBalance != null && c.currentBalance !== "") {
+        return Number(c.currentBalance);
+      }
+      return dynamicSum;
+    }
+
+    /* =========================
        LOAD BALANCES
     ========================= */
     function loadBalances() {
@@ -446,6 +521,12 @@
 
           // Balance (Amount: Total - Purchase - Advanced - Paid - Math.abs(RateDiff))
           const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          // Store computed balance so Customer Balance page reads IDENTICAL value
+          balance.computedBalAmt = balAmt;
+
+          // Fetch overall customer balance to display in the All Bill table
+          const overallBal = getCustomerBalance(balance.customer);
+          const formattedOverallBal = Math.abs(overallBal).toFixed(2) + (overallBal >= 0 ? " Dr" : " Cr");
 
           row.innerHTML = `
         <td class="center">${statusLabel}</td>
@@ -457,7 +538,7 @@
         <td class="right">${advanceAmt.toFixed(2)}</td>
         <td class="right">${paidAmt.toFixed(2)}</td>
         <td class="right">${grWt.toFixed(3)}</td>
-        <td class="right" style="color:${balAmt < 0 ? '#dc3545' : balAmt === 0 ? '#198754' : '#1d1d1f'}; font-weight:600;">${balAmt.toFixed(2)}</td>
+        <td class="right" style="color:${overallBal < 0 ? '#1a73e8' : overallBal === 0 ? '#198754' : '#d93025'}; font-weight:600;">${formattedOverallBal}</td>
         <td class="center">
           <div class="action-buttons">
             <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:4px 10px; border-radius:6px; border:none; background:#0d6efd; color:#fff; font-size:11px; cursor:pointer; font-weight:500;">Edit</button>
@@ -473,6 +554,9 @@
           console.error("Error creating balance row:", e);
         }
       });
+
+      // Save computed balances back so Customer Balance reads the exact same values
+      try { localStorage.setItem("customerBalances", JSON.stringify(sortedBalances)); } catch (e) { }
 
       updateFooter();
     }
@@ -790,7 +874,6 @@
           return;
         }
 
-        // Fallback: open in new window
         window.open("/pages/ready-extra-order.html", "EditBill", "width=1400,height=800");
 
       } catch (e) {
@@ -798,6 +881,75 @@
         alert("Error opening bill for editing: " + (e.message || String(e)));
       }
     }
+
+    /* =========================
+       SYNC BILL TO STATEMENT (Private Helper)
+    ========================= */
+    function syncBillToStatement(customer, bill, billNoVal) {
+      if (!customer || !billNoVal) return;
+      
+      const stmtKey = 'stmt_' + (customer.lfno || customer.name);
+      let transactions = [];
+      try {
+        transactions = JSON.parse(localStorage.getItem(stmtKey) || "[]");
+      } catch (e) { transactions = []; }
+      
+      // Prevent duplicate bill entry in statement
+      if (transactions.some(t => t.narration && t.narration.includes(billNoVal) && t.debit > 0)) return;
+      
+      let nextId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id || 0)) + 1 : 1;
+      const dateVal = bill.date || new Date().toISOString().split("T")[0];
+      
+      // 1. Add Bill Debit entry (Total)
+      const billTotal = parseFloat(bill.netAmount || bill.amount || bill.totalAmount || 0);
+      transactions.push({
+        id: nextId++,
+        date: dateVal,
+        narration: "Bill No: " + billNoVal,
+        debit: billTotal,
+        credit: 0,
+        cleared: false
+      });
+      
+      // 2. Add Payments Credit entries
+      const advanced = getPaidAmount(billNoVal, 'Advanced');
+      const paid = getPaidAmount(billNoVal, 'Paid');
+      
+      if (advanced > 0) {
+        transactions.push({
+          id: nextId++,
+          date: dateVal,
+          narration: "Advanced for Bill " + billNoVal,
+          debit: 0,
+          credit: advanced,
+          cleared: false
+        });
+      }
+      if (paid > 0) {
+        transactions.push({
+          id: nextId++,
+          date: dateVal,
+          narration: "Paid (minus) for Bill " + billNoVal,
+          debit: 0,
+          credit: paid,
+          cleared: false
+        });
+      }
+      
+      localStorage.setItem(stmtKey, JSON.stringify(transactions));
+      
+      // 3. Update customer currentBalance according to statement logic
+      let balance = parseFloat(customer.openingBalance || 0);
+      transactions.forEach(tx => {
+        balance += (tx.debit || 0) - (tx.credit || 0);
+      });
+      customer.currentBalance = Math.abs(balance);
+      customer.currentBalanceType = balance >= 0 ? 'Dr' : 'Cr';
+    }
+
+    /* =========================
+       EDIT BILL FUNCTION
+    ========================= */
 
     /* =========================
        TRANSFER ALL TO CUSTOMER BALANCE (Toolbar button)
@@ -839,8 +991,10 @@
           if (customer) {
             if (!customer.transferredBills) customer.transferredBills = [];
             if (customer.transferredBills.includes(bill.orderNo)) return;
-            const currentBal = parseFloat(customer.openingBalance || 0);
-            customer.openingBalance = (currentBal + amountVal).toFixed(2);
+            
+            // Sync to statement and update currentBalance
+            syncBillToStatement(customer, bill, bill.orderNo);
+            
             customer.transferredBills.push(bill.orderNo);
             customer.timestamp = new Date().toISOString();
             if ((!customer.phone || customer.phone === "—") && phone !== "—") customer.phone = phone;
@@ -854,7 +1008,7 @@
             customer = {
               cid: cid,
               name: bill.customer,
-              openingBalance: amountVal.toFixed(2),
+              openingBalance: "0.00", // Keep opening 0, let syncBillToStatement set currentBalance
               phone: phone,
               mobile: mobile,
               station: station,
@@ -865,6 +1019,7 @@
               openingDate: bill.date || new Date().toISOString().split("T")[0],
               transferredBills: [bill.orderNo]
             };
+            syncBillToStatement(customer, bill, bill.orderNo);
             customers.push(customer);
           }
           bill.transferred = true;
@@ -947,9 +1102,9 @@
             return;
           }
 
-          // Update existing customer
-          const currentBal = parseFloat(customer.openingBalance || 0);
-          customer.openingBalance = (currentBal + amountVal).toFixed(2);
+          // Sync to statement and update currentBalance
+          syncBillToStatement(customer, bill, bill.orderNo);
+          
           customer.transferredBills.push(bill.orderNo);
           customer.timestamp = new Date().toISOString();
 
@@ -962,13 +1117,13 @@
           if ((!customer.lfno || customer.lfno === "—") && lfno !== "—") customer.lfno = lfno;
           if ((!customer.cid || customer.cid === "—") && cid !== "—") customer.cid = cid;
 
-          alert(`Updated existing customer "${customer.name}".\nNew Balance: ₹ ${customer.openingBalance}`);
+          alert(`Updated existing customer "${customer.name}".\nNew Balance: ₹ ${customer.currentBalance} (${customer.currentBalanceType})`);
         } else {
           // Create new customer with all available data
           customer = {
             cid: cid,
             name: bill.customer,
-            openingBalance: amountVal.toFixed(2),
+            openingBalance: "0.00",
             phone: phone,
             mobile: mobile,
             station: station,
@@ -976,11 +1131,12 @@
             relationName: relationName,
             lfno: lfno,
             timestamp: new Date().toISOString(),
-            openingDate: bill.date || new Date().toISOString().split('T')[0],
+            openingDate: bill.date || new Date().toISOString().split("T")[0],
             transferredBills: [bill.orderNo]
           };
+          syncBillToStatement(customer, bill, bill.orderNo);
           customers.push(customer);
-          alert(`Created new customer "${customer.name}" with Balance: ₹ ${customer.openingBalance}`);
+          alert(`Created new customer "${customer.name}" and transferred bill.`);
         }
 
         // 3. SAVE DATA
