@@ -3,10 +3,9 @@
   const SESSION_KEY = "ledger_auth_session_v1";
   const STORAGE_FALLBACK_KEY = "ledger_auth_storage_fallback_v1";
 
-  // Simple hardcoded users (change as needed)
+  // Updated secure system credentials
   const USERS = [
-    { username: "admin", password: "admin" },
-    { username: "user", password: "1234" }
+    { username: "u9xQ7mL2vT8kR4pZ", password: "7#Kx!2vP9@LmQ4$Tz8&Yf3" }
   ];
 
   function normalizeUsername(u) {

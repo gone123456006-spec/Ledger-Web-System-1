@@ -48,23 +48,16 @@
                     </li>
                     <li onclick="loadPage('pages/jobworker-entry.html')">👷 Job Workers</li>
 
-                    <li class="divider"></li>
                     <li
                         onclick="window.ledgerAuth && (window.ledgerAuth.logout(), window.location.replace('login.html'))">
-                        Logout</li>
+                        🚪 Logout</li>
                 </ul>
             </li>
 
             <li class="menu-item" onclick="showInfo('Transactions module coming soon')">Transactions</li>
-            <li class="menu-item" onclick="showInfo('Reports module coming soon')">Reports</li>
-            <li class="menu-item has-submenu">
-                Tools
-                <ul class="submenu right">
-                    <li onclick="loadPage('pages/clear-local-data.html')">Clear local data (clean system)</li>
-                </ul>
-            </li>
-            <li class="menu-item" onclick="showInfo('Settings module coming soon')">Settings</li>
-            <li class="menu-item" onclick="showInfo('Help module coming soon')">Help</li>
+            <li class="menu-item" onclick="loadPage('pages/report-bugs.html')">Reports</li>
+            <li class="menu-item" onclick="loadPage('pages/clear-local-data.html')">Tools</li>
+            <li class="menu-item" onclick="loadPage('pages/settings.html')">Settings</li>
 
         </ul>
     </nav>
@@ -76,8 +69,7 @@
 
         <!-- side bar  -->
         <aside class="sidebar">
-            <button>Add Customer</button>
-            <button>Add Item</button>
+            <button onclick="loadPage('pages/customer.html')">Add Customer</button>
             <div class="sidebar-agents-order section-gap" style="margin-bottom:8px; position:relative;">
                 <button type="button" class="agents-order-trigger"
                     style="margin-bottom:0; font-weight:bold;">Agents</button>
@@ -319,35 +311,40 @@
         ========================= */
         function listStations() {
             const stations = JSON.parse(localStorage.getItem("stations") || "[]");
-
             let html = `
-            <div class="station-window" style="max-width:800px">
-                <div class="station-titlebar">Station List</div>
-                <div class="station-body" style="padding:0">
-                    <table style="width:100%; border-collapse:collapse;">
+            <div style="padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f1f3f4; padding-bottom: 15px;">
+                    <h2 style="margin: 0; font-size: 20px; color: #1a73e8;">Station List</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="stationSearch" placeholder="Search station..." onkeyup="filterStationsTable()" style="padding: 8px 12px; border: 1px solid #dadce0; border-radius: 8px; font-size: 14px; width: 250px;">
+                        <button class="btn" onclick="openStation()" style="background: #1a73e8; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500;">Add New Station</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto; border: 1px solid #f1f3f4; border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse; background: #fff;" id="stationsTable">
                         <thead>
-                            <tr style="background:#f2f2f7; text-align:left;">
-                                <th style="padding:10px; border-bottom:1px solid #ddd">Station</th>
-                                <th style="padding:10px; border-bottom:1px solid #ddd">State</th>
-                                <th style="padding:10px; border-bottom:1px solid #ddd">City</th>
-                                <th style="padding:10px; border-bottom:1px solid #ddd">Pin</th>
-                                <th style="padding:10px; border-bottom:1px solid #ddd">Actions</th>
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 12px 15px; text-align: left; font-size: 13px; color: #5f6368; text-transform: uppercase; border: 1px solid #eee;">Station</th>
+                                <th style="padding: 12px 15px; text-align: left; font-size: 13px; color: #5f6368; text-transform: uppercase; border: 1px solid #eee;">State</th>
+                                <th style="padding: 12px 15px; text-align: left; font-size: 13px; color: #5f6368; text-transform: uppercase; border: 1px solid #eee;">City</th>
+                                <th style="padding: 12px 15px; text-align: left; font-size: 13px; color: #5f6368; text-transform: uppercase; border: 1px solid #eee;">Pin</th>
+                                <th style="padding: 12px 15px; text-align: right; font-size: 13px; color: #5f6368; text-transform: uppercase; border: 1px solid #eee;">Action</th>
                             </tr>
                         </thead>
                         <tbody>`;
 
             if (stations.length === 0) {
-                html += `<tr><td colspan="5" style="padding:20px; text-align:center; color:#888;">No stations found</td></tr>`;
+                html += `<tr><td colspan="5" style="padding: 40px; text-align: center; color: #9aa0a6; font-style: italic; border: 1px solid #eee;">No stations found. Click "Add New Station" to start.</td></tr>`;
             } else {
                 stations.forEach(s => {
                     html += `
-                    <tr style="border-bottom:1px solid #eee;">
-                        <td style="padding:10px;">${s.name}</td>
-                        <td style="padding:10px;">${s.state}</td>
-                        <td style="padding:10px;">${s.city || '-'}</td>
-                        <td style="padding:10px;">${s.pin || '-'}</td>
-                        <td style="padding:10px;">
-                            <button onclick="deleteStation('${s.name}')" style="padding:4px 8px; font-size:12px; background:#ff3b30; color:white; border:none; border-radius:4px; cursor:pointer;">Delete</button>
+                    <tr style="transition: background 0.2s;" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background='white'">
+                        <td style="padding: 12px 15px; font-size: 14px; color: #3c4043; font-weight: 500; border: 1px solid #eee;">${s.name}</td>
+                        <td style="padding: 12px 15px; font-size: 14px; color: #5f6368; border: 1px solid #eee;">${s.state}</td>
+                        <td style="padding: 12px 15px; font-size: 14px; color: #5f6368; border: 1px solid #eee;">${s.city || '-'}</td>
+                        <td style="padding: 12px 15px; font-size: 14px; color: #5f6368; border: 1px solid #eee;">${s.pin || '-'}</td>
+                        <td style="padding: 12px 15px; text-align: right; border: 1px solid #eee;">
+                            <button onclick="deleteStation('${s.name}')" style="padding: 6px 12px; font-size: 12px; background: #feebeb; color: #d93025; border: 1px solid #fad2cf; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#fbc9c9'" onmouseout="this.style.background='#feebeb'">Delete</button>
                         </td>
                     </tr>`;
                 });
@@ -356,13 +353,37 @@
             html += `   </tbody>
                     </table>
                 </div>
-                <div class="station-footer">
-                    <button class="btn" onclick="openStation()">Add New Station</button>
-                    <button class="btn" onclick="closeStation()">Close</button>
+                <div style="margin-top: 15px; text-align: right;">
+                   <button class="btn" onclick="closeStation()" style="background: #f1f3f4; color: #3c4043; border: 1px solid #dadce0; padding: 8px 20px; border-radius: 8px; cursor: pointer;">Close</button>
                 </div>
             </div>`;
 
             document.getElementById("workspace").innerHTML = html;
+        }
+
+        /* =========================
+           FILTER STATIONS TABLE
+        ========================= */
+        function filterStationsTable() {
+            const input = document.getElementById("stationSearch");
+            const filter = input.value.toUpperCase();
+            const table = document.getElementById("stationsTable");
+            const tr = table.getElementsByTagName("tr");
+
+            for (let i = 1; i < tr.length; i++) {
+                let found = false;
+                const tds = tr[i].getElementsByTagName("td");
+                for (let j = 0; j < tds.length - 1; j++) {
+                    if (tds[j]) {
+                        const txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
         }
 
         /* =========================

@@ -391,6 +391,13 @@
       padding-right: 40px;
     }
   </style>
+  <style>
+    .erp-form .field label .required { color: #ff3b30; margin-left: 4px; font-weight: bold; }
+    #customerListSection table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
+    #customerListSection th, #customerListSection td { border: 1px solid #ddd !important; padding: 10px; text-align: left; }
+    #customerListSection th { background: #f8f9fa; font-weight: 600; color: #333; }
+    #customerListSection tr:hover { background: #f1f7ff; }
+  </style>
 </head>
 
 <body>
@@ -490,10 +497,10 @@
           <textarea id="address" placeholder="Enter full address" rows="3"></textarea>
         </div>
         <div class="field">
-          <label for="station">Station</label>
+          <label for="station">Station <span class="required">*</span></label>
           <div class="row">
             <div class="search-dropdown-wrap" id="stationDropdownWrap">
-              <input type="text" id="station" placeholder="Enter station" autocomplete="off" onfocus="showStationDropdown()" oninput="filterStationDropdown()">
+              <input type="text" id="station" placeholder="Enter station" required autocomplete="off" onfocus="showStationDropdown()" oninput="filterStationDropdown()">
               <div id="stationDropdown" class="search-dropdown-list"></div>
             </div>
             <button type="button" aria-label="Add New Station" title="Add New Station" onclick="openStationPopup()"
@@ -841,6 +848,7 @@
 
     function validateForm() {
       if (!fields.name.value.trim()) { alert("Customer name is required"); fields.name.focus(); return false; }
+      if (!fields.station.value.trim()) { alert("Station is required"); fields.station.focus(); return false; }
       if (!/^\d{10}$/.test((fields.phone.value || "").trim())) {
         alert("Enter valid 10-digit phone number");
         fields.phone.focus();
