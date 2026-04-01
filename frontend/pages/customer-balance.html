@@ -498,9 +498,12 @@
           (c.cid && b.cid && norm(b.cid) === norm(c.cid))
         );
 
-        // Start with opening balance
-        const openingBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
-        let dynamicSum = openingBal;
+        // Customer Balance table must match All Bill "Balance (₹)" totals (sum of per-bill balances).
+        // Opening Balance is shown/used in Customer Statement, not added here (prevents "random" extra amounts).
+        let openingBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
+        if ((c.openingBalanceType || "").toLowerCase() === "cr") openingBal = -Math.abs(openingBal);
+        if ((c.openingBalanceType || "").toLowerCase() === "dr") openingBal = Math.abs(openingBal);
+        let dynamicSum = 0;
 
         if (customerEntries.length > 0) {
           // Use computedBalAmt written by All Bill (guaranteed identical values)
@@ -519,28 +522,12 @@
               if (balance.amountMinusRateDiff != null && balance.amount != null) {
                 rateDiffResult = Math.abs(parseFloat(balance.amount) - parseFloat(balance.amountMinusRateDiff));
               }
-              dynamicSum += netAmt - advanceAmt - paidAmt - rateDiffResult;
+              const computed = netAmt - advanceAmt - paidAmt - rateDiffResult;
+              // Persist so Customer Balance matches All Bill exactly, even before opening All Bill.
+              balance.computedBalAmt = computed;
+              dynamicSum += computed;
             }
           });
-        } else if (c.currentBalance != null && c.currentBalance !== "") {
-          // No bills matched by name — use currentBalance that syncBillToStatement already computed
-          const finalAmount = Number(c.currentBalance);
-          const finalType = c.currentBalanceType || 'Dr';
-          return {
-            name,
-            lfno: c.lfno || "—",
-            relation: c.relation || "—",
-            relationName: c.relationName || "—",
-            station: c.station || "—",
-            phone: c.phone || "—",
-            mobile: c.mobile || "—",
-            amount: Math.abs(finalAmount),
-            balanceType: finalType,
-            originalOpBal: openingBal,
-            amountMinusRateDiff: null,
-            mark: c.mark || "—",
-            id: c.id != null ? c.id : null
-          };
         }
 
         const originalOpBal = openingBal;

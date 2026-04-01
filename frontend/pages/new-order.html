@@ -342,6 +342,12 @@
       box-shadow: none;
     }
 
+    /* Purchase row: Lbr.% — hidden and non-interactive; cell kept for column alignment */
+    #new-order-item-table td.purchase-lbr-cell-hidden input {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     /* =====================
    ACTION BUTTONS
 ===================== */
@@ -1578,11 +1584,14 @@
         if (!row) return;
 
         try {
+          const typeSelect = row.cells[0]?.querySelector('select');
+          const isPurchase = typeSelect && typeSelect.value === 'Purchase';
+
           // Get values
           const pc = safeNumber(row.cells[7]?.children[0]?.value);
           const utWt = safeNumber(row.cells[8]?.children[0]?.value);
           const rate = safeNumber(row.cells[10]?.children[0]?.value);
-          const lbr = safeNumber(row.cells[11]?.children[0]?.value);
+          const lbr = isPurchase ? 0 : safeNumber(row.cells[11]?.children[0]?.value);
 
           // Calculate estimated total weight
           const estTotalWt = pc * utWt;
@@ -1635,6 +1644,23 @@
             input.placeholder = placeholderName || '';
           }
         });
+
+        var lbrCell = row.cells[11];
+        if (lbrCell) {
+          var lbrInput = lbrCell.querySelector('input');
+          if (lbrInput) {
+            if (isPurchase) {
+              lbrInput.value = '0';
+              lbrInput.setAttribute('disabled', 'disabled');
+              lbrInput.tabIndex = -1;
+              lbrCell.classList.add('purchase-lbr-cell-hidden');
+            } else {
+              lbrInput.removeAttribute('disabled');
+              lbrInput.tabIndex = 0;
+              lbrCell.classList.remove('purchase-lbr-cell-hidden');
+            }
+          }
+        }
       }
 
       function handleTypeChange(select) {
@@ -1649,6 +1675,8 @@
           if (editBtn) {
             editBtn.style.display = type === 'Order' ? 'block' : 'none';
           }
+          const trigger = row.cells[7]?.children[0];
+          if (trigger) calculateRow(trigger);
         }
         updateInfoPanel();
         scheduleAutoSave();

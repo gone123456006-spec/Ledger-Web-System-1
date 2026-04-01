@@ -182,8 +182,13 @@
       color: #1d1d1f !important;
     }
 
-    thead th.center { text-align: center; }
-    thead th.right { text-align: right; }
+    thead th.center {
+      text-align: center;
+    }
+
+    thead th.right {
+      text-align: right;
+    }
 
     tbody td {
       padding: 18px;
@@ -231,7 +236,10 @@
       border-color: #b8d4f0;
     }
 
-    .center { text-align: center; }
+    .center {
+      text-align: center;
+    }
+
     .right {
       text-align: right;
       font-weight: 500;
@@ -321,10 +329,24 @@
     /* =========================
    SCROLLBAR (Customer Balance style)
 ========================= */
-    .table-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
-    .table-wrap::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb { background: #b0b4b8; border-radius: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb:hover { background: #a1a1a6; }
+    .table-wrap::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f0f2f5;
+      border-radius: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #b0b4b8;
+      border-radius: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a6;
+    }
 
     /* =========================
    RESPONSIVE
@@ -455,6 +477,19 @@
       return true;
     }
 
+    function getPaidAmountForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        const key = String(billNo).trim();
+        return payments
+          .filter(p => p && String(p.billNo || "").trim() === key)
+          .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    }
+
     /* =========================
        LOAD PENDING ORDERS
     ========================= */
@@ -516,36 +551,40 @@
         return;
       }
 
-      // Calculate Order-specific totals and Purchase total
       let displayGrWt = 0;
-      let displayNet = 0;
+      let orderSideTotal = 0;
       let purchaseTotal = 0;
 
       if (order.items && Array.isArray(order.items) && order.items.length > 0) {
         order.items.forEach(item => {
           if (!item || !item.values) return;
-          const type = item.values[0] || "Order";
-          // Support both old structure (Gr.Wt at index 8) and new structure (Gr.Wt at index 9)
+          const type = item.type || item.values[0] || "Order";
           const grWt = parseFloat(item.values[9] || item.values[5] || item.values[8] || 0);
-          // Support Net at index 12 (latest) or 13
           const net = parseFloat(item.values[12] || item.values[13] || 0);
 
-          if (type === "Order") {
-            displayGrWt += grWt;
-            displayNet += net;
-          } else if (type === "Purchase") {
+          if (type === "Purchase") {
             purchaseTotal += net;
+          } else {
+            displayGrWt += grWt;
+            orderSideTotal += net;
           }
         });
       } else {
-        // Fallback for orders without item details (legacy)
         displayGrWt = parseFloat(order.grWt || 0);
-        displayNet = parseFloat(order.netAmount || 0);
+        orderSideTotal = parseFloat(order.netAmount || 0);
       }
 
-      const cashAdvance = parseFloat(order.advance || 0);
-      const totalAdvance = cashAdvance + purchaseTotal;
-      const displayBalance = displayNet - totalAdvance;
+      const netBill = order.items && order.items.length > 0
+        ? orderSideTotal - purchaseTotal
+        : orderSideTotal;
+
+      const billNo = order.orderNo || order.billNo;
+      let paidDisplay = getPaidAmountForBill(billNo);
+      if (!paidDisplay) paidDisplay = parseFloat(order.advance || 0) || 0;
+
+      const displayNet = netBill;
+      const displayAdvance = paidDisplay;
+      const displayBalance = netBill - paidDisplay;
 
       // Get type from order or from first item
       let orderType = order.type || "Order";
@@ -574,7 +613,7 @@
         <td>${formatDate(order.dueDate)}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
         <td class="right"><strong>₹${displayNet.toFixed(2)}</strong></td>
-        <td class="right">₹${totalAdvance.toFixed(2)}</td>
+        <td class="right">₹${displayAdvance.toFixed(2)}</td>
         <td class="right">₹${displayBalance.toFixed(2)}</td>
         <td class="center">
           <button class="action-btn" onclick="markReady(${order.id}); event.stopPropagation();">✓ Mark Ready</button>

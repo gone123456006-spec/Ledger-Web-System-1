@@ -704,7 +704,8 @@
         </table>
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div class="jw-modal-section-title" style="margin-top:0;">Assigned Items in Process</div>
-          <select id="roJwModalItemsFilter" onchange="roFilterJwModalItems()" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:normal; color:#334155; background:#fff; cursor:pointer;">
+          <select id="roJwModalItemsFilter" onchange="roFilterJwModalItems()"
+            style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:12px; font-weight:normal; color:#334155; background:#fff; cursor:pointer;">
             <option value="ALL">All Status</option>
             <option value="PROCESS">In Process</option>
             <option value="READY">Ready</option>
@@ -771,6 +772,19 @@
 
       console.log("✅ Elements initialized");
       return true;
+    }
+
+    function getPaidAmountForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        const key = String(billNo).trim();
+        return payments
+          .filter(p => p && String(p.billNo || "").trim() === key)
+          .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
     }
 
     /* =========================
@@ -853,9 +867,8 @@
         return;
       }
 
-      // Calculate Order-specific totals
       let displayWeight = 0;
-      let displayAmount = 0;
+      let orderSideTotal = 0;
       let purchaseTotal = 0;
       let itemNames = [];
 
@@ -863,25 +876,22 @@
         order.items.forEach(item => {
           if (!item || !item.values) return;
 
-          const type = item.values[0] || "Order";
+          const type = item.type || item.values[0] || "Order";
           const weight = parseFloat(item.values[9] || item.values[5] || item.values[8] || 0);
           const amount = parseFloat(item.values[12] || item.values[13] || 0);
 
-          if (type === "Order") {
+          if (type === "Purchase") {
+            purchaseTotal += amount;
+          } else {
             displayWeight += weight;
-            displayAmount += amount;
-            
-            // Get item name for Order items (index 2 in latest structure)
+            orderSideTotal += amount;
             const itemName = item.values[2] || item.values[1] || "";
             if (itemName && itemName.trim()) itemNames.push(itemName.trim());
-          } else if (type === "Purchase") {
-            purchaseTotal += amount;
           }
         });
       } else {
-        // Fallback for orders without item details (legacy)
         displayWeight = parseFloat(order.grWt || 0);
-        displayAmount = parseFloat(order.netAmount || 0);
+        orderSideTotal = parseFloat(order.netAmount || 0);
       }
 
       // Format item names
@@ -894,10 +904,17 @@
       const customerName = order.customer || order.customerName || "—";
       const relationName = order.customerRelation || "—";
 
-      // Calculate totals consistent with Order List
-      const cashAdvance = parseFloat(order.advance || 0);
-      const totalAdvance = cashAdvance + purchaseTotal;
-      const displayBalance = displayAmount - totalAdvance;
+      const netBill = order.items && order.items.length > 0
+        ? orderSideTotal - purchaseTotal
+        : orderSideTotal;
+
+      const billNo = order.orderNo || order.billNo;
+      let paidDisplay = getPaidAmountForBill(billNo);
+      if (!paidDisplay) paidDisplay = parseFloat(order.advance || 0) || 0;
+
+      const displayAmount = netBill;
+      const totalAdvance = paidDisplay;
+      const displayBalance = netBill - paidDisplay;
 
       // Create row
       const tr = document.createElement("tr");

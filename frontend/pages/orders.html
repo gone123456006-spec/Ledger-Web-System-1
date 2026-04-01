@@ -61,7 +61,10 @@
       box-sizing: border-box;
     }
 
-    .orders-toolbar h2 { font-size: 20px; font-weight: 600; }
+    .orders-toolbar h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
 
     .btn {
       padding: 10px 18px;
@@ -84,7 +87,9 @@
       box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
     }
 
-    .btn:active { transform: translateY(0); }
+    .btn:active {
+      transform: translateY(0);
+    }
 
     label {
       font-size: 14px;
@@ -113,7 +118,9 @@
       background: #fff;
     }
 
-    input::placeholder { color: #8e8e93; }
+    input::placeholder {
+      color: #8e8e93;
+    }
 
     /* =========================
    TABLE (Customer Balance style)
@@ -155,8 +162,13 @@
       letter-spacing: 0.04em;
     }
 
-    thead th.center { text-align: center; }
-    thead th.right { text-align: right; }
+    thead th.center {
+      text-align: center;
+    }
+
+    thead th.right {
+      text-align: right;
+    }
 
     tbody td {
       padding: 18px;
@@ -183,19 +195,36 @@
       text-transform: capitalize;
     }
 
-    tbody tr { transition: background 0.2s; background: #fff; }
-    tbody tr:nth-child(even) { background: #f8f9fb; }
-    tbody tr:hover { background: #e8f2ff; }
-    tbody tr:hover td { border-color: #b8d4f0; }
+    tbody tr {
+      transition: background 0.2s;
+      background: #fff;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f8f9fb;
+    }
+
+    tbody tr:hover {
+      background: #e8f2ff;
+    }
+
+    tbody tr:hover td {
+      border-color: #b8d4f0;
+    }
 
     tbody tr.selected {
       background: #ffe6e6 !important;
       border-left: 3px solid #ff3b30;
     }
 
-    tbody tr.selected td { border-color: #ffcccc; }
+    tbody tr.selected td {
+      border-color: #ffcccc;
+    }
 
-    .center { text-align: center; }
+    .center {
+      text-align: center;
+    }
+
     .right {
       text-align: right;
       font-weight: 500;
@@ -228,10 +257,24 @@
     /* =========================
    SCROLLBAR (Customer Balance style)
 ========================= */
-    .table-wrap::-webkit-scrollbar { width: 12px; height: 12px; }
-    .table-wrap::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb { background: #b0b4b8; border-radius: 6px; }
-    .table-wrap::-webkit-scrollbar-thumb:hover { background: #a1a1a6; }
+    .table-wrap::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: #f0f2f5;
+      border-radius: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #b0b4b8;
+      border-radius: 6px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a6;
+    }
 
     /* =========================
    RESPONSIVE
@@ -380,6 +423,20 @@
       return true;
     }
 
+    /** Sum of payment rows for this bill (same idea as new-order getPaidAmount). */
+    function getPaidAmountForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        const key = String(billNo).trim();
+        return payments
+          .filter(p => p && String(p.billNo || "").trim() === key)
+          .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    }
+
     /* =========================
        LOAD ORDERS
     ========================= */
@@ -412,34 +469,41 @@
           const row = document.createElement("tr");
           row.dataset.orderId = order.id;
 
-          // Calculate Order-specific totals and Purchase total
+          // Same rules as new-order: non-Purchase lines add; Purchase subtracts from net bill;
+          // Advance column = paid only; Balance = net bill − paid (do not add purchase into advance).
           let displayGrWt = 0;
-          let displayNet = 0;
+          let orderSideTotal = 0;
           let purchaseTotal = 0;
 
           if (order.items && order.items.length > 0) {
             order.items.forEach(item => {
-              const type = item.type || "Order";
-              // Gr.Wt is index 9, Net is index 12
+              const type = item.type || (item.values && item.values[0]) || "Order";
               const grWt = parseFloat(item.values[9] || 0);
               const net = parseFloat(item.values[12] || 0);
 
-              if (type === "Order") {
-                displayGrWt += grWt;
-                displayNet += net;
-              } else if (type === "Purchase") {
+              if (type === "Purchase") {
                 purchaseTotal += net;
+              } else {
+                displayGrWt += grWt;
+                orderSideTotal += net;
               }
             });
           } else {
-            // Fallback for orders without item details (legacy)
             displayGrWt = parseFloat(order.grWt || 0);
-            displayNet = parseFloat(order.netAmount || 0);
+            orderSideTotal = parseFloat(order.netAmount || 0);
           }
 
-          const cashAdvance = parseFloat(order.advance || 0);
-          const totalAdvance = cashAdvance + purchaseTotal;
-          const displayBalance = displayNet - totalAdvance;
+          const netBill = order.items && order.items.length > 0
+            ? orderSideTotal - purchaseTotal
+            : orderSideTotal;
+
+          const billNo = order.orderNo || order.billNo;
+          let paidDisplay = getPaidAmountForBill(billNo);
+          if (!paidDisplay) paidDisplay = parseFloat(order.advance || 0) || 0;
+
+          const displayNet = netBill;
+          const displayAdvance = paidDisplay;
+          const displayBalance = netBill - paidDisplay;
 
           const isMarked = order.marked === true;
           row.innerHTML = `
@@ -453,7 +517,7 @@
         <td>${order.dueDate || "-"}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
         <td class="right">${displayNet.toFixed(2)}</td>
-        <td class="right">${totalAdvance.toFixed(2)}</td>
+        <td class="right">${displayAdvance.toFixed(2)}</td>
         <td class="right">${displayBalance.toFixed(2)}</td>
         <td class="center">
           <button class="btn" onclick="editOrder(${order.id}); event.stopPropagation();" style="padding:4px 12px; font-size:12px;">Edit</button>
@@ -552,7 +616,7 @@
       try {
         console.log("=== EDIT ORDER START ===");
         console.log("Order ID:", orderId);
-        
+
         // Clear ALL previous state flags first to prevent conflicts
         const keysToRemove = [
           "editOrderId",
@@ -564,7 +628,7 @@
           "returnToOrders",
           "selectedCustomerData"
         ];
-        
+
         keysToRemove.forEach(key => localStorage.removeItem(key));
 
         // Get the order data
@@ -607,12 +671,12 @@
         const orderSnapshot = {
           // ===== EDIT MODE FLAG =====
           isEditMode: true,
-          
+
           // ===== CORE IDENTIFIERS =====
           id: order.id,
           orderNo: order.orderNo || order.billNo || "",
           billNo: order.billNo || order.orderNo || "",
-          
+
           // ===== CUSTOMER INFORMATION (names new-order.html loadOrderForEdit expects) =====
           customerId: customerInfo.id || order.customerId || "",
           customer: customerInfo.name,
@@ -623,34 +687,34 @@
           customerRelation: customerInfo.relation,
           station: customerInfo.station,
           customerStation: customerInfo.station,
-          
+
           // Additional customer fields (if they exist in your form)
           customerPhone: order.customerPhone || "",
           customerEmail: order.customerEmail || "",
           customerAddress: order.customerAddress || "",
-          
+
           // ===== BILL INFORMATION =====
           orderDate: order.orderDate || "",
           dueDate: order.dueDate || "",
           hallmark: order.hallmark || "",
           type: order.type || "Order",
-          
+
           // ===== ORDER DETAILS - ITEMS ARRAY =====
           items: order.items || [],
-          
+
           // ===== FINANCIAL INFORMATION =====
           netAmount: order.netAmount || 0,
           advance: order.advance || 0,
           balance: order.balance || 0,
-          
+
           // ===== CALCULATED TOTALS =====
           pc: order.pc || 0,
           grWt: order.grWt || 0,
-          
+
           // ===== STATUS AND METADATA =====
           status: order.status || "",
           timestamp: order.timestamp || new Date().toISOString(),
-          
+
           // ===== ANY OTHER CUSTOM FIELDS =====
           ...order
         };
@@ -666,13 +730,13 @@
 
         // Store order ID for the edit mode
         localStorage.setItem("editOrderId", String(orderId));
-        
+
         // Store complete order snapshot
         localStorage.setItem("editOrderPayload", JSON.stringify(orderSnapshot));
-        
+
         // Customer is always editable; do not set read-only flag
 
-        
+
         // Set flag to indicate we're coming from orders page
         localStorage.setItem("returnToOrders", "true");
 

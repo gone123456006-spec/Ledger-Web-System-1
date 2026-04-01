@@ -39,7 +39,7 @@
             font-family: var(--font-main);
             background: var(--bg);
             color: var(--text);
-            font-size: 16px;
+            font-size: 14px;
             height: 100vh;
             overflow: hidden;
             display: flex;
@@ -72,8 +72,8 @@
         .toolbar {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 16px 24px;
+            gap: 10px;
+            padding: 10px 14px;
             border-bottom: 1px solid var(--border);
             background: #ffffff;
             flex-shrink: 0;
@@ -88,7 +88,7 @@
         }
 
         .toolbar-left h2 {
-            font-size: 26px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--text);
             letter-spacing: -0.02em;
@@ -96,20 +96,20 @@
         }
 
         .toolbar-left .subtitle {
-            font-size: 15px;
+            font-size: 12px;
             color: var(--muted);
             margin-top: 2px;
         }
 
         /* ── CUSTOMER INFO CARD ── */
         .info-card {
-            margin: 16px 24px 0;
-            padding: 16px 20px;
+            margin: 10px 14px 0;
+            padding: 10px 12px;
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             border: 1px solid #bfdbfe;
             border-radius: 12px;
             display: flex;
-            gap: 40px;
+            gap: 18px;
             flex-wrap: wrap;
             flex-shrink: 0;
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
@@ -130,7 +130,7 @@
         }
 
         .info-value {
-            font-size: 17px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--text);
         }
@@ -140,20 +140,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 24px 12px;
+            padding: 10px 14px 8px;
             flex-shrink: 0;
             flex-wrap: wrap;
             gap: 10px;
         }
 
         .stmt-title {
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 700;
             color: var(--text);
         }
 
         .op-bal-tag {
-            font-size: 15px;
+            font-size: 12px;
             color: var(--muted);
         }
 
@@ -173,7 +173,7 @@
 
         table {
             width: 100%;
-            min-width: 800px;
+            min-width: 820px;
             border-collapse: collapse;
             table-layout: fixed;
         }
@@ -202,12 +202,12 @@
             width: 150px;
         }
 
-        col.col-int {
-            width: 120px;
-        }
-
         col.col-clr {
             width: 90px;
+        }
+
+        col.col-int {
+            width: 100px;
         }
 
         .int-cal-cell {
@@ -215,7 +215,7 @@
             font-variant-numeric: tabular-nums;
             color: #7c3aed;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
         }
 
         th.col-int-th {
@@ -223,10 +223,29 @@
             color: #7c3aed !important;
         }
 
-        /* Hide Interest Cal column when not calculated */
-        table.hide-int-col .int-cal-cell,
-        table.hide-int-col th.col-int-th {
-            display: none;
+        .interest-table-wrap {
+            overflow: auto;
+            max-height: min(42vh, 340px);
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fafafa;
+        }
+
+        .interest-section .interest-module-table {
+            min-width: 900px;
+            margin: 0;
+            background: var(--card);
+        }
+
+        .interest-section .interest-module-table thead th {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .interest-section .interest-module-table tbody td {
+            padding: 8px 10px;
+            font-size: 12px;
         }
 
         thead {
@@ -238,9 +257,9 @@
         thead th {
             background: #f1f5f9;
             border: 1px solid var(--border);
-            padding: 16px 20px;
+            padding: 10px 12px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 12px;
             color: var(--muted);
             text-transform: uppercase;
             letter-spacing: 0.08em;
@@ -257,9 +276,9 @@
         }
 
         tbody td {
-            padding: 20px 22px;
+            padding: 10px 12px;
             border: 1px solid var(--border);
-            font-size: 16px;
+            font-size: 13px;
             color: var(--text);
             vertical-align: middle;
             line-height: 1.5;
@@ -428,10 +447,10 @@
         .actions-bar {
             display: flex;
             justify-content: space-between;
-            padding: 16px 24px;
+            padding: 10px 14px;
             background: #ffffff;
             border-top: 1px solid var(--border);
-            gap: 12px;
+            gap: 10px;
             flex-shrink: 0;
             flex-wrap: wrap;
         }
@@ -439,17 +458,17 @@
         .actions-left,
         .actions-right {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
 
         /* ── BUTTONS ── */
         .btn {
-            padding: 12px 24px;
+            padding: 8px 12px;
             border: 1px solid var(--border);
             background: #ffffff;
             cursor: pointer;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 13px;
             font-weight: 500;
             color: var(--text);
             font-family: inherit;
@@ -459,7 +478,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn:hover {
@@ -710,20 +729,20 @@
         }
 
         .interest-section {
-            margin: 0 24px 16px;
-            padding: 20px;
+            margin: 0 14px 10px;
+            padding: 10px 12px 12px;
             background: #ffffff;
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 10px;
             box-shadow: var(--shadow-sm);
         }
 
         .interest-section legend {
-            padding: 0 10px;
-            font-size: 13px;
+            padding: 0 6px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
@@ -733,51 +752,76 @@
         .int-row {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 10px 12px;
             flex-wrap: wrap;
         }
 
         .int-field {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
         }
 
         .int-field label {
-            font-size: 15px;
-            font-weight: 500;
+            font-size: 12px;
+            font-weight: 600;
             color: var(--text);
             white-space: nowrap;
         }
 
         .int-field input {
-            padding: 8px 12px;
+            padding: 4px 8px;
             border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 15px;
+            border-radius: 6px;
+            font-size: 12px;
             font-family: inherit;
-            width: 80px;
+            width: 56px;
             outline: none;
+            min-height: 28px;
+            box-sizing: border-box;
+        }
+
+        .int-field input#int_comp_inline {
+            width: 88px;
         }
 
         .int-field input[type="date"] {
-            width: 160px;
+            width: 124px;
+            min-height: 28px;
         }
 
         .int-field input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-soft);
+            box-shadow: 0 0 0 2px var(--primary-soft);
+        }
+
+        .interest-section .int-row > .btn-success {
+            padding: 5px 9px;
+            font-size: 11px;
+            border-radius: 6px;
+            box-shadow: none;
+            gap: 4px;
+        }
+
+        .interest-section .int-row > .btn-success:hover {
+            transform: translateY(-1px);
         }
 
         .btn-play {
-            width: 42px;
-            height: 42px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
             padding: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
-            font-size: 18px;
+            border-radius: 7px;
+            font-size: 13px;
+            box-shadow: none;
+        }
+
+        .interest-section .btn-play:hover {
+            transform: translateY(-1px);
         }
 
         /* Highlight for Interest Rows */
@@ -838,7 +882,6 @@
             </span>
         </div>
 
-        <!-- INTEREST SECTION -->
         <fieldset id="interestSection" class="interest-section" style="display:none;">
             <legend>Interest</legend>
             <div class="int-row">
@@ -859,6 +902,31 @@
                 <button id="applyIntInline" class="btn btn-success" style="display:none;"
                     onclick="applyInterestInline()">✅ Add as Debit</button>
             </div>
+            <div class="interest-table-wrap" id="interestTableWrap">
+                <table class="interest-module-table">
+                    <colgroup>
+                        <col class="col-ind">
+                        <col class="col-date">
+                        <col class="col-nar">
+                        <col class="col-cr">
+                        <col class="col-dr">
+                        <col class="col-bal">
+                        <col class="col-int">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="center">#</th>
+                            <th>Date</th>
+                            <th>Narration</th>
+                            <th class="right">Credit</th>
+                            <th class="right">Debit</th>
+                            <th class="right">Balance</th>
+                            <th class="right col-int-th" id="thIntCalModule">Interest Cal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interestModuleBody"></tbody>
+                </table>
+            </div>
             <div id="interestResultInline" class="interest-result" style="display:none;"></div>
         </fieldset>
 
@@ -872,7 +940,6 @@
                     <col class="col-cr">
                     <col class="col-dr">
                     <col class="col-bal">
-                    <col class="col-int">
                     <col class="col-clr">
                 </colgroup>
                 <thead>
@@ -883,7 +950,6 @@
                         <th class="right">Credit</th>
                         <th class="right">Debit</th>
                         <th class="right">Balance</th>
-                        <th class="right col-int-th" id="thIntCal">Interest Cal</th>
                         <th class="center">Cleared</th>
                     </tr>
                 </thead>
@@ -941,8 +1007,440 @@
         let pendingInterest = 0;
         let deleteTargetIdx = null;
         let draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
-        // Map: tx.id -> calculated row interest (populated by calculateAllInterest)
+        /** Draft row(s) at bottom of Interest module table (same flow as Account Statement). */
+        let interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '' }];
         let rowInterestMap = {};
+        /** Recorded interest applied from this module only (not Account Statement rows). */
+        let interestApplied = [];
+        let interestHasCalcResult = false;
+        let interestLastCompMonth = 0;
+
+        function stmtStorageKey() {
+            return 'stmt_' + (customerData.lfNo || customerData.name);
+        }
+
+        function interestModuleStorageKey() {
+            return stmtStorageKey() + '_interestModule';
+        }
+
+        function loadInterestModulePayload(obj) {
+            if (!obj || typeof obj !== 'object') return;
+            rowInterestMap = obj.rowInterestMap && typeof obj.rowInterestMap === 'object' ? obj.rowInterestMap : {};
+            pendingInterest = parseFloat(obj.pendingInterest) || 0;
+            interestApplied = Array.isArray(obj.interestApplied) ? obj.interestApplied : [];
+            interestHasCalcResult = !!obj.interestHasCalcResult;
+            interestLastCompMonth = parseInt(obj.interestLastCompMonth, 10) || 0;
+            const rateEl = document.getElementById('int_rate_inline');
+            const compEl = document.getElementById('int_comp_inline');
+            const toEl = document.getElementById('int_to_inline');
+            if (obj.intRate != null && rateEl) rateEl.value = obj.intRate;
+            if (obj.intComp != null && compEl) compEl.value = obj.intComp;
+            if (obj.intTo != null && toEl) toEl.value = obj.intTo;
+        }
+
+        function saveInterestModule() {
+            try {
+                const key = interestModuleStorageKey();
+                const rateEl = document.getElementById('int_rate_inline');
+                const compEl = document.getElementById('int_comp_inline');
+                const toEl = document.getElementById('int_to_inline');
+                const payload = {
+                    rowInterestMap,
+                    pendingInterest,
+                    interestApplied,
+                    interestHasCalcResult,
+                    interestLastCompMonth,
+                    intRate: rateEl ? rateEl.value : '',
+                    intComp: compEl ? compEl.value : '',
+                    intTo: toEl ? toEl.value : ''
+                };
+                localStorage.setItem(key, JSON.stringify(payload));
+                try { localStorage.removeItem(stmtStorageKey() + '_intMap'); } catch (e2) { }
+            } catch (e) { }
+        }
+
+        function renderInterestTable() {
+            const tbody = document.getElementById('interestModuleBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const opening = parseFloat(customerData.openingBalance || 0) || 0;
+            const billsSum = getCustomerBillsSumFromBalances();
+            let balance = opening + billsSum;
+
+            function makeIntCell(initialVal, isNum, onBlur) {
+                const td = document.createElement('td');
+                if (isNum) td.className = 'right';
+                const span = document.createElement('span');
+                span.contentEditable = 'true';
+                span.textContent = initialVal || '';
+                span.style.cssText = `
+                    display:block; min-width:30px; outline:none;
+                    font-family:inherit; font-size:12px; color:inherit;
+                    border-bottom: 1px dashed transparent;
+                `;
+                if (isNum) span.style.textAlign = 'right';
+                span.addEventListener('focus', () => {
+                    span.style.borderBottomColor = '#aac4e8';
+                });
+                span.addEventListener('blur', () => {
+                    span.style.borderBottomColor = 'transparent';
+                    if (onBlur) onBlur(span.textContent);
+                });
+                span.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        span.blur();
+                    }
+                });
+                td.appendChild(span);
+                return { td, span };
+            }
+
+            function appendIntRowStatic(idxTxt, dateStr, narText, crTxt, drTxt, balHtml, intCellHtml, intTitle, rowClass) {
+                const tr = document.createElement('tr');
+                if (rowClass) tr.className = rowClass;
+                const tdHtml = (cls, html) => {
+                    const c = document.createElement('td');
+                    if (cls) c.className = cls;
+                    c.innerHTML = html;
+                    return c;
+                };
+                const tdText = (cls, text) => {
+                    const c = document.createElement('td');
+                    if (cls) c.className = cls;
+                    c.textContent = text == null ? '' : String(text);
+                    return c;
+                };
+                const tdI = document.createElement('td');
+                tdI.className = 'int-cal-cell';
+                tdI.innerHTML = intCellHtml;
+                if (intTitle) tdI.title = intTitle;
+                tr.append(
+                    tdText('center', idxTxt),
+                    tdText('', dateStr),
+                    tdText('', narText),
+                    tdHtml('right', crTxt),
+                    tdHtml('right', drTxt),
+                    tdHtml('right', balHtml),
+                    tdI
+                );
+                tbody.appendChild(tr);
+            }
+
+            function intCellContent(intData) {
+                if (intData === null) return { html: 'N/A', title: '' };
+                if (intData != null && intData.amount !== undefined && intData.amount !== 0) {
+                    const t = intData.manual ? 'Manual' : (intData.days != null
+                        ? `${intData.days} days @ ${intData.rate}% on ₹${fmt(Math.abs(intData.principal))}`
+                        : '');
+                    return {
+                        html: fmt(Math.abs(intData.amount)),
+                        title: t
+                    };
+                }
+                return { html: '—', title: '' };
+            }
+
+            const opInt = rowInterestMap['__op__'];
+            const showOpRow = (opening !== 0 || !!customerData.openingDate) && (sorted.length > 0 || opInt != null);
+            if (showOpRow) {
+                const ic = intCellContent(opInt);
+                const absb = Math.abs(balance);
+                const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+                const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
+                appendIntRowStatic(
+                    '—',
+                    fmtDate(customerData.openingDate) || '—',
+                    'Opening Balance',
+                    '',
+                    '',
+                    `${fmt(absb)} <span class="${tagClass}">${tag}</span>`,
+                    ic.html,
+                    ic.title,
+                    ''
+                );
+            }
+
+            sorted.forEach((tx, i) => {
+                balance += txDelta(tx);
+                const absbal = Math.abs(balance);
+                const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+                const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
+
+                const tr = document.createElement('tr');
+                if (tx.narration === 'Interest') tr.classList.add('interest-row');
+
+                const tdIdx = document.createElement('td');
+                tdIdx.className = 'center';
+                tdIdx.style.cssText = 'color:var(--muted);font-size:11px;';
+                tdIdx.textContent = tx.cleared ? '✔' : String(i + 1);
+
+                const updateTxInt = (field, val) => {
+                    const orig = transactions.find(t => t.id === tx.id);
+                    if (!orig) return;
+                    if (field === 'date') {
+                        const parts = val.trim().split(/[-\/]/);
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) orig.date = val.trim();
+                            else orig.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        }
+                    } else if (field === 'narration') {
+                        orig.narration = val.trim();
+                    } else if (field === 'credit') {
+                        orig.credit = readMoney(val);
+                        if (!orig.entryType && orig.credit !== 0) orig.entryType = 'credit';
+                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
+                    } else if (field === 'debit') {
+                        orig.debit = readMoney(val);
+                        if (!orig.entryType && orig.debit !== 0) orig.entryType = 'debit';
+                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
+                    }
+                    saveTransactions();
+                    render();
+                };
+
+                const eff0 = effectiveAmounts(tx);
+                const { td: tdDate } = makeIntCell(fmtDate(tx.date), false, (v) => updateTxInt('date', v));
+                const { td: tdNar } = makeIntCell(tx.narration || '', false, (v) => updateTxInt('narration', v));
+                const { td: tdCr } = makeIntCell(eff0.credit ? fmt(eff0.credit) : '', true, (v) => updateTxInt('credit', v));
+                const { td: tdDr } = makeIntCell(eff0.debit ? fmt(eff0.debit) : '', true, (v) => updateTxInt('debit', v));
+
+                const tdBal = document.createElement('td');
+                tdBal.className = 'right';
+                tdBal.innerHTML = `${fmt(absbal)} <span class="${tagClass}">${tag}</span>`;
+
+                const intData = rowInterestMap[tx.id];
+                const ic = intCellContent(intData);
+                const tdInt = document.createElement('td');
+                tdInt.className = 'int-cal-cell';
+                const spInt = document.createElement('span');
+                spInt.contentEditable = 'true';
+                if (ic.html === 'N/A') spInt.textContent = 'N/A';
+                else if (ic.html === '—') spInt.textContent = '';
+                else spInt.textContent = ic.html;
+                spInt.title = ic.title || '';
+                spInt.style.cssText = `
+                    display:block; min-width:30px; outline:none;
+                    font-family:inherit; font-size:12px; color:inherit;
+                    border-bottom: 1px dashed transparent;
+                `;
+                spInt.style.textAlign = 'right';
+                spInt.addEventListener('focus', () => {
+                    spInt.style.borderBottomColor = '#aac4e8';
+                });
+                spInt.addEventListener('blur', () => {
+                    spInt.style.borderBottomColor = 'transparent';
+                    const raw = spInt.textContent.trim();
+                    if (raw === '' || raw === '—') {
+                        delete rowInterestMap[tx.id];
+                    } else if (raw.toUpperCase() === 'N/A') {
+                        rowInterestMap[tx.id] = null;
+                    } else {
+                        const n = readMoney(raw);
+                        if (n === 0) delete rowInterestMap[tx.id];
+                        else rowInterestMap[tx.id] = { amount: n, manual: true };
+                    }
+                    saveInterestModule();
+                    renderInterestTable();
+                });
+                spInt.addEventListener('keydown', e => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        spInt.blur();
+                    }
+                });
+                tdInt.appendChild(spInt);
+
+                tr.append(tdIdx, tdDate, tdNar, tdCr, tdDr, tdBal, tdInt);
+                tbody.appendChild(tr);
+            });
+
+            interestApplied.forEach((ap, j) => {
+                const tr = document.createElement('tr');
+                tr.className = 'interest-row';
+
+                const tdIdx = document.createElement('td');
+                tdIdx.className = 'center';
+                tdIdx.style.cssText = 'color:var(--muted);font-size:11px;';
+                tdIdx.textContent = '⊕';
+
+                const updateAp = (field, val) => {
+                    const rec = interestApplied[j];
+                    if (!rec) return;
+                    if (field === 'date') {
+                        const parts = val.trim().split(/[-\/]/);
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) rec.date = val.trim();
+                            else rec.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        }
+                    } else if (field === 'narration') {
+                        rec.narration = val.trim();
+                    } else if (field === 'debit') {
+                        rec.amount = readMoney(val);
+                    }
+                    saveInterestModule();
+                    renderInterestTable();
+                };
+
+                const narLabel = ap.narration || 'Interest (recorded in Interest module)';
+                const { td: tdDate } = makeIntCell(fmtDate(ap.date), false, (v) => updateAp('date', v));
+                const { td: tdNar } = makeIntCell(narLabel, false, (v) => updateAp('narration', v));
+                const tdCr = document.createElement('td');
+                tdCr.className = 'right';
+                tdCr.innerHTML = '';
+                const { td: tdDr } = makeIntCell((parseFloat(ap.amount) || 0) ? fmt(parseFloat(ap.amount)) : '', true, (v) => updateAp('debit', v));
+
+                const tdBal = document.createElement('td');
+                tdBal.className = 'right';
+                tdBal.innerHTML = '—';
+
+                const tdInt = document.createElement('td');
+                tdInt.className = 'int-cal-cell';
+                tdInt.textContent = '—';
+
+                tr.append(tdIdx, tdDate, tdNar, tdCr, tdDr, tdBal, tdInt);
+                tbody.appendChild(tr);
+            });
+
+            interestDraftRows.forEach((draft, dIdx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'today-row';
+
+                const tdHash = document.createElement('td');
+                tdHash.className = 'center';
+                tdHash.style.cssText = 'font-size:12px; font-weight:700;';
+                tdHash.textContent = '»';
+
+                const saveInterestDraft = () => {
+                    const narVal = spNar.textContent.trim();
+                    const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
+                    const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
+                    if (!narVal && crRaw === 0 && drRaw === 0) return;
+
+                    let dateVal = todayStr();
+                    const dateTxt = spDate.textContent.trim();
+                    if (dateTxt) {
+                        const parts = dateTxt.split(/[-\/]/);
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) dateVal = dateTxt;
+                            else dateVal = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                        }
+                    }
+
+                    const newId = nextId++;
+                    transactions.push({
+                        id: newId, date: dateVal, narration: narVal || '',
+                        debit: drRaw, credit: crRaw,
+                        entryType: (crRaw !== 0 ? 'credit' : (drRaw !== 0 ? 'debit' : null)), cleared: false
+                    });
+
+                    const intRaw = spInt.textContent.trim();
+                    if (intRaw.toUpperCase() === 'N/A') {
+                        rowInterestMap[newId] = null;
+                    } else if (intRaw !== '' && intRaw !== '—') {
+                        const n = readMoney(intRaw);
+                        if (n !== 0) rowInterestMap[newId] = { amount: n, manual: true };
+                    }
+
+                    interestDraftRows.splice(dIdx, 1);
+                    if (interestDraftRows.length === 0) {
+                        interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '' }];
+                    }
+
+                    saveTransactions();
+                    saveInterestModule();
+                    render();
+                    showToast('✅ Row saved');
+
+                    setTimeout(() => {
+                        const rows = document.querySelectorAll('#interestModuleBody tr.today-row');
+                        const lastDraft = rows[rows.length - 1];
+                        if (lastDraft && document.getElementById('interestSection')?.style.display === 'block') {
+                            const sp = lastDraft.querySelector('span[contenteditable="true"]');
+                            if (sp) {
+                                sp.focus();
+                                const range = document.createRange();
+                                const sel = window.getSelection();
+                                range.selectNodeContents(sp);
+                                range.collapse(false);
+                                sel.removeAllRanges();
+                                sel.addRange(range);
+                            }
+                        }
+                    }, 60);
+                };
+
+                const { td: tdDate, span: spDate } = makeIntCell(draft.date || fmtDate(todayStr()), false, () => { });
+                const { td: tdNar, span: spNar } = makeIntCell(draft.nar, false, () => { });
+                const { td: tdCr, span: spCr } = makeIntCell(draft.cr, true, () => { });
+                const { td: tdDr, span: spDr } = makeIntCell(draft.dr, true, () => { });
+
+                const tdBal = document.createElement('td');
+                tdBal.className = 'right';
+                tdBal.style.fontWeight = '700';
+                const rowAbsbal = Math.abs(balance);
+                const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+                tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
+
+                const { td: tdInt, span: spInt } = makeIntCell(draft.int || '', true, () => { });
+
+                [spDate, spNar, spCr, spDr, spInt].forEach((sp, idx) => {
+                    sp.addEventListener('input', () => {
+                        if (idx === 0) draft.date = sp.textContent;
+                        if (idx === 1) draft.nar = sp.textContent;
+                        if (idx === 2) draft.cr = sp.textContent;
+                        if (idx === 3) draft.dr = sp.textContent;
+                        if (idx === 4) draft.int = sp.textContent;
+                    });
+                    sp.addEventListener('keydown', e => {
+                        if (e.key === 'Enter' || e.key === 'Tab' && idx === 4) {
+                            e.preventDefault();
+                            saveInterestDraft();
+                        }
+                        if (e.key === 'Escape') {
+                            if (interestDraftRows.length > 1) {
+                                interestDraftRows.splice(dIdx, 1);
+                                renderInterestTable();
+                            } else {
+                                draft.date = '';
+                                draft.nar = '';
+                                draft.cr = '';
+                                draft.dr = '';
+                                draft.int = '';
+                                renderInterestTable();
+                            }
+                        }
+                    });
+                });
+
+                tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdInt);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function restoreInterestResultPanel() {
+            const res = document.getElementById('interestResultInline');
+            const applyBtn = document.getElementById('applyIntInline');
+            if (!interestHasCalcResult || !pendingInterest) {
+                if (res) res.style.display = 'none';
+                if (applyBtn) applyBtn.style.display = 'none';
+                return;
+            }
+            if (res) {
+                res.style.display = 'block';
+                res.innerHTML = `
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:600; color:var(--text); font-size:15px;">Net Interest Payable</span>
+                        <span style="font-weight:400; font-size:12px; color:var(--muted);">${interestLastCompMonth > 0 ? 'Compounding' : 'Simple'} Method (hover rows for details)</span>
+                    </div>
+                    <span style="font-size:22px; font-weight:800; color:var(--danger);">₹ ${fmt(pendingInterest)}</span>
+                </div>
+            `;
+            }
+            if (applyBtn) applyBtn.style.display = 'inline-block';
+        }
 
         // ─── HELPERS ─────────────────────────────────────────────────────────────────
         function showToast(msg) {
@@ -973,23 +1471,51 @@
             if (!n || isNaN(n)) return '0.00';
             return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
         }
+
+        function readMoney(v) {
+            const n = parseFloat(String(v || '').replace(/,/g, ''));
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        // Per-row rule: first non-zero input decides whether row is credit or debit.
+        // The other side stays editable but is ignored in calculations.
+        function normalizeEntryType(tx) {
+            if (!tx) return;
+            const cr = readMoney(tx.credit);
+            const dr = readMoney(tx.debit);
+            if (!tx.entryType) {
+                if (cr !== 0) tx.entryType = 'credit';
+                else if (dr !== 0) tx.entryType = 'debit';
+            } else if (cr === 0 && dr === 0) {
+                // Allow re-pick when row is cleared
+                tx.entryType = null;
+            }
+        }
+
+        function effectiveAmounts(tx) {
+            normalizeEntryType(tx);
+            const cr = readMoney(tx.credit);
+            const dr = readMoney(tx.debit);
+            if (tx && tx.entryType === 'credit') return { credit: cr, debit: 0 };
+            if (tx && tx.entryType === 'debit') return { credit: 0, debit: dr };
+            return { credit: cr, debit: dr };
+        }
+
+        function txDelta(tx) {
+            const a = effectiveAmounts(tx);
+            return (a.debit || 0) - (a.credit || 0);
+        }
         function saveTransactions() {
             try {
                 const key = 'stmt_' + (customerData.lfNo || customerData.name);
                 localStorage.setItem(key, JSON.stringify(transactions));
-                // Also persist the interest calculation map so it survives page reload
-                if (Object.keys(rowInterestMap).length > 0) {
-                    localStorage.setItem(key + '_intMap', JSON.stringify(rowInterestMap));
-                } else {
-                    localStorage.removeItem(key + '_intMap');
-                }
             } catch (e) { }
 
             // ── Sync net balance back to customer record ──────────────────────────
             // Compute current net balance: opening + sum of (debit - credit)
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             let balance = customerData.openingBalance || 0;
-            sorted.forEach(tx => { balance += (tx.debit || 0) - (tx.credit || 0); });
+            sorted.forEach(tx => { balance += txDelta(tx); });
             const netBalance = Math.abs(balance);
             const netType = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : 'Dr');
 
@@ -1045,19 +1571,36 @@
 
         // ─── RENDER ──────────────────────────────────────────────────────────────────
         // ─── RENDER ──────────────────────────────────────────────────────────────────
+        function getCustomerBillsSumFromBalances() {
+            try {
+                const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+                const norm = (s) => (s || "").trim().toLowerCase();
+                const nameNorm = norm(customerData.name);
+                const cidNorm = customerData.cid ? norm(customerData.cid) : "";
+                return balances
+                    .filter(b => b && (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm)))
+                    .reduce((sum, b) => {
+                        if (b.computedBalAmt != null && b.computedBalAmt !== "") return sum + (parseFloat(b.computedBalAmt) || 0);
+                        const amt = parseFloat(b.amount || b.netAmount || 0);
+                        let rateDiff = 0;
+                        if (b.amountMinusRateDiff != null && b.amount != null) {
+                            rateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+                        }
+                        return sum + (amt - rateDiff);
+                    }, 0);
+            } catch (e) { return 0; }
+        }
+
         function render() {
             const tbody = document.getElementById('statementBody');
             tbody.innerHTML = '';
 
-            // Toggle Interest Cal column visibility via CSS class on the table
-            const tableEl = tbody.closest('table');
-            const hasIntCalc = Object.keys(rowInterestMap).length > 0;
-            if (tableEl) {
-                tableEl.classList.toggle('hide-int-col', !hasIntCalc);
-            }
-
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            let balance = customerData.openingBalance;
+            // Opening Balance: always from Add Customer.
+            // Current Balance: bills total (Customer Balance) added on top of Opening Balance.
+            const opening = parseFloat(customerData.openingBalance || 0) || 0;
+            const billsSum = getCustomerBillsSumFromBalances();
+            let balance = opening + billsSum;
 
             // Updated helper to make editable cell
             function makeCell(initialVal, isNum, onBlur) {
@@ -1109,9 +1652,13 @@
                     } else if (field === 'narration') {
                         orig.narration = val.trim();
                     } else if (field === 'credit') {
-                        orig.credit = parseFloat(val.replace(/,/g, '')) || 0;
+                        orig.credit = readMoney(val);
+                        if (!orig.entryType && orig.credit !== 0) orig.entryType = 'credit';
+                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
                     } else if (field === 'debit') {
-                        orig.debit = parseFloat(val.replace(/,/g, '')) || 0;
+                        orig.debit = readMoney(val);
+                        if (!orig.entryType && orig.debit !== 0) orig.entryType = 'debit';
+                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
                     }
                     saveTransactions();
                     render();
@@ -1128,7 +1675,7 @@
                 tr.appendChild(tdCr);
                 tr.appendChild(tdDr);
 
-                balance += tx.debit - tx.credit;
+                balance += txDelta(tx);
                 const absbal = Math.abs(balance);
                 const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
                 const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
@@ -1137,20 +1684,6 @@
                 tdBal.className = 'right';
                 tdBal.innerHTML = `${fmt(absbal)} <span class="${tagClass}">${tag}</span>`;
                 tr.appendChild(tdBal);
-
-                // Interest Cal column cell
-                const tdIntCal = document.createElement('td');
-                tdIntCal.className = 'int-cal-cell';
-                const intData = rowInterestMap[tx.id];
-                if (intData != null && intData.amount !== 0) {
-                    tdIntCal.textContent = fmt(Math.abs(intData.amount));
-                    tdIntCal.title = `${intData.days} days @ ${intData.rate}% on ₹${fmt(Math.abs(intData.principal))}`;
-                } else if (intData === null) {
-                    tdIntCal.textContent = 'N/A';
-                } else {
-                    tdIntCal.textContent = '—';
-                }
-                tr.appendChild(tdIntCal);
 
                 const tdClr = document.createElement('td');
                 tdClr.className = 'center';
@@ -1211,7 +1744,7 @@
 
                     transactions.push({
                         id: nextId++, date: dateVal, narration: narVal || '',
-                        debit: drRaw, credit: crRaw, cleared: false
+                        debit: drRaw, credit: crRaw, entryType: (crRaw !== 0 ? 'credit' : (drRaw !== 0 ? 'debit' : null)), cleared: false
                     });
 
                     draftRows.splice(dIdx, 1);
@@ -1253,17 +1786,12 @@
                 const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
                 tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
 
-                // Draft row: empty interest cal cell
-                const tdDraftInt = document.createElement('td');
-                tdDraftInt.className = 'int-cal-cell';
-                tdDraftInt.textContent = '—';
-
                 const tdClr = document.createElement('td');
                 tdClr.className = 'center';
                 tdClr.style.color = 'var(--muted)';
                 tdClr.textContent = '—';
 
-                tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdDraftInt, tdClr);
+                tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdClr);
                 tbody.appendChild(tr);
             });
 
@@ -1276,27 +1804,45 @@
                 balEl.className = 'bal-value ' + (balance > 0 ? 'bal-dr' : 'bal-cr');
             }
 
+            // Auto "Clear Bill": when final balance becomes zero, tick cleared automatically.
+            // Keep inputs editable; we only change the cleared flag.
+            if (Math.abs(balance) < 0.000001 && sorted.length > 0) {
+                let changed = false;
+                sorted.forEach(tx => {
+                    const orig = transactions.find(t => t.id === tx.id);
+                    if (orig && !orig.cleared) {
+                        orig.cleared = true;
+                        changed = true;
+                    }
+                });
+                if (changed) saveTransactions();
+            }
+
             document.getElementById('dispName').textContent = customerData.name || '—';
             document.getElementById('dispStation').textContent = customerData.station || '—';
             document.getElementById('dispLfNo').textContent = customerData.lfNo || '—';
             document.getElementById('dispOpBal').textContent = customerData.openingBalance || '0';
             document.getElementById('dispOpDate').textContent = fmtDateLabel(customerData.openingDate);
             document.getElementById('toolbarSubtitle').textContent = (customerData.name || '') + (customerData.station ? ' · ' + customerData.station : '');
+
+            const intSec = document.getElementById('interestSection');
+            if (intSec && intSec.style.display === 'block') renderInterestTable();
         }
 
         // ─── MODALS ───────────────────────────────────────────────────────────────────
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-
         // ─── INTEREST ────────────────────────────────────────────────────────────────
         function openCalcInterest() {
             const sec = document.getElementById('interestSection');
-            if (sec.style.display === 'none') {
+            if (!sec) return;
+            if (sec.style.display === 'none' || sec.style.display === '') {
                 sec.style.display = 'block';
-                document.getElementById('int_to_inline').value = todayStr();
-                document.getElementById('interestResultInline').style.display = 'none';
-                document.getElementById('applyIntInline').style.display = 'none';
+                const toEl = document.getElementById('int_to_inline');
+                if (toEl && !toEl.value) toEl.value = todayStr();
+                renderInterestTable();
+                restoreInterestResultPanel();
             } else {
                 sec.style.display = 'none';
             }
@@ -1330,7 +1876,7 @@
                     if (txDate > uptoDate) { rowInterestMap[tx.id] = { amount: 0 }; return; }
                     const days = Math.round((uptoDate - txDate) / (1000 * 60 * 60 * 24));
                     if (days <= 0) { rowInterestMap[tx.id] = { amount: 0 }; return; }
-                    const amount = tx.debit - tx.credit;
+                    const amount = txDelta(tx);
                     if (amount === 0) { rowInterestMap[tx.id] = { amount: 0 }; return; }
                     rowInterestMap[tx.id] = { amount: (amount * (rate / 100)) * (days / 30), days: days, rate: rate, principal: amount };
                 });
@@ -1339,10 +1885,7 @@
                 sorted.forEach(tx => { rowInterestMap[tx.id] = null; });
             }
 
-            // Show the Interest Cal column via render()
-            // (render() reads rowInterestMap and toggles CSS class on table)
-            render();
-
+            renderInterestTable();
 
             let details = [];
             let totalInterest = 0;
@@ -1376,7 +1919,7 @@
                     }
 
                     if (ev.type === 'tx') {
-                        currentBal += ev.data.debit - ev.data.credit;
+                        currentBal += txDelta(ev.data);
                     } else {
                         const roundedInt = Math.round(currentAccumulatedInterest);
                         details.push(`<b>${fmtDate(ev.date)}</b>: Compounded ₹${fmt(roundedInt)} into principal`);
@@ -1390,11 +1933,11 @@
                 if (finalDays > 0) {
                     currentAccumulatedInterest += (currentBal * (rate / 100)) * (finalDays / 30);
                 }
-                totalInterest = currentBal + currentAccumulatedInterest - (customerData.openingBalance + sorted.reduce((acc, tx) => acc + (tx.debit - tx.credit), 0));
+                totalInterest = currentBal + currentAccumulatedInterest - (customerData.openingBalance + sorted.reduce((acc, tx) => acc + txDelta(tx), 0));
                 // Simplified display for compounding
                 details.push(`<b>Final Balance</b>: ₹${fmt(currentBal)}`);
                 details.push(`<b>Final Period Days</b>: ${finalDays}`);
-                totalInterest = Math.round(currentAccumulatedInterest + (currentBal - (customerData.openingBalance + sorted.reduce((s, t) => s + (t.debit - t.credit), 0))));
+                totalInterest = Math.round(currentAccumulatedInterest + (currentBal - (customerData.openingBalance + sorted.reduce((s, t) => s + txDelta(t), 0))));
             } else {
                 // SIMPLE MODE: Row-wise Breakdown
                 // 1. Opening Balance
@@ -1411,7 +1954,7 @@
                     if (txDate > uptoDate) return;
                     const days = Math.round((uptoDate - txDate) / (1000 * 60 * 60 * 24));
                     if (days <= 0) return;
-                    const amount = tx.debit - tx.credit;
+                    const amount = txDelta(tx);
                     if (amount === 0) return;
                     const txInt = (amount * (rate / 100)) * (days / 30);
                     totalInterest += txInt;
@@ -1421,6 +1964,8 @@
             }
 
             pendingInterest = Math.round(totalInterest);
+            interestHasCalcResult = true;
+            interestLastCompMonth = compMonth;
             const res = document.getElementById('interestResultInline');
             res.style.display = 'block';
             res.innerHTML = `
@@ -1434,19 +1979,21 @@
             `;
             document.getElementById('applyIntInline').style.display = 'inline-block';
             res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            saveInterestModule();
         }
 
         function applyInterestInline() {
             if (!pendingInterest) return;
             const to = document.getElementById('int_to_inline').value;
-            transactions.push({
-                id: nextId++, date: to, narration: 'Interest',
-                debit: pendingInterest, credit: 0, cleared: false
-            });
-            saveTransactions();
+            interestApplied.push({ date: to, amount: pendingInterest, id: Date.now() });
+            pendingInterest = 0;
+            interestHasCalcResult = false;
+            saveInterestModule();
             document.getElementById('interestSection').style.display = 'none';
-            render();
-            showToast('✅ Interest applied');
+            document.getElementById('interestResultInline').style.display = 'none';
+            document.getElementById('applyIntInline').style.display = 'none';
+            renderInterestTable();
+            showToast('✅ Interest saved in Interest module');
         }
 
         // ─── CLEAR BILL ──────────────────────────────────────────────────────────────
@@ -1612,20 +2159,48 @@
                         : 1;
                 }
             } catch (e) { }
-            // ── Step 5: Restore interest calculation map if it was saved
             try {
-                const savedIntMap = localStorage.getItem(stmtKey + '_intMap');
-                if (savedIntMap) {
-                    rowInterestMap = JSON.parse(savedIntMap);
+                const rawMod = localStorage.getItem(stmtKey + '_interestModule');
+                if (rawMod) {
+                    loadInterestModulePayload(JSON.parse(rawMod));
+                } else {
+                    const legacy = localStorage.getItem(stmtKey + '_intMap');
+                    if (legacy) {
+                        rowInterestMap = JSON.parse(legacy);
+                        saveInterestModule();
+                    }
                 }
             } catch (e) { }
         })();
 
         function addRow() {
+            const intSec = document.getElementById('interestSection');
+            const intOpen = intSec && intSec.style.display === 'block';
+            if (intOpen) {
+                interestDraftRows.push({ date: '', nar: '', cr: '', dr: '', int: '' });
+                render();
+                setTimeout(() => {
+                    const allDrafts = document.querySelectorAll('#interestModuleBody tr.today-row');
+                    const lastRow = allDrafts[allDrafts.length - 1];
+                    if (lastRow) {
+                        const sp = lastRow.querySelector('span[contenteditable]');
+                        if (sp) {
+                            sp.focus();
+                            const range = document.createRange();
+                            const sel = window.getSelection();
+                            range.selectNodeContents(sp);
+                            range.collapse(false);
+                            sel.removeAllRanges();
+                            sel.addRange(range);
+                        }
+                    }
+                }, 60);
+                return;
+            }
             draftRows.push({ date: '', nar: '', cr: '', dr: '' });
             render();
             setTimeout(() => {
-                const allDrafts = document.querySelectorAll('.today-row');
+                const allDrafts = document.querySelectorAll('#statementBody tr.today-row');
                 const lastRow = allDrafts[allDrafts.length - 1];
                 if (lastRow) {
                     const sp = lastRow.querySelector('span[contenteditable]');

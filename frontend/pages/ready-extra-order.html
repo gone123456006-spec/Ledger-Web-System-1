@@ -903,10 +903,89 @@
       overflow-y: auto;
     }
 
+    /* Payment panel: Est. Total + Total side by side; list full width below */
+    .panel-content#paymentPanelContent {
+      max-height: none;
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
+
+    .payment-summary-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+      width: 100%;
+    }
+
+    .payment-summary-columns .payment-section-block {
+      min-width: 0;
+    }
+
+    .payment-summary-columns .payment-section--est {
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .payment-section-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin: 0 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #c5cdd8;
+      letter-spacing: 0.03em;
+    }
+
+    .payment-section-block {
+      flex-shrink: 0;
+    }
+
+    .payment-section--est {
+      margin-top: 14px;
+      padding-top: 4px;
+    }
+
+    .payment-section--est .billing-detail {
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .panel-content#paymentPanelContent > .payment-summary-columns,
+    .panel-content#paymentPanelContent > .panel-list {
+      flex-shrink: 0;
+    }
+
+    .panel-content#paymentPanelContent > .panel-list {
+      flex: 0 0 auto;
+      min-height: 72px;
+      max-height: none;
+      overflow: visible;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .payment-summary-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .billing-detail .summary-item.billing-detail-est-total .summary-label,
+    .billing-detail .summary-item.billing-detail-est-total .summary-value {
+      color: var(--text);
+      font-weight: 700;
+    }
+
     .panel-summary {
-      margin-bottom: 12px;
+      margin-bottom: 0;
       padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: none;
+    }
+
+    .payment-section--total .panel-summary {
+      margin-bottom: 0;
     }
 
     .summary-item {
@@ -944,6 +1023,10 @@
       border-top: 1px dashed var(--border);
       padding-top: 10px;
       margin-top: 8px;
+    }
+
+    #paymentPanelContent .payment-section--est .billing-detail {
+      border-top: none;
     }
 
     .billing-detail .summary-item {
@@ -1052,6 +1135,11 @@
 
     .panel-item .edit-payment-btn:hover {
       opacity: 1;
+    }
+
+    /* Advance / non-Paid payments: not editable in panel */
+    .panel-item.panel-item-advanced .edit-payment-btn {
+      display: none;
     }
 
     .empty-state {
@@ -1229,11 +1317,22 @@
             <button class="panel-add-btn" onclick="openPayment()">+ Add</button>
           </div>
           <div class="panel-content" id="paymentPanelContent">
-            <div class="panel-summary"
-              style="background-color: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #fed7aa; margin-bottom: 16px;">
+            <div class="payment-summary-columns">
+            <div class="payment-section-block payment-section--total">
+              <h4 class="payment-section-heading">Est. Total</h4>
+              <div class="panel-summary"
+                style="background-color: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #fed7aa;">
               <div class="summary-item">
                 <span class="summary-label">Order Total:</span>
                 <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Repair Total:</span>
+                <span class="summary-value" id="panelRepairTotalMain">₹ 0.00</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Sale Total:</span>
+                <span class="summary-value" id="panelSaleTotalMain">₹ 0.00</span>
               </div>
               <div class="summary-item" style="color:#d63384;">
                 <span class="summary-label">Purchase Total:</span>
@@ -1245,19 +1344,27 @@
               </div>
               <div class="summary-item">
                 <span class="summary-label">Advanced:</span>
-                <span class="summary-value paid" id="panelPaid">₹ 0.00</span>
+                <span class="summary-value paid" id="panelAdvanced">₹ 0.00</span>
               </div>
               <div class="summary-item"
-                style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; font-weight:600;">
-                <span class="summary-label">Net Amount:</span>
+                style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; font-weight:600;"
+                title="Net Bill Total − Advanced (Est. Total column only). Full due amount is under Total → Net Total Amount.">
+                <span class="summary-label">Balance:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
               </div>
             </div>
+            </div>
 
+            <div class="payment-section-block payment-section--est">
+              <h4 class="payment-section-heading">Total</h4>
             <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
               <div class="summary-item">
                 <span class="summary-label">Order (add):</span>
-                <span class="summary-value" id="panelOrderSaleAdd">₹ 0.00</span>
+                <span class="summary-value" id="panelOrderAdd">₹ 0.00</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Repair (add):</span>
+                <span class="summary-value" id="panelRepairAdd">₹ 0.00</span>
               </div>
               <div class="summary-item">
                 <span class="summary-label">Sale (add):</span>
@@ -1271,8 +1378,17 @@
                 <span class="summary-label">Paid (minus):</span>
                 <span class="summary-value" id="panelPaidMinus">₹ 0.00</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Amount:</span>
+              <div class="summary-item purchase-minus">
+                <span class="summary-label">Advanced (minus):</span>
+                <span class="summary-value" id="panelAdvancedMinus">₹ 0.00</span>
+              </div>
+              <div class="summary-item purchase-minus">
+                <span class="summary-label">Rate Diff:</span>
+                <span class="summary-value" id="panelRateDiffAmount">₹ 0.00</span>
+              </div>
+              <div class="summary-item billing-detail-est-total"
+                style="border-top:1px dashed #ccc; margin-top:6px; padding-top:8px; font-weight:700;">
+                <span class="summary-label">Net Total Amount:</span>
                 <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
               </div>
             </div>
@@ -1285,6 +1401,8 @@
               style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
               <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
               <span class="summary-value" id="panelAmountMinusRateDiff" style="color:#28a745; font-weight:bold;"></span>
+            </div>
+            </div>
             </div>
             <div class="panel-list" id="paymentList">
               <div class="empty-state">No payments yet</div>
@@ -1330,7 +1448,7 @@
           <th style="width:8%;">Pc</th>
           <th style="width:10%;">Net Wt</th>
           <th style="width:10%;">Rate</th>
-          <th style="width:12%;">Total</th>
+          <th style="width:12%;">Est. Total</th>
           <th style="width:35%;">Order Details</th>
         </tr>
       </thead>
@@ -2277,10 +2395,8 @@
         tr.innerHTML = `
 <td>
   <select onchange="handleTypeChange(this)">
-    <option>Order</option>
-    <option>Repair</option>
-    <option>Sale</option>
     <option>Purchase</option>
+    <option>Other</option>
   </select>
 </td>
 <td><input readonly></td>
@@ -2348,6 +2464,22 @@
 
       function setPurchaseOptionalFieldsState(row, isPurchase) {
         if (!row) return;
+        const typeSel = row.cells[0] ? row.cells[0].querySelector("select") : null;
+        const isOther = typeSel && typeSel.value === "Other";
+
+        // OTHER: make every column editable & visible
+        if (isOther) {
+          row.querySelectorAll("input").forEach(input => {
+            input.removeAttribute("readonly");
+            input.classList.remove("order-detail-readonly");
+            input.classList.remove("purchase-field-disabled");
+            input.tabIndex = 0;
+            input.style.visibility = "visible";
+            input.style.border = "1px solid #ffc107";
+            input.style.borderRadius = "4px";
+          });
+          return;
+        }
         // Disable and hide columns 10, 11, 12, 13, 14 for Purchase type
         const targetIndices = [10, 11, 12, 13, 14];
         targetIndices.forEach(idx => {
@@ -2431,6 +2563,21 @@
         rows.forEach(row => {
           const typeSelect = row.cells[0]?.querySelector("select");
           const isPurchase = typeSelect && typeSelect.value === "Purchase";
+          const isOther = typeSelect && typeSelect.value === "Other";
+
+          // OTHER rows are always fully editable
+          if (isOther) {
+            row.querySelectorAll("input").forEach(input => {
+              input.removeAttribute("readonly");
+              input.classList.remove("order-detail-readonly");
+              input.classList.remove("purchase-field-disabled");
+              input.tabIndex = 0;
+              input.style.visibility = "visible";
+              input.style.border = "1px solid #ffc107";
+              input.style.borderRadius = "4px";
+            });
+            return;
+          }
 
           const orderDetailIndices = [3, 4, 5, 6, 7]; // Lbr.% (8) is hidden for purchase
           orderDetailIndices.forEach(idx => {
@@ -2472,14 +2619,15 @@
         }
 
         const row = sel.closest("tr");
-        const allowedTypes = ["Order", "Repair", "Sale", "Purchase"];
+        const allowedTypes = ["Purchase", "Other"];
 
         setPurchaseOptionalFieldsState(row, sel.value === "Purchase");
 
         // Recalculate totals so Total syncs with Est. Total for Purchase rows
         if (row) syncSecondTotalFromRow(row);
 
-        if (allowedTypes.includes(sel.value) && sel.value === "Order") {
+        // No Order type anymore (popup disabled).
+        if (false) {
           activeRow = row;
 
           if (popupDays) popupDays.value = row.dataset.daysToDelivery || "";
@@ -2655,15 +2803,37 @@
         setTimeout(() => updateInfoPanel(), 100);
       }
 
-      /* CALCULATE BILL TOTAL: Est. Total (col 9) or second Total (col 15) per row – same as new-order / previous behavior */
+      /**
+       * Bill amount for one row: prefer **Est. Total (Final)** (col 15). Fallback to Est. Total (col 9) when Final is 0.
+       * Using `est || ready` was wrong — col 9 is almost always set first, so Final (col 15) was never used.
+       */
+      function getReadyOrderRowLineTotal(tr) {
+        if (!tr || !tr.cells) return 0;
+        const est = (tr.cells[9] && tr.cells[9].children[0]) ? (parseFloat(tr.cells[9].children[0].value) || 0) : 0;
+        const fin = (tr.cells[15] && tr.cells[15].children[0]) ? (parseFloat(tr.cells[15].children[0].value) || 0) : 0;
+        if (fin !== 0) return fin;
+        return est;
+      }
+
+      /** Est. Total column (col 9) only — for **Total** summary panel. */
+      function getReadyOrderRowEstCol9(tr) {
+        if (!tr || !tr.cells || !tr.cells[9] || !tr.cells[9].children[0]) return 0;
+        return parseFloat(tr.cells[9].children[0].value) || 0;
+      }
+
+      /** Est. Total (Final) column (col 15) only — for **Est. Total (Final)** breakdown panel. */
+      function getReadyOrderRowFinalCol15(tr) {
+        if (!tr || !tr.cells || !tr.cells[15] || !tr.cells[15].children[0]) return 0;
+        return parseFloat(tr.cells[15].children[0].value) || 0;
+      }
+
+      /* CALCULATE BILL TOTAL: per-row line total from Final column when set, else Est. Total (col 9) */
       function calculateBillTotal() {
         if (!itemBody) return 0;
 
         let total = 0;
         itemBody.querySelectorAll("tr").forEach(r => {
-          const estTotal = (r.cells[9] && r.cells[9].children[0]) ? (parseFloat(r.cells[9].children[0].value) || 0) : 0;
-          const readyTotal = (r.cells[15] && r.cells[15].children[0]) ? (parseFloat(r.cells[15].children[0].value) || 0) : 0;
-          const rowTotal = estTotal || readyTotal;
+          const rowTotal = getReadyOrderRowLineTotal(r);
           const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
           const type = typeSelect ? typeSelect.value : "Order";
           if (type === "Purchase") {
@@ -2688,6 +2858,11 @@
             return true; // All payments for this bill
           })
           .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      }
+
+      /** Same rule as getPaidAmount(..., 'Advanced'): not type Paid → advance / legacy advance */
+      function isAdvancedPaymentRecord(p) {
+        return p && p.type !== 'Paid';
       }
 
       function syncBillToStatement(customer, bill, billNoVal) {
@@ -2869,26 +3044,14 @@
           const payments = JSON.parse(localStorage.getItem("payments") || "[]");
           const advanceTotal = payments.filter(p => p.billNo === billNo.value).reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
-          const customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-          const balanceIndex = customerBalances.findIndex(b => b.orderNo === billNo.value);
+          let customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+          const existingEntries = customerBalances.filter(b => b && (b.orderNo === billNo.value || b.billNo === billNo.value));
+          const oldEntry = existingEntries.length ? existingEntries[0] : null;
+          // Remove any old duplicates for this bill; we will re-add the updated entry below.
+          customerBalances = customerBalances.filter(b => !(b && (b.orderNo === billNo.value || b.billNo === billNo.value)));
 
-          if (balanceIndex >= 0) {
-            const oldEntry = customerBalances[balanceIndex];
-            if (oldEntry.transferred) {
-              const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-              const oldCustNameNorm = (oldEntry.customer || "").trim().toLowerCase();
-              const oldCustomer = customers.find(c => (c.name || "").trim().toLowerCase() === oldCustNameNorm);
-              if (oldCustomer) {
-                const oldAmount = parseFloat(oldEntry.amount || 0);
-                const currentBal = parseFloat(oldCustomer.openingBalance || 0);
-                oldCustomer.openingBalance = (currentBal - oldAmount).toFixed(2);
-                if (oldCustomer.transferredBills) {
-                  oldCustomer.transferredBills = oldCustomer.transferredBills.filter(tb => tb !== billNo.value);
-                }
-                localStorage.setItem("customers", JSON.stringify(customers));
-              }
-            }
-          }
+          // Editing safe: we already removed this bill's old row(s) from customerBalances above.
+          // Do NOT mutate customer openingBalance here; currentBalance is re-synced from openingBalance + bills.
 
           const customers = JSON.parse(localStorage.getItem("customers") || "[]");
           const targetCustomerName = getCustomerName();
@@ -2946,29 +3109,39 @@
           if (amountMinusRateDiffVal != null) balanceEntry.amountMinusRateDiff = parseFloat(amountMinusRateDiffVal).toFixed(2);
           delete balanceEntry.rate;
 
-          if (balanceIndex >= 0) {
-            customerBalances[balanceIndex] = balanceEntry;
-          } else {
-            customerBalances.push(balanceEntry);
-          }
+          customerBalances.push(balanceEntry);
           localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
 
           if (targetCust) {
-            // Update currentBalance directly from all bills (no auto statement rows)
+            // Recalculate (overwrite) customer currentBalance from scratch:
+            // signed opening balance + Σ per-bill computedBalAmt (bill due). No incremental adds.
             const allCustBals = JSON.parse(localStorage.getItem("customerBalances") || "[]");
             const custNorm = (targetCust.name || "").trim().toLowerCase();
             const custBills = allCustBals.filter(b => (b.customer || "").trim().toLowerCase() === custNorm);
-            let runningBal = parseFloat(targetCust.openingBalance || 0);
             const paymentsAll = JSON.parse(localStorage.getItem("payments") || "[]");
+
+            let openingSigned = parseFloat(targetCust.openingBalance || 0) || 0;
+            const opType = (targetCust.openingBalanceType || "").toLowerCase();
+            if (opType === "cr") openingSigned = -Math.abs(openingSigned);
+            if (opType === "dr") openingSigned = Math.abs(openingSigned);
+
+            let runningBal = openingSigned;
             custBills.forEach(b => {
-              const bno = b.orderNo || b.billNo || "";
-              const bAmt = parseFloat(b.amount || b.netAmount || 0);
-              const bAdv = paymentsAll.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
-              const bPaid = paymentsAll.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
-              let bRateDiff = 0;
-              if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
-              runningBal += bAmt - bAdv - bPaid - bRateDiff;
+              let due = (b.computedBalAmt != null && b.computedBalAmt !== "") ? (parseFloat(b.computedBalAmt) || 0) : null;
+              if (due == null) {
+                const bno = b.orderNo || b.billNo || "";
+                const bAmt = parseFloat(b.amount || b.netAmount || 0);
+                const bAdv = paymentsAll.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                const bPaid = paymentsAll.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                let bRateDiff = 0;
+                if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+                due = bAmt - bAdv - bPaid - bRateDiff;
+                b.computedBalAmt = due.toFixed(2);
+              }
+              runningBal += due;
             });
+
+            try { localStorage.setItem("customerBalances", JSON.stringify(allCustBals)); } catch (e) { }
             targetCust.currentBalance = Math.abs(runningBal);
             targetCust.currentBalanceType = runningBal >= 0 ? 'Dr' : 'Cr';
             targetCust.timestamp = new Date().toISOString();
@@ -3231,35 +3404,14 @@
         // AUTO-SAVE TO CUSTOMER BALANCES (ALL BILL PAGE)
         // This creates an entry in customerBalances so the order appears in All Bill page
         // AUTOMATION: Automatically transfer to Customer Balance
-        const customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-        const balanceIndex = customerBalances.findIndex(b => b.orderNo === billNo.value);
+        let customerBalances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+        const existingEntries = customerBalances.filter(b => b && (b.orderNo === billNo.value || b.billNo === billNo.value));
+        const oldEntry = existingEntries.length ? existingEntries[0] : null;
+        // Remove any old duplicates for this bill; we will re-add the updated entry below.
+        customerBalances = customerBalances.filter(b => !(b && (b.orderNo === billNo.value || b.billNo === billNo.value)));
 
-        // 1. REVERT PREVIOUS TRANSFER IF NEEDED
-        // If we are editing an order that was already transferred, we must revert the old amount
-        // from the OLD customer's balance before applying the new amount to the NEW customer.
-        if (balanceIndex >= 0) {
-          const oldEntry = customerBalances[balanceIndex];
-          if (oldEntry.transferred) {
-            const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-            // Find the customer who received the transfer (by name)
-            const oldCustNameNorm = (oldEntry.customer || "").trim().toLowerCase();
-            const oldCustomer = customers.find(c => (c.name || "").trim().toLowerCase() === oldCustNameNorm);
-
-            if (oldCustomer) {
-              const oldAmount = parseFloat(oldEntry.finalBalanceAmount || oldEntry.amount || 0);
-              const currentBal = parseFloat(oldCustomer.openingBalance || 0);
-              oldCustomer.openingBalance = (currentBal - oldAmount).toFixed(2);
-
-              // Remove bill from transferredBills list if present
-              if (oldCustomer.transferredBills) {
-                oldCustomer.transferredBills = oldCustomer.transferredBills.filter(tb => tb !== billNo.value);
-              }
-
-              // Save updated customers immediately to ensure integrity
-              localStorage.setItem("customers", JSON.stringify(customers));
-            }
-          }
-        }
+        // 1. EDIT SAFE: we already removed this bill's old row(s) from customerBalances above.
+        // Do NOT mutate customer openingBalance here; currentBalance is re-synced from openingBalance + bills.
 
         // 2. PREPARE NEW ENTRY
         // Get customer details for transfer
@@ -3303,11 +3455,7 @@
         if (finalBalanceAmount != null) balanceEntry.amountMinusRateDiff = parseFloat(finalBalanceAmount).toFixed(2);
         delete balanceEntry.rate;
 
-        if (balanceIndex >= 0) {
-          customerBalances[balanceIndex] = balanceEntry;
-        } else {
-          customerBalances.push(balanceEntry);
-        }
+        customerBalances.push(balanceEntry);
         localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
 
         // 3. APPLY NEW TRANSFER TO CUSTOMER
@@ -3332,21 +3480,34 @@
         }
 
         if (custToUpdate) {
-          // Update currentBalance directly from all bills (no auto statement rows)
+          // Recalculate (overwrite) customer currentBalance from scratch (no incremental adds).
           const allCustBals2 = JSON.parse(localStorage.getItem("customerBalances") || "[]");
           const custNorm2 = (custToUpdate.name || "").trim().toLowerCase();
           const custBills2 = allCustBals2.filter(b => (b.customer || "").trim().toLowerCase() === custNorm2);
-          let runningBal2 = parseFloat(custToUpdate.openingBalance || 0);
           const paymentsAll2 = JSON.parse(localStorage.getItem("payments") || "[]");
+
+          let openingSigned2 = parseFloat(custToUpdate.openingBalance || 0) || 0;
+          const opType2 = (custToUpdate.openingBalanceType || "").toLowerCase();
+          if (opType2 === "cr") openingSigned2 = -Math.abs(openingSigned2);
+          if (opType2 === "dr") openingSigned2 = Math.abs(openingSigned2);
+
+          let runningBal2 = openingSigned2;
           custBills2.forEach(b => {
-            const bno = b.orderNo || b.billNo || "";
-            const bAmt = parseFloat(b.amount || b.netAmount || 0);
-            const bAdv = paymentsAll2.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
-            const bPaid = paymentsAll2.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
-            let bRateDiff = 0;
-            if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
-            runningBal2 += bAmt - bAdv - bPaid - bRateDiff;
+            let due = (b.computedBalAmt != null && b.computedBalAmt !== "") ? (parseFloat(b.computedBalAmt) || 0) : null;
+            if (due == null) {
+              const bno = b.orderNo || b.billNo || "";
+              const bAmt = parseFloat(b.amount || b.netAmount || 0);
+              const bAdv = paymentsAll2.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              const bPaid = paymentsAll2.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              let bRateDiff = 0;
+              if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+              due = bAmt - bAdv - bPaid - bRateDiff;
+              b.computedBalAmt = due.toFixed(2);
+            }
+            runningBal2 += due;
           });
+
+          try { localStorage.setItem("customerBalances", JSON.stringify(allCustBals2)); } catch (e) { }
           custToUpdate.currentBalance = Math.abs(runningBal2);
           custToUpdate.currentBalanceType = runningBal2 >= 0 ? 'Dr' : 'Cr';
           custToUpdate.timestamp = new Date().toISOString();
@@ -4445,6 +4606,7 @@
       function openPaymentCardEdit(btnEl) {
         var card = btnEl && btnEl.closest(".panel-item");
         if (!card) return;
+        if (card.getAttribute("data-payment-advanced") === "1") return;
         var payKey = card.getAttribute("data-payment-key") || "";
         var timestamp = card.getAttribute("data-payment-timestamp") || "";
         var billNoVal = card.getAttribute("data-bill-no") || (billNo && billNo.value) || "";
@@ -5085,108 +5247,132 @@
         return "₹ " + (parseFloat(amount) || 0).toFixed(2);
       }
 
+      /** Signed rupee display for Rate Diff (negative shows minus before ₹). */
+      function formatCurrencySigned(amount) {
+        var v = parseFloat(amount) || 0;
+        if (v < 0) return "\u2212 ₹ " + Math.abs(v).toFixed(2);
+        return "₹ " + v.toFixed(2);
+      }
+
+      function parseRateDiffFromStored(stored) {
+        if (!stored) return 0;
+        var match = String(stored).match(/=\s*([-\u2212]?\s*[\d.]+)/);
+        if (match) {
+          var numStr = match[1].replace(/\u2212/g, "-").replace(/\s/g, "");
+          return parseFloat(numStr) || 0;
+        }
+        return 0;
+      }
+
       function updatePaymentPanel() {
         if (!billNo || !billNo.value) return;
 
-        // Main panel (Order Total, Purchase Total, Net Bill Total, Balance): use Est. Total (col 9) or second Total (col 15) – same as previous / new-order
-        let mainOrderTotal = 0;
-        let mainSaleTotal = 0;
-        let mainPurchaseTotal = 0;
-        // Detail breakdown (Order add, Sale add, Purchase minus, Net): use only second Total column (R. Metal, Neg, R. Wt, Rate, Making, Total)
-        let detailOrderTotal = 0;
-        let detailSaleTotal = 0;
-        let detailPurchaseTotal = 0;
+        // Total panel: **col 9 (Est. Total)** only. Est. Total (Final) panel: **col 15** only.
+        let estOrderCol9 = 0;
+        let estRepairCol9 = 0;
+        let estSaleCol9 = 0;
+        let estPurchaseCol9 = 0;
+        let finalOrderTotal = 0;
+        let finalRepairTotal = 0;
+        let finalSaleTotal = 0;
+        let finalPurchaseTotal = 0;
 
         if (itemBody) {
           itemBody.querySelectorAll("tr").forEach(r => {
             const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
             const type = typeSelect ? typeSelect.value : "Order";
-            const estTotal = (r.cells[9] && r.cells[9].children[0]) ? (parseFloat(r.cells[9].children[0].value) || 0) : 0;
-            const readyTotal = (r.cells[15] && r.cells[15].children[0]) ? (parseFloat(r.cells[15].children[0].value) || 0) : 0;
-            const mainRowTotal = estTotal || readyTotal;
-            const detailRowTotal = readyTotal;
+            const estOnly = getReadyOrderRowEstCol9(r);
+            const finOnly = getReadyOrderRowFinalCol15(r);
 
             if (type === "Purchase") {
-              mainPurchaseTotal += mainRowTotal;
-              detailPurchaseTotal += detailRowTotal;
+              estPurchaseCol9 += estOnly;
+              finalPurchaseTotal += finOnly;
             } else if (type === "Sale") {
-              mainSaleTotal += mainRowTotal;
-              detailSaleTotal += detailRowTotal;
+              estSaleCol9 += estOnly;
+              finalSaleTotal += finOnly;
+            } else if (type === "Repair") {
+              estRepairCol9 += estOnly;
+              finalRepairTotal += finOnly;
             } else {
-              mainOrderTotal += mainRowTotal;
-              detailOrderTotal += detailRowTotal;
+              estOrderCol9 += estOnly;
+              finalOrderTotal += finOnly;
             }
           });
         }
 
-        const mainOrderPlusSale = mainOrderTotal + mainSaleTotal;
-        const mainNetTotal = mainOrderPlusSale - mainPurchaseTotal;
+        const estTotalNetMain = estOrderCol9 + estRepairCol9 + estSaleCol9 - estPurchaseCol9;
+
+        const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
+        const rateDiffVal = parseRateDiffFromStored(rateDiffStored);
+        const rateDiffAbs = Math.abs(parseFloat(rateDiffVal) || 0);
+
         const advanced = getPaidAmount(billNo.value, 'Advanced');
         const paid = getPaidAmount(billNo.value, 'Paid');
-        const balance = mainNetTotal - advanced - paid;
+        const mainNetTotalFinal = finalOrderTotal + finalRepairTotal + finalSaleTotal - finalPurchaseTotal;
+        // Total panel only: Balance = Net Bill Total (Est. Total col 9) − Advanced
+        const balanceCol9 = estTotalNetMain - advanced;
 
         const root = getSearchRoot();
         const setPanel = function (id, text) {
           var el = root.querySelector(id);
           if (el) el.textContent = text;
         };
-        setPanel("#panelOrderTotal", formatCurrency(mainOrderPlusSale));
-        setPanel("#panelPurchaseTotal", formatCurrency(mainPurchaseTotal));
-        setPanel("#panelBillTotal", formatCurrency(mainNetTotal));
-        setPanel("#panelPaid", formatCurrency(advanced));
-        setPanel("#panelBalance", formatCurrency(balance));
+        setPanel("#panelOrderTotal", formatCurrency(estOrderCol9));
+        setPanel("#panelRepairTotalMain", formatCurrency(estRepairCol9));
+        setPanel("#panelSaleTotalMain", formatCurrency(estSaleCol9));
+        setPanel("#panelPurchaseTotal", formatCurrency(estPurchaseCol9));
+        setPanel("#panelBillTotal", formatCurrency(estTotalNetMain));
+        setPanel("#panelAdvanced", formatCurrency(advanced));
+        setPanel("#panelBalance", formatCurrency(balanceCol9));
 
-        // Breakdown: Order (add), Sale (add), Purchase (minus), Paid (minus), Amount – from second Total column only
         const panelWrap = root.querySelector("#panelPurchaseSaleDetailWrap");
-        const orderSaleAddEl = root.querySelector("#panelOrderSaleAdd");
+        const orderAddEl = root.querySelector("#panelOrderAdd");
+        const repairAddEl = root.querySelector("#panelRepairAdd");
         const saleAddEl = root.querySelector("#panelSaleAdd");
         const purchaseMinusEl = root.querySelector("#panelPurchaseMinus");
+        const advancedMinusEl = root.querySelector("#panelAdvancedMinus");
         const paidMinusEl = root.querySelector("#panelPaidMinus");
+        const rateDiffAmtEl = root.querySelector("#panelRateDiffAmount");
         const netDetailEl = root.querySelector("#panelNetDetail");
-        const detailNet = detailOrderTotal + detailSaleTotal - detailPurchaseTotal - advanced - paid;
+
+        // Net Total Amount = Order + Repair + Sale − Purchase − Paid − Advanced − |Rate Diff| (rate diff always reduces net)
+        const netTotalAmount =
+          finalOrderTotal +
+          finalRepairTotal +
+          finalSaleTotal -
+          finalPurchaseTotal -
+          paid -
+          advanced -
+          rateDiffAbs;
+
         if (panelWrap) panelWrap.style.display = "";
-        if (orderSaleAddEl) orderSaleAddEl.textContent = formatCurrency(detailOrderTotal);
-        if (saleAddEl) saleAddEl.textContent = formatCurrency(detailSaleTotal);
-        if (purchaseMinusEl) purchaseMinusEl.textContent = formatCurrency(detailPurchaseTotal);
+        if (orderAddEl) orderAddEl.textContent = formatCurrency(finalOrderTotal);
+        if (repairAddEl) repairAddEl.textContent = formatCurrency(finalRepairTotal);
+        if (saleAddEl) saleAddEl.textContent = formatCurrency(finalSaleTotal);
+        if (purchaseMinusEl) purchaseMinusEl.textContent = formatCurrency(finalPurchaseTotal);
         if (paidMinusEl) paidMinusEl.textContent = formatCurrency(paid);
-        if (netDetailEl) netDetailEl.textContent = formatCurrency(detailNet);
+        if (advancedMinusEl) advancedMinusEl.textContent = formatCurrency(advanced);
+        if (rateDiffAmtEl) rateDiffAmtEl.textContent = rateDiffAbs > 0 ? formatCurrencySigned(-rateDiffAbs) : formatCurrency(0);
+        if (netDetailEl) netDetailEl.textContent = formatCurrency(netTotalAmount);
 
         var paymentListEl = root.querySelector("#paymentList");
 
         // Rate Difference: only when saved for this bill — display "Rate Difference : 2.500 @(12000.00 - 13000.00) = 3000"
         const rateDiffWrap = root.querySelector("#panelRateDiffWrap");
         const rateDiffEl = root.querySelector("#panelRateDiffSummary");
-        const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
-        var rateDiffResult = 0;
         if (rateDiffWrap && rateDiffEl) {
           if (rateDiffStored) {
             rateDiffWrap.style.display = "";
             rateDiffEl.textContent = "Rate Difference : " + rateDiffStored;
             rateDiffEl.style.color = rateDiffStored.includes("\u2212") || rateDiffStored.includes("-") ? "var(--danger)" : "";
-            // Parse result after "=" (e.g. "2.000 @(12000.00 - 15000.00) = -9000.00" -> -9000)
-            var match = rateDiffStored.match(/=\s*([-\u2212]?\s*[\d.]+)/);
-            if (match) {
-              var numStr = match[1].replace(/\u2212/g, "-").replace(/\s/g, "");
-              rateDiffResult = parseFloat(numStr) || 0;
-            }
           } else {
             rateDiffWrap.style.display = "none";
           }
         }
 
-        // Amount minus Rate book Diff Amount – show below Rate Difference, in green
         const amountMinusRateDiffWrap = root.querySelector("#panelAmountMinusRateDiffWrap");
-        const amountMinusRateDiffEl = root.querySelector("#panelAmountMinusRateDiff");
-        if (amountMinusRateDiffWrap && amountMinusRateDiffEl) {
-          if (rateDiffStored) {
-            var amountMinusRateDiff = detailNet - Math.abs(rateDiffResult);
-            amountMinusRateDiffWrap.style.display = "flex";
-            amountMinusRateDiffWrap.style.justifyContent = "space-between";
-            amountMinusRateDiffEl.textContent = formatCurrency(amountMinusRateDiff);
-            amountMinusRateDiffEl.style.color = "#28a745";
-          } else {
-            amountMinusRateDiffWrap.style.display = "none";
-          }
+        if (amountMinusRateDiffWrap) {
+          amountMinusRateDiffWrap.style.display = "none";
         }
 
         // Get payments for this bill
@@ -5204,12 +5390,16 @@
               const narration = (p.narration || '—').substring(0, 30);
               const dateIso = (p.date && (p.date.indexOf('-') >= 0 || p.date.indexOf('/') >= 0)) ? (p.date.indexOf('T') >= 0 ? p.date.split('T')[0] : p.date) : (p.timestamp ? p.timestamp.split('T')[0] : '');
               const payKey = (p.id != null) ? String(p.id) : (p.timestamp || dateIso + '-' + (p.amount || 0));
+              const isAdv = isAdvancedPaymentRecord(p);
+              const advAttr = isAdv ? ' data-payment-advanced="1"' : '';
+              const advClass = isAdv ? ' panel-item-advanced' : '';
+              const editBtn = isAdv ? '' : `<button type="button" class="edit-payment-btn" onclick="event.stopPropagation(); openPaymentCardEdit(this);" title="Edit payment">✏️</button>`;
               html += `
-          <div class="panel-item" data-payment-key="${String(payKey).replace(/"/g, '&quot;')}" data-payment-timestamp="${(p.timestamp || '').replace(/"/g, '&quot;')}" data-bill-no="${(billNoVal || '').replace(/"/g, '&quot;')}">
+          <div class="panel-item${advClass}"${advAttr} data-payment-key="${String(payKey).replace(/"/g, '&quot;')}" data-payment-timestamp="${(p.timestamp || '').replace(/"/g, '&quot;')}" data-bill-no="${(billNoVal || '').replace(/"/g, '&quot;')}">
             <div class="panel-item-header">
               <span class="payment-amount">${formatCurrency(p.amount)}</span>
               <span class="payment-mode">${p.mode || 'Cash'}</span>
-              <button type="button" class="edit-payment-btn" onclick="event.stopPropagation(); openPaymentCardEdit(this);" title="Edit payment">✏️</button>
+              ${editBtn}
             </div>
             <div class="panel-item-detail payment-date">${date} — ${narration}</div>
           </div>

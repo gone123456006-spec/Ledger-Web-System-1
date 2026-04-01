@@ -178,6 +178,82 @@
       border: 1px solid #c5d5fb;
     }
 
+    /* ── FILTER BAR ── */
+    .filter-bar {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 20px;
+      background: linear-gradient(to bottom, #f0f3f8, #e8ecf4);
+      border-bottom: 1px solid #dce2ec;
+      flex-shrink: 0;
+    }
+
+    .filter-bar.open {
+      display: flex;
+    }
+
+    .filter-bar .filter-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-bar label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #4a5568;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .filter-bar select {
+      height: 34px;
+      padding: 0 28px 0 10px;
+      border: 1px solid #cdd5e4;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1a1f2e;
+      background: #fff;
+      cursor: pointer;
+      min-width: 160px;
+      outline: none;
+    }
+
+    .filter-bar select:focus {
+      border-color: #4f7ef8;
+      box-shadow: 0 0 0 2px rgba(79, 126, 248, 0.12);
+    }
+
+    .filter-bar .btn-clear-filters {
+      margin-left: auto;
+      height: 34px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      background: transparent;
+      border: 1px dashed #94a3b8;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .filter-bar .btn-clear-filters:hover {
+      color: #b91c1c;
+      border-color: #fca5a5;
+      background: #fef2f2;
+    }
+
+    .btn-filter-toggle.active {
+      background: #eef2ff;
+      border-color: #4f7ef8;
+      color: #2a50d8;
+    }
+
     /* ── TABLE ── */
     .table-wrap {
       flex: 1;
@@ -800,8 +876,14 @@
           <circle cx="11" cy="11" r="8" />
           <path d="m21 21-4.35-4.35" />
         </svg>
-        <input type="text" id="searchBox" placeholder="Search item, order, customer…" oninput="filterTable()">
+        <input type="text" id="searchBox" placeholder="Search item, order, customer…" oninput="applyTableFilters()">
       </div>
+      <button type="button" class="btn btn-filter-toggle" id="filterToggleBtn" onclick="toggleFilterBar()" aria-expanded="false" title="Filter by status and assignment">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+        Filter
+      </button>
       <button class="btn" onclick="loadPendingItems()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <polyline points="23 4 23 10 17 10" />
@@ -825,6 +907,27 @@
         Assign Selected
         <span class="btn-count" id="btnCount">0</span>
       </button>
+    </div>
+
+    <div class="filter-bar" id="filterBar" aria-hidden="true">
+      <div class="filter-field">
+        <label for="filterStatus">Status</label>
+        <select id="filterStatus" onchange="applyTableFilters()">
+          <option value="all">All statuses</option>
+          <option value="pending">Pending</option>
+          <option value="selected">Selected</option>
+          <option value="assigned">Assigned</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="filterAssign">Assign</label>
+        <select id="filterAssign" onchange="applyTableFilters()">
+          <option value="all">All</option>
+          <option value="assigned">Assigned only</option>
+          <option value="unassigned">Unassigned only</option>
+        </select>
+      </div>
+      <button type="button" class="btn-clear-filters" onclick="clearItemFilters()">Clear filters</button>
     </div>
 
     <!-- TABLE -->
@@ -1073,6 +1176,8 @@
             const tr = document.createElement('tr');
             if (r.assigned) tr.style.opacity = '0.62';
             tr.dataset.orderId = r.orderId;
+            tr.dataset.assigned = r.assigned ? '1' : '0';
+            tr.dataset.rowStatus = r.assigned ? 'assigned' : 'pending';
             tr.dataset.search = [r.type, r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
             tr.innerHTML = `
             <td class="center cb-cell">
@@ -1115,7 +1220,7 @@
           document.getElementById('statPending').textContent = `${rows.length - assignedCount} pending`;
           document.getElementById('statAssigned').textContent = `${assignedCount} assigned`;
         }
-        filterTable(); updateUI();
+        applyTableFilters(); updateUI();
       } catch (e) {
         console.error(e);
         tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
@@ -1129,14 +1234,17 @@
       const oId = cb.dataset.orderId;
       const iIdx = cb.dataset.itemIdx;
       const b = document.getElementById(`badge-${oId}-${iIdx}`);
+      const isAssignedRow = cb.getAttribute('data-assigned') === 'true';
       if (cb.checked) {
         tr.classList.add('row-sel');
         if (b) { b.className = 'badge badge-selected'; b.innerHTML = '✔ Selected'; }
+        if (!isAssignedRow) tr.dataset.rowStatus = 'selected';
       } else {
         tr.classList.remove('row-sel');
         if (b) { b.className = 'badge badge-pending'; b.textContent = 'Pending'; }
+        if (!isAssignedRow) tr.dataset.rowStatus = 'pending';
       }
-      updateUI();
+      applyTableFilters();
     }
 
     function toggleAll(src) {
@@ -1147,12 +1255,73 @@
       });
     }
 
-    function filterTable() {
-      const q = (document.getElementById('searchBox').value || '').toLowerCase().trim();
-      document.querySelectorAll('#tableBody tr[data-search]').forEach(tr => {
-        tr.style.display = (!q || tr.dataset.search.includes(q)) ? '' : 'none';
+    function toggleFilterBar() {
+      const bar = document.getElementById('filterBar');
+      const btn = document.getElementById('filterToggleBtn');
+      if (!bar) return;
+      const open = !bar.classList.contains('open');
+      bar.classList.toggle('open', open);
+      bar.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if (btn) {
+        btn.classList.toggle('active', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+    }
+
+    function clearItemFilters() {
+      const st = document.getElementById('filterStatus');
+      const as = document.getElementById('filterAssign');
+      if (st) st.value = 'all';
+      if (as) as.value = 'all';
+      applyTableFilters();
+    }
+
+    function applyTableFilters() {
+      const q = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+      const st = document.getElementById('filterStatus')?.value || 'all';
+      const as = document.getElementById('filterAssign')?.value || 'all';
+
+      const dataRows = document.querySelectorAll('#tableBody tr[data-search]');
+      let visibleCount = 0;
+      const filtersActive = !!(q || st !== 'all' || as !== 'all');
+
+      dataRows.forEach(tr => {
+        const searchOk = !q || (tr.dataset.search && tr.dataset.search.includes(q));
+        const assigned = tr.dataset.assigned === '1';
+        const rowSt = tr.dataset.rowStatus || 'pending';
+
+        let statusOk = true;
+        if (st === 'pending') statusOk = rowSt === 'pending';
+        else if (st === 'selected') statusOk = rowSt === 'selected';
+        else if (st === 'assigned') statusOk = rowSt === 'assigned';
+
+        let assignOk = true;
+        if (as === 'assigned') assignOk = assigned;
+        else if (as === 'unassigned') assignOk = !assigned;
+
+        const show = searchOk && statusOk && assignOk;
+        tr.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
       });
+
+      const ftText = document.getElementById('footerText');
+      const total = dataRows.length;
+      if (ftText && total > 0) {
+        if (!filtersActive && visibleCount === total) {
+          ftText.textContent = `${total} item${total !== 1 ? 's' : ''}`;
+        } else if (visibleCount < total) {
+          ftText.textContent = `${visibleCount} of ${total} item${total !== 1 ? 's' : ''} (filtered)`;
+        } else {
+          ftText.textContent = `${total} item${total !== 1 ? 's' : ''}`;
+        }
+      }
+
       updateUI();
+    }
+
+    /** @deprecated use applyTableFilters */
+    function filterTable() {
+      applyTableFilters();
     }
 
     /* ── MODAL OPEN/CLOSE ── */
@@ -1461,6 +1630,9 @@
        (which wraps scripts in an IIFE, making them locally scoped). */
     window.loadPendingItems = loadPendingItems;
     window.filterTable = filterTable;
+    window.applyTableFilters = applyTableFilters;
+    window.toggleFilterBar = toggleFilterBar;
+    window.clearItemFilters = clearItemFilters;
     window.renderJwList = renderJwList;
     window.openAssignModal = openAssignModal;
     window.closeAssignModal = closeAssignModal;

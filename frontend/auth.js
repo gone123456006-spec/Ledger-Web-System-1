@@ -16,20 +16,20 @@
     return String(p || "").trim();
   }
 
-  function getStorage(){
+  function getStorage() {
     // Prefer localStorage, fallback to sessionStorage (some browsers block localStorage)
     try {
       const t = "__t";
       localStorage.setItem(t, "1");
       localStorage.removeItem(t);
       return localStorage;
-    } catch(e) {}
+    } catch (e) { }
     try {
       const t = "__t";
       sessionStorage.setItem(t, "1");
       sessionStorage.removeItem(t);
       return sessionStorage;
-    } catch(e) {}
+    } catch (e) { }
     return null;
   }
 
@@ -62,7 +62,7 @@
 
     try {
       const storage = getStorage();
-      if(!storage) return { ok: false, message: "Browser storage is blocked. Please allow site data." };
+      if (!storage) return { ok: false, message: "Browser storage is blocked. Please allow site data." };
 
       storage.setItem(
         SESSION_KEY,
@@ -71,8 +71,8 @@
       // store which storage we used (debug/support)
       try {
         storage.setItem(STORAGE_FALLBACK_KEY, storage === localStorage ? "local" : "session");
-      } catch(e) {}
-    } catch (e) {}
+      } catch (e) { }
+    } catch (e) { }
 
     return { ok: true, message: "Login successful" };
   }
@@ -80,15 +80,15 @@
   function logout() {
     try {
       const storage = getStorage();
-      if(storage){
+      if (storage) {
         storage.removeItem(SESSION_KEY);
         storage.removeItem(STORAGE_FALLBACK_KEY);
       } else {
         // best effort
-        try { localStorage.removeItem(SESSION_KEY); } catch(e) {}
-        try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+        try { localStorage.removeItem(SESSION_KEY); } catch (e) { }
+        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { }
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   function requireAuth(redirectUrl) {
