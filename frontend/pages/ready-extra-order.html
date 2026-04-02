@@ -2403,7 +2403,7 @@
 </td>
 <td><input readonly></td>
 <td><input placeholder="Item Name"></td>
-<td><input readonly placeholder="Stamp" class="order-detail-readonly"></td>
+<td><input placeholder="Stamp"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
@@ -2440,7 +2440,7 @@
         // Apply global edit state if active
         const globalEditBtn = document.getElementById('globalEditBtn');
         if (globalEditBtn && globalEditBtn.dataset.editing === "true") {
-          const orderDetailIndices = [3, 4, 5, 6, 7]; // Lbr.% (8) removed from edit list
+          const orderDetailIndices = [4, 5, 6, 7]; // Pc..Rate; Stamp (3) always editable; Lbr.% (8) separate
           orderDetailIndices.forEach(idx => {
             const cell = tr.cells[idx];
             if (cell) {
@@ -2478,6 +2478,7 @@
 
         // Other / Sale: respect Global Edit — off = template-style locks (Edit unlocks all); on = full edit + highlight
         if (isReadyExtraFullLineRow(typeSel)) {
+          const isSale = typeSel && typeSel.value === "Sale";
           const globalEditBtn = document.getElementById("globalEditBtn");
           const isGlobalEditing = globalEditBtn && globalEditBtn.dataset.editing === "true";
           row.querySelectorAll("input").forEach(input => {
@@ -2487,6 +2488,20 @@
             if (idx < 0) return;
             input.classList.remove("purchase-field-disabled");
             input.style.visibility = "visible";
+
+            // Sale row requirement: hide + make non-editable
+            // Ut. Wt. (5), Est. Total Wt. (6), Rate (7), Lbr.% (8), Est. Total (9)
+            if (isSale && idx >= 5 && idx <= 9) {
+              input.value = "0";
+              input.setAttribute("readonly", "readonly");
+              input.classList.add("purchase-field-disabled");
+              input.tabIndex = -1;
+              input.style.visibility = "hidden";
+              input.style.border = "";
+              input.style.borderRadius = "";
+              return;
+            }
+
             if (idx === 1) {
               input.setAttribute("readonly", "readonly");
               input.style.border = "";
@@ -2503,7 +2518,8 @@
             }
             input.style.border = "";
             input.style.borderRadius = "";
-            if (idx >= 3 && idx <= 9) {
+            /* Stamp (3) always editable; Sale: Pc (4) editable; Other: lock Pc–Est. Total (4–9) until Global Edit */
+            if (idx >= 4 && idx <= 9 && !(isSale && idx === 4)) {
               input.setAttribute("readonly", "readonly");
               input.classList.add("order-detail-readonly");
             } else if (idx === 15) {
