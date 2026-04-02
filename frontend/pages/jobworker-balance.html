@@ -678,6 +678,9 @@
         <div class="lc-stat lc-purity">Purity: <input id="lcPurity" type="number" min="1" max="100" value="100"
             oninput="lcUpdateNet()"> %</div>
         <div class="lc-stat">Net Wt: <strong id="lcNet">0.000</strong></div>
+        <div class="lc-stat">Maal Total: <strong id="lcMaalTotal">0.000</strong></div>
+        <div class="lc-stat">Chain+Nag: <strong id="lcChainNagTotal">0.000</strong></div>
+        <div class="lc-stat">Final: <strong id="lcFinalValue">0.000</strong></div>
         <div class="lc-stat">Pending: <strong id="lcPending">0.000</strong></div>
         <div class="lc-stat">On: <strong id="lcOnDate"></strong></div>
         <div class="lc-btns">
@@ -1117,9 +1120,18 @@
         var tMetal = totM - totC - totN;
         var netWt = tMetal * (purity / 100);
         var pending = netWt - totMl;
+        var maalTotal = totMl * (purity / 100);
+        var chainNagTotal = totC + totN;
+        var finalValue = maalTotal - chainNagTotal;
         document.getElementById('lcPending').textContent = pending.toFixed(3);
         document.getElementById('lcNet').textContent = netWt.toFixed(3);
         document.getElementById('lcTotalMetal').textContent = tMetal.toFixed(3);
+        var elMaal = document.getElementById('lcMaalTotal');
+        var elCN = document.getElementById('lcChainNagTotal');
+        var elFinal = document.getElementById('lcFinalValue');
+        if (elMaal) elMaal.textContent = maalTotal.toFixed(3);
+        if (elCN) elCN.textContent = chainNagTotal.toFixed(3);
+        if (elFinal) elFinal.textContent = finalValue.toFixed(3);
       };
 
       window.lcSaveAndClose = function () {
