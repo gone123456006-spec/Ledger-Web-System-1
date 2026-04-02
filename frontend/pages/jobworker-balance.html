@@ -1114,9 +1114,17 @@
           }
         });
         var purity = parseFloat(document.getElementById('lcPurity').value) || 100;
-        var tMetal = totM - totC - totN;
-        var netWt = tMetal * (purity / 100);
-        var pending = netWt - totMl;
+        // T. Metal = Total Maal − (Total Chain + Total Nag)
+        var tMetal = totMl - (totC + totN);
+        // Net Wt logic:
+        // Value1 = (Chain + Nag) × Purity%
+        // Value2 = Maal × Purity%
+        // Net Wt = Value2 − Value1
+        var value1 = (totC + totN) * (purity / 100);
+        var value2 = totMl * (purity / 100);
+        var netWt = value2 - value1;
+        // Pending = Total Metal + Value1 − Value2
+        var pending = totM + value1 - value2;
         document.getElementById('lcPending').textContent = pending.toFixed(3);
         document.getElementById('lcNet').textContent = netWt.toFixed(3);
         document.getElementById('lcTotalMetal').textContent = tMetal.toFixed(3);
