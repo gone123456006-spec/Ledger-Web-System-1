@@ -70,6 +70,17 @@
         <!-- side bar  -->
         <aside class="sidebar">
             <button onclick="loadPage('pages/customer.html')">Add Customer</button>
+            <div class="sidebar-add-item section-gap" style="margin-bottom:8px; position:relative;">
+                <button type="button" class="add-item-trigger"
+                    style="margin-bottom:0; font-weight:bold; height:42px; padding:0 14px;">Add Item</button>
+                <div class="sidebar-add-item-submenu"
+                    style="display:none; position:fixed; min-width:170px; padding:4px 0; background:#fff; border:1px solid #d1d6de; border-radius:10px; box-shadow:0 6px 16px rgba(0,0,0,.12); z-index:10000;">
+                    <button type="button"
+                        style="display:block; width:100%; margin:0; padding:8px 14px; border:none; border-radius:6px; background:transparent; font-size:13px; font-weight:bold; text-align:left; cursor:pointer; color:#000 !important;">Add Item</button>
+                    <button type="button"
+                        style="display:block; width:100%; margin:0; padding:8px 14px; border:none; border-radius:6px; background:transparent; font-size:13px; font-weight:bold; text-align:left; cursor:pointer; color:#000 !important;">Item Sheet</button>
+                </div>
+            </div>
             <div class="sidebar-agents-order section-gap" style="margin-bottom:8px; position:relative;">
                 <button type="button" class="agents-order-trigger"
                     style="margin-bottom:0; font-weight:bold;">Agents</button>
@@ -80,9 +91,6 @@
                         Sheet</button>
                     <button type="button"
                         style="display:block; width:100%; margin:0; padding:8px 14px; border:none; border-radius:6px; background:transparent; font-size:13px; font-weight:bold; text-align:left; cursor:pointer; color:#000 !important;">Purchase</button>
-                    <button type="button"
-                        style="display:block; width:100%; margin:0; padding:8px 14px; border:none; border-radius:6px; background:transparent; font-size:13px; font-weight:bold; text-align:left; cursor:pointer; color:#000 !important;">Purchase
-                        Return</button>
                 </div>
             </div>
             <button>Customer Balance</button>

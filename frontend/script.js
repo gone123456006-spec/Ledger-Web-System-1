@@ -64,6 +64,41 @@ function initAgentsSubmenu() {
     submenu.addEventListener("mouseleave", scheduleHide);
 }
 
+function initAddItemSubmenu() {
+    const block = document.querySelector(".sidebar-add-item");
+    const trigger = document.querySelector(".add-item-trigger");
+    const submenu = document.querySelector(".sidebar-add-item-submenu");
+    if (!block || !trigger || !submenu) return;
+
+    let hideTimeout = 0;
+    function show() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = 0;
+        const rect = trigger.getBoundingClientRect();
+        submenu.style.top = rect.top + "px";
+        submenu.style.right = (window.innerWidth - rect.left + 6) + "px";
+        submenu.style.display = "block";
+
+        const btns = submenu.querySelectorAll('button');
+        btns.forEach(btn => {
+            btn.onmouseenter = () => btn.style.background = '#abccff';
+            btn.onmouseleave = () => btn.style.background = 'transparent';
+        });
+    }
+    function scheduleHide() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(function () {
+            submenu.style.display = "none";
+            hideTimeout = 0;
+        }, 200);
+    }
+
+    block.addEventListener("mouseenter", show);
+    block.addEventListener("mouseleave", scheduleHide);
+    submenu.addEventListener("mouseenter", show);
+    submenu.addEventListener("mouseleave", scheduleHide);
+}
+
 // Global Esc → go to dashboard (any page inside the app)
 function initEscToDashboard() {
     if (window.__escToDashboardInited) return;
@@ -90,6 +125,7 @@ function initSidebarButtons() {
     initEscToDashboard();
     initGoldOrderSubmenu();
     initAgentsSubmenu();
+    initAddItemSubmenu();
     sidebarButtons.forEach(btn => {
         btn.addEventListener("click", () => {
 
@@ -123,6 +159,10 @@ function initSidebarButtons() {
 
                 case "add item":
                     loadPage("pages/add-item.html");
+                    break;
+
+                case "item sheet":
+                    loadPage("pages/item-sheet.html");
                     break;
 
                 case "agents":

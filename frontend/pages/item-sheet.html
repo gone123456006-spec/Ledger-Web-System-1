@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Item Sheet</title>
+  <style>
+    :root {
+      --bg: #f8f9fc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-soft: rgba(59, 130, 246, 0.1);
+      --danger: #ef4444;
+      --success: #22c55e;
+      --radius: 12px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .app {
+      padding: 16px 12px;
+      width: 100%;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 14px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-row input {
+      flex: 1;
+      min-width: 240px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    .search-row input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    .btn {
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .btn.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn.primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn.danger {
+      border-color: var(--danger);
+      background: #fff;
+      color: var(--danger);
+    }
+
+    .btn.danger:hover {
+      background: rgba(239, 68, 68, 0.08);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 1450px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--muted);
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody tr:hover {
+      background: #f8faff;
+    }
+
+    .col-name {
+      width: 16%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .col-small {
+      width: 10%;
+    }
+
+    .col-desc {
+      width: 20%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .col-actions {
+      width: 150px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <div class="page-title">
+      <div>Item Sheet</div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn primary" type="button" onclick="loadPage('pages/add-item.html')">Add Item</button>
+        <button class="btn" type="button" onclick="clearSearch()">Clear Search</button>
+      </div>
+    </div>
+
+    <div class="box">
+      <div class="search-row">
+        <input id="itemSearch" type="text" placeholder="Search by name, group, type, tag..." oninput="renderTable()" />
+        <div class="muted" id="itemCount"></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-name">Name</th>
+              <th class="col-small">Tag/Level</th>
+              <th class="col-small">Group</th>
+              <th class="col-small">Type</th>
+              <th class="col-small">Sale Purity(%)</th>
+              <th class="col-small">Sale Wastage(%)</th>
+              <th class="col-small">Purchase Purity(%)</th>
+              <th class="col-small">Purchase Wastage(%)</th>
+              <th class="col-small">Weight</th>
+              <th class="col-small">Quantity</th>
+              <th class="col-desc">Description</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="itemBody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="muted" style="padding:14px 0; display:none;">
+        No items found.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const SEARCH_EL = document.getElementById('itemSearch');
+      const BODY_EL = document.getElementById('itemBody');
+      const EMPTY_EL = document.getElementById('emptyState');
+      const COUNT_EL = document.getElementById('itemCount');
+
+      function getItems() {
+        try {
+          return JSON.parse(localStorage.getItem('items') || '[]') || [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveItems(items) {
+        localStorage.setItem('items', JSON.stringify(items));
+      }
+
+      function normalize(s) {
+        return String(s || '').toLowerCase().trim();
+      }
+
+      function matches(item, q) {
+        if (!q) return true;
+        const n = normalize(item.name);
+        const t = normalize(item.tag);
+        const g = normalize(item.group);
+        const ty = normalize(item.type);
+        const sp = normalize(item.salePurity);
+        const sw = normalize(item.saleWastage);
+        const pp = normalize(item.purchasePurity);
+        const pw = normalize(item.purchaseWastage);
+        const wt = normalize(item.weight);
+        const qty = normalize(item.quantity);
+        const d = normalize(item.description);
+        return n.includes(q) || t.includes(q) || g.includes(q) || ty.includes(q) || sp.includes(q) || sw.includes(q) || pp.includes(q) || pw.includes(q) || wt.includes(q) || qty.includes(q) || d.includes(q);
+      }
+
+      window.deleteItemById = function (id) {
+        const items = getItems();
+        const hitIdx = items.findIndex(x => String(x.id) === String(id));
+        if (hitIdx < 0) return;
+        if (!confirm('Delete this item?')) return;
+        items.splice(hitIdx, 1);
+        saveItems(items);
+        renderTable();
+      };
+
+      window.clearSearch = function () {
+        if (SEARCH_EL) SEARCH_EL.value = '';
+        renderTable();
+      };
+
+      window.renderTable = function renderTable() {
+        const q = normalize(SEARCH_EL && SEARCH_EL.value);
+        const all = getItems().slice().sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+        const filtered = all.filter(it => matches(it, q));
+
+        BODY_EL.innerHTML = '';
+        EMPTY_EL.style.display = filtered.length ? 'none' : 'block';
+
+        if (COUNT_EL) COUNT_EL.textContent = filtered.length + ' item(s)';
+
+        filtered.forEach(item => {
+          const tr = document.createElement('tr');
+
+          const tdName = document.createElement('td');
+          tdName.className = 'col-name';
+          tdName.textContent = item.name || '—';
+
+          const tdTag = document.createElement('td');
+          tdTag.textContent = item.tag || '—';
+
+          const tdGroup = document.createElement('td');
+          tdGroup.textContent = item.group || '—';
+
+          const tdType = document.createElement('td');
+          tdType.textContent = item.type || '—';
+
+          const tdSalePur = document.createElement('td');
+          tdSalePur.textContent = item.salePurity != null && item.salePurity !== '' ? String(item.salePurity) : '0';
+
+          const tdSaleWas = document.createElement('td');
+          tdSaleWas.textContent = item.saleWastage != null && item.saleWastage !== '' ? String(item.saleWastage) : '0';
+
+          const tdPurPur = document.createElement('td');
+          tdPurPur.textContent = item.purchasePurity != null && item.purchasePurity !== '' ? String(item.purchasePurity) : '0';
+
+          const tdPurWas = document.createElement('td');
+          tdPurWas.textContent = item.purchaseWastage != null && item.purchaseWastage !== '' ? String(item.purchaseWastage) : '0';
+
+          const tdWt = document.createElement('td');
+          tdWt.textContent = item.weight != null && item.weight !== '' ? String(item.weight) : '0';
+
+          const tdQty = document.createElement('td');
+          tdQty.textContent = item.quantity != null && item.quantity !== '' ? String(item.quantity) : '0';
+
+          const tdDesc = document.createElement('td');
+          tdDesc.className = 'col-desc';
+          tdDesc.textContent = item.description || '';
+          tdDesc.title = item.description || '';
+
+          const tdActions = document.createElement('td');
+          tdActions.className = 'col-actions';
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn danger';
+          delBtn.textContent = 'Delete';
+          delBtn.onclick = () => window.deleteItemById(item.id);
+
+          tdActions.appendChild(delBtn);
+
+          tr.append(tdName, tdTag, tdGroup, tdType, tdSalePur, tdSaleWas, tdPurPur, tdPurWas, tdWt, tdQty, tdDesc, tdActions);
+          BODY_EL.appendChild(tr);
+        });
+      };
+
+      // Initial render
+      renderTable();
+    })();
+  </script>
+</body>
+
+</html>
+
