@@ -1342,13 +1342,14 @@
                 <span class="summary-label">Net Bill Total:</span>
                 <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Advanced:</span>
+              <div class="summary-item"
+                title="Same as Orders / Pending / Ready lists: payment advances (non-Paid) + purchase Est. Total (col 9). Balance below still uses advances only.">
+                <span class="summary-label">Advance:</span>
                 <span class="summary-value paid" id="panelAdvanced">₹ 0.00</span>
               </div>
               <div class="summary-item"
                 style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; font-weight:600;"
-                title="Net Bill Total − Advanced (Est. Total column only). Full due amount is under Total → Net Total Amount.">
+                title="Net Bill Total − payment advances only (purchase already in net bill). Full due: Total → Net Total Amount.">
                 <span class="summary-label">Balance:</span>
                 <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
               </div>
@@ -2395,8 +2396,9 @@
         tr.innerHTML = `
 <td>
   <select onchange="handleTypeChange(this)">
+    <option selected>Other</option>
+    <option>Sale</option>
     <option>Purchase</option>
-    <option>Other</option>
   </select>
 </td>
 <td><input readonly></td>
@@ -2407,7 +2409,7 @@
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
-<td class="total"><input type="number" step="0.01" readonly placeholder="0.00" class="order-detail-readonly"></td>
+<td class="total"><input type="number" step="0.01" readonly placeholder="0.00" class="order-detail-readonly" oninput="onEstTotalChange(this)" onchange="onEstTotalChange(this)"></td>
 <td><input type="text" placeholder="R. metal" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Ready metal"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="syncReadyWeight(this)" onchange="syncReadyWeight(this)" title="Neg: subtracted from Ready Weight"></td>
 <td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Auto: Ready metal minus Neg"></td>
@@ -2417,6 +2419,8 @@
 <td><button type="button" class="row-del-btn" onclick="this.closest('tr').remove()">X</button></td>
 `;
         itemBody.appendChild(tr);
+        var __typeSelNew = tr.cells[0] && tr.cells[0].querySelector("select");
+        if (__typeSelNew) setPurchaseOptionalFieldsState(tr, __typeSelNew.value === "Purchase");
         // Set Job No same as Order No (Bill No)
         if (billNo && tr.cells[1] && tr.cells[1].children[0]) {
           tr.cells[1].children[0].value = billNo.value || generateBillNo();
@@ -2462,21 +2466,53 @@
 
       var _optionalPlaceholders = [];
 
+      /** Other / Sale: full line (stamp, qty, ready metal, rate, making, both totals). Purchase uses the special layout. */
+      function isReadyExtraFullLineRow(typeSel) {
+        const v = typeSel && typeSel.value;
+        return v === "Other" || v === "Sale";
+      }
+
       function setPurchaseOptionalFieldsState(row, isPurchase) {
         if (!row) return;
         const typeSel = row.cells[0] ? row.cells[0].querySelector("select") : null;
-        const isOther = typeSel && typeSel.value === "Other";
 
-        // OTHER: make every column editable & visible
-        if (isOther) {
+        // Other / Sale: respect Global Edit — off = template-style locks (Edit unlocks all); on = full edit + highlight
+        if (isReadyExtraFullLineRow(typeSel)) {
+          const globalEditBtn = document.getElementById("globalEditBtn");
+          const isGlobalEditing = globalEditBtn && globalEditBtn.dataset.editing === "true";
           row.querySelectorAll("input").forEach(input => {
-            input.removeAttribute("readonly");
-            input.classList.remove("order-detail-readonly");
+            const td = input.closest("td");
+            if (!td || td.closest("tr") !== row) return;
+            const idx = Array.prototype.indexOf.call(row.cells, td);
+            if (idx < 0) return;
             input.classList.remove("purchase-field-disabled");
-            input.tabIndex = 0;
             input.style.visibility = "visible";
-            input.style.border = "1px solid #ffc107";
-            input.style.borderRadius = "4px";
+            if (idx === 1) {
+              input.setAttribute("readonly", "readonly");
+              input.style.border = "";
+              input.style.borderRadius = "";
+              return;
+            }
+            if (isGlobalEditing) {
+              input.removeAttribute("readonly");
+              input.classList.remove("order-detail-readonly");
+              input.tabIndex = 0;
+              input.style.border = "1px solid #ffc107";
+              input.style.borderRadius = "4px";
+              return;
+            }
+            input.style.border = "";
+            input.style.borderRadius = "";
+            if (idx >= 3 && idx <= 9) {
+              input.setAttribute("readonly", "readonly");
+              input.classList.add("order-detail-readonly");
+            } else if (idx === 15) {
+              input.setAttribute("readonly", "readonly");
+              input.classList.remove("order-detail-readonly");
+            } else {
+              input.removeAttribute("readonly");
+              input.classList.remove("order-detail-readonly");
+            }
           });
           return;
         }
@@ -2513,11 +2549,12 @@
           if (cell) {
             var input = cell.querySelector("input");
             if (input) {
-              if (isGlobalEditing && isPurchase) { // ONLY unlocked if Global Edit is active AND row is Purchase
+              // Purchase rows must stay editable (Pc, wt, rate, etc.) without Global Edit
+              if (isPurchase || isGlobalEditing) {
                 input.removeAttribute("readonly");
                 input.classList.remove("order-detail-readonly");
-                input.style.border = "1px solid #ffc107";
-                input.style.borderRadius = "4px";
+                input.style.border = isGlobalEditing ? "1px solid #ffc107" : "";
+                input.style.borderRadius = isGlobalEditing ? "4px" : "";
               } else {
                 input.setAttribute("readonly", "readonly");
                 input.classList.add("order-detail-readonly");
@@ -2536,6 +2573,23 @@
             input.style.visibility = isPurchase ? "hidden" : "visible";
             input.value = isPurchase ? "0" : input.value;
             input.setAttribute("readonly", "readonly"); // it's never editable if purchase
+          }
+        }
+
+        // Est. Total (col 9): editable for Purchase (direct amount); Other/Sale use calc()
+        var estCell = row.cells[9];
+        if (estCell) {
+          var estIn = estCell.querySelector("input");
+          if (estIn) {
+            if (isPurchase) {
+              estIn.removeAttribute("readonly");
+              estIn.classList.remove("order-detail-readonly");
+              estIn.tabIndex = 0;
+              estIn.style.visibility = "visible";
+            } else {
+              estIn.setAttribute("readonly", "readonly");
+              estIn.classList.add("order-detail-readonly");
+            }
           }
         }
       }
@@ -2563,19 +2617,9 @@
         rows.forEach(row => {
           const typeSelect = row.cells[0]?.querySelector("select");
           const isPurchase = typeSelect && typeSelect.value === "Purchase";
-          const isOther = typeSelect && typeSelect.value === "Other";
 
-          // OTHER rows are always fully editable
-          if (isOther) {
-            row.querySelectorAll("input").forEach(input => {
-              input.removeAttribute("readonly");
-              input.classList.remove("order-detail-readonly");
-              input.classList.remove("purchase-field-disabled");
-              input.tabIndex = 0;
-              input.style.visibility = "visible";
-              input.style.border = "1px solid #ffc107";
-              input.style.borderRadius = "4px";
-            });
+          if (isReadyExtraFullLineRow(typeSelect)) {
+            setPurchaseOptionalFieldsState(row, false);
             return;
           }
 
@@ -2585,7 +2629,12 @@
             if (cell) {
               const input = cell.querySelector("input");
               if (input) {
-                if (becomingActive && isPurchase) { // ONLY UNLOCK PURCHASE ROWS
+                if (isPurchase) {
+                  input.removeAttribute("readonly");
+                  input.classList.remove("order-detail-readonly");
+                  input.style.border = becomingActive ? "1px solid #ffc107" : "";
+                  input.style.borderRadius = becomingActive ? "4px" : "";
+                } else if (becomingActive) {
                   input.removeAttribute("readonly");
                   input.classList.remove("order-detail-readonly");
                   input.style.border = "1px solid #ffc107";
@@ -2612,6 +2661,18 @@
         });
       }
 
+      /* Purchase: Est. Total (col 9) is typed directly; copy to Final (col 15) */
+      function onEstTotalChange(el) {
+        if (!el || !el.closest) return;
+        const r = el.closest("tr");
+        if (!r || !r.cells) return;
+        const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
+        if (typeSelect && typeSelect.value === "Purchase") {
+          syncSecondTotalFromRow(r);
+          setTimeout(function () { updateInfoPanel(); }, 50);
+        }
+      }
+
       /* TYPE → POPUP */
       function handleTypeChange(sel) {
         if (!orderPopup || !popupDelivery || !popupSample || !popupDays) {
@@ -2619,7 +2680,7 @@
         }
 
         const row = sel.closest("tr");
-        const allowedTypes = ["Purchase", "Other"];
+        const allowedTypes = ["Purchase", "Other", "Sale"];
 
         setPurchaseOptionalFieldsState(row, sel.value === "Purchase");
 
@@ -3815,11 +3876,17 @@
         if (gstRate) gstRate.value = order.gst || "";
 
 
-        // Customer name is always editable when editing
+        // Customer name read-only when opened from All Bill (editCustomerReadOnly)
         if (custName) {
-          custName.disabled = false;
-          custName.style.backgroundColor = "";
-          custName.style.cursor = "";
+          if (localStorage.getItem("editCustomerReadOnly") === "true") {
+            custName.disabled = true;
+            custName.style.backgroundColor = "#f5f5f7";
+            custName.style.cursor = "not-allowed";
+          } else {
+            custName.disabled = false;
+            custName.style.backgroundColor = "";
+            custName.style.cursor = "";
+          }
         }
 
 
@@ -3860,7 +3927,7 @@
           if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
             itemBody.querySelectorAll("tr").forEach(function (tr) {
               var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
-              if (typeSel && typeSel.value === "Purchase") setPurchaseOptionalFieldsState(tr, true);
+              if (typeSel) setPurchaseOptionalFieldsState(tr, typeSel.value === "Purchase");
             });
           }
         } else {
@@ -3920,7 +3987,12 @@
 
         if (orderDate) orderDate.value = b.date || "";
         if (dueDate) dueDate.value = b.dueDate || "";
-        if (billNo) billNo.value = b.billNo || "";
+        if (billNo) {
+          billNo.value = b.billNo || "";
+          billNo.readOnly = true;
+          billNo.style.backgroundColor = "#f5f5f7";
+          billNo.style.cursor = "not-allowed";
+        }
         if (itemBody) itemBody.innerHTML = "";
 
         const billRows = b.rows || b.items || [];
@@ -3948,7 +4020,7 @@
         if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
           itemBody.querySelectorAll("tr").forEach(function (tr) {
             var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
-            if (typeSel && typeSel.value === "Purchase") setPurchaseOptionalFieldsState(tr, true);
+            if (typeSel) setPurchaseOptionalFieldsState(tr, typeSel.value === "Purchase");
           });
         }
 
@@ -3961,6 +4033,12 @@
           if (typeof updateInfoPanel === "function") updateInfoPanel();
           if (typeof updatePaymentPanel === "function") updatePaymentPanel();
         }, 400);
+
+        if (localStorage.getItem("editCustomerReadOnly") === "true" && custName) {
+          custName.disabled = true;
+          custName.style.backgroundColor = "#f5f5f7";
+          custName.style.cursor = "not-allowed";
+        }
       }
 
       /* INVOICE */
@@ -5309,7 +5387,8 @@
         const advanced = getPaidAmount(billNo.value, 'Advanced');
         const paid = getPaidAmount(billNo.value, 'Paid');
         const mainNetTotalFinal = finalOrderTotal + finalRepairTotal + finalSaleTotal - finalPurchaseTotal;
-        // Total panel only: Balance = Net Bill Total (Est. Total col 9) − Advanced
+        // Display Advance = advances + purchase est. (col 9), same as orders / pending / ready lists. Balance unchanged.
+        const advancedInclPurchaseDisplay = advanced + estPurchaseCol9;
         const balanceCol9 = estTotalNetMain - advanced;
 
         const root = getSearchRoot();
@@ -5322,7 +5401,7 @@
         setPanel("#panelSaleTotalMain", formatCurrency(estSaleCol9));
         setPanel("#panelPurchaseTotal", formatCurrency(estPurchaseCol9));
         setPanel("#panelBillTotal", formatCurrency(estTotalNetMain));
-        setPanel("#panelAdvanced", formatCurrency(advanced));
+        setPanel("#panelAdvanced", formatCurrency(advancedInclPurchaseDisplay));
         setPanel("#panelBalance", formatCurrency(balanceCol9));
 
         const panelWrap = root.querySelector("#panelPurchaseSaleDetailWrap");
@@ -5927,6 +6006,7 @@
         window.loadOrderForEdit = loadOrderForEdit;
         window.loadBill = loadBill;
         window.handleTypeChange = handleTypeChange;
+        window.onEstTotalChange = onEstTotalChange;
         window.calculateDeliveryDate = calculateDeliveryDate;
         window.saveOrderPopup = saveOrderPopup;
         window.closePopup = closePopup;
@@ -6003,7 +6083,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'showInvoice', 'back', 'openPayment', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'showInvoice', 'back', 'openPayment', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();

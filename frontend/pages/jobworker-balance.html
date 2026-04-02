@@ -193,6 +193,7 @@
     .lc-modal {
       background: #fff;
       width: 100vw;
+      min-height: 100vh;
       height: 100vh;
       max-height: 100vh;
       border-radius: 0;
@@ -276,26 +277,50 @@
       border-color: #fca5a5;
     }
 
-    /* table */
+    /* Ledger: scroll entries only; Total row fixed at bottom of this block */
     .lc-body {
       flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lc-table-scroll {
+      flex: 1;
+      min-height: 0;
       overflow: auto;
+    }
+
+    .lc-total-wrap {
+      flex-shrink: 0;
+      background: #f0fdf4;
+      border-top: 2px solid #a7f3d0;
+      box-shadow: 0 -4px 14px rgba(15, 23, 42, 0.08);
     }
 
     .lc-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 15px;
+      table-layout: fixed;
+    }
+
+    .lc-table-total {
+      margin: 0;
+    }
+
+    .lc-table-total .tot-row td {
+      border-top: none;
     }
 
     .lc-table th {
       background: #f1f5f9;
       color: #64748b;
       font-weight: 600;
-      padding: 9px 12px;
+      padding: 10px 12px;
       text-align: left;
       border: 1px solid var(--border);
-      font-size: 11.5px;
+      font-size: 12.5px;
       text-transform: uppercase;
       letter-spacing: .04em;
       position: sticky;
@@ -311,8 +336,22 @@
       vertical-align: middle;
     }
 
+    /* Entry rows: no inner padding so inputs fill the cell — avoids “double box” with td + input borders */
+    .lc-table .lc-entry-row > td {
+      padding: 0;
+      vertical-align: middle;
+    }
+
     .lc-table tbody tr:hover {
       background: #f8faff;
+    }
+
+    .lc-table tbody tr.lc-entry-row:hover {
+      background: transparent;
+    }
+
+    .lc-table tbody tr.lc-entry-row:hover .lc-input:not(:focus) {
+      background: #eef2f7;
     }
 
     .lc-table .num {
@@ -333,8 +372,15 @@
     .lc-table .tot-row td {
       background: #f0fdf4;
       font-weight: 700;
-      font-size: 13px;
-      border-top: 2px solid #a7f3d0;
+      font-size: 15px;
+    }
+
+    .lc-table .tot-row td.tot-label {
+      text-align: left;
+    }
+
+    .lc-table .tot-row td.num {
+      text-align: right;
     }
 
     .lc-empty {
@@ -344,40 +390,58 @@
       font-size: 14px;
     }
 
-    /* footer stats */
+    /* footer stats — readable but not oversized */
     .lc-footer {
       border-top: 2px solid var(--border);
-      padding: 10px 20px;
+      padding: 14px 20px;
       background: #f8fafc;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 16px 22px;
       flex-wrap: wrap;
       flex-shrink: 0;
+      margin-top: auto;
     }
 
     .lc-stat {
-      font-size: 12px;
-      color: #475569;
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 600;
+      line-height: 1.4;
     }
 
     .lc-stat strong {
-      color: #1e293b;
+      color: #0f172a;
+      font-size: 17px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      margin-left: 3px;
     }
 
     .lc-purity {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+      font-size: 13px;
     }
 
     .lc-purity input {
-      width: 56px;
-      padding: 3px 6px;
+      width: 64px;
+      min-height: 38px;
+      padding: 6px 8px;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
       text-align: center;
+      color: #0f172a;
+      background: #fff;
+    }
+
+    .lc-purity input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
     }
 
     .lc-btns {
@@ -388,12 +452,12 @@
     }
 
     .lc-btn {
-      padding: 7px 14px;
+      padding: 9px 16px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: #fff;
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       transition: .15s;
     }
@@ -423,24 +487,31 @@
       background: #dc2626;
     }
 
-    /* Editable Input overrides for Table */
+    /* Editable cells: single focus ring (no border + box-shadow double outline) */
     .lc-input {
       width: 100%;
-      border: 1px solid transparent;
-      background: transparent;
-      padding: 4px 6px;
-      font-size: 13px;
+      box-sizing: border-box;
+      border: none;
+      background: #fafbfc;
+      padding: 10px 12px;
+      min-height: 46px;
+      font-size: 15px;
+      line-height: 1.4;
       font-family: inherit;
-      color: inherit;
-      border-radius: 4px;
-      transition: 0.1s;
+      color: #1e293b;
+      border-radius: 0;
+      transition: background 0.12s;
     }
 
     .lc-input:focus {
       background: #fff;
-      border-color: var(--primary);
-      outline: none;
-      box-shadow: 0 0 0 2px var(--primary-soft);
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+
+    .lc-input:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
     }
 
     .lc-input.num-val {
@@ -451,7 +522,8 @@
     }
 
     .lc-input.date-val {
-      width: 110px;
+      width: 100%;
+      min-width: 0;
     }
 
     /* Hide number input arrows */
@@ -472,7 +544,7 @@
       background: transparent;
       border: none;
       color: #ef4444;
-      font-size: 14px;
+      font-size: 16px;
       cursor: pointer;
       padding: 0 4px;
       opacity: 0.3;
@@ -489,8 +561,15 @@
 
     .lc-narr-cell {
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: space-between;
+      gap: 6px;
+      padding: 0 4px 0 0 !important;
+    }
+
+    .lc-narr-cell .lc-narr-input {
+      flex: 1;
+      min-width: 0;
     }
   </style>
   <span>Jobworker Balance</span>
@@ -545,21 +624,53 @@
             id="lcStation">—</span></div>
         <button class="lc-close" onclick="lcClose()">&#x2715;</button>
       </div>
-      <!-- Entries Table -->
+      <!-- Entries scroll; Total row pinned to bottom of this block -->
       <div class="lc-body">
-        <table class="lc-table">
-          <thead>
-            <tr>
-              <th style="width:110px">Date</th>
-              <th class="num" style="width:90px">Metal</th>
-              <th class="num" style="width:90px">Chain</th>
-              <th class="num" style="width:90px">Neg</th>
-              <th class="num" style="width:90px">Maal</th>
-              <th>Narration</th>
-            </tr>
-          </thead>
-          <tbody id="lcEntriesBody"></tbody>
-        </table>
+        <div class="lc-table-scroll">
+          <table class="lc-table lc-table-entries">
+            <colgroup>
+              <col style="width:11%">
+              <col style="width:10%">
+              <col style="width:10%">
+              <col style="width:10%">
+              <col style="width:10%">
+              <col>
+            </colgroup>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="num">Metal</th>
+                <th class="num">Chain</th>
+                <th class="num">Neg</th>
+                <th class="num">Maal</th>
+                <th>Narration</th>
+              </tr>
+            </thead>
+            <tbody id="lcEntriesBody"></tbody>
+          </table>
+        </div>
+        <div class="lc-total-wrap">
+          <table class="lc-table lc-table-total">
+            <colgroup>
+              <col style="width:11%">
+              <col style="width:10%">
+              <col style="width:10%">
+              <col style="width:10%">
+              <col style="width:10%">
+              <col>
+            </colgroup>
+            <tbody>
+              <tr id="lcTotalRow" class="tot-row" aria-label="Column totals">
+                <td class="tot-label"><strong>Total</strong></td>
+                <td class="num"><strong id="lcTotM">0.000</strong></td>
+                <td class="num"><strong id="lcTotC">0.000</strong></td>
+                <td class="num"><strong id="lcTotN">0.000</strong></td>
+                <td class="num"><strong id="lcTotMl">0.000</strong></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <!-- Footer bar -->
       <div class="lc-footer">
@@ -601,6 +712,56 @@
       }
 
       var _allRows = [];
+
+      function num(v) {
+        var n = parseFloat(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      /** Add balance rows for job workers that are not yet in jobworkerBalances (legacy + new saves). */
+      function reconcileMissingJobworkerRows() {
+        var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        var bals = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
+        var entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        var changed = false;
+        jws.forEach(function (jw) {
+          if (!jw) return;
+          var jwId = (jw.jwId || '').trim();
+          var jwName = (jw.name || '').trim();
+          var exists = bals.some(function (b) {
+            return (jwId && String(b.jwId) === String(jwId)) ||
+              (jwName && (b.name || '').trim().toLowerCase() === jwName.toLowerCase());
+          });
+          if (exists) return;
+          var forJw = entries.filter(function (e) {
+            return (jwId && String(e.jobworkerId) === String(jwId)) ||
+              (jwName && (e.jobworkerName || '').trim().toLowerCase() === jwName.toLowerCase());
+          });
+          var sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
+          forJw.forEach(function (e) {
+            sumM += num(e.metal); sumC += num(e.chain); sumN += num(e.nag); sumMl += num(e.maal);
+          });
+          var obM = num(jw.obMetal), obC = num(jw.obChain), obN = num(jw.obNag), obMl = num(jw.obMaal);
+          var relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim();
+          bals.push({
+            id: Date.now() + Math.random(),
+            mark: false,
+            jwId: jw.jwId || '',
+            name: jw.name || '',
+            lfNo: jw.lfNo || '',
+            relation: relation,
+            station: jw.station || '',
+            metal: obM + sumM,
+            chain: obC + sumC,
+            nag: obN + sumN,
+            maal: obMl + sumMl
+          });
+          changed = true;
+        });
+        if (changed) {
+          try { localStorage.setItem(STORE_KEY, JSON.stringify(bals)); } catch (e) { }
+        }
+      }
 
       function renderTable(rows) {
         var tbody = document.getElementById('balanceTableBody');
@@ -654,7 +815,8 @@
           var n = parseFloat(r.nag) || 0;
           var ml = parseFloat(r.maal) || 0;
 
-          var isZero = (m === 0 && c === 0 && n === 0 && ml === 0);
+          function nearlyZero(x) { return Math.abs(x) < 1e-6; }
+          var isZero = nearlyZero(m) && nearlyZero(c) && nearlyZero(n) && nearlyZero(ml);
 
           var matchBal = true;
           if (balFilter === 'zero') matchBal = isZero;
@@ -666,14 +828,22 @@
       }
 
       function loadTable() {
+        reconcileMissingJobworkerRows();
         _allRows = getBalances();
         filterTable();
       }
+
+      // Expose for inline oninput/onchange (required when script runs inside IIFE / dashboard loadPage)
+      window.filterTable = filterTable;
+      window.loadJobworkerBalanceTable = loadTable;
       window.toggleMark = toggleMark;
 
       loadTable();
       window.addEventListener('storage', function (e) {
         if (e.key === STORE_KEY) loadTable();
+      });
+      window.addEventListener('jobworkerBalancesUpdated', function () {
+        loadTable();
       });
 
       /* =========================
@@ -682,8 +852,6 @@
       var _lcJwId = null;
       var _lcJwName = null;
       var _lcEntries = [];
-
-      function num(v) { var n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
 
       function lcFmt(v) { return v || ''; }
       function lcFmtNum(v) { v = parseFloat(v); return Number.isFinite(v) && v !== 0 ? v.toFixed(3) : ''; }
@@ -735,13 +903,13 @@
       function lcBuildRowHtml(e, isLast) {
         var safeNarration = (e.narration || '').replace(/"/g, '&quot;');
         return '<tr class="lc-entry-row">' +
-          '<td><input type="date" class="lc-input date-val" value="' + (e.date || '') + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
-          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.metal) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
-          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.chain) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
-          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.nag) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
-          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.maal) + '" oninput="lcComputeTotals()" onkeydown="lcHandleEnter(event, this)"></td>' +
+          '<td><input type="date" class="lc-input date-val" value="' + (e.date || '') + '" oninput="lcComputeTotals()" onkeydown="lcEntryKeydown(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.metal) + '" oninput="lcComputeTotals()" onkeydown="lcEntryKeydown(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.chain) + '" oninput="lcComputeTotals()" onkeydown="lcEntryKeydown(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.nag) + '" oninput="lcComputeTotals()" onkeydown="lcEntryKeydown(event, this)"></td>' +
+          '<td><input type="number" step="0.001" class="lc-input num-val" value="' + lcFmtNum(e.maal) + '" oninput="lcComputeTotals()" onkeydown="lcEntryKeydown(event, this)"></td>' +
           '<td class="lc-narr-cell">' +
-          '<input type="text" class="lc-input lc-narr-input" value="' + safeNarration + '" onkeydown="lcHandleEnter(event, this)">' +
+          '<input type="text" class="lc-input lc-narr-input" value="' + safeNarration + '" onkeydown="lcEntryKeydown(event, this)">' +
           '<button type="button" class="lc-row-del" onclick="lcDelRow(this)" title="Remove Row">&#x2715;</button>' +
           '</td>' +
           '</tr>';
@@ -806,42 +974,126 @@
           totMl += num(inputs[4].value);
         });
 
-        // Rebuild Totals row at the bottom (remove old one first)
-        var oldTot = tbody.querySelector('.tot-row');
-        if (oldTot) oldTot.remove();
-        var totTr = document.createElement('tr');
-        totTr.className = 'tot-row';
-        totTr.innerHTML = '<td><strong>Total</strong></td>' +
-          '<td class="num"><strong>' + totM.toFixed(3) + '</strong></td>' +
-          '<td class="num"><strong>' + totC.toFixed(3) + '</strong></td>' +
-          '<td class="num"><strong>' + totN.toFixed(3) + '</strong></td>' +
-          '<td class="num"><strong>' + totMl.toFixed(3) + '</strong></td>' +
-          '<td></td>';
-        tbody.appendChild(totTr);
+        var elM = document.getElementById('lcTotM');
+        var elC = document.getElementById('lcTotC');
+        var elN = document.getElementById('lcTotN');
+        var elMl = document.getElementById('lcTotMl');
+        if (elM) elM.textContent = totM.toFixed(3);
+        if (elC) elC.textContent = totC.toFixed(3);
+        if (elN) elN.textContent = totN.toFixed(3);
+        if (elMl) elMl.textContent = totMl.toFixed(3);
 
-        // Footer stats
-        var purity = parseFloat(document.getElementById('lcPurity').value) || 100;
+        // Footer stats (T. Metal / Net / Pending)
         var tMetal = totM - totC - totN;
         document.getElementById('lcTotalMetal').textContent = tMetal.toFixed(3);
         lcUpdateNet();
       };
 
-      window.lcHandleEnter = function (e, inputEl) {
-        if (e.key === 'Enter') {
+      function lcGetRowInputs(tr) {
+        return Array.prototype.slice.call(tr.querySelectorAll('input')).filter(function (inp) {
+          return inp.type !== 'button' && !inp.closest('button');
+        });
+      }
+
+      function lcFocusCell(tbody, rowIdx, colIdx) {
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('.lc-entry-row'));
+        if (rowIdx < 0 || rowIdx >= rows.length) return false;
+        var inputs = lcGetRowInputs(rows[rowIdx]);
+        if (colIdx < 0 || colIdx >= inputs.length) return false;
+        var el = inputs[colIdx];
+        el.focus();
+        try {
+          if (el.select && el.type !== 'date') el.select();
+        } catch (err) { }
+        return true;
+      }
+
+      function lcAppendEntryRow(tbody) {
+        var newRow = document.createElement('tr');
+        newRow.className = 'lc-entry-row';
+        newRow.innerHTML = lcBuildRowHtml({ date: new Date().toISOString().slice(0, 10) }).replace('<tr class="lc-entry-row">', '').replace('</tr>', '');
+        tbody.appendChild(newRow);
+        lcComputeTotals();
+        return newRow;
+      }
+
+      /** Enter + arrow keys: Excel-style grid in ledger entries */
+      window.lcEntryKeydown = function (e, inputEl) {
+        var tr = inputEl.closest('tr');
+        var tbody = document.getElementById('lcEntriesBody');
+        if (!tr || !tbody || !tr.classList.contains('lc-entry-row')) return;
+
+        var rows = Array.prototype.slice.call(tbody.querySelectorAll('.lc-entry-row'));
+        var r = rows.indexOf(tr);
+        var inputs = lcGetRowInputs(tr);
+        var c = inputs.indexOf(inputEl);
+        if (c < 0) return;
+
+        var key = e.key;
+        if (key !== 'Enter' && key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'ArrowLeft' && key !== 'ArrowRight') {
+          return;
+        }
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+        var lastCol = inputs.length - 1;
+        var lastRow = rows.length - 1;
+
+        if (key === 'Enter') {
           e.preventDefault();
-          var tr = inputEl.closest('tr');
-          var tbody = document.getElementById('lcEntriesBody');
-          var rows = Array.from(tbody.querySelectorAll('.lc-entry-row'));
-          if (rows.indexOf(tr) === rows.length - 1) {
-            // It's the last row, add new row
-            var newRow = document.createElement('tr');
-            newRow.className = 'lc-entry-row';
-            newRow.innerHTML = lcBuildRowHtml({ date: new Date().toISOString().slice(0, 10) }).replace('<tr class="lc-entry-row">', '').replace('</tr>', '');
-            tbody.insertBefore(newRow, tbody.querySelector('.tot-row'));
-            newRow.querySelector('input').focus();
+          if (r < lastRow) {
+            lcFocusCell(tbody, r + 1, c);
+          } else {
+            lcAppendEntryRow(tbody);
+            lcFocusCell(tbody, rows.length, c);
+          }
+          return;
+        }
+
+        if (key === 'ArrowRight') {
+          e.preventDefault();
+          if (c < lastCol) {
+            inputs[c + 1].focus();
+            try { if (inputs[c + 1].select && inputs[c + 1].type !== 'date') inputs[c + 1].select(); } catch (err2) { }
+          } else if (r < lastRow) {
+            lcFocusCell(tbody, r + 1, 0);
+          } else {
+            lcAppendEntryRow(tbody);
+            lcFocusCell(tbody, rows.length, 0);
+          }
+          return;
+        }
+
+        if (key === 'ArrowLeft') {
+          e.preventDefault();
+          if (c > 0) {
+            inputs[c - 1].focus();
+            try { if (inputs[c - 1].select && inputs[c - 1].type !== 'date') inputs[c - 1].select(); } catch (err3) { }
+          } else if (r > 0) {
+            lcFocusCell(tbody, r - 1, lastCol);
+          }
+          return;
+        }
+
+        if (key === 'ArrowDown') {
+          e.preventDefault();
+          if (r < lastRow) {
+            lcFocusCell(tbody, r + 1, c);
+          } else {
+            lcAppendEntryRow(tbody);
+            lcFocusCell(tbody, rows.length, c);
+          }
+          return;
+        }
+
+        if (key === 'ArrowUp') {
+          e.preventDefault();
+          if (r > 0) {
+            lcFocusCell(tbody, r - 1, c);
           }
         }
       };
+
+      window.lcHandleEnter = window.lcEntryKeydown;
 
       window.lcClose = function () {
         document.getElementById('lcOverlay').classList.remove('open');

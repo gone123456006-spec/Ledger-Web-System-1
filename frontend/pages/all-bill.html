@@ -311,7 +311,7 @@
             <th>Customer</th>
             <th>Bill Date</th>
             <th class="right">Net (₹)</th>
-            <th class="right">Advance (₹)</th>
+            <th class="right" title="Payment advances (non-Paid) + purchase line totals — same as Orders / Ready Extra">Advance (₹)</th>
             <th class="right">Paid (₹)</th>
             <th class="right">Weight (g)</th>
             <th class="right">Balance (₹)</th>
@@ -565,6 +565,9 @@
           const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           balance.computedBalAmt = balAmt;
 
+          // Display only: advances + purchase (same as orders / pending / ready / ready-extra Advance line)
+          const advanceDisplay = advanceAmt + purchaseTotal;
+
           row.innerHTML = `
         <td class="center">${statusLabel}</td>
         <td style="font-weight:600;color:#2a50d8;">${balance.orderNo || balance.billNo || '—'}</td>
@@ -572,7 +575,7 @@
         <td>${balance.customer || '—'}</td>
         <td>${balance.date || '—'}</td>
         <td class="right">${netAmt.toFixed(2)}</td>
-        <td class="right">${advanceAmt.toFixed(2)}</td>
+        <td class="right">${advanceDisplay.toFixed(2)}</td>
         <td class="right">${paidAmt.toFixed(2)}</td>
         <td class="right">${grWt.toFixed(3)}</td>
         <td class="right" style="font-weight:600;">${balAmt.toFixed(2)}</td>
@@ -844,6 +847,7 @@
         // We'll use a special flag to indicate we're editing from all-bill
         localStorage.setItem("editBalanceEntry", JSON.stringify(balanceEntry));
         localStorage.setItem("editFromAllBill", "true");
+        localStorage.setItem("editCustomerReadOnly", "true");
 
         // If balance entry has rows data, we can load it directly
         // Otherwise, try to find the order from orders storage

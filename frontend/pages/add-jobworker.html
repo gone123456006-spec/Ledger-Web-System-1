@@ -399,6 +399,8 @@
     }
     .search-dropdown-item { padding: 10px 16px; font-size: 14px; cursor: pointer; transition: all 0.15s; border-radius: 4px; margin: 0 6px; }
     .search-dropdown-item:hover { background: #f0f4ff; color: var(--primary); }
+
+    .search-dropdown-item.active { background: #dbeafe; color: var(--primary); }
     .search-dropdown-item span { font-size: 12px; color: var(--muted); margin-left: 8px; font-style: italic; }
     .search-dropdown-empty { padding: 12px 16px; font-size: 13px; color: var(--muted); text-align: center; font-style: italic; }
   </style>
@@ -541,6 +543,59 @@
         setTimeout(() => t.classList.remove('show'), 3000);
       }
 
+      function numJw(v) {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      /** Upsert jobworkerBalances so new/edited workers appear on Jobworker Balance (same totals as ledger sync). */
+      function syncJobworkerBalanceRow(jw) {
+        try {
+          const entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+          const jwId = (jw.jwId || '').trim();
+          const jwName = (jw.name || '').trim();
+          const forJw = entries.filter(function (e) {
+            return (jwId && String(e.jobworkerId) === String(jwId)) ||
+              (jwName && (e.jobworkerName || '').trim().toLowerCase() === jwName.toLowerCase());
+          });
+          let sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
+          forJw.forEach(function (e) {
+            sumM += numJw(e.metal); sumC += numJw(e.chain); sumN += numJw(e.nag); sumMl += numJw(e.maal);
+          });
+          const obM = numJw(jw.obMetal), obC = numJw(jw.obChain), obN = numJw(jw.obNag), obMl = numJw(jw.obMaal);
+          const finM = obM + sumM, finC = obC + sumC, finN = obN + sumN, finMl = obMl + sumMl;
+          const relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim();
+
+          let bals = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
+          const bIdx = bals.findIndex(function (b) {
+            return (jwId && String(b.jwId) === String(jwId)) ||
+              (jwName && (b.name || '').trim().toLowerCase() === jwName.toLowerCase());
+          });
+          const row = {
+            id: bIdx >= 0 ? bals[bIdx].id : Date.now(),
+            mark: bIdx >= 0 ? !!bals[bIdx].mark : false,
+            jwId: jw.jwId || '',
+            name: jw.name || '',
+            lfNo: jw.lfNo || '',
+            relation: relation,
+            station: jw.station || '',
+            metal: finM,
+            chain: finC,
+            nag: finN,
+            maal: finMl
+          };
+          if (bIdx >= 0) bals[bIdx] = row; else bals.push(row);
+          localStorage.setItem('jobworkerBalances', JSON.stringify(bals));
+          try {
+            window.dispatchEvent(new CustomEvent('jobworkerBalancesUpdated'));
+            if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent('jobworkerBalancesUpdated'));
+            if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent('jobworkerBalancesUpdated'));
+          } catch (e) { }
+        } catch (e) {
+          console.error('syncJobworkerBalanceRow', e);
+        }
+      }
+
       // ── AUTO LF No ─────────────────────────────────
       function generateLfNo() {
         const list = JSON.parse(localStorage.getItem('jobworkers') || '[]');
@@ -554,6 +609,8 @@
       }
 
       // ── STATION DROPDOWN UI ─────────────────────────
+      var jwStationDropdownActiveIdx = -1;
+
       function getJwStations() {
         const stored = JSON.parse(localStorage.getItem('stations') || '[]');
         const cust = JSON.parse(localStorage.getItem('customers') || '[]').map(function (c) { return c.station; }).filter(Boolean);
@@ -579,6 +636,7 @@
       function renderJwStationDropdown(list) {
         var dd = document.getElementById('jwStationDropdown');
         if (!dd) return;
+        jwStationDropdownActiveIdx = -1;
         if (!list.length) {
           dd.innerHTML = '<div class="search-dropdown-empty">No matching stations.<br>Type and click "+" to add.</div>';
         } else {
@@ -737,6 +795,7 @@
           if (idx >= 0) {
             list[idx] = data;
             localStorage.setItem('jobworkers', JSON.stringify(list));
+            syncJobworkerBalanceRow(data);
             localStorage.removeItem('editJobworkerId');
             localStorage.removeItem('editJobworkerPayload');
             editId = null;
@@ -750,6 +809,7 @@
         localStorage.setItem('lastJobworkerId', String(Number(last) + 1));
         list.push(data);
         localStorage.setItem('jobworkers', JSON.stringify(list));
+        syncJobworkerBalanceRow(data);
         showToast('Job Worker saved successfully!', 'success');
         return true;
       }
@@ -802,6 +862,112 @@
         }
       }
 
+      // ── KEYBOARD: Arrow Up/Down move between fields; Station dropdown supports Arrow Up/Down + Enter ──
+      var JW_ADD_FIELD_CHAIN = ['jwName', 'jwRelationType', 'jwRelationName', 'jwLfNo', 'jwObDate', 'jwObMetal', 'jwObChain', 'jwObNag', 'jwObMaal', 'jwAddress', 'jwStation', 'jwPhone', 'jwMobile', 'jwEmail'];
+
+      function focusJwAddFieldByIndex(idx) {
+        if (idx < 0) idx = JW_ADD_FIELD_CHAIN.length - 1;
+        if (idx >= JW_ADD_FIELD_CHAIN.length) idx = 0;
+        var root = getFormRoot();
+        var id = JW_ADD_FIELD_CHAIN[idx];
+        var el = (root && root.querySelector('#' + id)) || document.getElementById(id);
+        if (!el || el.disabled) return;
+        el.focus();
+        try { if (el.select && el.tagName === 'INPUT' && el.type !== 'date') el.select(); } catch (err) { }
+      }
+
+      function stationDropdownIsOpen() {
+        var dd = document.getElementById('jwStationDropdown');
+        return !!(dd && dd.style.display === 'block');
+      }
+
+      function getJwStationDropdownItems() {
+        var dd = document.getElementById('jwStationDropdown');
+        if (!dd) return [];
+        return Array.from(dd.querySelectorAll('.search-dropdown-item'));
+      }
+
+      function setJwStationDropdownActive(idx) {
+        var items = getJwStationDropdownItems();
+        items.forEach(function (it) { it.classList.remove('active'); });
+        jwStationDropdownActiveIdx = -1;
+        if (idx < 0 || idx >= items.length) return;
+        jwStationDropdownActiveIdx = idx;
+        items[jwStationDropdownActiveIdx].classList.add('active');
+      }
+
+      function moveJwStationDropdownActive(delta) {
+        var items = getJwStationDropdownItems();
+        if (!items.length) return;
+        var next = jwStationDropdownActiveIdx;
+        if (next < 0) next = delta > 0 ? 0 : items.length - 1;
+        else next = next + delta;
+        if (next < 0) next = 0;
+        if (next >= items.length) next = items.length - 1;
+        setJwStationDropdownActive(next);
+        try { items[next].scrollIntoView({ block: 'nearest' }); } catch (err) { }
+      }
+
+      function selectJwStationDropdownActive() {
+        var items = getJwStationDropdownItems();
+        if (!items.length) return;
+        var idx = jwStationDropdownActiveIdx;
+        if (idx < 0 || idx >= items.length) idx = 0;
+        var name = (items[idx] && items[idx].textContent ? items[idx].textContent.trim() : '');
+        if (!name) return;
+        window.selectJwStation(name);
+        jwStationDropdownActiveIdx = -1;
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        var t = e.target;
+        if (!t || !t.id) return;
+
+        // Station dropdown controls
+        if (t.id === 'jwStation') {
+          if (e.key === 'Escape') {
+            var dd = document.getElementById('jwStationDropdown');
+            if (dd && dd.style.display === 'block') {
+              e.preventDefault();
+              dd.style.display = 'none';
+              jwStationDropdownActiveIdx = -1;
+            }
+            return;
+          }
+
+          if (e.key === 'Enter') {
+            if (stationDropdownIsOpen()) {
+              var items = getJwStationDropdownItems();
+              if (items.length) {
+                e.preventDefault();
+                selectJwStationDropdownActive();
+                return;
+              }
+            }
+          }
+
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            var dd = document.getElementById('jwStationDropdown');
+            if (!stationDropdownIsOpen()) showJwStationDropdown();
+            if (dd && dd.style.display === 'block') {
+              var items = getJwStationDropdownItems();
+              if (items.length) {
+                e.preventDefault();
+                moveJwStationDropdownActive(e.key === 'ArrowDown' ? 1 : -1);
+                return;
+              }
+            }
+          }
+        }
+
+        // Field-to-field navigation
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        if (!JW_ADD_FIELD_CHAIN.includes(t.id)) return;
+        e.preventDefault();
+        focusJwAddFieldByIndex(JW_ADD_FIELD_CHAIN.indexOf(t.id) + (e.key === 'ArrowDown' ? 1 : -1));
+      });
+
       // ── BUTTON HANDLERS: clear form on each action so next visit or new entry is clean ──
       window.saveAndClose = function () {
         if (save()) {
@@ -853,7 +1019,5 @@
     })();
   </script>
 </body>
-
-</html>
 
 </html>

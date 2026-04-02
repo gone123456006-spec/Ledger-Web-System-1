@@ -136,11 +136,11 @@
     .row select,
     .row textarea {
       flex: 1;
-      height: 40px;
-      padding: 8px 12px;
+      height: 44px;
+      padding: 10px 14px;
       border-radius: 10px;
       border: 1px solid var(--border);
-      font-size: 15px;
+      font-size: 16px;
       background: #fff;
       transition: .2s;
       color: var(--text);
@@ -274,6 +274,13 @@
     .jw-dropdown div:hover {
       background: var(--primary-soft);
       color: var(--primary);
+    }
+
+    .jw-dropdown div.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      outline: 2px solid rgba(37, 99, 235, 0.25);
+      outline-offset: -2px;
     }
 
     .jw-dropdown-empty {
@@ -489,7 +496,7 @@
     </div>
 
     <!-- Hint -->
-    <div class="hint-bar"><span>Ctrl + M :</span> Add Job Worker</div>
+    <div class="hint-bar"><span>Ctrl + M :</span> Add Job Worker · <span>↑ ↓</span> move between fields</div>
 
   </div>
 
@@ -506,6 +513,54 @@
 
       // ── LOAD JOBWORKERS FROM JOB WORKER LIST (localStorage jobworkers) ───
       let _jwData = [];
+      let jwDropdownActiveIdx = -1;
+
+      function getJwDropdownOptions() {
+        const dd = document.getElementById('jwDropdown');
+        if (!dd) return [];
+        return Array.from(dd.querySelectorAll('div[role="option"]'));
+      }
+
+      function clearJwDropdownActive() {
+        const opts = getJwDropdownOptions();
+        opts.forEach(o => o.classList.remove('active'));
+        jwDropdownActiveIdx = -1;
+      }
+
+      function setJwDropdownActive(idx) {
+        const opts = getJwDropdownOptions();
+        opts.forEach(o => o.classList.remove('active'));
+        if (idx < 0 || idx >= opts.length) {
+          jwDropdownActiveIdx = -1;
+          return;
+        }
+        jwDropdownActiveIdx = idx;
+        opts[jwDropdownActiveIdx].classList.add('active');
+      }
+
+      function isJwDropdownOpen() {
+        const dd = document.getElementById('jwDropdown');
+        return !!(dd && dd.style.display === 'block');
+      }
+
+      function moveJwDropdownActive(delta) {
+        const opts = getJwDropdownOptions();
+        if (!opts.length) return;
+        let next = jwDropdownActiveIdx;
+        if (next < 0) next = delta > 0 ? 0 : opts.length - 1;
+        else next = next + delta;
+        if (next < 0) next = 0;
+        if (next >= opts.length) next = opts.length - 1;
+        setJwDropdownActive(next);
+      }
+
+      function selectJwDropdownActive() {
+        const opts = getJwDropdownOptions();
+        if (jwDropdownActiveIdx < 0 || jwDropdownActiveIdx >= opts.length) return;
+        const node = opts[jwDropdownActiveIdx];
+        const name = node && node.getAttribute('data-name');
+        if (name != null) selectJwName(name);
+      }
 
       function loadJobworkers() {
         _jwData = JSON.parse(localStorage.getItem('jobworkers') || '[]');
@@ -521,6 +576,8 @@
         var el = document.getElementById('jwDropdown');
         if (!el) return;
         list = list || _jwData;
+        jwDropdownActiveIdx = -1;
+        clearJwDropdownActive();
         if (list.length === 0) {
           var msg = isFiltered ? 'No matching name found.' : 'No Job Workers available.';
           el.innerHTML = '<div class="jw-dropdown-empty">' + msg + '</div>';
@@ -549,6 +606,7 @@
         }
         var el = document.getElementById('jwDropdown');
         if (el) el.style.display = 'none';
+        clearJwDropdownActive();
       }
       window.selectJwName = selectJwName;
 
@@ -557,6 +615,7 @@
         fillJwDropdown(_jwData);
         var el = document.getElementById('jwDropdown');
         if (el) el.style.display = 'block';
+        setJwDropdownActive(0);
       }
       window.showJwDropdown = showJwDropdown;
 
@@ -566,6 +625,7 @@
         fillJwDropdown(list, !!q);
         var el = document.getElementById('jwDropdown');
         if (el) el.style.display = 'block';
+        setJwDropdownActive(0);
       }
       window.filterJwDropdown = filterJwDropdown;
 
@@ -791,12 +851,73 @@
         goBack();
       };
 
-      // ── KEYBOARD SHORTCUT: Ctrl+M = Add Jobworker ──
+      // ── KEYBOARD: Ctrl+M = Add Jobworker; Arrow Up/Down = move between entry fields ──
+      var JW_ENTRY_FIELD_CHAIN = ['jwName', 'entryDate', 'entryMetal', 'entryChain', 'entryNag', 'entryMaal', 'entryNarration'];
+
+      function focusJwFieldByIndex(idx) {
+        if (idx < 0) idx = JW_ENTRY_FIELD_CHAIN.length - 1;
+        if (idx >= JW_ENTRY_FIELD_CHAIN.length) idx = 0;
+        var root = getFormRoot();
+        var id = JW_ENTRY_FIELD_CHAIN[idx];
+        var el = root.querySelector('#' + id) || document.getElementById(id);
+        if (!el || el.disabled) return;
+        el.focus();
+        try {
+          if (el.select && el.tagName === 'INPUT' && el.type !== 'date') el.select();
+        } catch (err) { }
+      }
+
+      function jwEntryFieldIndex(el) {
+        if (!el || !el.id) return -1;
+        return JW_ENTRY_FIELD_CHAIN.indexOf(el.id);
+      }
+
       document.addEventListener('keydown', function (e) {
         if (e.ctrlKey && e.key.toLowerCase() === 'm') {
           e.preventDefault();
           addJobworker();
+          return;
         }
+
+        var t = e.target;
+        var isOnJwName = t && t.id === 'jwName';
+        if (isOnJwName) {
+          // Dropdown keyboard handling: ArrowUp/ArrowDown = option navigation, Enter selects.
+          if (e.key === 'Escape') {
+            var dd = document.getElementById('jwDropdown');
+            if (dd && dd.style.display === 'block') {
+              e.preventDefault();
+              if (dd) dd.style.display = 'none';
+              clearJwDropdownActive();
+            }
+            return;
+          }
+          if (e.key === 'Enter' && isJwDropdownOpen()) {
+            e.preventDefault();
+            selectJwDropdownActive();
+            return;
+          }
+          if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !(e.altKey || e.ctrlKey || e.metaKey)) {
+            // If dropdown isn't open yet, open it on arrow navigation.
+            if (!isJwDropdownOpen()) showJwDropdown();
+            if (isJwDropdownOpen()) {
+              const opts = getJwDropdownOptions();
+              if (opts.length) {
+                e.preventDefault();
+                moveJwDropdownActive(e.key === 'ArrowDown' ? 1 : -1);
+                return;
+              }
+            }
+          }
+        }
+
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        if (e.altKey || e.ctrlKey || e.metaKey) return;
+        var ix = jwEntryFieldIndex(t);
+        if (ix === -1) return;
+        e.preventDefault();
+        if (e.key === 'ArrowDown') focusJwFieldByIndex(ix + 1);
+        else focusJwFieldByIndex(ix - 1);
       });
 
       // ── INIT: when opened from sidebar or any visit, clear form so data is reset ──

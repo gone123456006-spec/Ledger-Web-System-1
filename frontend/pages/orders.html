@@ -352,6 +352,9 @@
       <input type="date" id="filterToDate" onchange="filterTable()">
 
       <button class="btn" onclick="clearDateFilter()" style="padding:6px 12px; font-size:12px;">Clear filter</button>
+
+      <button type="button" class="btn" onclick="setMarkAllVisible(true)" style="padding:6px 12px; font-size:12px;" title="Mark every order currently shown in the list (respects date filter)">Mark all</button>
+      <button type="button" class="btn" onclick="setMarkAllVisible(false)" style="padding:6px 12px; font-size:12px;" title="Clear mark on every order currently shown in the list (respects date filter)">Unmark all</button>
     </div>
 
     <!-- TABLE -->
@@ -367,7 +370,7 @@
             <th>Due Date</th>
             <th class="right">Gr.Wt</th>
             <th class="right">Net (Rs)</th>
-            <th class="right">Advance (Rs)</th>
+            <th class="right" title="Payment advances (non-Paid) + purchase line totals">Advance</th>
             <th class="right">Balance</th>
             <th class="center">Action</th>
           </tr>
@@ -423,7 +426,7 @@
       return true;
     }
 
-    /** Sum of payment rows for this bill (same idea as new-order getPaidAmount). */
+    /** Sum of payment rows for this bill (all types). */
     function getPaidAmountForBill(billNo) {
       if (!billNo) return 0;
       try {
@@ -435,6 +438,32 @@
       } catch (e) {
         return 0;
       }
+    }
+
+    /** Advances only: same rule as new-order — amounts where type is not final Paid. */
+    function getAdvancePaymentsForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        const key = String(billNo).trim();
+        return payments
+          .filter(p => p && String(p.billNo || "").trim() === key && p.type !== "Paid")
+          .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    /** Amount for a line (new-order col 12, ready-extra / legacy col 9). */
+    function orderItemLineAmount(item) {
+      const v = item.values || [];
+      if (!v.length) return 0;
+      if (v[12] !== undefined && v[12] !== "" && v[12] !== null) {
+        const n = parseFloat(v[12]);
+        if (!isNaN(n)) return n;
+      }
+      const n9 = parseFloat(v[9]);
+      return isNaN(n9) ? 0 : n9;
     }
 
     /* =========================
@@ -469,8 +498,9 @@
           const row = document.createElement("tr");
           row.dataset.orderId = order.id;
 
-          // Same rules as new-order: non-Purchase lines add; Purchase subtracts from net bill;
-          // Advance column = paid only; Balance = net bill − paid (do not add purchase into advance).
+          // Same rules as new-order: non-Purchase lines add; Purchase subtracts from net bill.
+          // Advance column = payment advances (non-Paid) + purchase line totals (see header title).
+          // Balance = net bill − all payments recorded for the bill.
           let displayGrWt = 0;
           let orderSideTotal = 0;
           let purchaseTotal = 0;
@@ -479,7 +509,7 @@
             order.items.forEach(item => {
               const type = item.type || (item.values && item.values[0]) || "Order";
               const grWt = parseFloat(item.values[9] || 0);
-              const net = parseFloat(item.values[12] || 0);
+              const net = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(item.values[12] || 0) || 0);
 
               if (type === "Purchase") {
                 purchaseTotal += net;
@@ -498,12 +528,15 @@
             : orderSideTotal;
 
           const billNo = order.orderNo || order.billNo;
-          let paidDisplay = getPaidAmountForBill(billNo);
-          if (!paidDisplay) paidDisplay = parseFloat(order.advance || 0) || 0;
+          let advanceOnly = getAdvancePaymentsForBill(billNo);
+          if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
+
+          let totalPaymentsForBalance = getPaidAmountForBill(billNo);
+          if (!totalPaymentsForBalance) totalPaymentsForBalance = parseFloat(order.advance || 0) || 0;
 
           const displayNet = netBill;
-          const displayAdvance = paidDisplay;
-          const displayBalance = netBill - paidDisplay;
+          const displayAdvance = advanceOnly + purchaseTotal;
+          const displayBalance = netBill - totalPaymentsForBalance;
 
           const isMarked = order.marked === true;
           row.innerHTML = `
@@ -840,6 +873,41 @@
       }
     }
 
+    /** Set marked true/false for every order row currently visible (respects date range filter). */
+    function setMarkAllVisible(marked) {
+      if (!tbody && !initElements()) return;
+      try {
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const rows = Array.from(tbody.querySelectorAll("tr")).filter(r => r.style.display !== "none");
+        if (rows.length === 0) return;
+
+        let changed = false;
+        rows.forEach(row => {
+          const rawId = row.dataset.orderId;
+          if (rawId == null || rawId === "") return;
+          const order = orders.find(o => o && (String(o.id) === String(rawId) || o.id === Number(rawId)));
+          if (order && order.marked !== marked) {
+            order.marked = marked;
+            changed = true;
+          }
+        });
+
+        if (changed) {
+          localStorage.setItem("orders", JSON.stringify(orders));
+          const refreshEvent = new CustomEvent("orderStatusChanged", { detail: { bulk: true, marked: marked } });
+          window.dispatchEvent(refreshEvent);
+          if (window.parent && window.parent !== window) window.parent.dispatchEvent(refreshEvent);
+          if (window.top && window.top !== window) window.top.dispatchEvent(refreshEvent);
+        } else {
+          loadOrders();
+          filterTable();
+        }
+      } catch (e) {
+        console.error("Error in setMarkAllVisible:", e);
+        alert("Error updating marks");
+      }
+    }
+
     /* =========================
        DATE FILTER (by month, day, date)
     ========================= */
@@ -863,7 +931,7 @@
       const rows = tbody.querySelectorAll("tr");
       rows.forEach(row => {
         const cells = row.querySelectorAll("td");
-        const orderDateCell = cells[3] ? cells[3].textContent.trim() : "";
+        const orderDateCell = cells[4] ? cells[4].textContent.trim() : "";
         if (!fromValue && !toValue) {
           row.style.display = "";
           return;
@@ -969,17 +1037,20 @@
     // Listen for order saved event
     window.addEventListener('orderSaved', function () {
       loadOrders();
+      filterTable();
     });
 
     // Listen for order status changed event
     window.addEventListener('orderStatusChanged', function () {
       loadOrders();
+      filterTable();
     });
 
     // Listen for storage changes
     window.addEventListener('storage', function (e) {
       if (e.key === 'orders') {
         loadOrders();
+        filterTable();
       }
     });
 
@@ -994,6 +1065,7 @@
       if (orders.length !== lastOrderCount) {
         lastOrderCount = orders.length;
         loadOrders();
+        filterTable();
       }
     }, 1000);
 
@@ -1008,6 +1080,7 @@
       window.toggleOrderStatus = toggleOrderStatus;
       window.filterTable = filterTable;
       window.clearDateFilter = clearDateFilter;
+      window.setMarkAllVisible = setMarkAllVisible;
       window.updateFooter = updateFooter;
       window.initOrdersPage = initOrdersPage;
       window.initElements = initElements;

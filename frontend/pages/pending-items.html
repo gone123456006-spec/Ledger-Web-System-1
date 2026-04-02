@@ -254,6 +254,125 @@
       color: #2a50d8;
     }
 
+    /* ── DUE DATE QUICK FILTERS ── */
+    .due-date-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 10px;
+      padding: 12px 20px;
+      background: #f4f6fb;
+      border-bottom: 1px solid #e2e7ef;
+      flex-shrink: 0;
+    }
+
+    .filter-due-heading {
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      width: 100%;
+    }
+
+    .due-filter-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .due-filter-btn {
+      height: 30px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      border-radius: 6px;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .due-filter-btn:hover {
+      border-color: #4f7ef8;
+      color: #2a50d8;
+      background: #f8fafc;
+    }
+
+    .due-filter-btn.active {
+      background: #4f7ef8;
+      border-color: #4f7ef8;
+      color: #fff;
+    }
+
+    .custom-due-inline {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .custom-due-inline.open {
+      display: flex;
+    }
+
+    .custom-due-inline input[type="date"] {
+      height: 30px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0 8px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .custom-due-inline .btn-apply-due {
+      height: 30px;
+      padding: 0 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid #4f7ef8;
+      background: #4f7ef8;
+      color: #fff;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .custom-due-inline .btn-apply-due:hover {
+      background: #3a68e8;
+      border-color: #3a68e8;
+    }
+
+    .next-n-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: #475569;
+      padding: 2px 0;
+    }
+
+    .next-n-inline input[type="number"] {
+      width: 52px;
+      height: 30px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 0 6px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .next-n-inline.active {
+      padding: 4px 10px;
+      background: #eef2ff;
+      border-radius: 8px;
+      border: 1px solid #c5d5fb;
+    }
+
     /* ── TABLE ── */
     .table-wrap {
       flex: 1;
@@ -909,6 +1028,32 @@
       </button>
     </div>
 
+    <div class="due-date-toolbar">
+      <div class="filter-due-heading">Due date</div>
+      <div class="due-filter-btns">
+        <button type="button" class="due-filter-btn" data-due-mode="clear" onclick="setDueFilter('clear')" title="Remove due date filter">Clear</button>
+        <button type="button" class="due-filter-btn" data-due-mode="today" onclick="setDueFilter('today')" title="Due today">Today</button>
+        <button type="button" class="due-filter-btn" data-due-mode="week" onclick="setDueFilter('week')" title="Due this calendar week (Mon–Sun)">Week</button>
+        <button type="button" class="due-filter-btn" data-due-mode="month" onclick="setDueFilter('month')" title="Due this month">Month</button>
+        <button type="button" class="due-filter-btn" data-due-mode="year" onclick="setDueFilter('year')" title="Due this calendar year">Year</button>
+        <button type="button" class="due-filter-btn" data-due-mode="custom" onclick="setDueFilter('custom')" title="Pick from / to dates">Custom</button>
+      </div>
+      <div id="customDueWrap" class="custom-due-inline" aria-hidden="true">
+        <label for="dueCustomFrom" style="font-size:12px; color:#64748b;">From</label>
+        <input type="date" id="dueCustomFrom">
+        <span style="color:#94a3b8;">–</span>
+        <label for="dueCustomTo" style="font-size:12px; color:#64748b;">To</label>
+        <input type="date" id="dueCustomTo">
+        <button type="button" class="btn-apply-due" onclick="applyCustomDueRange()">Apply</button>
+      </div>
+      <div class="next-n-inline" id="nextNDaysWrap">
+        <span>Next</span>
+        <input type="number" id="dueNextNDays" min="1" max="999" value="7" title="Days from today (inclusive)">
+        <span>days</span>
+        <button type="button" class="due-filter-btn" data-due-mode="nextn" onclick="applyNextNDays()" title="Due from today through the next n−1 days (n days total)">Apply</button>
+      </div>
+    </div>
+
     <div class="filter-bar" id="filterBar" aria-hidden="true">
       <div class="filter-field">
         <label for="filterStatus">Status</label>
@@ -940,7 +1085,6 @@
             </th>
             <th class="center" style="width:68px;">Mark</th>
             <th class="center">Status</th>
-            <th>Type</th>
             <th class="right">Qty</th>
             <th>Item Name</th>
             <th>Sample Details</th>
@@ -1063,15 +1207,187 @@
     let isAssigning = false;
     let _pageReady = false; // blocks popup from auto-opening during page restoration
 
+    /** @type {{ start: number, end: number } | null} */
+    let dueDateFilter = null;
+    /** 'none' | 'today' | 'week' | 'month' | 'year' | 'custom' | 'nextn' */
+    let dueFilterMode = 'none';
+
     /* helpers */
     function fmt(d) {
       if (!d) return '—';
-      try { const dt = new Date(d); return isNaN(dt) ? d : dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
-      catch { return d; }
+      try {
+        const s = String(d).trim();
+        const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+        if (iso) {
+          const y = parseInt(iso[1], 10), mo = parseInt(iso[2], 10) - 1, day = parseInt(iso[3], 10);
+          const dt = new Date(y, mo, day);
+          if (!isNaN(dt.getTime())) return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        const dt = new Date(d);
+        return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch { return d; }
     }
     function esc(s) {
       if (s == null || s === '') return '—';
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function sod(d) {
+      const x = new Date(d);
+      if (isNaN(x.getTime())) return NaN;
+      x.setHours(0, 0, 0, 0);
+      return x.getTime();
+    }
+
+    function eod(d) {
+      const x = new Date(d);
+      if (isNaN(x.getTime())) return NaN;
+      x.setHours(23, 59, 59, 999);
+      return x.getTime();
+    }
+
+    /** Order dueDate from date fields is YYYY-MM-DD. Parse as local calendar day; Date('YYYY-MM-DD') is UTC midnight and breaks Today/Week filters in most timezones. */
+    function parseDueDateForFilter(raw) {
+      if (raw == null || String(raw).trim() === '') return null;
+      const s = String(raw).trim();
+      const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+      if (iso) {
+        const y = parseInt(iso[1], 10), mo = parseInt(iso[2], 10) - 1, d = parseInt(iso[3], 10);
+        const dt = new Date(y, mo, d);
+        if (isNaN(dt.getTime())) return null;
+        dt.setHours(0, 0, 0, 0);
+        return dt.getTime();
+      }
+      const dt = new Date(s);
+      if (isNaN(dt.getTime())) return null;
+      dt.setHours(0, 0, 0, 0);
+      return dt.getTime();
+    }
+
+    function syncDueFilterButtons() {
+      document.querySelectorAll('.due-filter-btn[data-due-mode]').forEach(btn => {
+        const m = btn.getAttribute('data-due-mode');
+        if (m === 'clear') {
+          btn.classList.remove('active');
+          return;
+        }
+        let on = false;
+        if (m === 'custom') {
+          const wrap = document.getElementById('customDueWrap');
+          on = dueFilterMode === 'custom' || !!(wrap && wrap.classList.contains('open'));
+        } else if (m === 'nextn') {
+          on = dueFilterMode === 'nextn';
+        } else {
+          on = dueFilterMode === m;
+        }
+        btn.classList.toggle('active', on);
+      });
+      const nw = document.getElementById('nextNDaysWrap');
+      if (nw) nw.classList.toggle('active', dueFilterMode === 'nextn');
+    }
+
+    function setDueFilter(mode) {
+      const wrap = document.getElementById('customDueWrap');
+      if (mode === 'custom') {
+        if (wrap) {
+          const open = !wrap.classList.contains('open');
+          wrap.classList.toggle('open', open);
+          wrap.setAttribute('aria-hidden', open ? 'false' : 'true');
+        }
+        syncDueFilterButtons();
+        return;
+      }
+      if (wrap) {
+        wrap.classList.remove('open');
+        wrap.setAttribute('aria-hidden', 'true');
+      }
+
+      if (mode === 'clear') {
+        dueDateFilter = null;
+        dueFilterMode = 'none';
+        syncDueFilterButtons();
+        applyTableFilters();
+        return;
+      }
+
+      const now = new Date();
+      if (mode === 'today') {
+        dueDateFilter = { start: sod(now), end: eod(now) };
+        dueFilterMode = 'today';
+      } else if (mode === 'week') {
+        const t = new Date(now);
+        const day = t.getDay();
+        const diffToMon = day === 0 ? -6 : 1 - day;
+        const mon = new Date(t);
+        mon.setDate(t.getDate() + diffToMon);
+        const sun = new Date(mon);
+        sun.setDate(mon.getDate() + 6);
+        dueDateFilter = { start: sod(mon), end: eod(sun) };
+        dueFilterMode = 'week';
+      } else if (mode === 'month') {
+        const y = now.getFullYear();
+        const mo = now.getMonth();
+        const first = new Date(y, mo, 1);
+        const last = new Date(y, mo + 1, 0);
+        dueDateFilter = { start: sod(first), end: eod(last) };
+        dueFilterMode = 'month';
+      } else if (mode === 'year') {
+        const y = now.getFullYear();
+        dueDateFilter = { start: sod(new Date(y, 0, 1)), end: eod(new Date(y, 11, 31)) };
+        dueFilterMode = 'year';
+      }
+
+      syncDueFilterButtons();
+      applyTableFilters();
+    }
+
+    function applyCustomDueRange() {
+      const fromEl = document.getElementById('dueCustomFrom');
+      const toEl = document.getElementById('dueCustomTo');
+      if (!fromEl || !toEl || !fromEl.value || !toEl.value) {
+        showToast('Choose both From and To dates', 'warn');
+        return;
+      }
+      const a = new Date(fromEl.value + 'T12:00:00');
+      const b = new Date(toEl.value + 'T12:00:00');
+      if (isNaN(a.getTime()) || isNaN(b.getTime())) {
+        showToast('Invalid dates', 'warn');
+        return;
+      }
+      if (a > b) {
+        showToast('From date must be on or before To date', 'warn');
+        return;
+      }
+      dueDateFilter = { start: sod(a), end: eod(b) };
+      dueFilterMode = 'custom';
+      const wrap = document.getElementById('customDueWrap');
+      if (wrap) {
+        wrap.classList.remove('open');
+        wrap.setAttribute('aria-hidden', 'true');
+      }
+      syncDueFilterButtons();
+      applyTableFilters();
+    }
+
+    function applyNextNDays() {
+      const el = document.getElementById('dueNextNDays');
+      const n = el ? parseInt(el.value, 10) : 7;
+      if (!n || n < 1) {
+        showToast('Enter a valid number of days (1 or more)', 'warn');
+        return;
+      }
+      const start = sod(new Date());
+      const endD = new Date();
+      endD.setDate(endD.getDate() + n - 1);
+      dueDateFilter = { start, end: eod(endD) };
+      dueFilterMode = 'nextn';
+      const wrap = document.getElementById('customDueWrap');
+      if (wrap) {
+        wrap.classList.remove('open');
+        wrap.setAttribute('aria-hidden', 'true');
+      }
+      syncDueFilterButtons();
+      applyTableFilters();
     }
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
@@ -1144,7 +1460,6 @@
 
             rows.push({
               orderId: order.id, itemIdx: idx,
-              type: type,
               qty: parseFloat(v[7]) || 0,
               itemName: (v[2] || '').trim() || '—',
               sampleDetails: item.sample || order.sampleDetails || '—',
@@ -1154,7 +1469,8 @@
               estTotalWt: parseFloat(v[9]) || 0,
               orderNo, customer,
               customerRelation: order.customerRelation || '—',
-              orderDate: order.orderDate || '', dueDate: order.dueDate || '',
+              orderDate: order.orderDate || '',
+              dueDate: order.dueDate || order.deliveryDate || '',
               assigned: item.processAssigned === true,
               assignedTo: item.assignedToName || ''
             });
@@ -1162,7 +1478,7 @@
         });
 
         if (rows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="16" style="border:none;">
+          tbody.innerHTML = `<tr><td colspan="15" style="border:none;">
           <div class="empty-state">
             <div class="icon">⏳</div>
             <div class="title">No Pending Items</div>
@@ -1178,7 +1494,9 @@
             tr.dataset.orderId = r.orderId;
             tr.dataset.assigned = r.assigned ? '1' : '0';
             tr.dataset.rowStatus = r.assigned ? 'assigned' : 'pending';
-            tr.dataset.search = [r.type, r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
+            tr.dataset.search = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
+            const dueTs = parseDueDateForFilter(r.dueDate);
+            if (dueTs != null) tr.dataset.dueTs = String(dueTs);
             tr.innerHTML = `
             <td class="center cb-cell">
               <input type="checkbox" class="row-cb" data-persist="ignore" ${r.assigned ? 'data-assigned="true"' : ''}
@@ -1200,7 +1518,6 @@
                 ? `<span class="badge badge-assigned">&#10004; ${esc(r.assignedTo)}</span>`
                 : `<span class="badge badge-pending" id="badge-${r.orderId}-${r.itemIdx}">Pending</span>`}
             </td>
-            <td>${esc(r.type)}</td>
             <td class="right">${r.qty}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.itemName)}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.sampleDetails)}</td>
@@ -1223,7 +1540,7 @@
         applyTableFilters(); updateUI();
       } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="15"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
         ftText.textContent = 'Error';
       }
     }
@@ -1273,6 +1590,14 @@
       const as = document.getElementById('filterAssign');
       if (st) st.value = 'all';
       if (as) as.value = 'all';
+      dueDateFilter = null;
+      dueFilterMode = 'none';
+      const cw = document.getElementById('customDueWrap');
+      if (cw) {
+        cw.classList.remove('open');
+        cw.setAttribute('aria-hidden', 'true');
+      }
+      syncDueFilterButtons();
       applyTableFilters();
     }
 
@@ -1280,10 +1605,11 @@
       const q = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
       const st = document.getElementById('filterStatus')?.value || 'all';
       const as = document.getElementById('filterAssign')?.value || 'all';
+      const dueActive = !!dueDateFilter;
 
       const dataRows = document.querySelectorAll('#tableBody tr[data-search]');
       let visibleCount = 0;
-      const filtersActive = !!(q || st !== 'all' || as !== 'all');
+      const filtersActive = !!(q || st !== 'all' || as !== 'all' || dueActive);
 
       dataRows.forEach(tr => {
         const searchOk = !q || (tr.dataset.search && tr.dataset.search.includes(q));
@@ -1299,7 +1625,17 @@
         if (as === 'assigned') assignOk = assigned;
         else if (as === 'unassigned') assignOk = !assigned;
 
-        const show = searchOk && statusOk && assignOk;
+        let dueOk = true;
+        if (dueActive && dueDateFilter) {
+          const ts = tr.dataset.dueTs;
+          if (!ts) dueOk = false;
+          else {
+            const t = parseInt(ts, 10);
+            dueOk = t >= dueDateFilter.start && t <= dueDateFilter.end;
+          }
+        }
+
+        const show = searchOk && statusOk && assignOk && dueOk;
         tr.style.display = show ? '' : 'none';
         if (show) visibleCount++;
       });
@@ -1307,7 +1643,12 @@
       const ftText = document.getElementById('footerText');
       const total = dataRows.length;
       if (ftText && total > 0) {
-        if (!filtersActive && visibleCount === total) {
+        if (dueActive && visibleCount === 0) {
+          const withDue = [...dataRows].filter(tr => tr.dataset.dueTs).length;
+          ftText.textContent = withDue === 0
+            ? `0 of ${total} — no due date on orders; set Due Date on the order or clear the due filter`
+            : `0 of ${total} match this due range — try Week / Custom or Clear`;
+        } else if (!filtersActive && visibleCount === total) {
           ftText.textContent = `${total} item${total !== 1 ? 's' : ''}`;
         } else if (visibleCount < total) {
           ftText.textContent = `${visibleCount} of ${total} item${total !== 1 ? 's' : ''} (filtered)`;
@@ -1517,7 +1858,7 @@
               jobworkerName: selectedJwName,
               assignedDate: now,
               orderDate: order.orderDate || '',
-              dueDate: order.dueDate || '',
+              dueDate: order.dueDate || order.deliveryDate || '',
               status: 'ASSIGNED',
               receivedQty: 0,
               receivedWt: 0
@@ -1633,6 +1974,9 @@
     window.applyTableFilters = applyTableFilters;
     window.toggleFilterBar = toggleFilterBar;
     window.clearItemFilters = clearItemFilters;
+    window.setDueFilter = setDueFilter;
+    window.applyCustomDueRange = applyCustomDueRange;
+    window.applyNextNDays = applyNextNDays;
     window.renderJwList = renderJwList;
     window.openAssignModal = openAssignModal;
     window.closeAssignModal = closeAssignModal;

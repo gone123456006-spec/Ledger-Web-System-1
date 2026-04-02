@@ -490,6 +490,32 @@
       }
     }
 
+    /** Same as orders.html: advances = payments where type is not Paid. */
+    function getAdvancePaymentsForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        const key = String(billNo).trim();
+        return payments
+          .filter(p => p && String(p.billNo || "").trim() === key && p.type !== "Paid")
+          .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    /** Purchase line amount: prefer col 12, else col 9 (ready-extra / legacy). */
+    function orderItemLineAmount(item) {
+      const v = item.values || [];
+      if (!v.length) return 0;
+      if (v[12] !== undefined && v[12] !== "" && v[12] !== null) {
+        const n = parseFloat(v[12]);
+        if (!isNaN(n)) return n;
+      }
+      const n9 = parseFloat(v[9]);
+      return isNaN(n9) ? 0 : n9;
+    }
+
     /* =========================
        LOAD PENDING ORDERS
     ========================= */
@@ -560,7 +586,7 @@
           if (!item || !item.values) return;
           const type = item.type || item.values[0] || "Order";
           const grWt = parseFloat(item.values[9] || item.values[5] || item.values[8] || 0);
-          const net = parseFloat(item.values[12] || item.values[13] || 0);
+          const net = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(item.values[12] || item.values[13] || 0) || 0);
 
           if (type === "Purchase") {
             purchaseTotal += net;
@@ -579,12 +605,15 @@
         : orderSideTotal;
 
       const billNo = order.orderNo || order.billNo;
-      let paidDisplay = getPaidAmountForBill(billNo);
-      if (!paidDisplay) paidDisplay = parseFloat(order.advance || 0) || 0;
+      let advanceOnly = getAdvancePaymentsForBill(billNo);
+      if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
+
+      let totalPaymentsForBalance = getPaidAmountForBill(billNo);
+      if (!totalPaymentsForBalance) totalPaymentsForBalance = parseFloat(order.advance || 0) || 0;
 
       const displayNet = netBill;
-      const displayAdvance = paidDisplay;
-      const displayBalance = netBill - paidDisplay;
+      const displayAdvance = advanceOnly + purchaseTotal;
+      const displayBalance = netBill - totalPaymentsForBalance;
 
       // Get type from order or from first item
       let orderType = order.type || "Order";

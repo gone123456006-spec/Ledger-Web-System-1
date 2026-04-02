@@ -223,13 +223,62 @@
             color: #7c3aed !important;
         }
 
-        .interest-table-wrap {
+        /* Interest module table: hide per-row "Interest Cal" column and "Interest (recorded in Interest module)" rows */
+        .interest-module-table col.col-int {
+            display: none;
+            width: 0;
+            max-width: 0;
+        }
+
+        .interest-module-table thead tr th:last-child,
+        .interest-module-table tbody tr td:last-child {
+            display: none !important;
+        }
+
+        .interest-module-table tr.interest-module-recorded {
+            display: none !important;
+        }
+
+        /* Scroll host: height follows table content up to max-height, then scrolls (do not flex-grow or it leaves blank space) */
+        .interest-scroll-host {
+            flex: 0 1 auto;
+            align-self: stretch;
+            width: 100%;
+            min-height: 0;
+            max-height: min(48vh, 460px);
             overflow: auto;
-            max-height: min(42vh, 340px);
-            margin-top: 12px;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .interest-table-wrap {
+            margin-top: 0;
             border: 1px solid var(--border);
+            scroll-behavior: smooth;
             border-radius: 12px;
             background: #fafafa;
+            scrollbar-gutter: stable;
+            scrollbar-width: auto;
+        }
+
+        .interest-table-wrap::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .interest-table-wrap::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 8px;
+            border: 3px solid #f1f5f9;
+        }
+
+        .interest-table-wrap::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        .interest-table-wrap::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 8px;
         }
 
         .interest-section .interest-module-table {
@@ -330,6 +379,11 @@
 
         tbody tr.selected-row:not(.today-row) .cr-tag {
             color: #bbf7d0 !important;
+        }
+
+        span.crdr-inactive-for-balance {
+            color: var(--muted);
+            font-style: italic;
         }
 
         tbody tr.today-row td {
@@ -736,17 +790,32 @@
             border-radius: 10px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 0;
             box-shadow: var(--shadow-sm);
+            min-width: 0;
+            min-height: 0;
+            overflow: hidden;
         }
 
-        .interest-section legend {
+        .interest-section-heading {
             padding: 0 6px;
+            margin-bottom: 8px;
             font-size: 11px;
             font-weight: 700;
             color: var(--primary);
             text-transform: uppercase;
             letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+
+        .interest-section-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1 1 0%;
+            min-height: 0;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .int-row {
@@ -754,6 +823,7 @@
             align-items: center;
             gap: 10px 12px;
             flex-wrap: wrap;
+            flex-shrink: 0;
         }
 
         .int-field {
@@ -838,6 +908,95 @@
         tbody tr.interest-row:hover td {
             background-color: #ede9fe !important;
         }
+
+        /*
+         * Collapse main statement table while Interest is open — do NOT use display:none.
+         * display:none broke interest row edits: render() rebuilds #statementBody; some browsers
+         * mishandle focus/contentEditable when that subtree is fully removed from layout.
+         */
+        .stmt-wrap.interest-panel-open #tableWrap {
+            flex: 0 0 0 !important;
+            min-height: 0 !important;
+            height: 0 !important;
+            max-height: 0 !important;
+            overflow: hidden !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* Give Interest block remaining column height (same role as main #tableWrap) */
+        .stmt-wrap.interest-panel-open .interest-section {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            margin-bottom: 8px;
+            overflow: hidden !important;
+        }
+
+        /*
+         * Do NOT set height:0 on .interest-section-inner — it collapses to zero in many layouts,
+         * so controls + table disappear (only the "Interest" heading stays visible).
+         */
+        .stmt-wrap.interest-panel-open .interest-section-inner {
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+
+        /* Scrollport: grow with rows until max-height, then vertical scroll; no flex-grow — avoids empty area under short tables */
+        .stmt-wrap.interest-panel-open #interestTableWrap.interest-scroll-host {
+            flex: 0 1 auto !important;
+            align-self: stretch !important;
+            width: 100% !important;
+            min-height: 0 !important;
+            max-height: min(48vh, 460px) !important;
+            height: auto !important;
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain;
+            border-top: none;
+            touch-action: pan-x pan-y;
+        }
+
+        .interest-section .interest-result {
+            flex-shrink: 0;
+        }
+
+        .interest-section .interest-scroll-hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin: 4px 2px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .interest-section .interest-scroll-hint kbd {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            font-family: inherit;
+        }
+
+        @media print {
+            .stmt-wrap.interest-panel-open #tableWrap {
+                flex: 1 1 auto !important;
+                min-height: 0 !important;
+                height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+                border-top: 1px solid var(--border) !important;
+            }
+        }
     </style>
 </head>
 
@@ -882,53 +1041,59 @@
             </span>
         </div>
 
-        <fieldset id="interestSection" class="interest-section" style="display:none;">
-            <legend>Interest</legend>
-            <div class="int-row">
-                <div class="int-field">
-                    <label>Rate</label>
-                    <input type="number" id="int_rate_inline" value="2" step="0.1">
+        <div id="interestSection" class="interest-section" style="display:none;" role="region"
+            aria-label="Interest calculation">
+            <div class="interest-section-heading">Interest</div>
+            <div class="interest-section-inner">
+                <div class="int-row">
+                    <div class="int-field">
+                        <label>Rate</label>
+                        <input type="number" id="int_rate_inline" value="2" step="0.1">
+                    </div>
+                    <div class="int-field">
+                        <label>Compound Month</label>
+                        <input type="number" id="int_comp_inline" placeholder="Empty for none">
+                    </div>
+                    <div class="int-field">
+                        <label>Upto</label>
+                        <input type="date" id="int_to_inline">
+                    </div>
+                    <button class="btn btn-primary btn-play" onclick="calculateAllInterest()"
+                        title="Calculate Interest">▶</button>
+                    <button id="applyIntInline" class="btn btn-success" style="display:none;"
+                        onclick="applyInterestInline()">✅ Add as Debit</button>
                 </div>
-                <div class="int-field">
-                    <label>Compound Month</label>
-                    <input type="number" id="int_comp_inline" placeholder="Empty for none">
+                <p class="interest-scroll-hint" aria-hidden="true">Scroll inside the table area for more rows
+                    <kbd title="Mouse wheel or trackpad">Wheel</kbd><span>or drag the scrollbar</span></p>
+                <div class="table-wrap interest-table-wrap interest-scroll-host" id="interestTableWrap"
+                    title="Scroll vertically or horizontally to see all interest rows">
+                    <table class="interest-module-table">
+                        <colgroup>
+                            <col class="col-ind">
+                            <col class="col-date">
+                            <col class="col-nar">
+                            <col class="col-cr">
+                            <col class="col-dr">
+                            <col class="col-bal">
+                            <col class="col-int">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th class="center">#</th>
+                                <th>Date</th>
+                                <th>Narration</th>
+                                <th class="right">Credit</th>
+                                <th class="right">Debit</th>
+                                <th class="right">Balance</th>
+                                <th class="right col-int-th" id="thIntCalModule">Interest Cal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="interestModuleBody"></tbody>
+                    </table>
                 </div>
-                <div class="int-field">
-                    <label>Upto</label>
-                    <input type="date" id="int_to_inline">
-                </div>
-                <button class="btn btn-primary btn-play" onclick="calculateAllInterest()"
-                    title="Calculate Interest">▶</button>
-                <button id="applyIntInline" class="btn btn-success" style="display:none;"
-                    onclick="applyInterestInline()">✅ Add as Debit</button>
+                <div id="interestResultInline" class="interest-result" style="display:none;"></div>
             </div>
-            <div class="interest-table-wrap" id="interestTableWrap">
-                <table class="interest-module-table">
-                    <colgroup>
-                        <col class="col-ind">
-                        <col class="col-date">
-                        <col class="col-nar">
-                        <col class="col-cr">
-                        <col class="col-dr">
-                        <col class="col-bal">
-                        <col class="col-int">
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th class="center">#</th>
-                            <th>Date</th>
-                            <th>Narration</th>
-                            <th class="right">Credit</th>
-                            <th class="right">Debit</th>
-                            <th class="right">Balance</th>
-                            <th class="right col-int-th" id="thIntCalModule">Interest Cal</th>
-                        </tr>
-                    </thead>
-                    <tbody id="interestModuleBody"></tbody>
-                </table>
-            </div>
-            <div id="interestResultInline" class="interest-result" style="display:none;"></div>
-        </fieldset>
+        </div>
 
         <!-- TABLE -->
         <div class="table-wrap" id="tableWrap">
@@ -1006,9 +1171,9 @@
         let ctxTargetIdx = null;
         let pendingInterest = 0;
         let deleteTargetIdx = null;
-        let draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
+        let draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
         /** Draft row(s) at bottom of Interest module table (same flow as Account Statement). */
-        let interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '' }];
+        let interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
         let rowInterestMap = {};
         /** Recorded interest applied from this module only (not Account Statement rows). */
         let interestApplied = [];
@@ -1017,6 +1182,25 @@
 
         function stmtStorageKey() {
             return 'stmt_' + (customerData.lfNo || customerData.name);
+        }
+
+        /** Every row must have a unique numeric id — legacy data often omitted id or duplicated it, so find(id) always hit the first row. */
+        function ensureTransactionIds() {
+            const seen = new Set();
+            let maxId = transactions.reduce((m, t) => {
+                const n = Number(t.id);
+                return Number.isFinite(n) && n > 0 ? Math.max(m, Math.floor(n)) : m;
+            }, 0);
+            transactions.forEach(tx => {
+                const n = Number(tx.id);
+                const ok = Number.isFinite(n) && n > 0 && !seen.has(n);
+                if (!ok) {
+                    maxId++;
+                    tx.id = maxId;
+                }
+                seen.add(tx.id);
+            });
+            nextId = Math.max(maxId + 1, 1);
         }
 
         function interestModuleStorageKey() {
@@ -1059,7 +1243,33 @@
             } catch (e) { }
         }
 
-        function renderInterestTable() {
+        function scrollInterestTableToBottom(o) {
+            const wrap = document.getElementById('interestTableWrap');
+            const sec = document.getElementById('interestSection');
+            if (!wrap || !sec || sec.style.display !== 'block') return;
+            const smooth = o && o.smooth;
+            const run = () => {
+                try {
+                    wrap.scrollTo({ top: wrap.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+                } catch (e) {
+                    wrap.scrollTop = wrap.scrollHeight;
+                }
+            };
+            requestAnimationFrame(() => requestAnimationFrame(run));
+        }
+
+        function scrollInterestSectionIntoView() {
+            const sec = document.getElementById('interestSection');
+            if (!sec || sec.style.display !== 'block') return;
+            try {
+                sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (e) {
+                sec.scrollIntoView();
+            }
+        }
+
+        /** @param {{ scrollBottom?: boolean, scrollSmooth?: boolean }} [opt] */
+        function renderInterestTable(opt) {
             const tbody = document.getElementById('interestModuleBody');
             if (!tbody) return;
             tbody.innerHTML = '';
@@ -1177,34 +1387,46 @@
                 tdIdx.textContent = tx.cleared ? '✔' : String(i + 1);
 
                 const updateTxInt = (field, val) => {
-                    const orig = transactions.find(t => t.id === tx.id);
-                    if (!orig) return;
+                    if (!transactions.includes(tx)) return;
                     if (field === 'date') {
                         const parts = val.trim().split(/[-\/]/);
                         if (parts.length === 3) {
-                            if (parts[0].length === 4) orig.date = val.trim();
-                            else orig.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                            if (parts[0].length === 4) tx.date = val.trim();
+                            else tx.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                         }
                     } else if (field === 'narration') {
-                        orig.narration = val.trim();
+                        tx.narration = val.trim();
                     } else if (field === 'credit') {
-                        orig.credit = readMoney(val);
-                        if (!orig.entryType && orig.credit !== 0) orig.entryType = 'credit';
-                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
+                        const prevEt = tx.entryType;
+                        tx.credit = readMoney(val);
+                        if (!tx.entryType && tx.credit !== 0) {
+                            tx.entryType = 'credit';
+                        } else if (prevEt === 'credit' && readMoney(tx.credit) === 0) {
+                            if (readMoney(tx.debit) !== 0) tx.entryType = 'debit';
+                            else tx.entryType = null;
+                        }
                     } else if (field === 'debit') {
-                        orig.debit = readMoney(val);
-                        if (!orig.entryType && orig.debit !== 0) orig.entryType = 'debit';
-                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
+                        const prevEt = tx.entryType;
+                        tx.debit = readMoney(val);
+                        if (!tx.entryType && tx.debit !== 0) {
+                            tx.entryType = 'debit';
+                        } else if (prevEt === 'debit' && readMoney(tx.debit) === 0) {
+                            if (readMoney(tx.credit) !== 0) tx.entryType = 'credit';
+                            else tx.entryType = null;
+                        }
                     }
                     saveTransactions();
                     render();
                 };
 
-                const eff0 = effectiveAmounts(tx);
+                const dispCr = readMoney(tx.credit);
+                const dispDr = readMoney(tx.debit);
                 const { td: tdDate } = makeIntCell(fmtDate(tx.date), false, (v) => updateTxInt('date', v));
                 const { td: tdNar } = makeIntCell(tx.narration || '', false, (v) => updateTxInt('narration', v));
-                const { td: tdCr } = makeIntCell(eff0.credit ? fmt(eff0.credit) : '', true, (v) => updateTxInt('credit', v));
-                const { td: tdDr } = makeIntCell(eff0.debit ? fmt(eff0.debit) : '', true, (v) => updateTxInt('debit', v));
+                const { td: tdCr, span: spIntCr } = makeIntCell(dispCr ? fmt(dispCr) : '', true, (v) => updateTxInt('credit', v));
+                const { td: tdDr, span: spIntDr } = makeIntCell(dispDr ? fmt(dispDr) : '', true, (v) => updateTxInt('debit', v));
+                normalizeEntryType(tx);
+                applyCrDrBalanceHint(spIntCr, spIntDr, tx.entryType);
 
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
@@ -1258,7 +1480,7 @@
 
             interestApplied.forEach((ap, j) => {
                 const tr = document.createElement('tr');
-                tr.className = 'interest-row';
+                tr.className = 'interest-row interest-module-recorded';
 
                 const tdIdx = document.createElement('td');
                 tdIdx.className = 'center';
@@ -1313,9 +1535,10 @@
                 tdHash.textContent = '»';
 
                 const saveInterestDraft = () => {
+                    syncDraftCrDrExclusive(draft, spCr, spDr);
                     const narVal = spNar.textContent.trim();
-                    const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
-                    const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
+                    const crRaw = readMoney(spCr.textContent);
+                    const drRaw = readMoney(spDr.textContent);
                     if (!narVal && crRaw === 0 && drRaw === 0) return;
 
                     let dateVal = todayStr();
@@ -1329,10 +1552,16 @@
                     }
 
                     const newId = nextId++;
+                    let intEntryType = draft.entryType;
+                    if (!intEntryType) {
+                        if (crRaw !== 0 && drRaw !== 0) intEntryType = 'credit';
+                        else if (crRaw !== 0) intEntryType = 'credit';
+                        else if (drRaw !== 0) intEntryType = 'debit';
+                    }
                     transactions.push({
                         id: newId, date: dateVal, narration: narVal || '',
                         debit: drRaw, credit: crRaw,
-                        entryType: (crRaw !== 0 ? 'credit' : (drRaw !== 0 ? 'debit' : null)), cleared: false
+                        entryType: intEntryType || null, cleared: false
                     });
 
                     const intRaw = spInt.textContent.trim();
@@ -1345,7 +1574,7 @@
 
                     interestDraftRows.splice(dIdx, 1);
                     if (interestDraftRows.length === 0) {
-                        interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '' }];
+                        interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
                     }
 
                     saveTransactions();
@@ -1354,6 +1583,7 @@
                     showToast('✅ Row saved');
 
                     setTimeout(() => {
+                        scrollInterestTableToBottom({ smooth: true });
                         const rows = document.querySelectorAll('#interestModuleBody tr.today-row');
                         const lastDraft = rows[rows.length - 1];
                         if (lastDraft && document.getElementById('interestSection')?.style.display === 'block') {
@@ -1375,6 +1605,7 @@
                 const { td: tdNar, span: spNar } = makeIntCell(draft.nar, false, () => { });
                 const { td: tdCr, span: spCr } = makeIntCell(draft.cr, true, () => { });
                 const { td: tdDr, span: spDr } = makeIntCell(draft.dr, true, () => { });
+                syncDraftCrDrExclusive(draft, spCr, spDr);
 
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
@@ -1389,8 +1620,7 @@
                     sp.addEventListener('input', () => {
                         if (idx === 0) draft.date = sp.textContent;
                         if (idx === 1) draft.nar = sp.textContent;
-                        if (idx === 2) draft.cr = sp.textContent;
-                        if (idx === 3) draft.dr = sp.textContent;
+                        if (idx === 2 || idx === 3) syncDraftCrDrExclusive(draft, spCr, spDr);
                         if (idx === 4) draft.int = sp.textContent;
                     });
                     sp.addEventListener('keydown', e => {
@@ -1408,6 +1638,7 @@
                                 draft.cr = '';
                                 draft.dr = '';
                                 draft.int = '';
+                                draft.entryType = null;
                                 renderInterestTable();
                             }
                         }
@@ -1417,6 +1648,10 @@
                 tr.append(tdHash, tdDate, tdNar, tdCr, tdDr, tdBal, tdInt);
                 tbody.appendChild(tr);
             });
+
+            if (opt && opt.scrollBottom) {
+                scrollInterestTableToBottom({ smooth: !!opt.scrollSmooth });
+            }
         }
 
         function restoreInterestResultPanel() {
@@ -1477,19 +1712,58 @@
             return Number.isFinite(n) ? n : 0;
         }
 
-        // Per-row rule: first non-zero input decides whether row is credit or debit.
-        // The other side stays editable but is ignored in calculations.
+        // Per-row rule: whichever column gets the first non-zero amount on blur stays "active"
+        // for balance. The other column may still hold a value but effectiveAmounts() omits it.
         function normalizeEntryType(tx) {
             if (!tx) return;
             const cr = readMoney(tx.credit);
             const dr = readMoney(tx.debit);
+            if (tx.entryType === 'credit' && cr === 0 && dr !== 0) tx.entryType = 'debit';
+            else if (tx.entryType === 'debit' && dr === 0 && cr !== 0) tx.entryType = 'credit';
             if (!tx.entryType) {
-                if (cr !== 0) tx.entryType = 'credit';
+                if (cr !== 0 && dr !== 0) tx.entryType = 'credit';
+                else if (cr !== 0) tx.entryType = 'credit';
                 else if (dr !== 0) tx.entryType = 'debit';
             } else if (cr === 0 && dr === 0) {
-                // Allow re-pick when row is cleared
                 tx.entryType = null;
             }
+        }
+
+        /** Visual hint only — both cells stay editable. */
+        function applyCrDrBalanceHint(spCr, spDr, entryType) {
+            if (!spCr || !spDr) return;
+            spCr.classList.toggle('crdr-inactive-for-balance', entryType === 'debit');
+            spDr.classList.toggle('crdr-inactive-for-balance', entryType === 'credit');
+            if (entryType === 'credit') {
+                spCr.title = '';
+                spDr.title = 'Not included in running balance — Credit was entered first for this row.';
+            } else if (entryType === 'debit') {
+                spDr.title = '';
+                spCr.title = 'Not included in running balance — Debit was entered first for this row.';
+            } else {
+                spCr.title = '';
+                spDr.title = '';
+            }
+        }
+
+        /** Draft row: track which side went non-zero first; do not clear the opposite field. */
+        function syncDraftCrDrExclusive(draft, spCr, spDr) {
+            draft.cr = spCr.textContent;
+            draft.dr = spDr.textContent;
+            const crv = readMoney(draft.cr);
+            const drv = readMoney(draft.dr);
+            if (!draft.entryType) {
+                if (crv !== 0 && drv === 0) draft.entryType = 'credit';
+                else if (drv !== 0 && crv === 0) draft.entryType = 'debit';
+                else if (crv !== 0 && drv !== 0) draft.entryType = 'credit';
+            } else if (draft.entryType === 'credit' && crv === 0) {
+                if (drv !== 0) draft.entryType = 'debit';
+                else draft.entryType = null;
+            } else if (draft.entryType === 'debit' && drv === 0) {
+                if (crv !== 0) draft.entryType = 'credit';
+                else draft.entryType = null;
+            }
+            applyCrDrBalanceHint(spCr, spDr, draft.entryType);
         }
 
         function effectiveAmounts(tx) {
@@ -1638,36 +1912,49 @@
                 tdIdx.style.cssText = 'color:var(--muted);font-size:11px;';
                 tdIdx.textContent = tx.cleared ? '✔' : String(i + 1);
 
-                // Inline editing handlers for existing transactions
+                // Inline editing handlers for existing transactions (mutate row by reference)
                 const updateTx = (field, val) => {
-                    const orig = transactions.find(t => t.id === tx.id);
-                    if (!orig) return;
+                    if (!transactions.includes(tx)) return;
 
                     if (field === 'date') {
                         const parts = val.trim().split(/[-\/]/);
                         if (parts.length === 3) {
-                            if (parts[0].length === 4) orig.date = val.trim();
-                            else orig.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                            if (parts[0].length === 4) tx.date = val.trim();
+                            else tx.date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
                         }
                     } else if (field === 'narration') {
-                        orig.narration = val.trim();
+                        tx.narration = val.trim();
                     } else if (field === 'credit') {
-                        orig.credit = readMoney(val);
-                        if (!orig.entryType && orig.credit !== 0) orig.entryType = 'credit';
-                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
+                        const prevEt = tx.entryType;
+                        tx.credit = readMoney(val);
+                        if (!tx.entryType && tx.credit !== 0) {
+                            tx.entryType = 'credit';
+                        } else if (prevEt === 'credit' && readMoney(tx.credit) === 0) {
+                            if (readMoney(tx.debit) !== 0) tx.entryType = 'debit';
+                            else tx.entryType = null;
+                        }
                     } else if (field === 'debit') {
-                        orig.debit = readMoney(val);
-                        if (!orig.entryType && orig.debit !== 0) orig.entryType = 'debit';
-                        if ((readMoney(orig.credit) === 0) && (readMoney(orig.debit) === 0)) orig.entryType = null;
+                        const prevEt = tx.entryType;
+                        tx.debit = readMoney(val);
+                        if (!tx.entryType && tx.debit !== 0) {
+                            tx.entryType = 'debit';
+                        } else if (prevEt === 'debit' && readMoney(tx.debit) === 0) {
+                            if (readMoney(tx.credit) !== 0) tx.entryType = 'credit';
+                            else tx.entryType = null;
+                        }
                     }
                     saveTransactions();
                     render();
                 };
 
+                const dispCrM = readMoney(tx.credit);
+                const dispDrM = readMoney(tx.debit);
                 const { td: tdDate, span: spDate } = makeCell(fmtDate(tx.date), false, (v) => updateTx('date', v));
                 const { td: tdNar, span: spNar } = makeCell(tx.narration, false, (v) => updateTx('narration', v));
-                const { td: tdCr, span: spCr } = makeCell(tx.credit ? fmt(tx.credit) : '', true, (v) => updateTx('credit', v));
-                const { td: tdDr, span: spDr } = makeCell(tx.debit ? fmt(tx.debit) : '', true, (v) => updateTx('debit', v));
+                const { td: tdCr, span: spCr } = makeCell(dispCrM ? fmt(dispCrM) : '', true, (v) => updateTx('credit', v));
+                const { td: tdDr, span: spDr } = makeCell(dispDrM ? fmt(dispDrM) : '', true, (v) => updateTx('debit', v));
+                normalizeEntryType(tx);
+                applyCrDrBalanceHint(spCr, spDr, tx.entryType);
 
                 tr.appendChild(tdIdx);
                 tr.appendChild(tdDate);
@@ -1727,9 +2014,10 @@
                 tdHash.textContent = '»';
 
                 const saveThisDraft = () => {
+                    syncDraftCrDrExclusive(draft, spCr, spDr);
                     const narVal = spNar.textContent.trim();
-                    const crRaw = parseFloat(spCr.textContent.replace(/,/g, '')) || 0;
-                    const drRaw = parseFloat(spDr.textContent.replace(/,/g, '')) || 0;
+                    const crRaw = readMoney(spCr.textContent);
+                    const drRaw = readMoney(spDr.textContent);
                     if (!narVal && crRaw === 0 && drRaw === 0) return;
 
                     let dateVal = todayStr();
@@ -1742,13 +2030,19 @@
                         }
                     }
 
+                    let entryType = draft.entryType;
+                    if (!entryType) {
+                        if (crRaw !== 0 && drRaw !== 0) entryType = 'credit';
+                        else if (crRaw !== 0) entryType = 'credit';
+                        else if (drRaw !== 0) entryType = 'debit';
+                    }
                     transactions.push({
                         id: nextId++, date: dateVal, narration: narVal || '',
-                        debit: drRaw, credit: crRaw, entryType: (crRaw !== 0 ? 'credit' : (drRaw !== 0 ? 'debit' : null)), cleared: false
+                        debit: drRaw, credit: crRaw, entryType: entryType || null, cleared: false
                     });
 
                     draftRows.splice(dIdx, 1);
-                    if (draftRows.length === 0) draftRows = [{ date: '', nar: '', cr: '', dr: '' }];
+                    if (draftRows.length === 0) draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
 
                     saveTransactions();
                     render();
@@ -1759,13 +2053,13 @@
                 const { td: tdNar, span: spNar } = makeCell(draft.nar, false);
                 const { td: tdCr, span: spCr } = makeCell(draft.cr, true);
                 const { td: tdDr, span: spDr } = makeCell(draft.dr, true);
+                syncDraftCrDrExclusive(draft, spCr, spDr);
 
                 [spDate, spNar, spCr, spDr].forEach((sp, idx) => {
                     sp.addEventListener('input', () => {
                         if (idx === 0) draft.date = sp.textContent;
                         if (idx === 1) draft.nar = sp.textContent;
-                        if (idx === 2) draft.cr = sp.textContent;
-                        if (idx === 3) draft.dr = sp.textContent;
+                        if (idx === 2 || idx === 3) syncDraftCrDrExclusive(draft, spCr, spDr);
                     });
                     sp.addEventListener('keydown', e => {
                         if (e.key === 'Enter' || e.key === 'Tab' && idx === 3) {
@@ -1774,7 +2068,14 @@
                         }
                         if (e.key === 'Escape') {
                             if (draftRows.length > 1) { draftRows.splice(dIdx, 1); render(); }
-                            else { draft.date = ''; draft.nar = ''; draft.cr = ''; draft.dr = ''; render(); }
+                            else {
+                                draft.date = '';
+                                draft.nar = '';
+                                draft.cr = '';
+                                draft.dr = '';
+                                draft.entryType = null;
+                                render();
+                            }
                         }
                     });
                 });
@@ -1808,10 +2109,9 @@
             // Keep inputs editable; we only change the cleared flag.
             if (Math.abs(balance) < 0.000001 && sorted.length > 0) {
                 let changed = false;
-                sorted.forEach(tx => {
-                    const orig = transactions.find(t => t.id === tx.id);
-                    if (orig && !orig.cleared) {
-                        orig.cleared = true;
+                sorted.forEach(row => {
+                    if (!row.cleared) {
+                        row.cleared = true;
                         changed = true;
                     }
                 });
@@ -1834,6 +2134,14 @@
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
         // ─── INTEREST ────────────────────────────────────────────────────────────────
+        function syncInterestPanelOpenClass() {
+            const sec = document.getElementById('interestSection');
+            const wrap = document.querySelector('.stmt-wrap');
+            if (!wrap) return;
+            const open = !!(sec && sec.style.display === 'block');
+            wrap.classList.toggle('interest-panel-open', open);
+        }
+
         function openCalcInterest() {
             const sec = document.getElementById('interestSection');
             if (!sec) return;
@@ -1841,11 +2149,13 @@
                 sec.style.display = 'block';
                 const toEl = document.getElementById('int_to_inline');
                 if (toEl && !toEl.value) toEl.value = todayStr();
-                renderInterestTable();
+                renderInterestTable({ scrollBottom: true, scrollSmooth: true });
                 restoreInterestResultPanel();
+                scrollInterestSectionIntoView();
             } else {
                 sec.style.display = 'none';
             }
+            syncInterestPanelOpenClass();
         }
 
         function calculateAllInterest() {
@@ -1978,6 +2288,7 @@
                 </div>
             `;
             document.getElementById('applyIntInline').style.display = 'inline-block';
+            scrollInterestTableToBottom({ smooth: true });
             res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             saveInterestModule();
         }
@@ -1992,6 +2303,7 @@
             document.getElementById('interestSection').style.display = 'none';
             document.getElementById('interestResultInline').style.display = 'none';
             document.getElementById('applyIntInline').style.display = 'none';
+            syncInterestPanelOpenClass();
             renderInterestTable();
             showToast('✅ Interest saved in Interest module');
         }
@@ -2001,11 +2313,10 @@
             if (selectedIdx === null) { showToast('⚠️ Please select a row first.'); return; }
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             const tx = sorted[selectedIdx];
-            const orig = transactions.find(t => t.id === tx.id);
-            if (orig) {
-                orig.cleared = !orig.cleared;
+            if (tx) {
+                tx.cleared = !tx.cleared;
                 saveTransactions();
-                showToast(orig.cleared ? '✅ Marked as cleared' : '↩️ Cleared mark removed');
+                showToast(tx.cleared ? '✅ Marked as cleared' : '↩️ Cleared mark removed');
             }
             render();
         }
@@ -2015,7 +2326,7 @@
             if (deleteTargetIdx === null) return;
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             const tx = sorted[deleteTargetIdx];
-            transactions = transactions.filter(t => t.id !== tx.id);
+            transactions = transactions.filter(t => t !== tx);
             saveTransactions();
             selectedIdx = null;
             deleteTargetIdx = null;
@@ -2154,9 +2465,9 @@
                 const saved = localStorage.getItem(stmtKey);
                 if (saved) {
                     transactions = JSON.parse(saved);
-                    nextId = transactions.length > 0
-                        ? Math.max(...transactions.map(t => t.id || 0)) + 1
-                        : 1;
+                    ensureTransactionIds();
+                    transactions.forEach(t => normalizeEntryType(t));
+                    saveTransactions();
                 }
             } catch (e) { }
             try {
@@ -2177,9 +2488,10 @@
             const intSec = document.getElementById('interestSection');
             const intOpen = intSec && intSec.style.display === 'block';
             if (intOpen) {
-                interestDraftRows.push({ date: '', nar: '', cr: '', dr: '', int: '' });
+                interestDraftRows.push({ date: '', nar: '', cr: '', dr: '', int: '', entryType: null });
                 render();
                 setTimeout(() => {
+                    scrollInterestTableToBottom({ smooth: true });
                     const allDrafts = document.querySelectorAll('#interestModuleBody tr.today-row');
                     const lastRow = allDrafts[allDrafts.length - 1];
                     if (lastRow) {
@@ -2197,7 +2509,7 @@
                 }, 60);
                 return;
             }
-            draftRows.push({ date: '', nar: '', cr: '', dr: '' });
+            draftRows.push({ date: '', nar: '', cr: '', dr: '', entryType: null });
             render();
             setTimeout(() => {
                 const allDrafts = document.querySelectorAll('#statementBody tr.today-row');
@@ -2231,7 +2543,7 @@
         window.closeModal = closeModal;
         window.confirmDelete = confirmDelete;
         window.ctxDelete = ctxDelete;
-        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => a.date.localeCompare(b.date)); const tx = s[ctxTargetIdx]; const orig = transactions.find(t => t.id === tx.id); if (orig) { orig.cleared = !orig.cleared; saveTransactions(); } render(); };
+        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => a.date.localeCompare(b.date)); const tx = s[ctxTargetIdx]; if (tx) { tx.cleared = !tx.cleared; saveTransactions(); } render(); };
         window.clearSelected = clearSelected;
         window.showCtxMenu = showCtxMenu;
         window.closeCtxMenu = closeCtxMenu;
