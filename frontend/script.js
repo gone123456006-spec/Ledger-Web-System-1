@@ -420,7 +420,7 @@ function loadPage(pageUrl) {
             // Remove any popup from a previous page that might be outside workspace (no shared DOM)
             var popupIds = [
                 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup',
-                'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-item-table',
+                'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'new-order-item-table',
                 'ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'ready-order-item-table'
             ];
             popupIds.forEach(function (id) {

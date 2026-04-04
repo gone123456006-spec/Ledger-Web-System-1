@@ -136,7 +136,7 @@
 
     table {
       width: 100%;
-      min-width: 1000px;
+      min-width: 1120px;
       border-collapse: collapse;
       background: #fff;
     }
@@ -370,6 +370,7 @@
             <th>Due Date</th>
             <th class="right">Gr.Wt</th>
             <th class="right">Net (Rs)</th>
+            <th class="right" title="Purchase lines + Purchase sheet (popup) total for this order">Total Purchase</th>
             <th class="right" title="Payment advances (non-Paid) + purchase line totals">Advance</th>
             <th class="right">Balance</th>
             <th class="center">Action</th>
@@ -466,6 +467,44 @@
       return isNaN(n9) ? 0 : n9;
     }
 
+    function sumStoredPurchaseSheetRows(rows) {
+      if (!rows || !rows.length) return 0;
+      return rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    }
+
+    /** Total from order.purchaseSheet: saved total, else sum of row amounts. */
+    function purchaseSheetTotalFromOrder(order) {
+      if (!order || order.purchaseSheet == null) return null;
+      const n = parseFloat(order.purchaseSheet.total);
+      if (!isNaN(n)) return n;
+      const rs = sumStoredPurchaseSheetRows(order.purchaseSheet.rows);
+      return rs !== 0 ? rs : null;
+    }
+
+    /** Same source as new-order.html getSavedPurchaseSheetTotal (keyed by bill no). */
+    function getSavedPurchaseSheetTotalForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const map = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
+        const rec = map[String(billNo).trim()] || map[billNo];
+        if (!rec) return 0;
+        if (rec.total != null && String(rec.total).trim() !== "") {
+          const n = parseFloat(rec.total);
+          return isNaN(n) ? 0 : n;
+        }
+        return sumStoredPurchaseSheetRows(rec.rows);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    /** Purchase sheet rupees: order payload, else newOrderPurchaseSheets localStorage (trimmed bill no). */
+    function purchaseSheetTotalResolved(order, billNo) {
+      const fromOrder = purchaseSheetTotalFromOrder(order);
+      if (fromOrder !== null) return fromOrder;
+      return getSavedPurchaseSheetTotalForBill(billNo);
+    }
+
     /* =========================
        LOAD ORDERS
     ========================= */
@@ -498,9 +537,8 @@
           const row = document.createElement("tr");
           row.dataset.orderId = order.id;
 
-          // Same rules as new-order: non-Purchase lines add; Purchase subtracts from net bill.
-          // Advance column = payment advances (non-Paid) + purchase line totals (see header title).
-          // Balance = net bill − all payments recorded for the bill.
+          // Same rules as new-order payment panel: net = order lines − line purchases − purchase sheet; balance = net − all payments.
+          // Advance column = payment advances (non-Paid) + purchase line totals only (see header title).
           let displayGrWt = 0;
           let orderSideTotal = 0;
           let purchaseTotal = 0;
@@ -523,11 +561,14 @@
             orderSideTotal = parseFloat(order.netAmount || 0);
           }
 
+          const billNo = order.orderNo || order.billNo;
+          const sheetPurchaseTotal = purchaseSheetTotalResolved(order, billNo);
+          const fullPurchase = purchaseTotal + sheetPurchaseTotal;
+
           const netBill = order.items && order.items.length > 0
-            ? orderSideTotal - purchaseTotal
+            ? orderSideTotal - fullPurchase
             : orderSideTotal;
 
-          const billNo = order.orderNo || order.billNo;
           let advanceOnly = getAdvancePaymentsForBill(billNo);
           if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
 
@@ -537,6 +578,7 @@
           const displayNet = netBill;
           const displayAdvance = advanceOnly + purchaseTotal;
           const displayBalance = netBill - totalPaymentsForBalance;
+          const totalPurchaseDisplay = fullPurchase;
 
           const isMarked = order.marked === true;
           row.innerHTML = `
@@ -550,6 +592,7 @@
         <td>${order.dueDate || "-"}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
         <td class="right">${displayNet.toFixed(2)}</td>
+        <td class="right">${totalPurchaseDisplay.toFixed(2)}</td>
         <td class="right">${displayAdvance.toFixed(2)}</td>
         <td class="right">${displayBalance.toFixed(2)}</td>
         <td class="center">

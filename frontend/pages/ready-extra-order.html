@@ -389,6 +389,26 @@
       color: #fff;
     }
 
+    .actions button.btn-bill {
+      background: #d4edda;
+      border-color: #a3cfbb;
+      color: #0f5132;
+      font-weight: 600;
+    }
+
+    .actions button.btn-bill:hover {
+      background: #c3e6cb;
+      border-color: #8fbfad;
+      color: #0a3622;
+    }
+
+    /* Bill mode: hide Ut. Wt. through Est. Total (columns 6–10); data remains in row for save/calc */
+    #ready-order-item-table.ready-order-bill-hide-mid col:nth-child(n+6):nth-child(-n+10),
+    #ready-order-item-table.ready-order-bill-hide-mid thead th:nth-child(n+6):nth-child(-n+10),
+    #ready-order-item-table.ready-order-bill-hide-mid tbody td:nth-child(n+6):nth-child(-n+10) {
+      display: none !important;
+    }
+
     /* =====================
    INVOICE
 ===================== */
@@ -727,6 +747,145 @@
       opacity: 0.9;
     }
 
+    /* Purchase sheet popup (same layout as new-order.html; shared localStorage key) */
+    #ready-extra-order-purchase-sheet-popup .purchase-sheet-box {
+      max-width: min(1220px, 98vw);
+      width: 100%;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-sheet-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      margin-top: 12px;
+      max-height: min(420px, 55vh);
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 14px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table thead th {
+      position: sticky;
+      top: 0;
+      background: #f5f6fa;
+      z-index: 1;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table th,
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(n+3),
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(n+3):not(:last-child) {
+      text-align: right;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:last-child {
+      text-align: center;
+      width: 48px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table tbody tr:hover {
+      background: #f8faff;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table input.purchase-sheet-computed {
+      background: #f5f5f7;
+      color: var(--text);
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table input,
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table button {
+      width: 100%;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:last-child button {
+      width: auto;
+      min-width: 36px;
+      padding: 4px 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table tfoot td {
+      background: #eef1f5;
+      font-weight: 600;
+      border-top: 2px solid var(--border);
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-sheet-total-label {
+      text-align: right;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-sheet-total-amt {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .summary-item--purchase-click {
+      cursor: pointer;
+      border-radius: 6px;
+      margin-left: -4px;
+      margin-right: -4px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .summary-item--purchase-click:hover {
+      background: rgba(214, 51, 132, 0.08);
+    }
+
+    .summary-item--purchase-click:focus {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Ready-extra Purchase popup: view-only (data edited on New Order only) */
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--viewonly table.purchase-sheet-table input {
+      pointer-events: none;
+      cursor: default;
+      background: #f0f2f5 !important;
+      color: var(--text);
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--viewonly table.purchase-sheet-table tbody tr:hover {
+      background: transparent;
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--viewonly table.purchase-sheet-table th:last-child,
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--viewonly table.purchase-sheet-table td:last-child {
+      display: none;
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--viewonly .purchase-sheet-popup-actions-edit {
+      display: none !important;
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--viewonly .popup-actions {
+      justify-content: flex-end;
+    }
+
     /* =====================
    PAYMENT POPUP STYLES
 ===================== */
@@ -929,13 +1088,13 @@
     }
 
     .payment-section-heading {
-      font-size: 13px;
-      font-weight: 700;
-      color: #1a1a2e;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
       margin: 0 0 10px 0;
-      padding-bottom: 6px;
-      border-bottom: 2px solid #c5cdd8;
-      letter-spacing: 0.03em;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: normal;
     }
 
     .payment-section-block {
@@ -984,8 +1143,15 @@
       border-bottom: none;
     }
 
-    .payment-section--total .panel-summary {
-      margin-bottom: 0;
+    /* Match new-order.html Payment Summary block: divider below totals, no tinted card */
+    .panel-summary.panel-summary--est-total {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .payment-section--total .panel-summary.panel-summary--est-total {
+      margin-bottom: 12px;
     }
 
     .summary-item {
@@ -1285,8 +1451,10 @@
       <button id="globalEditBtn" onclick="toggleGlobalEdit()"> Edit</button>
 
       <button onclick="openPayment()"> Payment</button>
+      <button type="button" onclick="openPurchaseSheet()"> Purchase</button>
       <button onclick="openRateBook()"> Rate Book</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
+      <button type="button" class="btn-bill" onclick="onBillButtonClick()"> Bill</button>
       <button onclick="saveOrder()"> Save</button>
       <button onclick="saveAndNew()"> Save & New</button>
       <button onclick="resetOrder()"> Reset</button>
@@ -1313,28 +1481,21 @@
         <!-- PAYMENT SECTION -->
         <div class="panel-section">
           <div class="panel-section-header">
-            <h3>Payment</h3>
+            <h3>Payment Summary</h3>
             <button class="panel-add-btn" onclick="openPayment()">+ Add</button>
           </div>
           <div class="panel-content" id="paymentPanelContent">
             <div class="payment-summary-columns">
             <div class="payment-section-block payment-section--total">
               <h4 class="payment-section-heading">Est. Total</h4>
-              <div class="panel-summary"
-                style="background-color: #fff7ed; padding: 12px; border-radius: 8px; border: 1px solid #fed7aa;">
+              <div class="panel-summary panel-summary--est-total">
               <div class="summary-item">
                 <span class="summary-label">Order Total:</span>
                 <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
               </div>
-              <div class="summary-item">
-                <span class="summary-label">Repair Total:</span>
-                <span class="summary-value" id="panelRepairTotalMain">₹ 0.00</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Sale Total:</span>
-                <span class="summary-value" id="panelSaleTotalMain">₹ 0.00</span>
-              </div>
-              <div class="summary-item" style="color:#d63384;">
+              <div class="summary-item summary-item--purchase-click" style="color:#d63384;" role="button" tabindex="0"
+                title="Click to open Purchase lines (same sheet as New Order, saved per order no.)"
+                onclick="openPurchaseSheet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPurchaseSheet();}">
                 <span class="summary-label">Purchase Total:</span>
                 <span class="summary-value" id="panelPurchaseTotal">₹ 0.00</span>
               </div>
@@ -1343,15 +1504,14 @@
                 <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
               </div>
               <div class="summary-item"
-                title="Same as Orders / Pending / Ready lists: payment advances (non-Paid) + purchase Est. Total (col 9). Balance below still uses advances only.">
-                <span class="summary-label">Advance:</span>
-                <span class="summary-value paid" id="panelAdvanced">₹ 0.00</span>
+                title="Same as New Order Payment Summary: sum of all saved payments for this order (Advanced, Paid, etc.). Purchase is already in Net Bill Total above.">
+                <span class="summary-label">Paid:</span>
+                <span class="summary-value" style="color:#28a745;" id="panelAdvanced">₹ 0.00</span>
               </div>
               <div class="summary-item"
-                style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; font-weight:600;"
-                title="Net Bill Total − payment advances only (purchase already in net bill). Full due: Total → Net Total Amount.">
+                title="Net Bill Total (Est. figures above) minus all payments on the Paid line. For Final totals and rate diff, see the Total section below.">
                 <span class="summary-label">Balance:</span>
-                <span class="summary-value balance" id="panelBalance">₹ 0.00</span>
+                <span class="summary-value" style="color:#dc3545;" id="panelBalance">₹ 0.00</span>
               </div>
             </div>
             </div>
@@ -1362,10 +1522,6 @@
               <div class="summary-item">
                 <span class="summary-label">Order (add):</span>
                 <span class="summary-value" id="panelOrderAdd">₹ 0.00</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Repair (add):</span>
-                <span class="summary-value" id="panelRepairAdd">₹ 0.00</span>
               </div>
               <div class="summary-item">
                 <span class="summary-label">Sale (add):</span>
@@ -1642,6 +1798,48 @@
     </div>
   </div>
 
+  <!-- PURCHASE SHEET (read-only here; edit on New Order — same newOrderPurchaseSheets storage) -->
+  <div id="ready-extra-order-purchase-sheet-popup"
+    class="popup-bg ready-order-popup purchase-sheet-popup--viewonly" style="display:none;"
+    onclick="if(event.target===this) closePurchaseSheetPopup()">
+    <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
+      <h3>Purchase <span style="font-size:12px;font-weight:500;color:var(--muted);">(view only)</span></h3>
+      <div class="purchase-sheet-wrap">
+        <table class="purchase-sheet-table">
+          <thead>
+            <tr>
+              <th style="min-width:128px;">On date</th>
+              <th style="min-width:160px;">Item Name</th>
+              <th style="min-width:92px;">GROSS WT.</th>
+              <th style="min-width:88px;">Less Wt</th>
+              <th style="min-width:100px;">Net Weight</th>
+              <th style="min-width:88px;">Rate</th>
+              <th style="min-width:100px;">Amount</th>
+              <th>❌</th>
+            </tr>
+          </thead>
+          <tbody id="ready-extra-purchase-sheet-tbody"></tbody>
+          <tfoot>
+            <tr class="purchase-sheet-tfoot-row">
+              <td colspan="6" class="purchase-sheet-total-label">Total Purchase</td>
+              <td class="purchase-sheet-total-amt"><span id="ready-extra-purchase-sheet-total-amt">₹ 0.00</span></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+        <div class="purchase-sheet-popup-actions-edit" style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button type="button" class="primary" onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
+            Add Row</button>
+          <button type="button" class="primary"
+            onclick="typeof savePurchaseSheet==='function'&&savePurchaseSheet()">Save</button>
+        </div>
+        <button type="button" onclick="typeof closePurchaseSheetPopup==='function'&&closePurchaseSheetPopup()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- RATE BOOKING FORM POPUP (same as new-order: add one rate entry) -->
   <div id="ready-order-ratebook-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closeRatebookPopup()">
@@ -1844,9 +2042,11 @@
       var iGrand = null;
 
       var activeRow = null;
+      /** When true, Ut. Wt.–Est. Total columns are hidden; persisted on save (bills / customer balance). */
+      var billMidColumnsHidden = false;
 
       (function hideOtherPagesPopupsOnInit() {
-        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
+        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
         ids.forEach(function (id) {
           try {
             var el = container.querySelector("#" + id);
@@ -1897,6 +2097,23 @@
         }
 
         return true;
+      }
+
+      function getReadyOrderItemTableEl() {
+        return getSearchRoot().querySelector("#ready-order-item-table");
+      }
+
+      function applyBillMidColumnsHidden(hidden) {
+        billMidColumnsHidden = !!hidden;
+        var tbl = getReadyOrderItemTableEl();
+        if (tbl) tbl.classList.toggle("ready-order-bill-hide-mid", billMidColumnsHidden);
+      }
+
+      function onBillButtonClick() {
+        applyBillMidColumnsHidden(true);
+        try {
+          if (typeof saveOrderState === "function") saveOrderState();
+        } catch (e) { }
       }
 
       /* INIT */
@@ -2375,7 +2592,7 @@
           if (el.tagName === "INPUT" || el.tagName === "SELECT") el.value = "";
         }
         setCol(0, vals[0]); setCol(1, vals[1]); setCol(2, vals[2]); setCol(3, vals[3]);
-        if (fromNewOrder && vals.length >= 13) {
+        if (fromNewOrder && vals.length === 13) {
           /* New Order: cols 4–6 are Remark/Design/Size; Pc=7, Ut.Wt=8, Est.Total Wt=9, Rate=10, Lbr%=11, Est.Total=12 */
           setCol(4, vals[7]); setCol(5, vals[8]); setCol(6, vals[9]); setCol(7, vals[10]); setCol(8, vals[11]); setCol(9, vals[12]);
           for (var i = 10; i <= 15; i++) clearCol(i);
@@ -2489,10 +2706,8 @@
             input.classList.remove("purchase-field-disabled");
             input.style.visibility = "visible";
 
-            // Sale row requirement: hide + make non-editable
-            // Ut. Wt. (5), Est. Total Wt. (6), Rate (7), Lbr.% (8), Est. Total (9)
+            // Sale row: hide Ut. Wt.–Est. Total (5–9); do NOT clear values (saved bill / All Bill restore needs them; calc() would zero totals if these were wiped).
             if (isSale && idx >= 5 && idx <= 9) {
-              input.value = "0";
               input.setAttribute("readonly", "readonly");
               input.classList.add("purchase-field-disabled");
               input.tabIndex = -1;
@@ -2518,8 +2733,8 @@
             }
             input.style.border = "";
             input.style.borderRadius = "";
-            /* Stamp (3) always editable; Sale: Pc (4) editable; Other: lock Pc–Est. Total (4–9) until Global Edit */
-            if (idx >= 4 && idx <= 9 && !(isSale && idx === 4)) {
+            /* Stamp (3) and Pc (4) always editable for Other/Sale; lock Ut. Wt.–Est. Total (5–9) until Global Edit */
+            if (idx >= 5 && idx <= 9) {
               input.setAttribute("readonly", "readonly");
               input.classList.add("order-detail-readonly");
             } else if (idx === 15) {
@@ -2768,49 +2983,107 @@
 
       /* CALCULATION - AUTO CALCULATE ALL FIELDS */
       /* CALCULATION - AUTO CALCULATE ALL FIELDS */
+      /** After restoring a row from bill/order storage: refresh totals without Sale→Other calc wiping saved amounts. */
+      function refreshRowTotalsAfterLoad(tr) {
+        if (!tr || !tr.cells || !tr.cells[0]) return;
+        const typeSel = tr.cells[0].querySelector("select");
+        const t = typeSel ? typeSel.value : "Other";
+        if (t === "Sale") {
+          const rmEl = tr.cells[10] && tr.cells[10].children[0];
+          if (rmEl) syncReadyWeight(rmEl);
+          syncSecondTotalFromRow(tr);
+          return;
+        }
+        if (t === "Purchase") {
+          const p = tr.cells[4] && tr.cells[4].children[0];
+          if (p) calc(p);
+          return;
+        }
+        const pc = tr.cells[4] && tr.cells[4].children[0];
+        if (pc) calc(pc);
+      }
+
       function calc(el) {
         if (!el || !el.closest) return;
 
         const r = el.closest("tr");
         if (!r || !r.cells) return;
 
+        const typeSelectCalc = r.cells[0] && r.cells[0].querySelector("select");
+        /** Purchase: same Pc×Ut.Wt.→Est.Total Wt. and amount = net×rate+Lbr% as Other rows; never zero col 9/15 when inputs incomplete (manual Est. Total still works). */
+        if (typeSelectCalc && typeSelectCalc.value === "Purchase") {
+          try {
+            const pcP = parseFloat(r.cells[4].children[0].value) || 0;
+            const utWtP = parseFloat(r.cells[5].children[0].value) || 0;
+            const estTotalWtP = pcP * utWtP;
+            if (r.cells[6] && r.cells[6].children[0]) {
+              r.cells[6].children[0].value = estTotalWtP.toFixed(3);
+            }
+            const netP = parseFloat(r.cells[6].children[0].value) || 0;
+            const rateP = parseFloat(r.cells[7].children[0].value) || 0;
+            const lbrP = parseFloat(r.cells[8].children[0].value) || 0;
+            if (netP > 0 && rateP > 0) {
+              const baseP = netP * rateP;
+              const laborP = baseP * (lbrP / 100);
+              const totalP = baseP + laborP;
+              if (r.cells[9] && r.cells[9].children[0]) {
+                r.cells[9].children[0].value = totalP.toFixed(2);
+              }
+            }
+            syncSecondTotalFromRow(r);
+        } catch (e) {
+          console.error("Error in calc (Purchase):", e);
+          }
+          setTimeout(function () {
+            updateInfoPanel();
+          }, 100);
+          return;
+        }
+
+        // Sale: totals come from Ready Wt × Rate × Making (cols 12–14), not Pc×Ut.Wt. path — never run that path or it zeros col 9/15.
+        if (typeSelectCalc && typeSelectCalc.value === "Sale") {
+          try {
+            const rmEl = r.cells[10] && r.cells[10].children[0];
+            if (rmEl) syncReadyWeight(rmEl);
+            syncSecondTotalFromRow(r);
+          } catch (e) {
+            console.error("Error in calc (Sale):", e);
+          }
+          setTimeout(function () {
+            updateInfoPanel();
+          }, 100);
+          return;
+        }
+
         try {
-          // Get input values
-          // Note: Indices shifted due to removal of Less column
+          // Other: same formulas as Purchase for cols 4–9, but never zero col 9/15 when net×rate
+          // is incomplete after All Bill restore — Final Total still comes from R.Wt×Rate (syncSecondTotalFromRow).
           const pc = parseFloat(r.cells[4].children[0].value) || 0;
-          const utWt = parseFloat(r.cells[5].children[0].value) || 0; // Ut. Wt.
+          const utWt = parseFloat(r.cells[5].children[0].value) || 0;
 
-          // Calculate Est. Total Wt. = Pc * Ut. Wt.
-          const estTotalWt = pc * utWt;
-
-          // Always update the Est. Total Wt. input (cell 6)
-          if (r.cells[6] && r.cells[6].children[0]) {
-            r.cells[6].children[0].value = estTotalWt.toFixed(3); // 3 decimal places for weight
+          if (pc > 0 && utWt > 0) {
+            const estTotalWt = pc * utWt;
+            if (r.cells[6] && r.cells[6].children[0]) {
+              r.cells[6].children[0].value = estTotalWt.toFixed(3);
+            }
           }
 
-          const net = parseFloat(r.cells[6].children[0].value) || 0; // Est. Total Wt
+          const net = parseFloat(r.cells[6].children[0].value) || 0;
           const rate = parseFloat(r.cells[7].children[0].value) || 0;
-          const lbr = parseFloat(r.cells[8].children[0].value) || 0; // Lbr.%
+          const lbr = parseFloat(r.cells[8].children[0].value) || 0;
 
-          // AUTO CALCULATE Est. Total = (Net.Wt * Rate) + (Net.Wt * Rate * Lbr% / 100)
-          let total = 0;
           if (net > 0 && rate > 0) {
             const base = net * rate;
             const labor = base * (lbr / 100);
-            total = base + labor;
+            const total = base + labor;
             if (r.cells[9] && r.cells[9].children[0]) {
               r.cells[9].children[0].value = total.toFixed(2);
             }
-            syncSecondTotalFromRow(r);
-          } else {
-            if (r.cells[9] && r.cells[9].children[0]) {
-              r.cells[9].children[0].value = "0.00";
-            }
-            if (r.cells[15] && r.cells[15].children[0]) {
-              r.cells[15].children[0].value = "0.00";
-            }
           }
 
+          const rmElOther = r.cells[10] && r.cells[10].children[0];
+          if (rmElOther) syncReadyWeight(rmElOther);
+          syncSecondTotalFromRow(r);
         } catch (e) {
           console.error("Error in calc function:", e);
         }
@@ -2856,14 +3129,15 @@
             }
           } else {
             const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
-            const rate = parseFloat(r.cells[13].children[0].value) || 0; // Rate column
-            const making = parseFloat(r.cells[14].children[0].value) || 0; // Making percentage column
-            // Formula: (R.Wt * Rate) + (R.Wt * Rate * Making / 100) = Total
-            const base = readyWeight * rate;
-            const labor = base * (making / 100);
-            const secondTotal = base + labor;
-            if (r.cells[15] && r.cells[15].children[0]) {
-              r.cells[15].children[0].value = secondTotal.toFixed(2);
+            const rate = parseFloat(r.cells[13].children[0].value) || 0;
+            const making = parseFloat(r.cells[14].children[0].value) || 0;
+            if (readyWeight > 0 && rate > 0) {
+              const base = readyWeight * rate;
+              const labor = base * (making / 100);
+              const secondTotal = base + labor;
+              if (r.cells[15] && r.cells[15].children[0]) {
+                r.cells[15].children[0].value = secondTotal.toFixed(2);
+              }
             }
           }
         } catch (e) {
@@ -2904,7 +3178,50 @@
         return parseFloat(tr.cells[15].children[0].value) || 0;
       }
 
-      /* CALCULATE BILL TOTAL: per-row line total from Final column when set, else Est. Total (col 9) */
+      /** Same localStorage map as new-order.html (keyed by order / bill no). */
+      var PURCHASE_SHEETS_STORAGE_KEY = "newOrderPurchaseSheets";
+
+      function readPurchaseSheetsMap() {
+        try {
+          return JSON.parse(localStorage.getItem(PURCHASE_SHEETS_STORAGE_KEY) || "{}");
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function writePurchaseSheetForBill(billNoKey, rows, total) {
+        if (!billNoKey) return;
+        var key = String(billNoKey).trim();
+        if (!key) return;
+        var map = readPurchaseSheetsMap();
+        map[key] = {
+          rows: rows || [],
+          total: typeof total === "number" ? total : parseFloat(total) || 0,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(PURCHASE_SHEETS_STORAGE_KEY, JSON.stringify(map));
+      }
+
+      function sumPurchaseSheetRowsAmount(rows) {
+        return (rows || []).reduce(function (s, r) {
+          return s + (parseFloat(r && r.amount) || 0);
+        }, 0);
+      }
+
+      function getSavedPurchaseSheetTotal(billNoVal) {
+        if (!billNoVal) return 0;
+        var map = readPurchaseSheetsMap();
+        var key = String(billNoVal).trim();
+        var rec = map[key] || map[billNoVal];
+        if (!rec) return 0;
+        if (rec.total != null && String(rec.total).trim() !== "") {
+          var t = parseFloat(rec.total);
+          return isNaN(t) ? 0 : t;
+        }
+        return sumPurchaseSheetRowsAmount(rec.rows);
+      }
+
+      /* CALCULATE BILL TOTAL: per-row line total from Final column when set, else Est. Total (col 9); minus purchase sheet */
       function calculateBillTotal() {
         if (!itemBody) return 0;
 
@@ -2919,15 +3236,19 @@
             total += rowTotal;
           }
         });
+        var bn = billNo && billNo.value ? String(billNo.value).trim() : "";
+        if (bn) total -= getSavedPurchaseSheetTotal(bn);
         return total;
       }
 
-      /* GET PAID AMOUNT FOR BILL (from payments storage) */
+      /* GET PAID AMOUNT FOR BILL (from payments storage). Bill match is trim-normalized (same as orders list / cross-page). */
       function getPaidAmount(billNo, typeFilter = null) {
+        if (!billNo) return 0;
+        const key = String(billNo).trim();
         const payments = JSON.parse(localStorage.getItem("payments") || "[]");
         return payments
           .filter(p => {
-            const billMatch = p.billNo === billNo;
+            const billMatch = p && String(p.billNo || "").trim() === key;
             if (!billMatch) return false;
             if (typeFilter === 'Paid') return p.type === 'Paid';
             // Advanced = explicit 'Advanced' OR no type (legacy)
@@ -3285,7 +3606,8 @@
           customer: getCustomerName(),
           customerId: custName.value,
           totalAmount: billTotal,
-          rows
+          rows,
+          hideBillMidColumns: billMidColumnsHidden
         };
 
         if (existingBillIndex >= 0) {
@@ -3431,7 +3753,8 @@
           items: rows,
           ratebookOrderedWeight: orderedNetWt.toFixed(3),
           ratebookDeliveredWeight: rbSafeNum(existingOrder && existingOrder.ratebookDeliveredWeight, 0).toFixed(3),
-          timestamp: orderTimestamp
+          timestamp: orderTimestamp,
+          hideBillMidColumns: billMidColumnsHidden
         };
 
         // Preserve any additional properties from existing order
@@ -3468,7 +3791,8 @@
           rows: rows,
           rateBookDiffSummary: rateBookDiffSummaryStored,
           pc: totalPc,
-          grWt: totalGrWt.toFixed(3)
+          grWt: totalGrWt.toFixed(3),
+          hideBillMidColumns: billMidColumnsHidden
         };
 
         if (billIndex >= 0) {
@@ -3527,7 +3851,8 @@
           relation: targetCust?.relation || relation?.value || "—",
           relationName: targetCust?.relationName || "—",
           lfno: targetCust?.lfno || "—",
-          cid: targetCust?.cid || "—"
+          cid: targetCust?.cid || "—",
+          hideBillMidColumns: billMidColumnsHidden
         };
         if (finalBalanceAmount != null) balanceEntry.amountMinusRateDiff = parseFloat(finalBalanceAmount).toFixed(2);
         delete balanceEntry.rate;
@@ -3762,6 +4087,7 @@
         // Clear table rows
         if (itemBody) itemBody.innerHTML = "";
         addRow();
+        applyBillMidColumnsHidden(false);
 
         // Clear edit flags and re-enable fields
         localStorage.removeItem("editOrderId");
@@ -3922,7 +4248,7 @@
 
             // Restore by column index so Stamp, Pc, Ut. Wt., etc. stay in correct columns
             if (item.values && item.values.length > 0) {
-              setReadyOrderRowValues(tr, item.values, item.values.length === 13 || item.values.length > 17, false);
+              setReadyOrderRowValues(tr, item.values, item.values.length === 13, false);
             }
 
             // Restore order metadata
@@ -3931,13 +4257,6 @@
               tr.dataset.sample = item.sample || "";
               tr.dataset.orderFilled = item.orderFilled || "";
             }
-
-            // Recalculate row - trigger calc on Pc field (column 7)
-            setTimeout(() => {
-              if (tr.cells[4] && tr.cells[4].children[0]) {
-                calc(tr.cells[4].children[0]);
-              }
-            }, 10);
           });
 
           if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
@@ -3946,9 +4265,19 @@
               if (typeSel) setPurchaseOptionalFieldsState(tr, typeSel.value === "Purchase");
             });
           }
+
+          setTimeout(function () {
+            if (itemBody) {
+              itemBody.querySelectorAll("tr").forEach(function (tr) {
+                refreshRowTotalsAfterLoad(tr);
+              });
+            }
+          }, 15);
         } else {
           addRow();
         }
+
+        applyBillMidColumnsHidden(!!(order && order.hideBillMidColumns));
 
         // Update panel after loading order
         setTimeout(() => {
@@ -4016,7 +4345,7 @@
           addRow();
           const tr = itemBody.lastElementChild;
           const vals = r.values || [];
-          if (vals.length > 0) setReadyOrderRowValues(tr, vals, vals.length === 13 || vals.length > 17, false);
+          if (vals.length > 0) setReadyOrderRowValues(tr, vals, vals.length === 13, false);
 
           // Restore all order metadata
           if (r.delivery || r.orderFilled) {
@@ -4024,13 +4353,6 @@
             tr.dataset.sample = r.sample || "";
             tr.dataset.orderFilled = r.orderFilled || "";
           }
-
-          // Recalculate row - trigger calc on Pc field (column 7)
-          setTimeout(() => {
-            if (tr.cells[4] && tr.cells[4].children[0]) {
-              calc(tr.cells[4].children[0]);
-            }
-          }, 10);
         });
 
         if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
@@ -4039,6 +4361,14 @@
             if (typeSel) setPurchaseOptionalFieldsState(tr, typeSel.value === "Purchase");
           });
         }
+
+        setTimeout(function () {
+          if (itemBody) {
+            itemBody.querySelectorAll("tr").forEach(function (tr) {
+              refreshRowTotalsAfterLoad(tr);
+            });
+          }
+        }, 15);
 
         // Refresh totals and payment panel so they show saved data
         setTimeout(function () {
@@ -4049,6 +4379,8 @@
           if (typeof updateInfoPanel === "function") updateInfoPanel();
           if (typeof updatePaymentPanel === "function") updatePaymentPanel();
         }, 400);
+
+        applyBillMidColumnsHidden(!!(b && b.hideBillMidColumns));
 
         if (localStorage.getItem("editCustomerReadOnly") === "true" && custName) {
           custName.disabled = true;
@@ -4820,6 +5152,192 @@
         alert(msg || "Error");
       }
 
+      function getPurchaseSheetTbody() {
+        return getSearchRoot().querySelector("#ready-extra-purchase-sheet-tbody")
+          || document.getElementById("ready-extra-purchase-sheet-tbody");
+      }
+
+      function isPurchaseSheetViewOnly() {
+        var p = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        return !!(p && p.classList && p.classList.contains("purchase-sheet-popup--viewonly"));
+      }
+
+      function parsePurchaseSheetWeight(el) {
+        if (!el || el.value == null) return 0;
+        var s = String(el.value).trim();
+        if (s === "") return 0;
+        var n = Number(s);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function recalcPurchaseSheetRow(tr) {
+        if (!tr || !tr.cells || tr.cells.length < 7) return;
+        var grossIn = tr.cells[2].querySelector("input");
+        var lessIn = tr.cells[3].querySelector("input");
+        var netIn = tr.cells[4].querySelector("input");
+        var rateIn = tr.cells[5].querySelector("input");
+        var amtIn = tr.cells[6].querySelector("input");
+        if (!grossIn || !lessIn || !netIn || !rateIn || !amtIn) return;
+        var gross = parsePurchaseSheetWeight(grossIn);
+        var less = parsePurchaseSheetWeight(lessIn);
+        if (less < 0) less = 0;
+        var net = Math.max(0, gross - less);
+        netIn.value = net.toFixed(3);
+        var rate = parsePurchaseSheetWeight(rateIn);
+        amtIn.value = (net * rate).toFixed(2);
+        updatePurchaseSheetTotalDisplay();
+      }
+
+      function updatePurchaseSheetTotalDisplay() {
+        var tb = getPurchaseSheetTbody();
+        var span = getSearchRoot().querySelector("#ready-extra-purchase-sheet-total-amt")
+          || document.getElementById("ready-extra-purchase-sheet-total-amt");
+        if (!tb || !span) return;
+        var sum = 0;
+        tb.querySelectorAll("tr").forEach(function (tr) {
+          var inp = tr.querySelector(".ps-amt");
+          if (inp) sum += safeNumber(inp.value);
+        });
+        span.textContent = "₹ " + sum.toFixed(2);
+      }
+
+      function collectPurchaseSheetRowsFromDom() {
+        var tb = getPurchaseSheetTbody();
+        if (!tb) return [];
+        var out = [];
+        tb.querySelectorAll("tr").forEach(function (tr) {
+          var c = tr.cells;
+          if (!c || c.length < 7) return;
+          out.push({
+            onDate: c[0].querySelector("input") ? c[0].querySelector("input").value : "",
+            itemName: c[1].querySelector("input") ? c[1].querySelector("input").value : "",
+            grossWt: c[2].querySelector("input") ? c[2].querySelector("input").value : "",
+            lessWt: c[3].querySelector("input") ? c[3].querySelector("input").value : "",
+            netWt: c[4].querySelector("input") ? c[4].querySelector("input").value : "",
+            rate: c[5].querySelector("input") ? c[5].querySelector("input").value : "",
+            amount: c[6].querySelector("input") ? c[6].querySelector("input").value : ""
+          });
+        });
+        return out;
+      }
+
+      function savePurchaseSheet() {
+        if (isPurchaseSheetViewOnly()) return;
+        if (!billNo || !String(billNo.value || "").trim()) {
+          showError("Order number is required. Save the order first.");
+          return;
+        }
+        var bn = String(billNo.value).trim();
+        var rows = collectPurchaseSheetRowsFromDom();
+        var total = sumPurchaseSheetRowsAmount(rows);
+        writePurchaseSheetForBill(bn, rows, total);
+        updatePurchaseSheetTotalDisplay();
+        updateInfoPanel();
+      }
+
+      function renderPurchaseSheetTableForBill(billNoVal) {
+        var tb = getPurchaseSheetTbody();
+        if (!tb) return;
+        var map = readPurchaseSheetsMap();
+        var key = billNoVal ? String(billNoVal).trim() : "";
+        var rec = key ? (map[key] || map[billNoVal]) : null;
+        tb.innerHTML = "";
+        if (rec && rec.rows && rec.rows.length) {
+          rec.rows.forEach(function (r) {
+            addPurchaseSheetRow(r);
+          });
+        } else {
+          addPurchaseSheetRow();
+        }
+        updatePurchaseSheetTotalDisplay();
+      }
+
+      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount */
+      function addPurchaseSheetRow(preset) {
+        var tb = getPurchaseSheetTbody();
+        if (!tb) return;
+        var orderDateVal = orderDate && orderDate.value
+          ? orderDate.value
+          : new Date().toISOString().split("T")[0];
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td><input type="date" class="ps-ondate"></td>' +
+          '<td><input type="text" class="ps-item" placeholder="Item"></td>' +
+          '<td><input type="number" class="ps-gross" step="0.001" min="0" placeholder="0" title="GROSS WT."></td>' +
+          '<td><input type="number" class="ps-less" step="0.001" min="0" placeholder="0" title="Subtract from net only: Net = GROSS WT. − Less Wt"></td>' +
+          '<td><input type="number" class="ps-net purchase-sheet-computed" step="0.001" readonly tabindex="-1" placeholder="0" title="Net = GROSS WT. − Less Wt (same as Gross when Less is empty)"></td>' +
+          '<td><input type="number" class="ps-rate" step="0.01" min="0" placeholder="0"></td>' +
+          '<td><input type="number" class="ps-amt purchase-sheet-computed" step="0.01" readonly tabindex="-1" placeholder="0"></td>' +
+          '<td><button type="button" title="Remove row">❌</button></td>';
+        tb.appendChild(tr);
+        var onDate = tr.querySelector(".ps-ondate");
+        if (onDate) onDate.value = preset && preset.onDate ? String(preset.onDate) : orderDateVal;
+        if (preset) {
+          var it = tr.querySelector(".ps-item");
+          if (it && preset.itemName != null) it.value = String(preset.itemName);
+          var g = tr.querySelector(".ps-gross");
+          if (g && preset.grossWt != null && preset.grossWt !== "") g.value = String(preset.grossWt);
+          var l = tr.querySelector(".ps-less");
+          if (l && preset.lessWt != null && preset.lessWt !== "") l.value = String(preset.lessWt);
+          var rt = tr.querySelector(".ps-rate");
+          if (rt && preset.rate != null && preset.rate !== "") rt.value = String(preset.rate);
+        }
+        var btn = tr.querySelector("button");
+        function recalc() { recalcPurchaseSheetRow(tr); }
+        if (!isPurchaseSheetViewOnly()) {
+          ["input", "change", "blur"].forEach(function (ev) {
+            tr.querySelector(".ps-gross").addEventListener(ev, recalc);
+            tr.querySelector(".ps-less").addEventListener(ev, recalc);
+            tr.querySelector(".ps-rate").addEventListener(ev, recalc);
+          });
+          if (btn) btn.addEventListener("click", function () {
+            tr.remove();
+            updatePurchaseSheetTotalDisplay();
+          });
+        }
+        recalc();
+        if (isPurchaseSheetViewOnly()) {
+          tr.querySelectorAll("input").forEach(function (inp) {
+            inp.setAttribute("readonly", "readonly");
+            inp.setAttribute("tabindex", "-1");
+          });
+        }
+      }
+
+      function openPurchaseSheet() {
+        if (!custName || !billNo) {
+          if (!initElements()) {
+            alert("Form not initialized. Please refresh the page.");
+            return;
+          }
+        }
+        if (!custName || !custName.value) {
+          alert("Select customer first");
+          return;
+        }
+        if (!billNo || !billNo.value) {
+          alert("Order number is required");
+          return;
+        }
+        var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        if (!popup) return;
+        var bn = String(billNo.value).trim();
+        if (bn) renderPurchaseSheetTableForBill(bn);
+        else {
+          var tb = getPurchaseSheetTbody();
+          if (tb && !tb.querySelector("tr")) addPurchaseSheetRow();
+        }
+        popup.style.display = "flex";
+        popup.style.alignItems = "center";
+        popup.style.justifyContent = "center";
+        updatePurchaseSheetTotalDisplay();
+      }
+
+      function closePurchaseSheetPopup() {
+        var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        if (popup) popup.style.display = "none";
+      }
+
       function openRateBook(rowElement = null) {
         activeRateRow = rowElement || null;
         if (!custName || !custName.value) {
@@ -4941,6 +5459,7 @@
             orderDate: orderDate ? orderDate.value : "",
             dueDate: dueDate ? dueDate.value : "",
             gstRate: gstRate ? gstRate.value : "",
+            hideBillMidColumns: billMidColumnsHidden,
             rows: []
           };
 
@@ -5022,7 +5541,7 @@
                   const tr = itemBody.lastElementChild;
 
                   if (rowData.values && rowData.values.length > 0) {
-                    setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13 || rowData.values.length > 17, false);
+                    setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, false);
                   }
 
                   if (rowData.delivery || rowData.orderFilled) {
@@ -5030,23 +5549,26 @@
                     tr.dataset.sample = rowData.sample || "";
                     tr.dataset.orderFilled = rowData.orderFilled || "";
                   }
-
-                  // Preserve saved total (Est. Total column, index 9 in 17-col layout)
-                  const savedTotal = rowData.values && (rowData.values[9] != null ? (rowData.values[9] || "") : "");
-                  setTimeout(() => {
-                    if (tr.cells[4] && tr.cells[4].children[0]) {
-                      calc(tr.cells[4].children[0]);
-                      if (savedTotal && tr.cells[9] && tr.cells[9].children[0]) {
-                        tr.cells[9].children[0].value = savedTotal;
-                      }
-                    }
-                  }, 10);
                 });
 
               } else {
                 // Ensure at least one row
                 addRow();
               }
+
+              if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+                itemBody.querySelectorAll("tr").forEach(function (tr) {
+                  var ts = tr.cells[0] && tr.cells[0].querySelector("select");
+                  if (ts) setPurchaseOptionalFieldsState(tr, ts.value === "Purchase");
+                });
+              }
+              setTimeout(function () {
+                if (itemBody) {
+                  itemBody.querySelectorAll("tr").forEach(function (tr) {
+                    refreshRowTotalsAfterLoad(tr);
+                  });
+                }
+              }, 15);
 
               // Clear flags/state now that we restored
               localStorage.removeItem("readyExtraOrderState");
@@ -5058,6 +5580,7 @@
               setTimeout(() => {
                 updateInfoPanel();
                 applyPendingRatebook();
+                applyBillMidColumnsHidden(!!orderState.hideBillMidColumns);
               }, 50);
 
               return;
@@ -5101,7 +5624,7 @@
                     const tr = itemBody.lastElementChild;
 
                     if (rowData.values && rowData.values.length > 0) {
-                      setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13 || rowData.values.length > 17, false);
+                      setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, false);
                     }
 
                     if (rowData.delivery || rowData.orderFilled) {
@@ -5109,14 +5632,20 @@
                       tr.dataset.sample = rowData.sample || "";
                       tr.dataset.orderFilled = rowData.orderFilled || "";
                     }
-
-                    // Recalculate row
-                    setTimeout(() => {
-                      if (tr.cells[4] && tr.cells[4].children[0]) {
-                        calc(tr.cells[4].children[0]);
-                      }
-                    }, 10);
                   });
+                  if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+                    itemBody.querySelectorAll("tr").forEach(function (tr) {
+                      var ts = tr.cells[0] && tr.cells[0].querySelector("select");
+                      if (ts) setPurchaseOptionalFieldsState(tr, ts.value === "Purchase");
+                    });
+                  }
+                  setTimeout(function () {
+                    if (itemBody) {
+                      itemBody.querySelectorAll("tr").forEach(function (tr) {
+                        refreshRowTotalsAfterLoad(tr);
+                      });
+                    }
+                  }, 15);
                 } else {
                   // We have existing rows - merge data instead of replacing
                   // Update existing rows with saved data where applicable
@@ -5126,7 +5655,7 @@
                       // Update existing row by column index; only fill empty cells
                       const tr = existingTrs[index];
                       if (rowData.values && rowData.values.length > 0) {
-                        setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13 || rowData.values.length > 17, true);
+                        setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, true);
                       }
 
                       if (rowData.delivery || rowData.orderFilled) {
@@ -5134,20 +5663,13 @@
                         if (!tr.dataset.sample) tr.dataset.sample = rowData.sample || "";
                         if (!tr.dataset.orderFilled) tr.dataset.orderFilled = rowData.orderFilled || "";
                       }
-
-                      // Recalculate row
-                      setTimeout(() => {
-                        if (tr.cells[4] && tr.cells[4].children[0]) {
-                          calc(tr.cells[4].children[0]);
-                        }
-                      }, 10);
                     } else {
                       // Add new row for additional saved data
                       addRow();
                       const tr = itemBody.lastElementChild;
 
                       if (rowData.values && rowData.values.length > 0) {
-                        setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13 || rowData.values.length > 17, false);
+                        setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, false);
                       }
 
                       if (rowData.delivery || rowData.orderFilled) {
@@ -5155,15 +5677,21 @@
                         tr.dataset.sample = rowData.sample || "";
                         tr.dataset.orderFilled = rowData.orderFilled || "";
                       }
-
-                      // Recalculate row
-                      setTimeout(() => {
-                        if (tr.cells[4] && tr.cells[4].children[0]) {
-                          calc(tr.cells[4].children[0]);
-                        }
-                      }, 10);
                     }
                   });
+                  if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+                    itemBody.querySelectorAll("tr").forEach(function (tr) {
+                      var ts = tr.cells[0] && tr.cells[0].querySelector("select");
+                      if (ts) setPurchaseOptionalFieldsState(tr, ts.value === "Purchase");
+                    });
+                  }
+                  setTimeout(function () {
+                    if (itemBody) {
+                      itemBody.querySelectorAll("tr").forEach(function (tr) {
+                        refreshRowTotalsAfterLoad(tr);
+                      });
+                    }
+                  }, 15);
                 }
               } else if (itemBody && itemBody.querySelectorAll("tr").length === 0) {
                 // If no rows saved and no existing rows, add one empty row
@@ -5183,6 +5711,7 @@
             // Update panel after restoring
             updateInfoPanel();
             applyPendingRatebook();
+            applyBillMidColumnsHidden(!!orderState.hideBillMidColumns);
           }, 100);
         } catch (e) {
           console.error("Error restoring order state:", e);
@@ -5363,18 +5892,16 @@
 
         // Total panel: **col 9 (Est. Total)** only. Est. Total (Final) panel: **col 15** only.
         let estOrderCol9 = 0;
-        let estRepairCol9 = 0;
         let estSaleCol9 = 0;
         let estPurchaseCol9 = 0;
         let finalOrderTotal = 0;
-        let finalRepairTotal = 0;
         let finalSaleTotal = 0;
         let finalPurchaseTotal = 0;
 
         if (itemBody) {
           itemBody.querySelectorAll("tr").forEach(r => {
             const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
-            const type = typeSelect ? typeSelect.value : "Order";
+            const type = typeSelect ? typeSelect.value : "Other";
             const estOnly = getReadyOrderRowEstCol9(r);
             const finOnly = getReadyOrderRowFinalCol15(r);
 
@@ -5384,17 +5911,17 @@
             } else if (type === "Sale") {
               estSaleCol9 += estOnly;
               finalSaleTotal += finOnly;
-            } else if (type === "Repair") {
-              estRepairCol9 += estOnly;
-              finalRepairTotal += finOnly;
             } else {
+              // Order, Other, Repair, legacy — same bucket as before Repair line was removed from UI
               estOrderCol9 += estOnly;
               finalOrderTotal += finOnly;
             }
           });
         }
 
-        const estTotalNetMain = estOrderCol9 + estRepairCol9 + estSaleCol9 - estPurchaseCol9;
+        const purchaseSheetRupees = getSavedPurchaseSheetTotal(billNo.value);
+        const estPurchaseCombined = estPurchaseCol9 + purchaseSheetRupees;
+        const estTotalNetMain = estOrderCol9 + estSaleCol9 - estPurchaseCombined;
 
         const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
         const rateDiffVal = parseRateDiffFromStored(rateDiffStored);
@@ -5402,27 +5929,36 @@
 
         const advanced = getPaidAmount(billNo.value, 'Advanced');
         const paid = getPaidAmount(billNo.value, 'Paid');
-        const mainNetTotalFinal = finalOrderTotal + finalRepairTotal + finalSaleTotal - finalPurchaseTotal;
-        // Display Advance = advances + purchase est. (col 9), same as orders / pending / ready lists. Balance unchanged.
-        const advancedInclPurchaseDisplay = advanced + estPurchaseCol9;
-        const balanceCol9 = estTotalNetMain - advanced;
+        const finalPurchaseCombined = finalPurchaseTotal + purchaseSheetRupees;
+        // Paid line = sum of all payment rows (matches new-order.html getPaidAmount + panelPaid). Purchase is not added here — it's already subtracted in Net Bill Total.
+        const totalPaymentsApplied = getPaidAmount(billNo.value);
+
+        // Total section: Final columns (15) + |rate diff| — same basis as save/invoice when finals are set.
+        const netTotalAmount =
+          finalOrderTotal +
+          finalSaleTotal -
+          finalPurchaseCombined -
+          paid -
+          advanced -
+          rateDiffAbs;
+
+        // Est. Total section: Balance must follow **col 9** (same as Net Bill Total), not col 15 — otherwise
+        // opening from All Bill / mixed New Order rows shows stale Final totals and wrong Balance (e.g. ₹104704 vs ₹144280).
+        const balanceFromEstNet = estTotalNetMain - totalPaymentsApplied;
 
         const root = getSearchRoot();
         const setPanel = function (id, text) {
           var el = root.querySelector(id);
           if (el) el.textContent = text;
         };
-        setPanel("#panelOrderTotal", formatCurrency(estOrderCol9));
-        setPanel("#panelRepairTotalMain", formatCurrency(estRepairCol9));
-        setPanel("#panelSaleTotalMain", formatCurrency(estSaleCol9));
-        setPanel("#panelPurchaseTotal", formatCurrency(estPurchaseCol9));
+        setPanel("#panelOrderTotal", formatCurrency(estOrderCol9 + estSaleCol9));
+        setPanel("#panelPurchaseTotal", formatCurrency(estPurchaseCombined));
         setPanel("#panelBillTotal", formatCurrency(estTotalNetMain));
-        setPanel("#panelAdvanced", formatCurrency(advancedInclPurchaseDisplay));
-        setPanel("#panelBalance", formatCurrency(balanceCol9));
+        setPanel("#panelAdvanced", formatCurrency(totalPaymentsApplied));
+        setPanel("#panelBalance", formatCurrency(balanceFromEstNet));
 
         const panelWrap = root.querySelector("#panelPurchaseSaleDetailWrap");
         const orderAddEl = root.querySelector("#panelOrderAdd");
-        const repairAddEl = root.querySelector("#panelRepairAdd");
         const saleAddEl = root.querySelector("#panelSaleAdd");
         const purchaseMinusEl = root.querySelector("#panelPurchaseMinus");
         const advancedMinusEl = root.querySelector("#panelAdvancedMinus");
@@ -5430,21 +5966,10 @@
         const rateDiffAmtEl = root.querySelector("#panelRateDiffAmount");
         const netDetailEl = root.querySelector("#panelNetDetail");
 
-        // Net Total Amount = Order + Repair + Sale − Purchase − Paid − Advanced − |Rate Diff| (rate diff always reduces net)
-        const netTotalAmount =
-          finalOrderTotal +
-          finalRepairTotal +
-          finalSaleTotal -
-          finalPurchaseTotal -
-          paid -
-          advanced -
-          rateDiffAbs;
-
         if (panelWrap) panelWrap.style.display = "";
         if (orderAddEl) orderAddEl.textContent = formatCurrency(finalOrderTotal);
-        if (repairAddEl) repairAddEl.textContent = formatCurrency(finalRepairTotal);
         if (saleAddEl) saleAddEl.textContent = formatCurrency(finalSaleTotal);
-        if (purchaseMinusEl) purchaseMinusEl.textContent = formatCurrency(finalPurchaseTotal);
+        if (purchaseMinusEl) purchaseMinusEl.textContent = formatCurrency(finalPurchaseCombined);
         if (paidMinusEl) paidMinusEl.textContent = formatCurrency(paid);
         if (advancedMinusEl) advancedMinusEl.textContent = formatCurrency(advanced);
         if (rateDiffAmtEl) rateDiffAmtEl.textContent = rateDiffAbs > 0 ? formatCurrencySigned(-rateDiffAbs) : formatCurrency(0);
@@ -5470,9 +5995,10 @@
           amountMinusRateDiffWrap.style.display = "none";
         }
 
-        // Get payments for this bill
+        // Get payments for this bill (trim match — same as getPaidAmount)
         const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-        const billPayments = payments.filter(p => p.billNo === billNo.value);
+        const billPaymentsKey = String(billNo.value).trim();
+        const billPayments = payments.filter(p => p && String(p.billNo || "").trim() === billPaymentsKey);
 
         if (paymentListEl) {
           if (billPayments.length === 0) {
@@ -6011,9 +6537,14 @@
         window.saveAndNew = saveAndNew;
         window.transferToCustomerBalance = transferToCustomerBalance;
         window.resetOrder = resetOrder;
+        window.onBillButtonClick = onBillButtonClick;
         window.showInvoice = showInvoice;
         window.back = back;
         window.openPayment = openPayment;
+        window.openPurchaseSheet = openPurchaseSheet;
+        window.closePurchaseSheetPopup = closePurchaseSheetPopup;
+        window.savePurchaseSheet = savePurchaseSheet;
+        window.addPurchaseSheetRow = addPurchaseSheetRow;
         window.openCustomer = openCustomer;
         window.openReceipt = openReceipt;
         window.openRateBook = openRateBook;
@@ -6099,7 +6630,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'showInvoice', 'back', 'openPayment', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();

@@ -670,6 +670,102 @@
       opacity: 0.9;
     }
 
+    /* Purchase sheet (horizontal table in popup — same visual language as order details table) */
+    #new-order-purchase-sheet-popup .purchase-sheet-box {
+      max-width: min(1220px, 98vw);
+      width: 100%;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-sheet-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      margin-top: 12px;
+      max-height: min(420px, 55vh);
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table {
+      width: 100%;
+      min-width: 960px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 14px;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table thead th {
+      position: sticky;
+      top: 0;
+      background: #f5f6fa;
+      z-index: 1;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table th,
+    #new-order-purchase-sheet-popup table.purchase-sheet-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(n+3),
+    #new-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(n+3):not(:last-child) {
+      text-align: right;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table td:last-child {
+      text-align: center;
+      width: 48px;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table tbody tr:hover {
+      background: #f8faff;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table input.purchase-sheet-computed {
+      background: #f5f5f7;
+      color: var(--text);
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table input,
+    #new-order-purchase-sheet-popup table.purchase-sheet-table button {
+      width: 100%;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table td:last-child button {
+      width: auto;
+      min-width: 36px;
+      padding: 4px 8px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    #new-order-purchase-sheet-popup table.purchase-sheet-table tfoot td {
+      background: #eef1f5;
+      font-weight: 600;
+      border-top: 2px solid var(--border);
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-sheet-total-label {
+      text-align: right;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-sheet-total-amt {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
     /* =====================
    INFO PANEL
 ===================== */
@@ -1040,6 +1136,7 @@
       <button class="primary" onclick="addRowNewOrder()">+ Add Row</button>
       <button onclick="openPayment()">Payment</button>
       <button onclick="openRateBook()">Rate Book</button>
+      <button onclick="openPurchaseSheet()">Purchase</button>
       <button class="primary" onclick="saveOrder()">Save Order</button>
       <button onclick="saveAndNew()">Save & New</button>
       <button onclick="resetOrder()">Reset</button>
@@ -1264,6 +1361,48 @@
     </div>
   </div>
 
+  <!-- PURCHASE SHEET (horizontal line-item table) -->
+  <div id="new-order-purchase-sheet-popup" class="popup-bg new-order-popup" style="display:none;"
+    onclick="if(event.target===this && typeof newOrderClosePurchaseSheetPopup==='function') newOrderClosePurchaseSheetPopup()">
+    <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
+      <h3>Purchase</h3>
+      <div class="purchase-sheet-wrap">
+        <table class="purchase-sheet-table">
+          <thead>
+            <tr>
+              <th style="min-width:128px;">On date</th>
+              <th style="min-width:160px;">Item Name</th>
+              <th style="min-width:92px;">GROSS WT.</th>
+              <th style="min-width:88px;">Less Wt</th>
+              <th style="min-width:100px;">Net Weight</th>
+              <th style="min-width:88px;">Rate</th>
+              <th style="min-width:100px;">Amount</th>
+              <th>❌</th>
+            </tr>
+          </thead>
+          <tbody id="new-order-purchase-sheet-tbody"></tbody>
+          <tfoot>
+            <tr class="purchase-sheet-tfoot-row">
+              <td colspan="6" class="purchase-sheet-total-label">Total Purchase</td>
+              <td class="purchase-sheet-total-amt"><span id="new-order-purchase-sheet-total-amt">₹ 0.00</span></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+          <button type="button" class="primary" onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
+            Add Row</button>
+          <button type="button" class="primary"
+            onclick="typeof savePurchaseSheet==='function'&&savePurchaseSheet()">Save</button>
+        </div>
+        <button type="button"
+          onclick="typeof newOrderClosePurchaseSheetPopup==='function'?newOrderClosePurchaseSheetPopup():closePurchaseSheetPopup()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       var container = document.querySelector('.workspace');
@@ -1349,11 +1488,11 @@
       }
 
       function getPopupEl(id) {
-        return container.querySelector('#' + id) || null;
+        return container.querySelector('#' + id) || document.getElementById(id) || null;
       }
 
       function hideOwnPopupsOnInit() {
-        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'].forEach(function (id) {
+        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'].forEach(function (id) {
           try {
             var el = container.querySelector('#' + id);
             if (el && el.style) el.style.display = 'none';
@@ -1517,16 +1656,13 @@
         }
 
         const tr = document.createElement('tr');
-        // Type column: show all four types (Order, Repair, Sale, Purchase) so every added row has full type list
+        // Type column: Order only (legacy saved rows may still normalize via normalizeNewOrderLineTypeSelect)
         tr.innerHTML = `
         <td>
           <div style="display:flex; gap:4px; align-items:center;">
             <select onchange="handleTypeChange(this)" style="flex:1; min-width:80px;">
               <option value="" selected>-- Select --</option>
               <option value="Order">Order</option>
-              <option value="Repair">Repair</option>
-              <option value="Sale">Sale</option>
-              <option value="Purchase">Purchase</option>
             </select>
             <button class="edit-details-btn" onclick="openOrderDetailsPopup(this)" title="Edit Order Details" style="display:none; padding:4px; background:none; border:none; cursor:pointer; font-size:14px;">✏️</button>
           </div>
@@ -1622,6 +1758,13 @@
       let _orderDetailsRow = null;
 
       var _optionalPlaceholders = ['Remarks', 'Design', 'Size'];
+
+      /** Map removed line types (Repair / Sale / Purchase) to Order so the select stays valid. */
+      function normalizeNewOrderLineTypeSelect(select) {
+        if (!select) return;
+        var v = select.value;
+        if (v === 'Repair' || v === 'Sale' || v === 'Purchase') select.value = 'Order';
+      }
 
       function setPurchaseOptionalFieldsState(row, isPurchase) {
         if (!row) return;
@@ -1824,6 +1967,8 @@
           }
         });
 
+        total -= getSavedPurchaseSheetTotal(AppState.elements.billNo?.value);
+
         return total;
       }
 
@@ -1890,6 +2035,219 @@
 
       function newOrderClosePaymentPopup() { closePaymentPopup(); }
       function newOrderSavePayment() { savePayment(); }
+
+      function getPurchaseSheetTbody() {
+        return getSearchRoot().querySelector('#new-order-purchase-sheet-tbody')
+          || document.getElementById('new-order-purchase-sheet-tbody');
+      }
+
+      /** Purchase sheet: Net Weight = GROSS WT. when Less Wt is empty; Less Wt only reduces Net (Net = GROSS − Less). */
+      function parsePurchaseSheetWeight(el) {
+        if (!el || el.value == null) return 0;
+        var s = String(el.value).trim();
+        if (s === '') return 0;
+        var n = Number(s);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function recalcPurchaseSheetRow(tr) {
+        if (!tr || !tr.cells || tr.cells.length < 7) return;
+        var grossIn = tr.cells[2].querySelector('input');
+        var lessIn = tr.cells[3].querySelector('input');
+        var netIn = tr.cells[4].querySelector('input');
+        var rateIn = tr.cells[5].querySelector('input');
+        var amtIn = tr.cells[6].querySelector('input');
+        if (!grossIn || !lessIn || !netIn || !rateIn || !amtIn) return;
+        var gross = parsePurchaseSheetWeight(grossIn);
+        var less = parsePurchaseSheetWeight(lessIn);
+        if (less < 0) less = 0;
+        var net = Math.max(0, gross - less);
+        netIn.value = net.toFixed(3);
+        var rate = parsePurchaseSheetWeight(rateIn);
+        amtIn.value = (net * rate).toFixed(2);
+        updatePurchaseSheetTotalDisplay();
+      }
+
+      function updatePurchaseSheetTotalDisplay() {
+        var tb = getPurchaseSheetTbody();
+        var span = getSearchRoot().querySelector('#new-order-purchase-sheet-total-amt')
+          || document.getElementById('new-order-purchase-sheet-total-amt');
+        if (!tb || !span) return;
+        var sum = 0;
+        tb.querySelectorAll('tr').forEach(function (tr) {
+          var inp = tr.querySelector('.ps-amt');
+          if (inp) sum += safeNumber(inp.value);
+        });
+        span.textContent = '₹ ' + sum.toFixed(2);
+      }
+
+      var PURCHASE_SHEETS_STORAGE_KEY = 'newOrderPurchaseSheets';
+
+      function readPurchaseSheetsMap() {
+        try {
+          return JSON.parse(localStorage.getItem(PURCHASE_SHEETS_STORAGE_KEY) || '{}');
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function writePurchaseSheetForBill(billNo, rows, total) {
+        if (!billNo) return;
+        var key = String(billNo).trim();
+        if (!key) return;
+        var map = readPurchaseSheetsMap();
+        map[key] = {
+          rows: rows || [],
+          total: safeNumber(total),
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(PURCHASE_SHEETS_STORAGE_KEY, JSON.stringify(map));
+      }
+
+      function getSavedPurchaseSheetTotal(billNo) {
+        if (!billNo) return 0;
+        var map = readPurchaseSheetsMap();
+        var key = String(billNo).trim();
+        var rec = map[key] || map[billNo];
+        if (!rec) return 0;
+        if (rec.total != null && String(rec.total).trim() !== '') {
+          return safeNumber(rec.total);
+        }
+        return sumPurchaseSheetRowsAmount(rec.rows);
+      }
+
+      function removePurchaseSheetForBill(billNo) {
+        if (!billNo) return;
+        var map = readPurchaseSheetsMap();
+        var key = String(billNo).trim();
+        if (map[key]) delete map[key];
+        if (map[billNo]) delete map[billNo];
+        localStorage.setItem(PURCHASE_SHEETS_STORAGE_KEY, JSON.stringify(map));
+      }
+
+      function collectPurchaseSheetRowsFromDom() {
+        var tb = getPurchaseSheetTbody();
+        if (!tb) return [];
+        var out = [];
+        tb.querySelectorAll('tr').forEach(function (tr) {
+          var c = tr.cells;
+          if (!c || c.length < 7) return;
+          out.push({
+            onDate: c[0].querySelector('input') ? c[0].querySelector('input').value : '',
+            itemName: c[1].querySelector('input') ? c[1].querySelector('input').value : '',
+            grossWt: c[2].querySelector('input') ? c[2].querySelector('input').value : '',
+            lessWt: c[3].querySelector('input') ? c[3].querySelector('input').value : '',
+            netWt: c[4].querySelector('input') ? c[4].querySelector('input').value : '',
+            rate: c[5].querySelector('input') ? c[5].querySelector('input').value : '',
+            amount: c[6].querySelector('input') ? c[6].querySelector('input').value : ''
+          });
+        });
+        return out;
+      }
+
+      function sumPurchaseSheetRowsAmount(rows) {
+        return (rows || []).reduce(function (s, r) {
+          return s + safeNumber(r.amount);
+        }, 0);
+      }
+
+      function savePurchaseSheet() {
+        if (!AppState.elements.billNo || !String(AppState.elements.billNo.value || '').trim()) {
+          showError('Order number is required. Save or generate an order number first.');
+          return;
+        }
+        var bn = String(AppState.elements.billNo.value).trim();
+        var rows = collectPurchaseSheetRowsFromDom();
+        var total = sumPurchaseSheetRowsAmount(rows);
+        writePurchaseSheetForBill(bn, rows, total);
+        updatePurchaseSheetTotalDisplay();
+        updateInfoPanel();
+        if (typeof showSaveIndicator === 'function') showSaveIndicator();
+      }
+
+      function renderPurchaseSheetTableForBill(billNo) {
+        var tb = getPurchaseSheetTbody();
+        if (!tb) return;
+        var map = readPurchaseSheetsMap();
+        var key = billNo ? String(billNo).trim() : '';
+        var rec = key ? (map[key] || map[billNo]) : null;
+        tb.innerHTML = '';
+        if (rec && rec.rows && rec.rows.length) {
+          rec.rows.forEach(function (r) {
+            addPurchaseSheetRow(r);
+          });
+        } else {
+          addPurchaseSheetRow();
+        }
+        updatePurchaseSheetTotalDisplay();
+      }
+
+      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount */
+      function addPurchaseSheetRow(preset) {
+        var tb = getPurchaseSheetTbody();
+        if (!tb) return;
+        var orderDateVal = AppState.elements.orderDate && AppState.elements.orderDate.value
+          ? AppState.elements.orderDate.value
+          : new Date().toISOString().split('T')[0];
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><input type="date" class="ps-ondate"></td>' +
+          '<td><input type="text" class="ps-item" placeholder="Item"></td>' +
+          '<td><input type="number" class="ps-gross" step="0.001" min="0" placeholder="0" title="GROSS WT."></td>' +
+          '<td><input type="number" class="ps-less" step="0.001" min="0" placeholder="0" title="Subtract from net only: Net = GROSS WT. − Less Wt"></td>' +
+          '<td><input type="number" class="ps-net purchase-sheet-computed" step="0.001" readonly tabindex="-1" placeholder="0" title="Net = GROSS WT. − Less Wt (same as Gross when Less is empty)"></td>' +
+          '<td><input type="number" class="ps-rate" step="0.01" min="0" placeholder="0"></td>' +
+          '<td><input type="number" class="ps-amt purchase-sheet-computed" step="0.01" readonly tabindex="-1" placeholder="0"></td>' +
+          '<td><button type="button" title="Remove row">❌</button></td>';
+        tb.appendChild(tr);
+        var onDate = tr.querySelector('.ps-ondate');
+        if (onDate) onDate.value = preset && preset.onDate ? String(preset.onDate) : orderDateVal;
+        if (preset) {
+          var it = tr.querySelector('.ps-item');
+          if (it && preset.itemName != null) it.value = String(preset.itemName);
+          var g = tr.querySelector('.ps-gross');
+          if (g && preset.grossWt != null && preset.grossWt !== '') g.value = String(preset.grossWt);
+          var l = tr.querySelector('.ps-less');
+          if (l && preset.lessWt != null && preset.lessWt !== '') l.value = String(preset.lessWt);
+          var rt = tr.querySelector('.ps-rate');
+          if (rt && preset.rate != null && preset.rate !== '') rt.value = String(preset.rate);
+        }
+        var btn = tr.querySelector('button');
+        function recalc() { recalcPurchaseSheetRow(tr); }
+        ['input', 'change', 'blur'].forEach(function (ev) {
+          tr.querySelector('.ps-gross').addEventListener(ev, recalc);
+          tr.querySelector('.ps-less').addEventListener(ev, recalc);
+          tr.querySelector('.ps-rate').addEventListener(ev, recalc);
+        });
+        if (btn) btn.addEventListener('click', function () {
+          tr.remove();
+          updatePurchaseSheetTotalDisplay();
+        });
+        recalc();
+      }
+
+      function openPurchaseSheet() {
+        var popup = getPopupEl('new-order-purchase-sheet-popup');
+        if (!popup) return;
+        var bn = AppState.elements.billNo && AppState.elements.billNo.value
+          ? String(AppState.elements.billNo.value).trim() : '';
+        if (bn) renderPurchaseSheetTableForBill(bn);
+        else {
+          var tb = getPurchaseSheetTbody();
+          if (tb && !tb.querySelector('tr')) addPurchaseSheetRow();
+        }
+        popup.style.display = 'flex';
+        popup.style.alignItems = 'center';
+        popup.style.justifyContent = 'center';
+        updatePurchaseSheetTotalDisplay();
+      }
+
+      function closePurchaseSheetPopup() {
+        var popup = getPopupEl('new-order-purchase-sheet-popup');
+        if (popup) popup.style.display = 'none';
+      }
+
+      function newOrderClosePurchaseSheetPopup() { closePurchaseSheetPopup(); }
 
       function savePayment() {
         const amountInput = getPopupEl('paymentAmount') || getSearchRoot().querySelector('#paymentAmount');
@@ -2142,7 +2500,7 @@
             AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
               const rowData = {
                 values: [...tr.querySelectorAll('input,select')].map(el => el.value),
-                type: tr.cells[0]?.children[0]?.value || '',
+                type: tr.cells[0]?.querySelector('select')?.value || '',
                 delivery: tr.dataset.delivery || '',
                 deliveryDate: tr.dataset.deliveryDate || '',
                 daysToDelivery: tr.dataset.daysToDelivery || '',
@@ -2200,6 +2558,12 @@
                 if (rowData.daysToDelivery) tr.dataset.daysToDelivery = rowData.daysToDelivery;
                 if (rowData.sample) tr.dataset.sample = rowData.sample;
                 if (rowData.orderFilled) tr.dataset.orderFilled = rowData.orderFilled;
+
+                const sel = tr.cells[0]?.querySelector('select');
+                normalizeNewOrderLineTypeSelect(sel);
+                setPurchaseOptionalFieldsState(tr, false);
+                const editBtn = tr.querySelector('.edit-details-btn');
+                if (editBtn && sel) editBtn.style.display = sel.value === 'Order' ? 'block' : 'none';
 
                 setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10);
               });
@@ -2308,6 +2672,8 @@
             orderTotal += amount;
           }
         });
+
+        purchaseTotal += getSavedPurchaseSheetTotal(AppState.elements.billNo.value);
 
         const netTotal = orderTotal - purchaseTotal;
         const paid = getPaidAmount(AppState.elements.billNo.value);
@@ -2434,7 +2800,16 @@
           // For brand-new orders (not edits), officially claim the next order number now.
           // This is the ONLY place the counter is incremented — never on page load or reset.
           if (!AppState.editMode) {
+            const prevBn = String(AppState.elements.billNo.value || '').trim();
             const claimed = claimBillNo();
+            if (prevBn && claimed && prevBn !== claimed) {
+              const map = readPurchaseSheetsMap();
+              if (map[prevBn]) {
+                map[claimed] = map[prevBn];
+                delete map[prevBn];
+                localStorage.setItem(PURCHASE_SHEETS_STORAGE_KEY, JSON.stringify(map));
+              }
+            }
             AppState.elements.billNo.value = claimed;
             // Also update the read-only bill-no cell in every table row
             AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
@@ -2457,6 +2832,13 @@
             });
           });
 
+          const bnSave = AppState.elements.billNo.value;
+          const psMapSave = readPurchaseSheetsMap();
+          const psRecSave = psMapSave[bnSave];
+          const purchaseSheetPayload = psRecSave
+            ? { rows: psRecSave.rows, total: psRecSave.total, savedAt: psRecSave.savedAt }
+            : null;
+
           // Save to bills
           const bills = JSON.parse(localStorage.getItem('bills') || '[]');
           const billData = {
@@ -2465,7 +2847,8 @@
             customer: getCustomerName(),
             customerId: AppState.elements.custName.value,
             totalAmount: billTotal,
-            rows: rows
+            rows: rows,
+            purchaseSheet: purchaseSheetPayload
           };
 
           const existingIndex = bills.findIndex(b => b.billNo === billData.billNo);
@@ -2509,6 +2892,7 @@
             status: AppState.editMode ? (AppState.currentOrderStatus || 'PENDING') : 'PENDING',
             marked: AppState.editMode ? (AppState.currentOrderMarked || false) : false,
             items: rows,
+            purchaseSheet: purchaseSheetPayload,
             timestamp: new Date().toISOString()
           };
 
@@ -2629,6 +3013,7 @@
               if (rowData.sample) tr.dataset.sample = rowData.sample;
               
               const sel = tr.cells[0]?.querySelector('select');
+              normalizeNewOrderLineTypeSelect(sel);
               setPurchaseOptionalFieldsState(tr, sel && sel.value === 'Purchase');
               const editBtn = tr.querySelector('.edit-details-btn');
               if (editBtn && sel) {
@@ -2794,7 +3179,7 @@
           if (AppState.elements.dueDate && order.dueDate != null && order.dueDate !== '') AppState.elements.dueDate.value = order.dueDate;
           if (AppState.elements.gstRate && order.gstRate != null && order.gstRate !== '') AppState.elements.gstRate.value = order.gstRate;
 
-          // Load all order items into the table – restore every row (Order, Repair, Sale, Purchase) with full data; do not delete or remove any type
+          // Load all order items into the table – restore every row; legacy line types normalize to Order
           AppState.elements.itemBody.innerHTML = '';
           // Support both items and legacy rows array; normalize to { values, type, ... }
           const rawItems = order.items || order.rows || [];
@@ -2809,16 +3194,19 @@
           }));
           for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
-            addRow(true); // skip throttle so every row is added (Order, Repair, Sale, Purchase all visible)
+            addRow(true); // skip throttle so every row is added
             const tr = AppState.elements.itemBody.lastElementChild;
             if (!tr) continue;
 
             const values = item.values || [];
-            const typeVal = (item.type && ['Order', 'Repair', 'Sale', 'Purchase'].includes(item.type)) ? item.type : 'Order';
+            var typeVal = (!item.type || item.type === 'Order') ? (item.type || 'Order') : 'Order';
 
-            // Restore type first so row UI matches (Purchase optional fields, etc.)
+            // Restore type first (Repair/Sale/Purchase in old data → Order)
             const typeSelect = tr.cells[0]?.querySelector('select');
-            if (typeSelect) typeSelect.value = typeVal;
+            if (typeSelect) {
+              typeSelect.value = typeVal;
+              normalizeNewOrderLineTypeSelect(typeSelect);
+            }
 
             // Restore every input/select by index (same order as save); pad with empty so all inputs get a value
             const inputs = tr.querySelectorAll('input, select');
@@ -2842,15 +3230,25 @@
             setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10 + idx * 5);
           }
 
-          // Apply Purchase optional-field state for all rows so Order/Repair/Sale/Purchase display correctly with full row visible
+          // Apply optional-field state for all rows
           AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
             const sel = tr.cells[0]?.querySelector('select');
+            normalizeNewOrderLineTypeSelect(sel);
             setPurchaseOptionalFieldsState(tr, sel && sel.value === 'Purchase');
             const editBtn = tr.querySelector('.edit-details-btn');
             if (editBtn && sel) {
               editBtn.style.display = sel.value === 'Order' ? 'block' : 'none';
             }
           });
+
+          // Restore saved Purchase sheet for this bill (panel + calculations)
+          if (order.purchaseSheet && order.purchaseSheet.rows && order.purchaseSheet.rows.length) {
+            writePurchaseSheetForBill(
+              String(order.orderNo),
+              order.purchaseSheet.rows,
+              safeNumber(order.purchaseSheet.total)
+            );
+          }
 
           // Update panels
           updateInfoPanel();
@@ -2883,6 +3281,10 @@
 
       /** Permanently clear the entire order form, table, state, and UI for a fresh order. */
       function clearOrderFormAndState() {
+        var prevBillForPurchase = AppState.elements.billNo && AppState.elements.billNo.value
+          ? String(AppState.elements.billNo.value).trim() : '';
+        if (prevBillForPurchase) removePurchaseSheetForBill(prevBillForPurchase);
+
         // Clear all input fields
         if (AppState.elements.custName) AppState.elements.custName.value = '';
         if (AppState.elements.billNo) AppState.elements.billNo.value = peekNextBillNo();
@@ -2961,15 +3363,12 @@
         const itemsBody = document.getElementById('iItems');
         itemsBody.innerHTML = '';
 
-        let grandTotal = 0;
         AppState.elements.itemBody.querySelectorAll('tr').forEach(row => {
           const itemName = row.cells[2]?.children[0]?.value || '—';
           const pc = row.cells[7]?.children[0]?.value || '0';
           const netWt = row.cells[9]?.children[0]?.value || '0';
           const rate = row.cells[10]?.children[0]?.value || '0';
           const total = safeNumber(row.cells[12]?.children[0]?.value);
-
-          grandTotal += total;
 
           const orderDetails = row.dataset.delivery
             ? `Delivery: ${row.dataset.delivery}${row.dataset.sample ? ' | ' + row.dataset.sample : ''}`
@@ -2987,6 +3386,7 @@
         `;
         });
 
+        const grandTotal = calculateBillTotal();
         const paid = getPaidAmount(AppState.elements.billNo.value);
         const balance = grandTotal - paid;
 
@@ -3160,6 +3560,11 @@
         window.openPaymentCardEdit = openPaymentCardEdit;
         window.savePaymentCardEdit = savePaymentCardEdit;
         window.cancelPaymentCardEdit = cancelPaymentCardEdit;
+        window.openPurchaseSheet = openPurchaseSheet;
+        window.closePurchaseSheetPopup = closePurchaseSheetPopup;
+        window.newOrderClosePurchaseSheetPopup = newOrderClosePurchaseSheetPopup;
+        window.addPurchaseSheetRow = addPurchaseSheetRow;
+        window.savePurchaseSheet = savePurchaseSheet;
         window.openRateBook = openRateBook;
         window.closeRatebookPopup = closeRatebookPopup;
         window.newOrderCloseRatebookPopup = newOrderCloseRatebookPopup;
@@ -3186,7 +3591,7 @@
         window.__currentPageCleanup = function () {
           if (_storageHandler) window.removeEventListener('storage', _storageHandler);
           if (_visibilityHandler) document.removeEventListener('visibilitychange', _visibilityHandler);
-          var globals = ['addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange', 'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup', 'newOrderSavePayment', 'savePayment', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup', 'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup', 'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup', 'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount', 'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew', 'resetOrder', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState', 'restoreOrderState'];
+          var globals = ['addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange', 'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup', 'newOrderSavePayment', 'savePayment', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'newOrderClosePurchaseSheetPopup', 'addPurchaseSheetRow', 'savePurchaseSheet', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup', 'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup', 'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup', 'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount', 'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew', 'resetOrder', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState', 'restoreOrderState'];
           globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
         };
       }

@@ -310,11 +310,11 @@
             <th>Order No.</th>
             <th>Customer</th>
             <th>Bill Date</th>
-            <th class="right">Net (₹)</th>
+            <th class="right" title="Amount due after purchase, advances, paid, and rate diff — same as Balance">Net Total Amount (₹)</th>
             <th class="right" title="Payment advances (non-Paid) + purchase line totals — same as Orders / Ready Extra">Advance (₹)</th>
             <th class="right">Paid (₹)</th>
             <th class="right">Weight (g)</th>
-            <th class="right">Balance (₹)</th>
+            <th class="right" title="Same value as Net Total Amount — amount due on this bill">Balance (₹)</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -348,15 +348,50 @@
       return !!(tbody && footer);
     }
 
+    /** Same key as new-order.html / ready-extra-order.html — purchase sheet rupees per bill. */
+    const ALL_BILL_PURCHASE_SHEETS_KEY = "newOrderPurchaseSheets";
+
+    function getSavedPurchaseSheetTotal(billNoVal) {
+      if (!billNoVal) return 0;
+      try {
+        const map = JSON.parse(localStorage.getItem(ALL_BILL_PURCHASE_SHEETS_KEY) || "{}") || {};
+        const key = String(billNoVal).trim();
+        const rec = map[key] || map[billNoVal];
+        if (!rec) return 0;
+        if (rec.total != null && String(rec.total).trim() !== "") {
+          const t = parseFloat(rec.total);
+          return isNaN(t) ? 0 : t;
+        }
+        return (rec.rows || []).reduce((s, r) => s + (parseFloat(r && r.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    /** Match ready-extra getReadyOrderRowLineTotal: Final (col 15) if set, else Est. Total (col 9); legacy rows use index 12. */
+    function readyExtraLineTotalFromValues(vals) {
+      if (!vals || !vals.length) return 0;
+      if (vals.length >= 16) {
+        const fin = parseFloat(vals[15] || 0) || 0;
+        const est = parseFloat(vals[9] || 0) || 0;
+        return fin !== 0 ? fin : est;
+      }
+      if (vals.length >= 13) {
+        return parseFloat(vals[12] || 0) || 0;
+      }
+      return 0;
+    }
+
     /* =========================
        GET PAID AMOUNT HELPER
     ========================= */
     function getPaidAmount(billNo, typeFilter = null) {
       if (!billNo) return 0;
+      const key = String(billNo).trim();
       const payments = JSON.parse(localStorage.getItem("payments") || "[]");
       return payments
         .filter(p => {
-          const billMatch = p.billNo === billNo;
+          const billMatch = p && String(p.billNo || "").trim() === key;
           if (!billMatch) return false;
           if (typeFilter === 'Paid') return p.type === 'Paid';
           // Advanced = explicit 'Advanced' OR no type (legacy)
@@ -407,21 +442,15 @@
             linkedItems.forEach(it => {
               const vals = it.values || [];
               const type = it.type || 'Order';
-              const isGst = vals.length >= 16;
-              const totalIdx = isGst ? 15 : 12;
-              const valTotal = parseFloat(vals[totalIdx] || 0);
+              const valTotal = readyExtraLineTotalFromValues(vals);
               if (type === 'Purchase') purchaseTotal += valTotal;
               else if (type === 'Sale') saleTotal += valTotal;
               else orderTotal += valTotal;
             });
           }
 
-          let netAmt = orderTotal + saleTotal;
-          if (netAmt === 0) {
-            netAmt = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0);
-          }
-
           const billNoVal = balance.orderNo || balance.billNo || "";
+          const purchaseSheetTotal = getSavedPurchaseSheetTotal(billNoVal);
           const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
           const paidAmt = getPaidAmount(billNoVal, 'Paid');
 
@@ -435,7 +464,14 @@
             }
           }
 
-          const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          const netOrderSale = orderTotal + saleTotal;
+          let billNetBeforePayments;
+          if (netOrderSale > 0 || purchaseTotal > 0 || purchaseSheetTotal > 0) {
+            billNetBeforePayments = netOrderSale - purchaseTotal - purchaseSheetTotal;
+          } else {
+            billNetBeforePayments = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0) || 0;
+          }
+          const balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           dynamicSum += balAmt;
         });
       } else if (c && c.currentBalance != null && c.currentBalance !== "") {
@@ -513,12 +549,9 @@
             linkedItems.forEach(it => {
               const vals = it.values || [];
               const type = it.type || 'Order';
-              // Determine if this is a Ready Extra Order (GST) based on column count (GST has 16-17 columns)
               const isGst = vals.length >= 16;
-              const totalIdx = isGst ? 15 : 12;
-              const weightIdx = isGst ? 12 : 9; // R. Wt for GST, Total Wt for standard
-
-              const valTotal = parseFloat(vals[totalIdx] || 0);
+              const weightIdx = isGst ? 12 : 9;
+              const valTotal = readyExtraLineTotalFromValues(vals);
               const valWeight = parseFloat(vals[weightIdx] || 0);
 
               if (type === 'Purchase') {
@@ -533,14 +566,8 @@
             });
           }
 
-          // Net amount (Total of all rows' 'Total' column, index 15)
-          let netAmt = orderTotal + saleTotal;
-          if (netAmt === 0) {
-            netAmt = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0);
-          }
-
-          // Advance & Paid (Total of payments)
           const billNoVal = balance.orderNo || balance.billNo || "";
+          const purchaseSheetTotal = getSavedPurchaseSheetTotal(billNoVal);
           const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
           const paidAmt = getPaidAmount(billNoVal, 'Paid');
 
@@ -561,12 +588,20 @@
             }
           }
 
-          // Net Total Amount (same as Ready Extra payment panel): line adds − purchase − advance − paid − |rate diff|
-          const balAmt = netAmt - purchaseTotal - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          const netOrderSale = orderTotal + saleTotal;
+          let billNetBeforePayments;
+          if (netOrderSale > 0 || purchaseTotal > 0 || purchaseSheetTotal > 0) {
+            billNetBeforePayments = netOrderSale - purchaseTotal - purchaseSheetTotal;
+          } else {
+            billNetBeforePayments = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0) || 0;
+          }
+
+          // Net Total Amount / Balance — matches ready-extra calculateBillTotal + payments + |rate diff|
+          const balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           balance.computedBalAmt = balAmt;
 
-          // Display only: advances + purchase (same as orders / pending / ready / ready-extra Advance line)
-          const advanceDisplay = advanceAmt + purchaseTotal;
+          // Advances + table purchase + purchase sheet (same buckets as Ready Extra purchase total)
+          const advanceDisplay = advanceAmt + purchaseTotal + purchaseSheetTotal;
 
           row.innerHTML = `
         <td class="center">${statusLabel}</td>
@@ -574,7 +609,7 @@
         <td>${balance.orderNo || '—'}</td>
         <td>${balance.customer || '—'}</td>
         <td>${balance.date || '—'}</td>
-        <td class="right">${netAmt.toFixed(2)}</td>
+        <td class="right">${balAmt.toFixed(2)}</td>
         <td class="right">${advanceDisplay.toFixed(2)}</td>
         <td class="right">${paidAmt.toFixed(2)}</td>
         <td class="right">${grWt.toFixed(3)}</td>

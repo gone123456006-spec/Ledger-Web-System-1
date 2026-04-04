@@ -143,7 +143,7 @@
 
     table {
       width: 100%;
-      min-width: 1200px;
+      min-width: 1320px;
       border-collapse: collapse;
       background: #fff !important;
     }
@@ -424,8 +424,9 @@
             <th>Due Date</th>
             <th class="right">Gr.Wt</th>
             <th class="right">Net (Rs)</th>
-            <th class="right">Advance (Rs)</th>
-            <th class="right">Balance</th>
+            <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
+            <th class="right" title="Non-Paid payments + purchase line totals">Advance (Rs)</th>
+            <th class="right" title="Same as Orders list: Net − all payments">Balance</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -516,6 +517,41 @@
       return isNaN(n9) ? 0 : n9;
     }
 
+    function sumStoredPurchaseSheetRows(rows) {
+      if (!rows || !rows.length) return 0;
+      return rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    }
+
+    function purchaseSheetTotalFromOrder(order) {
+      if (!order || order.purchaseSheet == null) return null;
+      const n = parseFloat(order.purchaseSheet.total);
+      if (!isNaN(n)) return n;
+      const rs = sumStoredPurchaseSheetRows(order.purchaseSheet.rows);
+      return rs !== 0 ? rs : null;
+    }
+
+    function getSavedPurchaseSheetTotalForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const map = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
+        const rec = map[String(billNo).trim()] || map[billNo];
+        if (!rec) return 0;
+        if (rec.total != null && String(rec.total).trim() !== "") {
+          const n = parseFloat(rec.total);
+          return isNaN(n) ? 0 : n;
+        }
+        return sumStoredPurchaseSheetRows(rec.rows);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function purchaseSheetTotalResolved(order, billNo) {
+      const fromOrder = purchaseSheetTotalFromOrder(order);
+      if (fromOrder !== null) return fromOrder;
+      return getSavedPurchaseSheetTotalForBill(billNo);
+    }
+
     /* =========================
        LOAD PENDING ORDERS
     ========================= */
@@ -600,11 +636,14 @@
         orderSideTotal = parseFloat(order.netAmount || 0);
       }
 
+      const billNo = order.orderNo || order.billNo;
+      const sheetPurchaseTotal = purchaseSheetTotalResolved(order, billNo);
+      const fullPurchase = purchaseTotal + sheetPurchaseTotal;
+
       const netBill = order.items && order.items.length > 0
-        ? orderSideTotal - purchaseTotal
+        ? orderSideTotal - fullPurchase
         : orderSideTotal;
 
-      const billNo = order.orderNo || order.billNo;
       let advanceOnly = getAdvancePaymentsForBill(billNo);
       if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
 
@@ -614,6 +653,7 @@
       const displayNet = netBill;
       const displayAdvance = advanceOnly + purchaseTotal;
       const displayBalance = netBill - totalPaymentsForBalance;
+      const totalPurchaseDisplay = fullPurchase;
 
       // Get type from order or from first item
       let orderType = order.type || "Order";
@@ -642,6 +682,7 @@
         <td>${formatDate(order.dueDate)}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
         <td class="right"><strong>₹${displayNet.toFixed(2)}</strong></td>
+        <td class="right">₹${totalPurchaseDisplay.toFixed(2)}</td>
         <td class="right">₹${displayAdvance.toFixed(2)}</td>
         <td class="right">₹${displayBalance.toFixed(2)}</td>
         <td class="center">
@@ -690,7 +731,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
         <tr>
-          <td colspan="11" style="border:none;">
+          <td colspan="12" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⏳</div>
               <div class="empty-state-text">No Pending Orders</div>
@@ -707,7 +748,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="11" style="border:none;">
+          <td colspan="12" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⚠️</div>
               <div class="empty-state-text">Error Loading Orders</div>

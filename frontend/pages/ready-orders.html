@@ -143,7 +143,7 @@
 
     table {
       width: 100%;
-      min-width: 1000px;
+      min-width: 1180px;
       border-collapse: collapse;
       background: #fff !important;
     }
@@ -656,8 +656,9 @@
             <th>Relation Name</th>
             <th class="right">Weight (g)</th>
             <th class="right">Net (Rs)</th>
-            <th class="right">Advance</th>
-            <th class="right">Balance</th>
+            <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
+            <th class="right" title="Non-Paid payments + purchase line totals">Advance</th>
+            <th class="right" title="Same as Orders list: Net − all payments">Balance</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -812,6 +813,41 @@
       return isNaN(n9) ? 0 : n9;
     }
 
+    function sumStoredPurchaseSheetRows(rows) {
+      if (!rows || !rows.length) return 0;
+      return rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    }
+
+    function purchaseSheetTotalFromOrder(order) {
+      if (!order || order.purchaseSheet == null) return null;
+      const n = parseFloat(order.purchaseSheet.total);
+      if (!isNaN(n)) return n;
+      const rs = sumStoredPurchaseSheetRows(order.purchaseSheet.rows);
+      return rs !== 0 ? rs : null;
+    }
+
+    function getSavedPurchaseSheetTotalForBill(billNo) {
+      if (!billNo) return 0;
+      try {
+        const map = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
+        const rec = map[String(billNo).trim()] || map[billNo];
+        if (!rec) return 0;
+        if (rec.total != null && String(rec.total).trim() !== "") {
+          const n = parseFloat(rec.total);
+          return isNaN(n) ? 0 : n;
+        }
+        return sumStoredPurchaseSheetRows(rec.rows);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function purchaseSheetTotalResolved(order, billNo) {
+      const fromOrder = purchaseSheetTotalFromOrder(order);
+      if (fromOrder !== null) return fromOrder;
+      return getSavedPurchaseSheetTotalForBill(billNo);
+    }
+
     /* =========================
        LOAD READY ORDERS
     ========================= */
@@ -929,11 +965,14 @@
       const customerName = order.customer || order.customerName || "—";
       const relationName = order.customerRelation || "—";
 
+      const billNo = order.orderNo || order.billNo;
+      const sheetPurchaseTotal = purchaseSheetTotalResolved(order, billNo);
+      const fullPurchase = purchaseTotal + sheetPurchaseTotal;
+
       const netBill = order.items && order.items.length > 0
-        ? orderSideTotal - purchaseTotal
+        ? orderSideTotal - fullPurchase
         : orderSideTotal;
 
-      const billNo = order.orderNo || order.billNo;
       let advanceOnly = getAdvancePaymentsForBill(billNo);
       if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
 
@@ -943,6 +982,7 @@
       const displayAmount = netBill;
       const totalAdvance = advanceOnly + purchaseTotal;
       const displayBalance = netBill - totalPaymentsForBalance;
+      const totalPurchaseDisplay = fullPurchase;
 
       // Create row
       const tr = document.createElement("tr");
@@ -981,6 +1021,7 @@
     <td>${relationName}</td>
     <td class="right">${displayWeight.toFixed(3)}</td>
     <td class="right"><strong>\u20b9${displayAmount.toFixed(2)}</strong></td>
+    <td class="right">\u20b9${totalPurchaseDisplay.toFixed(2)}</td>
     <td class="right">\u20b9${totalAdvance.toFixed(2)}</td>
     <td class="right" style="font-weight:700; color:${displayBalance > 0 ? '#d32f2f' : '#2e7d32'};">
       \u20b9${displayBalance.toFixed(2)}
@@ -1022,7 +1063,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
     <tr>
-      <td colspan="12" style="border:none;">
+      <td colspan="13" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-text">No Ready Orders</div>
@@ -1039,7 +1080,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
     <tr>
-      <td colspan="12" style="border:none;">
+      <td colspan="13" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">⚠️</div>
           <div class="empty-state-text">Error Loading Orders</div>

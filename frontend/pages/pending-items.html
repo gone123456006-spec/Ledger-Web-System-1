@@ -254,7 +254,86 @@
       color: #2a50d8;
     }
 
-    /* ── DUE DATE QUICK FILTERS ── */
+    /* ── DUE DATE DROPDOWN (Bootstrap-style select + menu) ── */
+    .due-date-dropdown-wrap {
+      position: relative;
+    }
+
+    .btn.btn-due-dropdown {
+      min-width: 200px;
+      max-width: min(280px, 42vw);
+      justify-content: space-between;
+      gap: 10px;
+      padding: 0 12px;
+      background: #fff;
+      border: 2px solid #212529;
+      border-radius: 8px;
+      color: #212529;
+      font-weight: 400;
+      box-shadow: none;
+    }
+
+    .btn.btn-due-dropdown:hover {
+      border-color: #212529;
+      background: #fff;
+      color: #212529;
+    }
+
+    .btn.btn-due-dropdown .due-dd-label {
+      flex: 1;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .btn.btn-due-dropdown:not(.active) .due-dd-label {
+      color: #6c757d;
+      font-style: italic;
+    }
+
+    .btn.btn-due-dropdown.active .due-dd-label {
+      color: #212529;
+      font-style: normal;
+      font-weight: 500;
+    }
+
+    .btn.btn-due-dropdown.active {
+      border-color: #212529;
+      background: #fff;
+      color: #212529;
+      box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+    }
+
+    .btn-due-dropdown .due-dd-chevron {
+      opacity: 0.75;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+
+    .btn-due-dropdown[aria-expanded="true"] .due-dd-chevron {
+      transform: rotate(180deg);
+    }
+
+    .due-date-dropdown-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 250;
+      min-width: 100%;
+      width: max(100%, 260px);
+      max-width: min(320px, calc(100vw - 32px));
+      background: #eef2f6;
+      border: 1px solid #c5cdd8;
+      border-radius: 8px;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+    }
+
+    .due-date-dropdown-panel.open {
+      display: block;
+    }
+
+    /* ── DUE DATE QUICK FILTERS (inside dropdown panel) ── */
     .due-date-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -266,12 +345,32 @@
       flex-shrink: 0;
     }
 
-    .filter-due-heading {
-      font-size: 12px;
+    .due-date-toolbar.due-date-toolbar--panel {
+      border-bottom: none;
+      background: transparent;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 12px 12px 14px;
+      gap: 0;
+    }
+
+    .due-date-toolbar--panel .filter-due-heading {
+      font-size: 11px;
       font-weight: 700;
-      color: #475569;
+      color: #1e3a5f;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
+      width: 100%;
+      padding: 4px 4px 10px;
+      margin: 0;
+    }
+
+    .filter-due-heading {
+      font-size: 11px;
+      font-weight: 700;
+      color: #1e3a5f;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
       width: 100%;
     }
 
@@ -280,6 +379,17 @@
       flex-wrap: wrap;
       gap: 6px;
       align-items: center;
+    }
+
+    .due-date-toolbar--panel .due-filter-btns {
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      width: 100%;
+      gap: 6px;
+      border: none;
+      border-radius: 0;
+      overflow: visible;
     }
 
     .due-filter-btn {
@@ -293,7 +403,24 @@
       border-radius: 6px;
       color: #475569;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+
+    .due-date-toolbar--panel .due-filter-btns .due-filter-btn {
+      width: 100%;
+      min-height: 38px;
+      height: auto;
+      padding: 10px 14px;
+      text-align: center;
+      font-weight: 400;
+      font-size: 14px;
+      color: #1e3a5f;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: #fff;
+      justify-content: center;
+      display: flex;
+      align-items: center;
     }
 
     .due-filter-btn:hover {
@@ -302,9 +429,26 @@
       background: #f8fafc;
     }
 
+    .due-date-toolbar--panel .due-filter-btns .due-filter-btn:hover {
+      border-color: #adb5bd;
+      background: #f8f9fa;
+      color: #1e3a5f;
+    }
+
     .due-filter-btn.active {
       background: #4f7ef8;
       border-color: #4f7ef8;
+      color: #fff;
+    }
+
+    .due-date-toolbar--panel .due-filter-btns .due-filter-btn.active {
+      background: #0d6efd;
+      border-color: #0d6efd;
+      color: #fff;
+    }
+
+    .due-date-toolbar--panel .due-filter-btns .due-filter-btn.active:hover {
+      background: #0b5ed7;
       color: #fff;
     }
 
@@ -367,10 +511,113 @@
     }
 
     .next-n-inline.active {
-      padding: 4px 10px;
-      background: #eef2ff;
-      border-radius: 8px;
-      border: 1px solid #c5d5fb;
+      padding: 8px 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e9ecef;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline.open {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline.open label {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 12px;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline input[type="date"] {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline .btn-apply-due {
+      width: 100%;
+      margin-top: 6px;
+      min-height: 38px;
+      height: auto;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 400;
+      background: #fff;
+      color: #1e3a5f;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline .btn-apply-due:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+      color: #1e3a5f;
+    }
+
+    .due-date-toolbar--panel .custom-due-inline span[style*="color:#94a3b8"] {
+      display: none;
+    }
+
+    .due-date-toolbar--panel .next-n-inline {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e9ecef;
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .due-date-toolbar--panel .next-n-inline input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background: #fff;
+      min-height: 38px;
+    }
+
+    .due-date-toolbar--panel .next-n-inline .due-filter-btn {
+      margin-top: 4px;
+      width: 100%;
+      min-height: 38px;
+      padding: 10px 14px;
+      text-align: center;
+      font-weight: 400;
+      font-size: 14px;
+      color: #1e3a5f;
+      background: #fff;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+    }
+
+    .due-date-toolbar--panel .next-n-inline .due-filter-btn:hover {
+      background: #f8f9fa;
+      border-color: #adb5bd;
+      color: #1e3a5f;
+    }
+
+    .due-date-toolbar--panel .next-n-inline .due-filter-btn.active {
+      background: #0d6efd;
+      border-color: #0d6efd;
+      color: #fff;
+    }
+
+    .due-date-toolbar--panel .next-n-inline .due-filter-btn.active:hover {
+      background: #0b5ed7;
+      color: #fff;
     }
 
     /* ── TABLE ── */
@@ -1003,6 +1250,42 @@
         </svg>
         Filter
       </button>
+      <div class="due-date-dropdown-wrap" id="dueDateDropdownWrap">
+        <button type="button" class="btn btn-due-dropdown" id="dueDateDropdownBtn" onclick="toggleDueDateDropdown(event)"
+          aria-expanded="false" aria-haspopup="true" title="Filter by order due date">
+          <span class="due-dd-label">Due date</span>
+          <svg class="due-dd-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        <div class="due-date-dropdown-panel" id="dueDateDropdownPanel" role="menu" aria-hidden="true">
+          <div class="due-date-toolbar due-date-toolbar--panel">
+            <div class="filter-due-heading">Due date</div>
+            <div class="due-filter-btns">
+              <button type="button" class="due-filter-btn" data-due-mode="clear" onclick="setDueFilter('clear')" title="Remove due date filter">Clear</button>
+              <button type="button" class="due-filter-btn" data-due-mode="today" onclick="setDueFilter('today')" title="Due today">Today</button>
+              <button type="button" class="due-filter-btn" data-due-mode="week" onclick="setDueFilter('week')" title="Due this calendar week (Mon–Sun)">Week</button>
+              <button type="button" class="due-filter-btn" data-due-mode="month" onclick="setDueFilter('month')" title="Due this month">Month</button>
+              <button type="button" class="due-filter-btn" data-due-mode="year" onclick="setDueFilter('year')" title="Due this calendar year">Year</button>
+              <button type="button" class="due-filter-btn" data-due-mode="custom" onclick="setDueFilter('custom')" title="Pick from / to dates">Custom</button>
+            </div>
+            <div id="customDueWrap" class="custom-due-inline" aria-hidden="true">
+              <label for="dueCustomFrom" style="font-size:12px; color:#64748b;">From</label>
+              <input type="date" id="dueCustomFrom">
+              <span style="color:#94a3b8;">–</span>
+              <label for="dueCustomTo" style="font-size:12px; color:#64748b;">To</label>
+              <input type="date" id="dueCustomTo">
+              <button type="button" class="btn-apply-due" onclick="applyCustomDueRange()">Apply</button>
+            </div>
+            <div class="next-n-inline" id="nextNDaysWrap">
+              <span>Next</span>
+              <input type="number" id="dueNextNDays" min="1" max="999" value="7" title="Days from today (inclusive)">
+              <span>days</span>
+              <button type="button" class="due-filter-btn" data-due-mode="nextn" onclick="applyNextNDays()" title="Due from today through the next n−1 days (n days total)">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <button class="btn" onclick="loadPendingItems()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <polyline points="23 4 23 10 17 10" />
@@ -1026,32 +1309,6 @@
         Assign Selected
         <span class="btn-count" id="btnCount">0</span>
       </button>
-    </div>
-
-    <div class="due-date-toolbar">
-      <div class="filter-due-heading">Due date</div>
-      <div class="due-filter-btns">
-        <button type="button" class="due-filter-btn" data-due-mode="clear" onclick="setDueFilter('clear')" title="Remove due date filter">Clear</button>
-        <button type="button" class="due-filter-btn" data-due-mode="today" onclick="setDueFilter('today')" title="Due today">Today</button>
-        <button type="button" class="due-filter-btn" data-due-mode="week" onclick="setDueFilter('week')" title="Due this calendar week (Mon–Sun)">Week</button>
-        <button type="button" class="due-filter-btn" data-due-mode="month" onclick="setDueFilter('month')" title="Due this month">Month</button>
-        <button type="button" class="due-filter-btn" data-due-mode="year" onclick="setDueFilter('year')" title="Due this calendar year">Year</button>
-        <button type="button" class="due-filter-btn" data-due-mode="custom" onclick="setDueFilter('custom')" title="Pick from / to dates">Custom</button>
-      </div>
-      <div id="customDueWrap" class="custom-due-inline" aria-hidden="true">
-        <label for="dueCustomFrom" style="font-size:12px; color:#64748b;">From</label>
-        <input type="date" id="dueCustomFrom">
-        <span style="color:#94a3b8;">–</span>
-        <label for="dueCustomTo" style="font-size:12px; color:#64748b;">To</label>
-        <input type="date" id="dueCustomTo">
-        <button type="button" class="btn-apply-due" onclick="applyCustomDueRange()">Apply</button>
-      </div>
-      <div class="next-n-inline" id="nextNDaysWrap">
-        <span>Next</span>
-        <input type="number" id="dueNextNDays" min="1" max="999" value="7" title="Days from today (inclusive)">
-        <span>days</span>
-        <button type="button" class="due-filter-btn" data-due-mode="nextn" onclick="applyNextNDays()" title="Due from today through the next n−1 days (n days total)">Apply</button>
-      </div>
     </div>
 
     <div class="filter-bar" id="filterBar" aria-hidden="true">
@@ -1264,6 +1521,52 @@
       return dt.getTime();
     }
 
+    function updateDueDateDropdownLabel() {
+      const btn = document.getElementById('dueDateDropdownBtn');
+      const label = btn && btn.querySelector('.due-dd-label');
+      if (!btn || !label) return;
+      if (dueFilterMode === 'none' || !dueDateFilter) {
+        label.textContent = 'Due date';
+        btn.classList.remove('active');
+        return;
+      }
+      btn.classList.add('active');
+      if (dueFilterMode === 'today') label.textContent = 'Due: Today';
+      else if (dueFilterMode === 'week') label.textContent = 'Due: Week';
+      else if (dueFilterMode === 'month') label.textContent = 'Due: Month';
+      else if (dueFilterMode === 'year') label.textContent = 'Due: Year';
+      else if (dueFilterMode === 'custom') label.textContent = 'Due: Custom';
+      else if (dueFilterMode === 'nextn') {
+        const n = document.getElementById('dueNextNDays');
+        const v = (n && n.value) ? String(n.value).trim() : '7';
+        label.textContent = 'Due: Next ' + v + 'd';
+      } else {
+        label.textContent = 'Due date';
+        btn.classList.remove('active');
+      }
+    }
+
+    function closeDueDateDropdown() {
+      const panel = document.getElementById('dueDateDropdownPanel');
+      const btn = document.getElementById('dueDateDropdownBtn');
+      if (panel) {
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+      }
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleDueDateDropdown(e) {
+      if (e) e.stopPropagation();
+      const panel = document.getElementById('dueDateDropdownPanel');
+      const btn = document.getElementById('dueDateDropdownBtn');
+      if (!panel || !btn) return;
+      const willOpen = !panel.classList.contains('open');
+      panel.classList.toggle('open', willOpen);
+      panel.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
+      btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    }
+
     function syncDueFilterButtons() {
       document.querySelectorAll('.due-filter-btn[data-due-mode]').forEach(btn => {
         const m = btn.getAttribute('data-due-mode');
@@ -1284,6 +1587,7 @@
       });
       const nw = document.getElementById('nextNDaysWrap');
       if (nw) nw.classList.toggle('active', dueFilterMode === 'nextn');
+      updateDueDateDropdownLabel();
     }
 
     function setDueFilter(mode) {
@@ -1307,6 +1611,7 @@
         dueFilterMode = 'none';
         syncDueFilterButtons();
         applyTableFilters();
+        closeDueDateDropdown();
         return;
       }
 
@@ -1339,6 +1644,7 @@
 
       syncDueFilterButtons();
       applyTableFilters();
+      closeDueDateDropdown();
     }
 
     function applyCustomDueRange() {
@@ -1367,6 +1673,7 @@
       }
       syncDueFilterButtons();
       applyTableFilters();
+      closeDueDateDropdown();
     }
 
     function applyNextNDays() {
@@ -1388,6 +1695,7 @@
       }
       syncDueFilterButtons();
       applyTableFilters();
+      closeDueDateDropdown();
     }
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
@@ -1599,6 +1907,7 @@
       }
       syncDueFilterButtons();
       applyTableFilters();
+      closeDueDateDropdown();
     }
 
     function applyTableFilters() {
@@ -1966,9 +2275,30 @@
       if (e.target === this) closeAssignModal();
     });
 
+    (function setupPendingDueDateDropdown() {
+      document.addEventListener('click', function (e) {
+        const wrap = document.getElementById('dueDateDropdownWrap');
+        const panel = document.getElementById('dueDateDropdownPanel');
+        if (!wrap || !panel || !panel.classList.contains('open')) return;
+        if (wrap.contains(e.target)) return;
+        closeDueDateDropdown();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        const panel = document.getElementById('dueDateDropdownPanel');
+        if (panel && panel.classList.contains('open')) closeDueDateDropdown();
+      });
+      const nEl = document.getElementById('dueNextNDays');
+      if (nEl) nEl.addEventListener('input', function () {
+        if (dueFilterMode === 'nextn') updateDueDateDropdownLabel();
+      });
+    })();
+
     /* Expose ALL functions to window so onclick attributes work
        when this page is loaded inside the dashboard via loadPage()
        (which wraps scripts in an IIFE, making them locally scoped). */
+    window.toggleDueDateDropdown = toggleDueDateDropdown;
+    window.closeDueDateDropdown = closeDueDateDropdown;
     window.loadPendingItems = loadPendingItems;
     window.filterTable = filterTable;
     window.applyTableFilters = applyTableFilters;
