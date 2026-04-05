@@ -1367,7 +1367,7 @@
         <div class="footer-stat">
           <div class="footer-dot" style="background:#fbbf24;"></div>
           <span id="statPending">0 pending</span>
-        </div>
+    </div>
         <div class="footer-stat">
           <div class="footer-dot" style="background:#34d399;"></div>
           <span id="statAssigned">0 assigned</span>
@@ -1787,7 +1787,7 @@
 
         if (rows.length === 0) {
           tbody.innerHTML = `<tr><td colspan="15" style="border:none;">
-          <div class="empty-state">
+                <div class="empty-state">
             <div class="icon">⏳</div>
             <div class="title">No Pending Items</div>
             <div class="sub">Items from PENDING orders will appear here</div>
@@ -1796,16 +1796,16 @@
           ftStats.style.display = 'none';
         } else {
           const assignedCount = rows.filter(r => r.assigned).length;
-          rows.forEach(r => {
-            const tr = document.createElement('tr');
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
             if (r.assigned) tr.style.opacity = '0.62';
-            tr.dataset.orderId = r.orderId;
+          tr.dataset.orderId = r.orderId;
             tr.dataset.assigned = r.assigned ? '1' : '0';
             tr.dataset.rowStatus = r.assigned ? 'assigned' : 'pending';
             tr.dataset.search = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
             const dueTs = parseDueDateForFilter(r.dueDate);
             if (dueTs != null) tr.dataset.dueTs = String(dueTs);
-            tr.innerHTML = `
+          tr.innerHTML = `
             <td class="center cb-cell">
               <input type="checkbox" class="row-cb" data-persist="ignore" ${r.assigned ? 'data-assigned="true"' : ''}
                 data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}" onchange="onCbChange(this)">
@@ -1838,8 +1838,8 @@
             <td>${esc(r.customerRelation)}</td>
             <td>${fmt(r.orderDate)}</td>
             <td>${fmt(r.dueDate)}</td>`;
-            tbody.appendChild(tr);
-          });
+          tbody.appendChild(tr);
+        });
           ftText.textContent = `${rows.length} item${rows.length !== 1 ? 's' : ''}`;
           ftStats.style.display = 'flex';
           document.getElementById('statPending').textContent = `${rows.length - assignedCount} pending`;
@@ -2194,7 +2194,7 @@
                 loadPage('pages/item-process.html');
               } else if (typeof window.loadPage === 'function') {
                 window.loadPage('pages/item-process.html');
-              } else {
+    } else {
                 window.open('pages/item-process.html', '_blank');
               }
             }
@@ -2299,8 +2299,8 @@
        (which wraps scripts in an IIFE, making them locally scoped). */
     window.toggleDueDateDropdown = toggleDueDateDropdown;
     window.closeDueDateDropdown = closeDueDateDropdown;
-    window.loadPendingItems = loadPendingItems;
-    window.filterTable = filterTable;
+      window.loadPendingItems = loadPendingItems;
+      window.filterTable = filterTable;
     window.applyTableFilters = applyTableFilters;
     window.toggleFilterBar = toggleFilterBar;
     window.clearItemFilters = clearItemFilters;

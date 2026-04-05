@@ -455,10 +455,25 @@
       }
     }
 
-    /** Amount for a line (new-order col 12, ready-extra / legacy col 9). */
+    function readyExtraItemLineTotalFromValues(vals) {
+      if (!vals || vals.length < 16) return 0;
+      const fin = parseFloat(vals[15] || 0) || 0;
+      const est = parseFloat(vals[9] || 0) || 0;
+      return fin !== 0 ? fin : est;
+    }
+
+    function readyExtraItemReadyWeightGrams(vals) {
+      if (!vals || vals.length < 16) return 0;
+      return parseFloat(vals[12] || 0) || 0;
+    }
+
+    /** Amount for a line: 16-col Ready Extra uses Final/Est.; new-order col 12 / 9. */
     function orderItemLineAmount(item) {
       const v = item.values || [];
       if (!v.length) return 0;
+      if (v.length >= 16) {
+        return readyExtraItemLineTotalFromValues(v);
+      }
       if (v[12] !== undefined && v[12] !== "" && v[12] !== null) {
         const n = parseFloat(v[12]);
         if (!isNaN(n)) return n;
@@ -481,24 +496,42 @@
       return rs !== 0 ? rs : null;
     }
 
-    /** Same source as new-order.html getSavedPurchaseSheetTotal (keyed by bill no). */
+    function purchaseSheetRecordTotalFromMaps(rec) {
+      if (!rec) return 0;
+      if (rec.rows && rec.rows.length > 0) {
+        return rec.rows.reduce((s, r) => {
+          if (r && r.amount != null && String(r.amount).trim() !== "") {
+            const a = parseFloat(String(r.amount).replace(/[^0-9.-]/g, ""));
+            if (!isNaN(a)) return s + a;
+          }
+          const net = parseFloat(r.netWt) || 0;
+          const rate = parseFloat(r.rate) || 0;
+          return s + net * rate;
+        }, 0);
+      }
+      if (rec.total != null && String(rec.total).trim() !== "") {
+        const n = parseFloat(rec.total);
+        return isNaN(n) ? 0 : n;
+      }
+      return 0;
+    }
+
+    /** Sum New Order + Ready Extra purchase sheets for this bill (trimmed bill no). */
     function getSavedPurchaseSheetTotalForBill(billNo) {
       if (!billNo) return 0;
       try {
-        const map = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
-        const rec = map[String(billNo).trim()] || map[billNo];
-        if (!rec) return 0;
-        if (rec.total != null && String(rec.total).trim() !== "") {
-          const n = parseFloat(rec.total);
-          return isNaN(n) ? 0 : n;
-        }
-        return sumStoredPurchaseSheetRows(rec.rows);
+        const key = String(billNo).trim();
+        const map1 = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
+        const map2 = JSON.parse(localStorage.getItem("readyExtraOrderPurchaseSheets") || "{}");
+        const rec1 = map1[key] || map1[billNo];
+        const rec2 = map2[key] || map2[billNo];
+        return purchaseSheetRecordTotalFromMaps(rec1) + purchaseSheetRecordTotalFromMaps(rec2);
       } catch (e) {
         return 0;
       }
     }
 
-    /** Purchase sheet rupees: order payload, else newOrderPurchaseSheets localStorage (trimmed bill no). */
+    /** Purchase sheet rupees: order payload, else combined localStorage maps. */
     function purchaseSheetTotalResolved(order, billNo) {
       const fromOrder = purchaseSheetTotalFromOrder(order);
       if (fromOrder !== null) return fromOrder;
@@ -545,9 +578,23 @@
 
           if (order.items && order.items.length > 0) {
             order.items.forEach(item => {
-              const type = item.type || (item.values && item.values[0]) || "Order";
-              const grWt = parseFloat(item.values[9] || 0);
-              const net = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(item.values[12] || 0) || 0);
+              const vals = item.values || [];
+              const type = item.type || vals[0] || "Order";
+
+              if (vals.length >= 16) {
+                const grWt = readyExtraItemReadyWeightGrams(vals);
+                const net = readyExtraItemLineTotalFromValues(vals);
+                if (type === "Purchase") {
+                  purchaseTotal += net;
+                } else {
+                  displayGrWt += grWt;
+                  orderSideTotal += net;
+                }
+                return;
+              }
+
+              const grWt = parseFloat(vals[9] || 0);
+              const net = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(vals[12] || 0) || 0);
 
               if (type === "Purchase") {
                 purchaseTotal += net;

@@ -802,9 +802,26 @@
       }
     }
 
+    /** Ready / Extra row: 16 cells — Final (15) if set, else Est. Total (9). */
+    function readyExtraItemLineTotalFromValues(vals) {
+      if (!vals || vals.length < 16) return 0;
+      const fin = parseFloat(vals[15] || 0) || 0;
+      const est = parseFloat(vals[9] || 0) || 0;
+      return fin !== 0 ? fin : est;
+    }
+
+    /** Ready / Extra row: Ready Weight column (12). */
+    function readyExtraItemReadyWeightGrams(vals) {
+      if (!vals || vals.length < 16) return 0;
+      return parseFloat(vals[12] || 0) || 0;
+    }
+
     function orderItemLineAmount(item) {
       const v = item.values || [];
       if (!v.length) return 0;
+      if (v.length >= 16) {
+        return readyExtraItemLineTotalFromValues(v);
+      }
       if (v[12] !== undefined && v[12] !== "" && v[12] !== null) {
         const n = parseFloat(v[12]);
         if (!isNaN(n)) return n;
@@ -826,17 +843,35 @@
       return rs !== 0 ? rs : null;
     }
 
+    function purchaseSheetRecordTotalFromMaps(rec) {
+      if (!rec) return 0;
+      if (rec.rows && rec.rows.length > 0) {
+        return rec.rows.reduce((s, r) => {
+          if (r && r.amount != null && String(r.amount).trim() !== "") {
+            const a = parseFloat(String(r.amount).replace(/[^0-9.-]/g, ""));
+            if (!isNaN(a)) return s + a;
+          }
+          const net = parseFloat(r.netWt) || 0;
+          const rate = parseFloat(r.rate) || 0;
+          return s + net * rate;
+        }, 0);
+      }
+      if (rec.total != null && String(rec.total).trim() !== "") {
+        const n = parseFloat(rec.total);
+        return isNaN(n) ? 0 : n;
+      }
+      return 0;
+    }
+
     function getSavedPurchaseSheetTotalForBill(billNo) {
       if (!billNo) return 0;
       try {
-        const map = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
-        const rec = map[String(billNo).trim()] || map[billNo];
-        if (!rec) return 0;
-        if (rec.total != null && String(rec.total).trim() !== "") {
-          const n = parseFloat(rec.total);
-          return isNaN(n) ? 0 : n;
-        }
-        return sumStoredPurchaseSheetRows(rec.rows);
+        const key = String(billNo).trim();
+        const map1 = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
+        const map2 = JSON.parse(localStorage.getItem("readyExtraOrderPurchaseSheets") || "{}");
+        const rec1 = map1[key] || map1[billNo];
+        const rec2 = map2[key] || map2[billNo];
+        return purchaseSheetRecordTotalFromMaps(rec1) + purchaseSheetRecordTotalFromMaps(rec2);
       } catch (e) {
         return 0;
       }
@@ -937,16 +972,32 @@
         order.items.forEach(item => {
           if (!item || !item.values) return;
 
-          const type = item.type || item.values[0] || "Order";
-          const weight = parseFloat(item.values[9] || item.values[5] || item.values[8] || 0);
-          const amount = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(item.values[12] || item.values[13] || 0) || 0);
+          const vals = item.values;
+          const type = item.type || vals[0] || "Order";
+
+          if (vals.length >= 16) {
+            const weight = readyExtraItemReadyWeightGrams(vals);
+            const amount = readyExtraItemLineTotalFromValues(vals);
+            if (type === "Purchase") {
+              purchaseTotal += amount;
+            } else {
+              displayWeight += weight;
+              orderSideTotal += amount;
+              const itemName = vals[2] || vals[1] || "";
+              if (itemName && itemName.trim()) itemNames.push(itemName.trim());
+            }
+            return;
+          }
+
+          const weight = parseFloat(vals[9] || vals[5] || vals[8] || 0);
+          const amount = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(vals[12] || vals[13] || 0) || 0);
 
           if (type === "Purchase") {
             purchaseTotal += amount;
           } else {
             displayWeight += weight;
             orderSideTotal += amount;
-            const itemName = item.values[2] || item.values[1] || "";
+            const itemName = vals[2] || vals[1] || "";
             if (itemName && itemName.trim()) itemNames.push(itemName.trim());
           }
         });

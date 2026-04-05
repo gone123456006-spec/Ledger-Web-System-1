@@ -348,21 +348,39 @@
       return !!(tbody && footer);
     }
 
-    /** Same key as new-order.html / ready-extra-order.html — purchase sheet rupees per bill. */
-    const ALL_BILL_PURCHASE_SHEETS_KEY = "newOrderPurchaseSheets";
+    /** New Order + Ready Extra purchase sheet rupees per bill (separate localStorage maps). */
+    function purchaseSheetRowAmountAllBill(r) {
+      if (!r) return 0;
+      if (r.amount != null && String(r.amount).trim() !== "") {
+        const a = parseFloat(String(r.amount).replace(/[^0-9.-]/g, ""));
+        if (!isNaN(a)) return a;
+      }
+      const net = parseFloat(r.netWt) || 0;
+      const rate = parseFloat(r.rate) || 0;
+      return net * rate;
+    }
+
+    function purchaseSheetRecordTotalAllBill(rec) {
+      if (!rec) return 0;
+      if (rec.rows && rec.rows.length > 0) {
+        return rec.rows.reduce((s, r) => s + purchaseSheetRowAmountAllBill(r), 0);
+      }
+      if (rec.total != null && String(rec.total).trim() !== "") {
+        const t = parseFloat(rec.total);
+        return isNaN(t) ? 0 : t;
+      }
+      return 0;
+    }
 
     function getSavedPurchaseSheetTotal(billNoVal) {
       if (!billNoVal) return 0;
       try {
-        const map = JSON.parse(localStorage.getItem(ALL_BILL_PURCHASE_SHEETS_KEY) || "{}") || {};
         const key = String(billNoVal).trim();
-        const rec = map[key] || map[billNoVal];
-        if (!rec) return 0;
-        if (rec.total != null && String(rec.total).trim() !== "") {
-          const t = parseFloat(rec.total);
-          return isNaN(t) ? 0 : t;
-        }
-        return (rec.rows || []).reduce((s, r) => s + (parseFloat(r && r.amount) || 0), 0);
+        const mapNew = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}") || {};
+        const mapReady = JSON.parse(localStorage.getItem("readyExtraOrderPurchaseSheets") || "{}") || {};
+        const rec1 = mapNew[key] || mapNew[billNoVal];
+        const rec2 = mapReady[key] || mapReady[billNoVal];
+        return purchaseSheetRecordTotalAllBill(rec1) + purchaseSheetRecordTotalAllBill(rec2);
       } catch (e) {
         return 0;
       }
@@ -898,6 +916,8 @@
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
         const order = orders.find(o => o.orderNo === balanceEntry.orderNo);
 
+        const hideBillMidFromStore = !!(fullBill && fullBill.hideBillMidColumns) || !!(balanceEntry && balanceEntry.hideBillMidColumns);
+
         if (order && order.id) {
           localStorage.setItem("editOrderId", order.id);
           // Ensure ready-extra-order can load full items (incl. cols 10–15); pass payload from bill if it has more complete rows
@@ -910,7 +930,8 @@
               customerId: fullBill.customerId,
               orderDate: fullBill.date,
               dueDate: fullBill.dueDate || "",
-              items: fullBill.items || fullBill.rows
+              items: fullBill.items || fullBill.rows,
+              hideBillMidColumns: hideBillMidFromStore
             };
             localStorage.setItem("editOrderPayload", JSON.stringify(payload));
           }
@@ -926,7 +947,8 @@
               customerId: fullBill.customerId,
               orderDate: fullBill.date,
               dueDate: fullBill.dueDate || "",
-              items: fullBill.items || fullBill.rows
+              items: fullBill.items || fullBill.rows,
+              hideBillMidColumns: hideBillMidFromStore
             };
             localStorage.setItem("editOrderPayload", JSON.stringify(payload));
           }
