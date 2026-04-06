@@ -265,6 +265,14 @@
       margin-top: 18px;
     }
 
+    .order-details .box-title {
+      margin-bottom: 6px;
+    }
+
+    .order-details .table-wrap {
+      margin-top: 4px;
+    }
+
     .table-wrap {
       background: var(--card);
       border-radius: var(--radius);
@@ -272,6 +280,10 @@
       box-shadow: var(--shadow-lg);
       overflow-x: auto;
       margin-top: 10px;
+    }
+
+    .order-details-table-wrap {
+      overflow: visible;
     }
 
     table {
@@ -325,10 +337,6 @@
       font-size: 14px;
     }
 
-    #new-order-item-table td:first-child select {
-      min-width: 95px;
-    }
-
     table input:invalid {
       border-color: var(--danger);
     }
@@ -343,9 +351,141 @@
     }
 
     /* Purchase row: Lbr.% — hidden and non-interactive; cell kept for column alignment */
-    #new-order-item-table td.purchase-lbr-cell-hidden input {
+    .order-details-table-wrap #new-order-item-table td.purchase-lbr-cell-hidden input {
       visibility: hidden;
       pointer-events: none;
+    }
+
+    #new-order-item-table td.total input {
+      min-width: 4.5em;
+      box-sizing: border-box;
+    }
+
+    /* Order Details: same compact row/column grid as ready-extra-order */
+    .order-details-table-wrap #new-order-item-table {
+      width: 100%;
+      min-width: 0;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    /* Item Name column (3rd col: after Type + hidden Order No.) */
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(3),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(3) {
+      min-width: 170px;
+      width: 17%;
+    }
+
+    /* Remarks, Design, Size — modest extra width */
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(5),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(5) {
+      min-width: 230px;
+      width: 12%;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(6),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(6),
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(7),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(7) {
+      min-width: 115px;
+      width: 6.5%;
+    }
+
+    .order-details-table-wrap #new-order-item-table th,
+    .order-details-table-wrap #new-order-item-table td {
+      padding: 0;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+    }
+
+    .order-details-table-wrap #new-order-item-table input,
+    .order-details-table-wrap #new-order-item-table select {
+      width: 100%;
+      min-width: 0;
+      height: 32px;
+      padding: 0 6px;
+      margin: 0;
+      font-size: 14px;
+      box-sizing: border-box;
+      border-radius: 0;
+      border: 1px solid #d1d9e0;
+      outline: none;
+      background: #fff;
+    }
+
+    .order-details-table-wrap #new-order-item-table td:first-child select {
+      min-width: 72px;
+      padding: 0 6px;
+      font-size: 13px;
+      box-sizing: border-box;
+      border-radius: 0;
+      border: 1px solid var(--border, #dee2e6);
+    }
+
+    .order-details-table-wrap #new-order-item-table .row-del-btn {
+      display: inline-block;
+      vertical-align: middle;
+      min-width: 28px;
+      height: 32px;
+      padding: 0;
+      border-radius: 0;
+      border: 1px solid var(--border, #dee2e6);
+      background: #fff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th {
+      padding: 0 4px;
+      line-height: 32px;
+      height: 32px;
+      box-sizing: border-box;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th,
+    .order-details-table-wrap #new-order-item-table tbody td {
+      border-right: 1px solid #e5edf5;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th:last-child,
+    .order-details-table-wrap #new-order-item-table tbody td:last-child {
+      border-right: none;
+      text-align: right;
+      vertical-align: middle;
+      width: 1%;
+      white-space: nowrap;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr {
+      background: #fff;
+    }
+
+    .order-details-table-wrap #new-order-item-table th.total,
+    .order-details-table-wrap #new-order-item-table td.total {
+      background: #f5f6fa;
+    }
+
+    .order-details-table-wrap #new-order-item-table input:focus,
+    .order-details-table-wrap #new-order-item-table select:focus {
+      outline: none;
+      border: 2px solid #000;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .order-details-table-wrap #new-order-item-table input.order-detail-readonly:focus,
+    .order-details-table-wrap #new-order-item-table input.purchase-field-disabled:focus {
+      outline: none;
+      border: 1px solid #e2e8f0;
+    }
+
+    .order-details-table-wrap #new-order-item-table input.purchase-field-disabled:focus {
+      border: none;
+      box-shadow: none;
     }
 
     /* =====================
@@ -670,6 +810,412 @@
       opacity: 0.9;
     }
 
+    /* Add Payment popup — same layout language as Advance payments (ready-extra) */
+    #new-order-payment-popup .advanced-payments-popup-box {
+      display: flex;
+      flex-direction: column;
+      width: min(840px, calc(100vw - 24px));
+      max-width: min(840px, calc(100vw - 24px));
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 16px 18px 14px;
+      overflow-x: hidden;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-title {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-body {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      flex: 0 1 auto;
+      overflow: hidden;
+    }
+
+    #new-order-payment-popup .new-order-payment-add-header-table {
+      margin: 0 0 0;
+      table-layout: fixed;
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      border: 1px solid #c5cad4;
+      background: #fff;
+    }
+
+    #new-order-payment-popup .new-order-payment-add-header-table thead th {
+      background: #eef1f5;
+      font-weight: 600;
+      color: var(--text);
+      border: 1px solid #d1d6de;
+      padding: 8px;
+      text-align: left;
+    }
+
+    #new-order-payment-popup .new-order-payment-add-header-table thead th:nth-child(3) {
+      text-align: right;
+    }
+
+    #new-order-payment-popup .new-order-payment-add-header-table thead th:nth-child(5) {
+      text-align: center;
+      width: 10%;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form {
+      padding: 12px 4px 4px;
+      text-align: left;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 8px 12px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form-grid label {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form-grid input,
+    #new-order-payment-popup .advanced-payments-popup-edit-form-grid select,
+    #new-order-payment-popup .advanced-payments-popup-edit-form-grid textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form-grid textarea {
+      min-height: 52px;
+      resize: vertical;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button:first-child {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    #new-order-payment-popup .new-order-payment-popup-summary {
+      font-weight: 600;
+      font-size: 13px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      margin: 10px 0 0;
+      padding: 10px 0 0;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    #new-order-payment-popup .new-order-payment-popup-summary .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+      font-weight: 500;
+      font-size: 12px;
+    }
+
+    #new-order-payment-popup .new-order-payment-popup-summary .summary-line:first-child {
+      margin-top: 0;
+    }
+
+    #new-order-payment-popup .new-order-payment-popup-summary .summary-line--balance .summary-line-value {
+      color: #dc3545;
+    }
+
+    @media (max-width: 600px) {
+      #new-order-payment-popup .advanced-payments-popup-box {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        padding: 12px 12px 10px;
+      }
+    }
+
+    /* Payment Summary: tap "Paid:" → detail modal (same pattern as ready-extra Advance payments) */
+    .summary-item.summary-item--new-order-paid-open {
+      cursor: pointer;
+      border-radius: 8px;
+      margin: 0 -4px;
+      padding: 4px 4px !important;
+      transition: background 0.15s ease;
+    }
+
+    .summary-item.summary-item--new-order-paid-open:hover {
+      background: rgba(40, 167, 69, 0.1);
+    }
+
+    .summary-item.summary-item--new-order-paid-open:focus {
+      outline: 2px solid rgba(40, 167, 69, 0.45);
+      outline-offset: 1px;
+    }
+
+    /* Payments detail modal (table + inline edit) */
+    #new-order-payments-detail-popup .advanced-payments-popup-box {
+      display: flex;
+      flex-direction: column;
+      width: min(840px, calc(100vw - 24px));
+      max-width: min(840px, calc(100vw - 24px));
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 16px 18px 14px;
+      overflow-x: hidden;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-title {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-body {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      flex: 0 1 auto;
+      overflow: hidden;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-list {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-total {
+      font-weight: 600;
+      font-size: 14px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      margin: 8px 0 0;
+      padding: 8px 0 0;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin: 10px 0 0;
+      padding: 0;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-close-btn {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      min-width: 88px;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table {
+      table-layout: fixed;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      border-collapse: collapse;
+      font-size: 12px;
+      border: 1px solid #c5cad4;
+      background: #fff;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table col.advanced-payments-col--date {
+      width: 16%;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table col.advanced-payments-col--mode {
+      width: 18%;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table col.advanced-payments-col--amt {
+      width: 16%;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table col.advanced-payments-col--narr {
+      width: 40%;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table col.advanced-payments-col--action {
+      width: 10%;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table th,
+    #new-order-payments-detail-popup .advanced-payments-table td {
+      border: 1px solid #d1d6de;
+      padding: 8px 8px;
+      vertical-align: top;
+      box-sizing: border-box;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table th:nth-child(3),
+    #new-order-payments-detail-popup .advanced-payments-table td:nth-child(3) {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table th:nth-child(5),
+    #new-order-payments-detail-popup .advanced-payments-table td:nth-child(5) {
+      text-align: center;
+      vertical-align: middle;
+      padding: 6px 4px;
+    }
+
+    #new-order-payments-detail-popup .advanced-payment-table-edit-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      font-size: 14px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+
+    #new-order-payments-detail-popup .advanced-payment-table-edit-btn:hover {
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form {
+      padding: 10px 4px 4px;
+      text-align: left;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 8px 12px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form-grid label {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form-grid input,
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form-grid select,
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form-grid textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form-grid textarea {
+      min-height: 52px;
+      resize: vertical;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button:first-child {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table tbody tr.advanced-payments-row--editing td {
+      background: #f8faff;
+      vertical-align: top;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table thead th {
+      background: #eef1f5;
+      font-weight: 600;
+      color: var(--text);
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table tbody tr:nth-child(even) {
+      background: #f8f9fb;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table .advanced-payments-table__amt {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #new-order-payments-detail-popup .advanced-payments-table td.advanced-payments-table__narr {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      #new-order-payments-detail-popup .advanced-payments-popup-box {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        padding: 12px 12px 10px;
+      }
+
+      #new-order-payments-detail-popup .advanced-payments-table {
+        font-size: 11px;
+      }
+
+      #new-order-payments-detail-popup .advanced-payments-table th,
+      #new-order-payments-detail-popup .advanced-payments-table td {
+        padding: 6px 6px;
+      }
+    }
+
     /* Purchase sheet (horizontal table in popup — same visual language as order details table) */
     #new-order-purchase-sheet-popup .purchase-sheet-box {
       max-width: min(1220px, 98vw);
@@ -711,8 +1257,8 @@
       vertical-align: middle;
     }
 
-    #new-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(n+3),
-    #new-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(n+3):not(:last-child) {
+    #new-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(n+4),
+    #new-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(n+4):not(:last-child) {
       text-align: right;
     }
 
@@ -723,11 +1269,6 @@
 
     #new-order-purchase-sheet-popup table.purchase-sheet-table tbody tr:hover {
       background: #f8faff;
-    }
-
-    #new-order-purchase-sheet-popup table.purchase-sheet-table input.purchase-sheet-computed {
-      background: #f5f5f7;
-      color: var(--text);
     }
 
     #new-order-purchase-sheet-popup table.purchase-sheet-table input,
@@ -857,6 +1398,11 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    /* Sidebar: hide per-payment row list; keep Payment Summary figures only */
+    #paymentList {
+      display: none !important;
     }
 
     .panel-item {
@@ -1106,15 +1652,15 @@
     <div class="order-details">
       <div class="box-title">Order Details</div>
 
-      <div class="table-wrap">
+      <div class="table-wrap order-details-table-wrap">
         <table id="new-order-item-table" class="new-order-table">
           <thead>
             <tr>
               <th style="min-width: 115px;">Type</th>
               <th style="display: none;">Order No.</th>
-              <th style="min-width: 180px;">Item Name</th>
+              <th style="min-width: 170px;">Item Name</th>
               <th>Stamp</th>
-              <th style="min-width: 200px;">Remarks</th>
+              <th>Remarks</th>
               <th>Design</th>
               <th>Size</th>
               <th>Pc</th>
@@ -1180,7 +1726,10 @@
                 <span class="summary-label">Net Bill Total:</span>
                 <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
               </div>
-              <div class="summary-item">
+              <div class="summary-item summary-item--new-order-paid-open" role="button" tabindex="0"
+                title="Tap to view payment lines for this bill"
+                onclick="typeof openNewOrderPaymentsDetailPopup==='function'&&openNewOrderPaymentsDetailPopup()"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();typeof openNewOrderPaymentsDetailPopup==='function'&&openNewOrderPaymentsDetailPopup();}">
                 <span class="summary-label">Paid:</span>
                 <span class="summary-value" style="color:#28a745;" id="panelPaid">₹ 0.00</span>
               </div>
@@ -1249,40 +1798,79 @@
     </div>
   </div>
 
-  <!-- PAYMENT POPUP (new-order only) -->
+  <!-- PAYMENT POPUP (new-order only) — layout aligned with Advance payments modal -->
   <div id="new-order-payment-popup" class="popup-bg new-order-popup"
     onclick="if(event.target===this) (typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup:closePaymentPopup)()">
-    <div class="popup-box">
-      <h3>Add Payment</h3>
-      <div class="popup-row">
-        <label>Payment Mode</label>
-        <select id="paymentMode">
-          <option>Cash</option>
-          <option>Card</option>
-          <option>Cheque</option>
-          <option>UPI</option>
-          <option>Online</option>
-        </select>
+    <div class="popup-box advanced-payments-popup-box" onclick="event.stopPropagation()">
+      <h3 class="advanced-payments-popup-title">Add Payment</h3>
+      <div class="advanced-payments-popup-body">
+        <table class="advanced-payments-table new-order-payment-add-header-table" aria-hidden="true">
+          <colgroup>
+            <col style="width:16%"><col style="width:18%"><col style="width:16%"><col style="width:40%"><col style="width:10%">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Payment Mode</th>
+              <th>Amount</th>
+              <th>Narration</th>
+              <th>Edit</th>
+            </tr>
+          </thead>
+        </table>
+        <div class="advanced-payments-popup-edit-form">
+          <div class="advanced-payments-popup-edit-form-grid">
+            <label for="paymentAmount">Amount (₹)</label>
+            <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
+            <label for="paymentMode">Mode</label>
+            <select id="paymentMode">
+              <option>Cash</option>
+              <option>Card</option>
+              <option>Cheque</option>
+              <option>UPI</option>
+              <option>Online</option>
+            </select>
+            <label for="paymentDate">Date</label>
+            <input type="date" id="paymentDate">
+            <label for="paymentNarration">Narration</label>
+            <textarea id="paymentNarration" rows="2" placeholder="Narration"></textarea>
+          </div>
+          <div class="advanced-payments-popup-edit-actions">
+            <button type="button"
+              onclick="typeof newOrderSavePayment==='function'?newOrderSavePayment():savePayment()">Save</button>
+            <button type="button"
+              onclick="typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup():closePaymentPopup()">Cancel</button>
+          </div>
+        </div>
+        <div class="new-order-payment-popup-summary">
+          <div class="summary-line">
+            <span>Order Total</span>
+            <span>₹<span id="popupBillTotal">0.00</span></span>
+          </div>
+          <div class="summary-line">
+            <span>Amount</span>
+            <span>₹<span id="popupAmountDisplay">0.00</span></span>
+          </div>
+          <div class="summary-line summary-line--balance">
+            <span>Balance</span>
+            <span class="summary-line-value">₹<span id="popupBalance">0.00</span></span>
+          </div>
+        </div>
       </div>
-      <div class="popup-row">
-        <label>Amount *</label>
-        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
+    </div>
+  </div>
+
+  <!-- PAYMENTS DETAIL (tap Paid: in Payment Summary — same table + edit form as ready-extra Advance modal) -->
+  <div id="new-order-payments-detail-popup" class="popup-bg new-order-popup" style="display:none;"
+    onclick="if(event.target===this) (typeof closeNewOrderPaymentsDetailPopup==='function'&&closeNewOrderPaymentsDetailPopup())">
+    <div class="popup-box advanced-payments-popup-box" onclick="event.stopPropagation()">
+      <h3 class="advanced-payments-popup-title">Payments</h3>
+      <div class="advanced-payments-popup-body">
+        <div id="newOrderPaymentsDetailList" class="advanced-payments-popup-list"></div>
+        <div id="newOrderPaymentsDetailTotal" class="advanced-payments-popup-total">Total: ₹ 0.00</div>
       </div>
-      <div class="popup-row">
-        <label>Narration</label>
-        <textarea id="paymentNarration" placeholder="Enter narration..."></textarea>
-      </div>
-      <div class="popup-row"
-        style="display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--border);">
-        <div><strong>Order Total: ₹<span id="popupBillTotal">0.00</span></strong></div>
-        <div><strong>Amount: ₹<span id="popupAmountDisplay">0.00</span></strong></div>
-        <div><strong style="color:#dc3545;">Balance: ₹<span id="popupBalance">0.00</span></strong></div>
-      </div>
-      <div class="popup-actions">
-        <button onclick="typeof newOrderSavePayment==='function'?newOrderSavePayment():savePayment()">Save
-          Payment</button>
-        <button
-          onclick="typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup():closePaymentPopup()">Cancel</button>
+      <div class="popup-actions advanced-payments-popup-actions">
+        <button type="button" class="advanced-payments-popup-close-btn" onclick="closeNewOrderPaymentsDetailPopup()">Close</button>
       </div>
     </div>
   </div>
@@ -1372,6 +1960,7 @@
             <tr>
               <th style="min-width:128px;">On date</th>
               <th style="min-width:160px;">Item Name</th>
+              <th style="min-width:80px;">Stamp</th>
               <th style="min-width:92px;">GROSS WT.</th>
               <th style="min-width:88px;">Less Wt</th>
               <th style="min-width:100px;">Net Weight</th>
@@ -1383,7 +1972,7 @@
           <tbody id="new-order-purchase-sheet-tbody"></tbody>
           <tfoot>
             <tr class="purchase-sheet-tfoot-row">
-              <td colspan="6" class="purchase-sheet-total-label">Total Purchase</td>
+              <td colspan="7" class="purchase-sheet-total-label">Total Purchase</td>
               <td class="purchase-sheet-total-amt"><span id="new-order-purchase-sheet-total-amt">₹ 0.00</span></td>
               <td></td>
             </tr>
@@ -1492,7 +2081,7 @@
       }
 
       function hideOwnPopupsOnInit() {
-        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'].forEach(function (id) {
+        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-payments-detail-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'].forEach(function (id) {
           try {
             var el = container.querySelector('#' + id);
             if (el && el.style) el.style.display = 'none';
@@ -1686,7 +2275,7 @@
         <td><input type="number" step="0.01" placeholder="0" oninput="calculateRow(this)" min="0"></td>
         <td><input type="number" step="0.01" placeholder="0" oninput="calculateRow(this)" min="0" max="100"></td>
         <td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>
-        <td><button onclick="removeRow(this)" title="Remove row">❌</button></td>
+        <td><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Remove row">❌</button></td>
       `;
 
         itemBody.appendChild(tr);
@@ -1995,6 +2584,7 @@
         const amountInput = getPopupEl('paymentAmount') || getSearchRoot().querySelector('#paymentAmount');
         const modeSelect = getPopupEl('paymentMode') || getSearchRoot().querySelector('#paymentMode');
         const narrationInput = getPopupEl('paymentNarration') || getSearchRoot().querySelector('#paymentNarration');
+        const dateInput = getPopupEl('paymentDate') || getSearchRoot().querySelector('#paymentDate');
 
         if (!popup || !amountInput) return;
 
@@ -2011,6 +2601,10 @@
         amountInput.value = '';
         if (modeSelect) modeSelect.selectedIndex = 0;
         if (narrationInput) narrationInput.value = '';
+        if (dateInput) {
+          const od = AppState.elements.orderDate && AppState.elements.orderDate.value;
+          dateInput.value = od || new Date().toISOString().split('T')[0];
+        }
 
         function updatePaymentBalance() {
           const amt = safeNumber(amountInput.value);
@@ -2051,12 +2645,12 @@
       }
 
       function recalcPurchaseSheetRow(tr) {
-        if (!tr || !tr.cells || tr.cells.length < 7) return;
-        var grossIn = tr.cells[2].querySelector('input');
-        var lessIn = tr.cells[3].querySelector('input');
-        var netIn = tr.cells[4].querySelector('input');
-        var rateIn = tr.cells[5].querySelector('input');
-        var amtIn = tr.cells[6].querySelector('input');
+        if (!tr || !tr.cells || tr.cells.length < 8) return;
+        var grossIn = tr.cells[3].querySelector('input');
+        var lessIn = tr.cells[4].querySelector('input');
+        var netIn = tr.cells[5].querySelector('input');
+        var rateIn = tr.cells[6].querySelector('input');
+        var amtIn = tr.cells[7].querySelector('input');
         if (!grossIn || !lessIn || !netIn || !rateIn || !amtIn) return;
         var gross = parsePurchaseSheetWeight(grossIn);
         var less = parsePurchaseSheetWeight(lessIn);
@@ -2131,15 +2725,17 @@
         var out = [];
         tb.querySelectorAll('tr').forEach(function (tr) {
           var c = tr.cells;
-          if (!c || c.length < 7) return;
+          if (!c || c.length < 8) return;
+          var stEl = tr.querySelector('.ps-stamp');
           out.push({
             onDate: c[0].querySelector('input') ? c[0].querySelector('input').value : '',
             itemName: c[1].querySelector('input') ? c[1].querySelector('input').value : '',
-            grossWt: c[2].querySelector('input') ? c[2].querySelector('input').value : '',
-            lessWt: c[3].querySelector('input') ? c[3].querySelector('input').value : '',
-            netWt: c[4].querySelector('input') ? c[4].querySelector('input').value : '',
-            rate: c[5].querySelector('input') ? c[5].querySelector('input').value : '',
-            amount: c[6].querySelector('input') ? c[6].querySelector('input').value : ''
+            grossWt: c[3].querySelector('input') ? c[3].querySelector('input').value : '',
+            lessWt: c[4].querySelector('input') ? c[4].querySelector('input').value : '',
+            netWt: c[5].querySelector('input') ? c[5].querySelector('input').value : '',
+            rate: c[6].querySelector('input') ? c[6].querySelector('input').value : '',
+            amount: c[7].querySelector('input') ? c[7].querySelector('input').value : '',
+            stamp: stEl ? stEl.value : ''
           });
         });
         return out;
@@ -2182,7 +2778,7 @@
         updatePurchaseSheetTotalDisplay();
       }
 
-      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount */
+      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount, stamp */
       function addPurchaseSheetRow(preset) {
         var tb = getPurchaseSheetTbody();
         if (!tb) return;
@@ -2193,11 +2789,12 @@
         tr.innerHTML =
           '<td><input type="date" class="ps-ondate"></td>' +
           '<td><input type="text" class="ps-item" placeholder="Item"></td>' +
+          '<td><input type="text" class="ps-stamp" placeholder="Stamp"></td>' +
           '<td><input type="number" class="ps-gross" step="0.001" min="0" placeholder="0" title="GROSS WT."></td>' +
           '<td><input type="number" class="ps-less" step="0.001" min="0" placeholder="0" title="Subtract from net only: Net = GROSS WT. − Less Wt"></td>' +
-          '<td><input type="number" class="ps-net purchase-sheet-computed" step="0.001" readonly tabindex="-1" placeholder="0" title="Net = GROSS WT. − Less Wt (same as Gross when Less is empty)"></td>' +
+          '<td><input type="number" class="ps-net" step="0.001" min="0" placeholder="0" title="Net = GROSS − Less (auto); you can edit manually"></td>' +
           '<td><input type="number" class="ps-rate" step="0.01" min="0" placeholder="0"></td>' +
-          '<td><input type="number" class="ps-amt purchase-sheet-computed" step="0.01" readonly tabindex="-1" placeholder="0"></td>' +
+          '<td><input type="number" class="ps-amt" step="0.01" min="0" placeholder="0" title="Usually Net × Rate; editable"></td>' +
           '<td><button type="button" title="Remove row">❌</button></td>';
         tb.appendChild(tr);
         var onDate = tr.querySelector('.ps-ondate');
@@ -2211,19 +2808,41 @@
           if (l && preset.lessWt != null && preset.lessWt !== '') l.value = String(preset.lessWt);
           var rt = tr.querySelector('.ps-rate');
           if (rt && preset.rate != null && preset.rate !== '') rt.value = String(preset.rate);
+          var st = tr.querySelector('.ps-stamp');
+          if (st && preset.stamp != null && preset.stamp !== '') st.value = String(preset.stamp);
         }
         var btn = tr.querySelector('button');
+        var netIn = tr.querySelector('.ps-net');
+        var amtIn = tr.querySelector('.ps-amt');
         function recalc() { recalcPurchaseSheetRow(tr); }
         ['input', 'change', 'blur'].forEach(function (ev) {
           tr.querySelector('.ps-gross').addEventListener(ev, recalc);
           tr.querySelector('.ps-less').addEventListener(ev, recalc);
           tr.querySelector('.ps-rate').addEventListener(ev, recalc);
         });
+        function syncAmtFromNet() {
+          if (!netIn || !amtIn) return;
+          var n = parsePurchaseSheetWeight(netIn);
+          var r = parsePurchaseSheetWeight(tr.querySelector('.ps-rate'));
+          amtIn.value = (n * r).toFixed(2);
+          updatePurchaseSheetTotalDisplay();
+        }
+        ['input', 'change', 'blur'].forEach(function (ev) {
+          if (netIn) netIn.addEventListener(ev, syncAmtFromNet);
+        });
+        ['input', 'change', 'blur'].forEach(function (ev) {
+          if (amtIn) amtIn.addEventListener(ev, function () { updatePurchaseSheetTotalDisplay(); });
+        });
         if (btn) btn.addEventListener('click', function () {
           tr.remove();
           updatePurchaseSheetTotalDisplay();
         });
         recalc();
+        if (preset) {
+          if (netIn && preset.netWt != null && preset.netWt !== '') netIn.value = String(preset.netWt);
+          if (amtIn && preset.amount != null && preset.amount !== '') amtIn.value = String(preset.amount);
+          else if (netIn && amtIn) syncAmtFromNet();
+        }
       }
 
       function openPurchaseSheet() {
@@ -2253,6 +2872,7 @@
         const amountInput = getPopupEl('paymentAmount') || getSearchRoot().querySelector('#paymentAmount');
         const modeSelect = getPopupEl('paymentMode') || getSearchRoot().querySelector('#paymentMode');
         const narrationInput = getPopupEl('paymentNarration') || getSearchRoot().querySelector('#paymentNarration');
+        const dateInput = getPopupEl('paymentDate') || getSearchRoot().querySelector('#paymentDate');
 
         if (!amountInput) return;
         const amount = safeNumber(amountInput.value);
@@ -2260,6 +2880,12 @@
           showError('Please enter a valid amount');
           return;
         }
+
+        const dateVal = dateInput && dateInput.value
+          ? dateInput.value
+          : new Date().toISOString().split('T')[0];
+        const dateForTs = new Date(dateVal + 'T12:00:00');
+        const timestamp = !isNaN(dateForTs.getTime()) ? dateForTs.toISOString() : new Date().toISOString();
 
         const payment = {
           id: Date.now(),
@@ -2270,8 +2896,8 @@
           mode: modeSelect ? modeSelect.value : 'Cash',
           narration: narrationInput ? narrationInput.value : '',
           type: 'Advanced',
-          date: new Date().toISOString().split('T')[0],
-          timestamp: new Date().toISOString()
+          date: dateVal,
+          timestamp: timestamp
         };
 
         const payments = JSON.parse(localStorage.getItem('payments') || '[]');
@@ -2280,6 +2906,10 @@
 
         closePaymentPopup();
         updateInfoPanel();
+        const detPopup = getPopupEl('new-order-payments-detail-popup');
+        if (detPopup && detPopup.style.display === 'flex') {
+          openNewOrderPaymentsDetailPopup();
+        }
         if (typeof showSaveIndicator === 'function') showSaveIndicator();
         else alert('Payment saved successfully');
       }
@@ -2364,6 +2994,177 @@
 
       function cancelPaymentCardEdit(btnEl) {
         updateInfoPanel();
+      }
+
+      /** All payment rows for current bill (same scope as Paid: total). */
+      function getPaymentRecordsForBillNewOrder(billNoVal) {
+        if (!billNoVal) return [];
+        const key = String(billNoVal).trim();
+        let payments = [];
+        try {
+          payments = JSON.parse(localStorage.getItem('payments') || '[]');
+        } catch (e) {
+          return [];
+        }
+        return payments.filter(p => p && String(p.billNo || '').trim() === key);
+      }
+
+      function openNewOrderPaymentsDetailPopup() {
+        if (!AppState.elements.billNo || !String(AppState.elements.billNo.value || '').trim()) {
+          showError('Order number is required');
+          return;
+        }
+        const root = getSearchRoot();
+        const popup = root.querySelector('#new-order-payments-detail-popup') || document.getElementById('new-order-payments-detail-popup');
+        const listEl = root.querySelector('#newOrderPaymentsDetailList');
+        const totalEl = root.querySelector('#newOrderPaymentsDetailTotal');
+        if (!popup || !listEl) return;
+        const billVal = String(AppState.elements.billNo.value).trim();
+        const rows = getPaymentRecordsForBillNewOrder(billVal);
+        const sum = rows.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+        if (totalEl) totalEl.textContent = 'Total: ' + formatCurrency(sum);
+        const escCell = function (s) {
+          return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/"/g, '&quot;');
+        };
+        if (rows.length === 0) {
+          listEl.innerHTML = '<div class="empty-state" style="padding:16px;">No payments for this bill yet.</div>';
+        } else {
+          let html = '<table class="advanced-payments-table"><colgroup>' +
+            '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
+            '<col class="advanced-payments-col--amt"><col class="advanced-payments-col--narr">' +
+            '<col class="advanced-payments-col--action"></colgroup>' +
+            '<thead><tr><th>Date</th><th>Payment Mode</th><th>Amount</th><th>Narration</th><th>Edit</th></tr></thead><tbody>';
+          rows.slice().reverse().forEach(function (p) {
+            const dateStr = p.date ? new Date(p.date).toLocaleDateString() : '—';
+            const modeStr = p.mode ? String(p.mode) : 'Cash';
+            const narrRaw = p.narration != null && String(p.narration).trim() !== ''
+              ? String(p.narration).trim()
+              : '—';
+            let dateIsoForKey = '';
+            if (p.date) {
+              const ds = String(p.date);
+              if (ds.indexOf('T') >= 0) dateIsoForKey = ds.split('T')[0];
+              else if (/^\d{4}-\d{2}-\d{2}/.test(ds)) dateIsoForKey = ds.substring(0, 10);
+              else {
+                try { dateIsoForKey = new Date(p.date).toISOString().split('T')[0]; } catch (e) { dateIsoForKey = ''; }
+              }
+            } else if (p.timestamp) {
+              dateIsoForKey = String(p.timestamp).split('T')[0];
+            }
+            const payKey = (p.id != null) ? String(p.id) : String(p.timestamp || (dateIsoForKey ? dateIsoForKey + '-' + (p.amount || 0) : ''));
+            const amountRaw = String(Number(p.amount) || 0);
+            html += '<tr data-payment-key="' + escCell(payKey) + '" data-payment-timestamp="' + escCell(p.timestamp || '') + '" data-bill-no="' + escCell(billVal) + '"' +
+              ' data-payment-date-iso="' + escCell(dateIsoForKey) + '" data-payment-amount="' + escCell(amountRaw) + '">' +
+              '<td>' + escCell(dateStr) + '</td><td>' + escCell(modeStr) + '</td>' +
+              '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + '</td>' +
+              '<td class="advanced-payments-table__narr">' + escCell(narrRaw) + '</td>' +
+              '<td><button type="button" class="advanced-payment-table-edit-btn" onclick="event.stopPropagation();openPaymentDetailTableEdit(this);" title="Edit">✏️</button></td></tr>';
+          });
+          html += '</tbody></table>';
+          listEl.innerHTML = html;
+        }
+        popup.style.display = 'flex';
+        popup.style.alignItems = 'center';
+        popup.style.justifyContent = 'center';
+      }
+
+      function closeNewOrderPaymentsDetailPopup() {
+        const popup = getSearchRoot().querySelector('#new-order-payments-detail-popup') || document.getElementById('new-order-payments-detail-popup');
+        if (popup) popup.style.display = 'none';
+      }
+
+      function openPaymentDetailTableEdit(btnEl) {
+        const tr = btnEl && btnEl.closest('tr');
+        if (!tr || tr.classList.contains('advanced-payments-row--editing')) return;
+        const payKey = tr.getAttribute('data-payment-key') || '';
+        const timestamp = tr.getAttribute('data-payment-timestamp') || '';
+        const billNoVal = tr.getAttribute('data-bill-no') || '';
+        const dateIso = tr.getAttribute('data-payment-date-iso') || '';
+        const amountRaw = tr.getAttribute('data-payment-amount') || '0';
+        const tds = tr.querySelectorAll('td');
+        const mode = tds[1] ? tds[1].textContent.trim() : 'Cash';
+        let narr = tds[3] ? tds[3].textContent.trim() : '';
+        if (narr === '—') narr = '';
+        const modes = ['Cash', 'Card', 'Cheque', 'UPI', 'Online'];
+        const options = modes.map(function (m) {
+          return '<option value="' + m + '"' + (m === mode ? ' selected' : '') + '>' + m + '</option>';
+        }).join('');
+        const narrForTa = String(narr).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        tr.classList.add('advanced-payments-row--editing');
+        tr.setAttribute('data-payment-key', payKey);
+        tr.setAttribute('data-payment-timestamp', timestamp);
+        tr.setAttribute('data-bill-no', billNoVal);
+        tr.innerHTML =
+          '<td colspan="5"><div class="advanced-payments-popup-edit-form">' +
+          '<div class="advanced-payments-popup-edit-form-grid">' +
+          '<label>Amount (₹)</label><input type="number" class="payment-edit-amount" step="0.01" min="0" value="' +
+          String(amountRaw).replace(/"/g, '&quot;') + '" placeholder="0.00">' +
+          '<label>Mode</label><select class="payment-edit-mode">' + options + '</select>' +
+          '<label>Date</label><input type="date" class="payment-edit-date" value="' +
+          String(dateIso || '').replace(/"/g, '&quot;') + '">' +
+          '<label>Narration</label><textarea class="payment-edit-narration" rows="2" placeholder="Narration">' +
+          narrForTa + '</textarea></div>' +
+          '<div class="advanced-payments-popup-edit-actions">' +
+          '<button type="button" onclick="savePaymentDetailTableEdit(this)">Save</button>' +
+          '<button type="button" onclick="cancelPaymentDetailTableEdit(this)">Cancel</button>' +
+          '</div></div></td>';
+      }
+
+      function refreshNewOrderPaymentDetailAfterEdit() {
+        const det = getSearchRoot().querySelector('#new-order-payments-detail-popup');
+        if (det && det.style.display === 'flex') {
+          openNewOrderPaymentsDetailPopup();
+        }
+      }
+
+      function savePaymentDetailTableEdit(btnEl) {
+        const wrap = btnEl && btnEl.closest('.advanced-payments-popup-edit-form');
+        const tr = btnEl && btnEl.closest('tr');
+        if (!wrap || !tr) return;
+        const amountInput = wrap.querySelector('.payment-edit-amount');
+        const modeSelect = wrap.querySelector('.payment-edit-mode');
+        const dateInput = wrap.querySelector('.payment-edit-date');
+        const narrInput = wrap.querySelector('.payment-edit-narration');
+        const amount = parseFloat(amountInput ? amountInput.value : 0) || 0;
+        if (amount <= 0) {
+          showError('Please enter a valid amount');
+          return;
+        }
+        const payKey = tr.getAttribute('data-payment-key');
+        const timestamp = tr.getAttribute('data-payment-timestamp');
+        const billNoVal = tr.getAttribute('data-bill-no');
+        const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+        const idx = payments.findIndex(function (p) {
+          return p && p.billNo === billNoVal && (String(p.id) === payKey || p.timestamp === timestamp || String(p.timestamp) === timestamp);
+        });
+        if (idx === -1) {
+          showError('Payment not found');
+          refreshNewOrderPaymentDetailAfterEdit();
+          return;
+        }
+        payments[idx].amount = amount;
+        payments[idx].mode = modeSelect ? modeSelect.value : 'Cash';
+        payments[idx].date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+        if (narrInput) payments[idx].narration = narrInput.value || '';
+        if (payments[idx].timestamp && dateInput && dateInput.value) {
+          const d = new Date(dateInput.value);
+          if (!isNaN(d.getTime())) payments[idx].timestamp = d.toISOString();
+        }
+        localStorage.setItem('payments', JSON.stringify(payments));
+        window.dispatchEvent(new CustomEvent('paymentSaved'));
+        if (window.parent && window.parent !== window) {
+          try { window.parent.dispatchEvent(new CustomEvent('paymentSaved')); } catch (e) { /* ignore */ }
+        }
+        refreshNewOrderPaymentDetailAfterEdit();
+        updateInfoPanel();
+        if (typeof showSaveIndicator === 'function') showSaveIndicator();
+      }
+
+      function cancelPaymentDetailTableEdit() {
+        refreshNewOrderPaymentDetailAfterEdit();
       }
 
       // =====================================================
@@ -3560,6 +4361,11 @@
         window.openPaymentCardEdit = openPaymentCardEdit;
         window.savePaymentCardEdit = savePaymentCardEdit;
         window.cancelPaymentCardEdit = cancelPaymentCardEdit;
+        window.openNewOrderPaymentsDetailPopup = openNewOrderPaymentsDetailPopup;
+        window.closeNewOrderPaymentsDetailPopup = closeNewOrderPaymentsDetailPopup;
+        window.openPaymentDetailTableEdit = openPaymentDetailTableEdit;
+        window.savePaymentDetailTableEdit = savePaymentDetailTableEdit;
+        window.cancelPaymentDetailTableEdit = cancelPaymentDetailTableEdit;
         window.openPurchaseSheet = openPurchaseSheet;
         window.closePurchaseSheetPopup = closePurchaseSheetPopup;
         window.newOrderClosePurchaseSheetPopup = newOrderClosePurchaseSheetPopup;
@@ -3591,7 +4397,7 @@
         window.__currentPageCleanup = function () {
           if (_storageHandler) window.removeEventListener('storage', _storageHandler);
           if (_visibilityHandler) document.removeEventListener('visibilitychange', _visibilityHandler);
-          var globals = ['addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange', 'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup', 'newOrderSavePayment', 'savePayment', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'newOrderClosePurchaseSheetPopup', 'addPurchaseSheetRow', 'savePurchaseSheet', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup', 'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup', 'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup', 'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount', 'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew', 'resetOrder', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState', 'restoreOrderState'];
+          var globals = ['addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange', 'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup', 'newOrderSavePayment', 'savePayment', 'openNewOrderPaymentsDetailPopup', 'closeNewOrderPaymentsDetailPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'newOrderClosePurchaseSheetPopup', 'addPurchaseSheetRow', 'savePurchaseSheet', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup', 'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup', 'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup', 'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount', 'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew', 'resetOrder', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState', 'restoreOrderState'];
           globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
         };
       }

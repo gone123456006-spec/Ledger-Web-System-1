@@ -351,10 +351,15 @@
       <label>To date</label>
       <input type="date" id="filterToDate" onchange="filterTable()">
 
-      <button class="btn" onclick="clearDateFilter()" style="padding:6px 12px; font-size:12px;">Clear filter</button>
+      <label for="filterStation">Station</label>
+      <select id="filterStation" title="Filter by customer station" onchange="filterTable()">
+        <option value="">All stations</option>
+      </select>
 
-      <button type="button" class="btn" onclick="setMarkAllVisible(true)" style="padding:6px 12px; font-size:12px;" title="Mark every order currently shown in the list (respects date filter)">Mark all</button>
-      <button type="button" class="btn" onclick="setMarkAllVisible(false)" style="padding:6px 12px; font-size:12px;" title="Clear mark on every order currently shown in the list (respects date filter)">Unmark all</button>
+      <button class="btn" onclick="clearDateFilter()" style="padding:6px 12px; font-size:12px;">Clear filters</button>
+
+      <button type="button" class="btn" onclick="setMarkAllVisible(true)" style="padding:6px 12px; font-size:12px;" title="Mark every order currently shown in the list (respects date and station filters)">Mark all</button>
+      <button type="button" class="btn" onclick="setMarkAllVisible(false)" style="padding:6px 12px; font-size:12px;" title="Clear mark on every order currently shown in the list (respects date and station filters)">Unmark all</button>
     </div>
 
     <!-- TABLE -->
@@ -554,7 +559,8 @@
       tbody.innerHTML = "";
 
       if (orders.length === 0) {
-        updateFooter();
+        populateStationFilter();
+        filterTable();
         return;
       }
 
@@ -628,6 +634,9 @@
           const totalPurchaseDisplay = fullPurchase;
 
           const isMarked = order.marked === true;
+          const stationForRow = getStationForOrder(order);
+          row.dataset.station = stationForRow;
+
           row.innerHTML = `
         <td class="center">
           <input type="checkbox" ${isMarked ? 'checked' : ''} onchange="selectRow(this); toggleOrderStatus(this, ${order.id}); event.stopPropagation();" onclick="event.stopPropagation();">
@@ -664,7 +673,8 @@
         }
       });
 
-      updateFooter();
+      populateStationFilter();
+      filterTable();
     }
 
     /* =========================
@@ -707,6 +717,71 @@
         relationName: relName || "",
         station: customer.station || customer.city || customer.location || ""
       };
+    }
+
+    function normalizeStationValue(s) {
+      if (s == null || s === "") return "";
+      return String(s).trim();
+    }
+
+    /** Resolved station for list row + filter (same priority as edit order). */
+    function getStationForOrder(order) {
+      if (!order) return "";
+      const customerId = order.customerId != null && order.customerId !== "" ? order.customerId : null;
+      const customerName = (order.customer || order.customerName || "").toString().trim();
+      let station = "";
+      if (customerId) {
+        const c = getCustomerDataById(customerId);
+        if (c && c.station) station = c.station;
+      }
+      if (!station && customerName) {
+        const c = getCustomerData(customerName);
+        if (c && c.station) station = c.station;
+      }
+      if (!station) {
+        station = order.customerStation || order.station || "";
+      }
+      return normalizeStationValue(station);
+    }
+
+    /** Build sorted station list from customers + orders (for filter dropdown). */
+    function collectStationsForFilter() {
+      const set = new Set();
+      try {
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        customers.forEach(function (c) {
+          if (!c) return;
+          const s = normalizeStationValue(c.station || c.city || c.location);
+          if (s) set.add(s);
+        });
+      } catch (e) { /* ignore */ }
+      try {
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        orders.forEach(function (o) {
+          const s = getStationForOrder(o);
+          if (s) set.add(s);
+        });
+      } catch (e) { /* ignore */ }
+      return Array.from(set).sort(function (a, b) {
+        return a.localeCompare(b, undefined, { sensitivity: "base" });
+      });
+    }
+
+    function populateStationFilter() {
+      const workspace = document.querySelector(".workspace");
+      let sel = workspace ? workspace.querySelector("#filterStation") : null;
+      if (!sel) sel = document.querySelector("#filterStation") || document.getElementById("filterStation");
+      if (!sel) return;
+      const prev = sel.value;
+      const stations = collectStationsForFilter();
+      sel.innerHTML = '<option value="">All stations</option>';
+      stations.forEach(function (st) {
+        const opt = document.createElement("option");
+        opt.value = st;
+        opt.textContent = st;
+        sel.appendChild(opt);
+      });
+      if (prev && stations.indexOf(prev) !== -1) sel.value = prev;
     }
 
     function getCustomerData(customerName) {
@@ -1009,11 +1084,14 @@
       const workspace = document.querySelector(".workspace");
       let fromEl = workspace ? workspace.querySelector("#filterFromDate") : null;
       let toEl = workspace ? workspace.querySelector("#filterToDate") : null;
+      let stationEl = workspace ? workspace.querySelector("#filterStation") : null;
       if (!fromEl) fromEl = document.querySelector("#filterFromDate") || document.getElementById("filterFromDate");
       if (!toEl) toEl = document.querySelector("#filterToDate") || document.getElementById("filterToDate");
+      if (!stationEl) stationEl = document.querySelector("#filterStation") || document.getElementById("filterStation");
 
       const fromValue = fromEl ? fromEl.value : "";
       const toValue = toEl ? toEl.value : "";
+      const stationFilter = stationEl ? normalizeStationValue(stationEl.value) : "";
       const fromDate = fromValue ? new Date(fromValue) : null;
       const toDate = toValue ? new Date(toValue) : null;
       if (toDate) toDate.setHours(23, 59, 59, 999);
@@ -1022,19 +1100,25 @@
       rows.forEach(row => {
         const cells = row.querySelectorAll("td");
         const orderDateCell = cells[4] ? cells[4].textContent.trim() : "";
-        if (!fromValue && !toValue) {
-          row.style.display = "";
-          return;
+
+        let showByDate = true;
+        if (fromValue || toValue) {
+          const rowDate = orderDateCell ? new Date(orderDateCell) : null;
+          if (!rowDate || isNaN(rowDate.getTime())) {
+            showByDate = false;
+          } else {
+            if (fromDate && rowDate < fromDate) showByDate = false;
+            if (toDate && rowDate > toDate) showByDate = false;
+          }
         }
-        const rowDate = orderDateCell ? new Date(orderDateCell) : null;
-        if (!rowDate || isNaN(rowDate.getTime())) {
-          row.style.display = fromValue || toValue ? "none" : "";
-          return;
+
+        let showByStation = true;
+        if (stationFilter) {
+          const rowSt = normalizeStationValue(row.dataset.station || "");
+          showByStation = rowSt.toLowerCase() === stationFilter.toLowerCase();
         }
-        let show = true;
-        if (fromDate && rowDate < fromDate) show = false;
-        if (toDate && rowDate > toDate) show = false;
-        row.style.display = show ? "" : "none";
+
+        row.style.display = showByDate && showByStation ? "" : "none";
       });
 
       updateFooter();
@@ -1044,10 +1128,13 @@
       const workspace = document.querySelector(".workspace");
       let fromEl = workspace ? workspace.querySelector("#filterFromDate") : null;
       let toEl = workspace ? workspace.querySelector("#filterToDate") : null;
+      let stationEl = workspace ? workspace.querySelector("#filterStation") : null;
       if (!fromEl) fromEl = document.querySelector("#filterFromDate") || document.getElementById("filterFromDate");
       if (!toEl) toEl = document.querySelector("#filterToDate") || document.getElementById("filterToDate");
+      if (!stationEl) stationEl = document.querySelector("#filterStation") || document.getElementById("filterStation");
       if (fromEl) fromEl.value = "";
       if (toEl) toEl.value = "";
+      if (stationEl) stationEl.value = "";
       filterTable();
     }
 

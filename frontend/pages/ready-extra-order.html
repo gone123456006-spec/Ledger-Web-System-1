@@ -190,6 +190,14 @@
       margin-top: 18px;
     }
 
+    .order-details .box-title {
+      margin-bottom: 6px;
+    }
+
+    .order-details .table-wrap {
+      margin-top: 4px;
+    }
+
     .table-wrap {
       background: var(--card);
       border-radius: var(--radius);
@@ -236,7 +244,7 @@
     }
 
     .total {
-      background: #fff2cc;
+      background: #f5f6fa;
       font-weight: 600;
     }
 
@@ -278,13 +286,15 @@
       box-shadow: none;
     }
 
-    /* Order Details table: no scroll, fit in container */
+    /* Order Details table: no scroll, fit in container — collapse removes gap between header & body rows */
     .order-details-table-wrap #itemTable,
     .order-details-table-wrap #ready-order-item-table,
     .order-details-table-wrap .order-details-table {
       width: 100%;
       min-width: 0;
       table-layout: fixed;
+      border-collapse: collapse;
+      border-spacing: 0;
     }
 
     .order-details-table-wrap #itemTable th,
@@ -293,7 +303,7 @@
     .order-details-table-wrap #ready-order-item-table td,
     .order-details-table-wrap .order-details-table th,
     .order-details-table-wrap .order-details-table td {
-      padding: 10px 8px;
+      padding: 0;
       vertical-align: middle;
       white-space: nowrap;
       overflow: hidden;
@@ -309,34 +319,100 @@
     .order-details-table-wrap .order-details-table select {
       width: 100%;
       min-width: 0;
-      height: 36px;
-      padding: 6px 10px;
+      height: 32px;
+      padding: 0 6px;
+      margin: 0;
       font-size: 14px;
       box-sizing: border-box;
-      border-radius: 6px;
-      border: 1px solid var(--border, #dee2e6);
+      border-radius: 0;
+      border: 1px solid #d1d9e0;
+      outline: none;
+      background: #fff;
     }
 
     .order-details-table-wrap #ready-order-item-table td:first-child select,
     .order-details-table-wrap .order-details-table td:first-child select {
       min-width: 72px;
-      padding: 5px 8px;
+      padding: 0 6px;
       font-size: 13px;
       box-sizing: border-box;
-      border-radius: 6px;
+      border-radius: 0;
       border: 1px solid var(--border, #dee2e6);
     }
 
+    .order-details-table-wrap #itemTable .row-del-btn,
     .order-details-table-wrap #ready-order-item-table .row-del-btn,
     .order-details-table-wrap .order-details-table .row-del-btn {
+      display: inline-block;
+      vertical-align: middle;
       min-width: 28px;
-      height: 28px;
+      height: 32px;
       padding: 0;
-      border-radius: 6px;
+      border-radius: 0;
       border: 1px solid var(--border, #dee2e6);
       background: #fff;
       cursor: pointer;
       font-size: 12px;
+    }
+
+    /* Order Details grid: faint vertical rules; focus = solid 2px black frame (sharp corners, white fill) */
+    /* Header row height matches body cells (no extra vertical gap) */
+    .order-details-table-wrap #ready-order-item-table thead th {
+      padding: 0 4px;
+      line-height: 32px;
+      height: 32px;
+      box-sizing: border-box;
+    }
+
+    .order-details-table-wrap #ready-order-item-table thead th,
+    .order-details-table-wrap #ready-order-item-table tbody td {
+      border-right: 1px solid #e5edf5;
+    }
+
+    .order-details-table-wrap #itemTable thead th:last-child,
+    .order-details-table-wrap #itemTable tbody td:last-child,
+    .order-details-table-wrap #ready-order-item-table thead th:last-child,
+    .order-details-table-wrap #ready-order-item-table tbody td:last-child,
+    .order-details-table-wrap .order-details-table thead th:last-child,
+    .order-details-table-wrap .order-details-table tbody td:last-child {
+      border-right: none;
+      text-align: right;
+      vertical-align: middle;
+      width: 1%;
+      white-space: nowrap;
+    }
+
+    .order-details-table-wrap #ready-order-item-table tbody tr {
+      background: #fff;
+    }
+
+    .order-details-table-wrap #itemTable input:focus,
+    .order-details-table-wrap #itemTable select:focus,
+    .order-details-table-wrap #ready-order-item-table input:focus,
+    .order-details-table-wrap #ready-order-item-table select:focus,
+    .order-details-table-wrap .order-details-table input:focus,
+    .order-details-table-wrap .order-details-table select:focus {
+      outline: none;
+      border: 2px solid #000;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .order-details-table-wrap #itemTable input.order-detail-readonly:focus,
+    .order-details-table-wrap #ready-order-item-table input.order-detail-readonly:focus,
+    .order-details-table-wrap .order-details-table input.order-detail-readonly:focus,
+    .order-details-table-wrap #itemTable input.purchase-field-disabled:focus,
+    .order-details-table-wrap #ready-order-item-table input.purchase-field-disabled:focus,
+    .order-details-table-wrap .order-details-table input.purchase-field-disabled:focus {
+      outline: none;
+      border: 1px solid #e2e8f0;
+    }
+
+    .order-details-table-wrap #itemTable input.purchase-field-disabled:focus,
+    .order-details-table-wrap #ready-order-item-table input.purchase-field-disabled:focus,
+    .order-details-table-wrap .order-details-table input.purchase-field-disabled:focus {
+      border: none;
+      box-shadow: none;
     }
 
     /* =====================
@@ -427,13 +503,11 @@
       display: none !important;
     }
 
-    /* After Bill: hide Est. Total payment block (Order Total / Purchase / Net Bill / Paid / Balance) */
-    #orderApp[data-bill-mode="1"] .payment-section-block.payment-section--total {
+    /* Per-row Order No. mirrors header #billNo; hidden in UI only — DOM column kept for sync/save/load */
+    #ready-order-item-table col:nth-child(2),
+    #ready-order-item-table thead th:nth-child(2),
+    #ready-order-item-table tbody td:nth-child(2) {
       display: none !important;
-    }
-
-    #orderApp[data-bill-mode="1"] .payment-summary-columns {
-      grid-template-columns: 1fr;
     }
 
     /* Bill mode: A4 line items — hide Net Wt / Rate / Est. Total (cols 3–5), aligned with main table */
@@ -821,8 +895,8 @@
       vertical-align: middle;
     }
 
-    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(n+3),
-    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(n+3):not(:last-child) {
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(n+4),
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(n+4):not(:last-child) {
       text-align: right;
     }
 
@@ -833,11 +907,6 @@
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table tbody tr:hover {
       background: #f8faff;
-    }
-
-    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table input.purchase-sheet-computed {
-      background: #f5f5f7;
-      color: var(--text);
     }
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table input,
@@ -876,11 +945,23 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Left column must not steal clicks meant for "Purchase (minus)" on the right.
-       pointer-events:none on the block + auto on the button only (pointer-events inherits). */
-    .payment-summary-columns .payment-section--total {
-      position: relative;
-      z-index: 1;
+    /* Advance purchase (New Order): view-only on this page */
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--readonly .rex-purchase-edit-only {
+      display: none !important;
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--readonly table.purchase-sheet-table thead th:last-child,
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--readonly table.purchase-sheet-table tbody td:last-child {
+      display: none !important;
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--readonly table.purchase-sheet-table tfoot td:last-child {
+      display: none !important;
+    }
+
+    #ready-extra-order-purchase-sheet-popup.purchase-sheet-popup--readonly table.purchase-sheet-table input {
+      background: #f5f5f7;
+      cursor: default;
       pointer-events: none;
     }
 
@@ -942,10 +1023,6 @@
     .panel-open-purchase-sheet-btn:focus {
       outline: 2px solid var(--primary);
       outline-offset: 2px;
-    }
-
-    .summary-item--purchase-row {
-      margin-bottom: 6px;
     }
 
     /* =====================
@@ -1074,8 +1151,8 @@
 
     .panel-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      /* Ensure 2 columns to fill space */
+      /* Ratebook (1st column) narrower than Payment Summary (2nd) */
+      grid-template-columns: minmax(200px, 0.38fr) minmax(0, 1fr);
       gap: 20px;
     }
 
@@ -1124,7 +1201,7 @@
       overflow-y: auto;
     }
 
-    /* Payment panel: Est. Total + Total side by side; list full width below */
+    /* Payment panel: Total block + payment list full width below */
     .panel-content#paymentPanelContent {
       max-height: none;
       display: flex;
@@ -1134,7 +1211,7 @@
 
     .payment-summary-columns {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 12px;
       align-items: start;
       width: 100%;
@@ -1199,23 +1276,6 @@
       font-weight: 700;
     }
 
-    .panel-summary {
-      margin-bottom: 0;
-      padding-bottom: 12px;
-      border-bottom: none;
-    }
-
-    /* Match new-order.html Payment Summary block: divider below totals, no tinted card */
-    .panel-summary.panel-summary--est-total {
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .payment-section--total .panel-summary.panel-summary--est-total {
-      margin-bottom: 12px;
-    }
-
     .summary-item {
       display: flex;
       justify-content: space-between;
@@ -1264,12 +1324,118 @@
       font-size: 13px;
     }
 
-    .billing-detail .summary-item:last-child {
-      margin-bottom: 0;
-      padding-top: 4px;
-      margin-top: 4px;
-      border-top: 1px solid var(--border);
+    /* Total breakdown: label | value table with full outlines */
+    #panelPurchaseSaleDetailWrap.billing-detail {
+      border: 1px solid #c5cad4;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #f6f7f9;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(6.5rem, auto);
+      align-items: stretch;
+      gap: 0;
+      margin: 0;
+      min-height: 38px;
+      border-bottom: 1px solid #d1d6de;
+      font-size: 12px;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item:last-child {
+      border-bottom: none;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item > .summary-label,
+    #panelPurchaseSaleDetailWrap .summary-item > .summary-value {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item > .summary-label {
+      border-right: 1px solid #d1d6de;
+      color: var(--muted);
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item > .summary-value {
+      justify-content: flex-end;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-subtotal-row {
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-net-balance {
+      background: #eef0f3;
+      font-weight: 700;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-est-total {
+      background: #e8eaee;
+      font-weight: 700;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.purchase-minus {
+      padding: 0;
+    }
+
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(6.5rem, auto);
+      align-items: stretch;
+      width: 100%;
+      min-height: 38px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      font: inherit;
+    }
+
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-label {
+      padding: 10px 12px;
+      border-right: 1px solid #d1d6de;
+      text-align: left;
+      display: flex;
+      align-items: center;
+    }
+
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-value {
+      padding: 10px 12px;
+      text-align: right;
+      justify-content: flex-end;
+      display: flex;
+      align-items: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-line--add .summary-value {
+      color: #0d6efd;
       font-weight: 600;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.purchase-minus:not(.billing-detail-net-balance):not(.billing-detail-est-total) .summary-label,
+    #panelPurchaseSaleDetailWrap .summary-item.purchase-minus:not(.billing-detail-net-balance):not(.billing-detail-est-total) .summary-value {
+      color: #d63384;
+    }
+
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn--adv-purchase .summary-label,
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn--adv-purchase .summary-value {
+      color: #d63384;
+    }
+
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn--paid-purchase .summary-label,
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn--paid-purchase .summary-value {
+      color: #0f766e;
     }
 
     .billing-detail .summary-label {
@@ -1306,6 +1472,11 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    /* Sidebar: hide per-payment row list; keep Payment Summary figures only */
+    #paymentList {
+      display: none !important;
     }
 
     .panel-item {
@@ -1391,6 +1562,310 @@
       color: var(--muted);
       font-size: 12px;
       padding: 20px 0;
+    }
+
+    /* —— Advance / Paid payment detail modals (same layout) —— */
+    #ready-order-advanced-payments-popup .advanced-payments-popup-box,
+    #ready-order-paid-payments-popup .advanced-payments-popup-box {
+      display: flex;
+      flex-direction: column;
+      width: min(840px, calc(100vw - 24px));
+      max-width: min(840px, calc(100vw - 24px));
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 16px 18px 14px;
+      overflow-x: hidden;
+    }
+
+    .advanced-payments-popup-title {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .advanced-payments-popup-body {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      flex: 0 1 auto;
+      overflow: hidden;
+    }
+
+    .advanced-payments-popup-list {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .advanced-payments-popup-total {
+      font-weight: 600;
+      font-size: 14px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      margin: 8px 0 0;
+      padding: 8px 0 0;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    #ready-order-advanced-payments-popup .advanced-payments-popup-actions,
+    #ready-order-paid-payments-popup .advanced-payments-popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin: 10px 0 0;
+      padding: 0;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    #ready-order-advanced-payments-popup .advanced-payments-popup-close-btn,
+    #ready-order-paid-payments-popup .advanced-payments-popup-close-btn {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      min-width: 88px;
+    }
+
+    .advanced-payments-table {
+      table-layout: fixed;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      border-collapse: collapse;
+      font-size: 12px;
+      border: 1px solid #c5cad4;
+      background: #fff;
+    }
+
+    .advanced-payments-table col.advanced-payments-col--date {
+      width: 16%;
+    }
+
+    .advanced-payments-table col.advanced-payments-col--mode {
+      width: 18%;
+    }
+
+    .advanced-payments-table col.advanced-payments-col--amt {
+      width: 16%;
+    }
+
+    .advanced-payments-table col.advanced-payments-col--narr {
+      width: 40%;
+    }
+
+    .advanced-payments-table col.advanced-payments-col--action {
+      width: 10%;
+    }
+
+    .advanced-payments-table th,
+    .advanced-payments-table td {
+      border: 1px solid #d1d6de;
+      padding: 8px 8px;
+      vertical-align: top;
+      box-sizing: border-box;
+    }
+
+    /* Date: compact */
+    .advanced-payments-table th:nth-child(1),
+    .advanced-payments-table td:nth-child(1) {
+      text-align: left;
+    }
+
+    /* Payment Mode */
+    .advanced-payments-table th:nth-child(2),
+    .advanced-payments-table td:nth-child(2) {
+      text-align: left;
+    }
+
+    /* Amount: ₹ right-aligned */
+    .advanced-payments-table th:nth-child(3),
+    .advanced-payments-table td:nth-child(3) {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Narration */
+    .advanced-payments-table th:nth-child(4),
+    .advanced-payments-table td:nth-child(4) {
+      text-align: left;
+      overflow: hidden;
+    }
+
+    .advanced-payments-table th:nth-child(5),
+    .advanced-payments-table td:nth-child(5) {
+      text-align: center;
+      vertical-align: middle;
+      padding: 6px 4px;
+    }
+
+    .advanced-payment-table-edit-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 6px;
+      font-size: 14px;
+      border-radius: 6px;
+      line-height: 1;
+    }
+
+    .advanced-payment-table-edit-btn:hover {
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    .advanced-payments-popup-edit-form {
+      padding: 10px 4px 4px;
+      text-align: left;
+    }
+
+    .advanced-payments-popup-edit-form-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 8px 12px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .advanced-payments-popup-edit-form-grid label {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .advanced-payments-popup-edit-form-grid input,
+    .advanced-payments-popup-edit-form-grid select,
+    .advanced-payments-popup-edit-form-grid textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    .advanced-payments-popup-edit-form-grid textarea {
+      min-height: 52px;
+      resize: vertical;
+    }
+
+    .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+    }
+
+    .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button:first-child {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .advanced-payments-table tbody tr.advanced-payments-row--editing td {
+      background: #f8faff;
+      vertical-align: top;
+    }
+
+    .advanced-payments-table thead th {
+      background: #eef1f5;
+      font-weight: 600;
+      color: var(--text);
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    .advanced-payments-table tbody tr:nth-child(even) {
+      background: #f8f9fb;
+    }
+
+    .advanced-payments-table .advanced-payments-table__amt {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .advanced-payments-table td.advanced-payments-table__narr {
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      hyphens: auto;
+    }
+
+    .advanced-payments-table thead th:nth-child(4) {
+      white-space: normal;
+      line-height: 1.25;
+    }
+
+    @media (max-width: 600px) {
+      #ready-order-advanced-payments-popup .advanced-payments-popup-box,
+      #ready-order-paid-payments-popup .advanced-payments-popup-box {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        padding: 12px 12px 10px;
+      }
+
+      .advanced-payments-table {
+        font-size: 11px;
+      }
+
+      .advanced-payments-table th,
+      .advanced-payments-table td {
+        padding: 6px 6px;
+      }
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.summary-item--advance-minus-open {
+      cursor: pointer;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.summary-item--advance-minus-open:hover {
+      background: #f5e9ee;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.summary-item--paid-minus-open {
+      cursor: pointer;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.summary-item--paid-minus-open:hover {
+      background: #e8f4f2;
+    }
+
+    /* Full-row tap targets: match other rows — no dark focus ring / button border */
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--advance-minus-open,
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--paid-minus-open {
+      -webkit-appearance: none;
+      appearance: none;
+      font-family: inherit;
+      box-sizing: border-box;
+      border: none;
+      outline: none;
+    }
+
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--advance-minus-open:focus:not(:focus-visible),
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--paid-minus-open:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--advance-minus-open:focus-visible,
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--paid-minus-open:focus-visible {
+      outline: 1px solid #d1d6de;
+      outline-offset: 1px;
     }
 
     @media(max-width:1024px) {
@@ -1526,18 +2001,14 @@
     <!-- ACTIONS -->
     <div class="actions">
       <button onclick="addRow()"> Add Row</button>
-      <button id="globalEditBtn" onclick="toggleGlobalEdit()"> Edit</button>
 
       <button onclick="openPayment()"> Payment</button>
       <button type="button" class="panel-open-purchase-sheet-btn" data-purchase-sheet-source="ready-extra"
         title="Ready / Extra purchase sheet (saved here for this bill)"> Purchase</button>
-      <button onclick="openRateBook()"> Rate Book</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button type="button" class="btn-bill" onclick="onBillButtonClick()"
         title="Post to All Bill and Customer Balance (removes from Ready Orders)"> Bill</button>
       <button type="button" onclick="saveOrder()" title="Save to Ready Orders list only (not All Bill)"> Save</button>
-      <button type="button" onclick="saveAndNew()" title="Save to Ready Orders, then start a new order"> Save & New</button>
-      <button onclick="resetOrder()"> Reset</button>
       <button onclick="showInvoice()"> A4 Invoice</button>
       <button onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
     </div>
@@ -1549,7 +2020,6 @@
         <div class="panel-section">
           <div class="panel-section-header">
             <h3>Ratebook</h3>
-            <button class="panel-add-btn" onclick="openRateBook()">+ Add</button>
           </div>
           <div class="panel-content" id="ratebookPanelContent">
             <div class="panel-list" id="ratebookList">
@@ -1566,37 +2036,6 @@
           </div>
           <div class="panel-content" id="paymentPanelContent">
             <div class="payment-summary-columns">
-            <div class="payment-section-block payment-section--total">
-              <h4 class="payment-section-heading">Est. Total</h4>
-              <div class="panel-summary panel-summary--est-total">
-              <div class="summary-item">
-                <span class="summary-label">Order Total:</span>
-                <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
-              </div>
-              <div class="summary-item summary-item--purchase-row" style="color:#d63384;">
-                <button type="button" class="panel-open-purchase-sheet-btn" data-purchase-sheet-source="ready-extra"
-                  title="Est.: table purchase (if any) + New Order sheet + Ready / Extra sheet. Tap to edit Ready / Extra purchases.">
-                  <span class="summary-label">Purchase Total:</span>
-                  <span class="summary-value" id="panelPurchaseTotal">₹ 0.00</span>
-                </button>
-              </div>
-              <div class="summary-item" style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px;">
-                <span class="summary-label">Net Bill Total:</span>
-                <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
-              </div>
-              <div class="summary-item"
-                title="Same as New Order Payment Summary: sum of all saved payments for this order (Advanced, Paid, etc.). Purchase is already in Net Bill Total above.">
-                <span class="summary-label">Paid:</span>
-                <span class="summary-value" style="color:#28a745;" id="panelAdvanced">₹ 0.00</span>
-              </div>
-              <div class="summary-item"
-                title="Net Bill Total (Est. figures above) minus all payments on the Paid line. For Final totals and rate diff, see the Total section below.">
-                <span class="summary-label">Balance:</span>
-                <span class="summary-value" style="color:#dc3545;" id="panelBalance">₹ 0.00</span>
-              </div>
-            </div>
-            </div>
-
             <div class="payment-section-block payment-section--est">
               <h4 class="payment-section-heading">Total</h4>
             <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
@@ -1620,25 +2059,26 @@
                   <span class="summary-value" id="panelAdvancePurchaseMinus">₹ 0.00</span>
                 </button>
               </div>
-              <div class="summary-item purchase-minus"
-                title="Non-Paid payments recorded for this bill (Advanced / legacy advance)">
+              <button type="button" class="summary-item purchase-minus summary-item--advance-minus-open"
+                title="Tap to view advance payment lines for this bill"
+                onclick="typeof openAdvancedPaymentsPopup==='function'&&openAdvancedPaymentsPopup()">
                 <span class="summary-label">Advance minus:</span>
                 <span class="summary-value" id="panelAdvancedMinus">₹ 0.00</span>
-              </div>
+              </button>
               <div class="summary-item purchase-minus">
                 <span class="summary-label">Rate difference:</span>
                 <span class="summary-value" id="panelRateDiffAmount">₹ 0.00</span>
               </div>
-              <div class="summary-item billing-detail-net-balance"
-                style="border-top:1px dashed #ccc; margin-top:6px; padding-top:8px;">
+              <div class="summary-item billing-detail-net-balance">
                 <span class="summary-label">Net Balance:</span>
                 <span class="summary-value" id="panelNetBalanceMid">₹ 0.00</span>
               </div>
-              <div class="summary-item purchase-minus"
-                title="Payments marked Paid for this bill">
+              <button type="button" class="summary-item purchase-minus summary-item--paid-minus-open"
+                title="Tap to view Paid payment lines for this bill"
+                onclick="typeof openPaidPaymentsPopup==='function'&&openPaidPaymentsPopup()">
                 <span class="summary-label">Paid minus:</span>
                 <span class="summary-value" id="panelPaidMinus">₹ 0.00</span>
-              </div>
+              </button>
               <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
                 <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--paid-purchase"
                   data-purchase-sheet-source="ready-extra"
@@ -1647,8 +2087,7 @@
                   <span class="summary-value" id="panelPaidPurchaseMinus">₹ 0.00</span>
                 </button>
               </div>
-              <div class="summary-item billing-detail-est-total"
-                style="border-top:1px dashed #ccc; margin-top:6px; padding-top:8px; font-weight:700;">
+              <div class="summary-item billing-detail-est-total">
                 <span class="summary-label">Pending balance Net Total Amount:</span>
                 <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
               </div>
@@ -1902,17 +2341,51 @@
     </div>
   </div>
 
+  <!-- Advance payments detail (opened from Total → Advance minus) -->
+  <div id="ready-order-advanced-payments-popup" class="popup-bg ready-order-popup" style="display:none;"
+    onclick="if(event.target===this) closeAdvancedPaymentsPopup()">
+    <div class="popup-box advanced-payments-popup-box" data-payment-detail-source="advance" onclick="event.stopPropagation()">
+      <h3 class="advanced-payments-popup-title">Advance payments</h3>
+      <div class="advanced-payments-popup-body">
+        <div id="advancedPaymentsPopupList" class="advanced-payments-popup-list"></div>
+        <div id="advancedPaymentsPopupTotal" class="advanced-payments-popup-total">Total: ₹ 0.00</div>
+      </div>
+      <div class="popup-actions advanced-payments-popup-actions">
+        <button type="button" class="advanced-payments-popup-close-btn" onclick="closeAdvancedPaymentsPopup()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paid payments detail (opened from Total → Paid minus) -->
+  <div id="ready-order-paid-payments-popup" class="popup-bg ready-order-popup" style="display:none;"
+    onclick="if(event.target===this) closePaidPaymentsPopup()">
+    <div class="popup-box advanced-payments-popup-box" data-payment-detail-source="paid" onclick="event.stopPropagation()">
+      <h3 class="advanced-payments-popup-title">Paid payments</h3>
+      <div class="advanced-payments-popup-body">
+        <div id="paidPaymentsPopupList" class="advanced-payments-popup-list"></div>
+        <div id="paidPaymentsPopupTotal" class="advanced-payments-popup-total">Total: ₹ 0.00</div>
+      </div>
+      <div class="popup-actions advanced-payments-popup-actions">
+        <button type="button" class="advanced-payments-popup-close-btn" onclick="closePaidPaymentsPopup()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PURCHASE SHEET: mode New Order (newOrderPurchaseSheets) vs Ready / Extra (readyExtraOrderPurchaseSheets) -->
   <div id="ready-extra-order-purchase-sheet-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closePurchaseSheetPopup()">
     <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
       <h3 id="rex-purchase-popup-title">Purchase</h3>
+      <p id="rex-purchase-popup-readonly-hint" class="rex-purchase-readonly-hint" style="display:none; margin:0 0 10px; font-size:13px; color:#666;">
+        View only. Edit these lines on the <strong>New Order</strong> page for this bill number.
+      </p>
       <div class="purchase-sheet-wrap">
         <table class="purchase-sheet-table">
           <thead>
             <tr>
               <th style="min-width:128px;">On date</th>
               <th style="min-width:160px;">Item Name</th>
+              <th style="min-width:80px;">Stamp</th>
               <th style="min-width:92px;">GROSS WT.</th>
               <th style="min-width:88px;">Less Wt</th>
               <th style="min-width:100px;">Net Weight</th>
@@ -1924,7 +2397,7 @@
           <tbody id="ready-extra-purchase-sheet-tbody"></tbody>
           <tfoot>
             <tr class="purchase-sheet-tfoot-row">
-              <td colspan="6" class="purchase-sheet-total-label">Total Purchase</td>
+              <td colspan="7" class="purchase-sheet-total-label">Total Purchase</td>
               <td class="purchase-sheet-total-amt"><span id="ready-extra-purchase-sheet-total-amt">₹ 0.00</span></td>
               <td></td>
             </tr>
@@ -1932,7 +2405,7 @@
         </table>
       </div>
       <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <div class="rex-purchase-edit-only" style="display:flex; flex-wrap:wrap; gap:8px;">
           <button type="button" class="primary" onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
             Add Row</button>
           <button type="button" class="primary"
@@ -2149,7 +2622,7 @@
       var billMidColumnsHidden = false;
 
       (function hideOtherPagesPopupsOnInit() {
-        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
+        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-advanced-payments-popup', 'ready-order-paid-payments-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
         ids.forEach(function (id) {
           try {
             var el = container.querySelector("#" + id);
@@ -2776,9 +3249,9 @@
           });
         }
 
-        // Apply global edit state if active
+        // Apply global edit state if active (no Edit button = always treat as global editing on)
         const globalEditBtn = document.getElementById('globalEditBtn');
-        if (globalEditBtn && globalEditBtn.dataset.editing === "true") {
+        if (!globalEditBtn || globalEditBtn.dataset.editing === "true") {
           const orderDetailIndices = [4, 5, 6, 7]; // Pc..Rate; Stamp (3) always editable; Lbr.% (8) separate
           orderDetailIndices.forEach(idx => {
             const cell = tr.cells[idx];
@@ -2787,7 +3260,7 @@
               if (input) {
                 input.removeAttribute("readonly");
                 input.classList.remove("order-detail-readonly");
-                input.style.border = "1px solid #ffc107";
+                input.style.border = "1px solid var(--border)";
                 input.style.borderRadius = "4px";
               }
             }
@@ -2819,7 +3292,7 @@
         if (isReadyExtraFullLineRow(typeSel)) {
           const isSale = typeSel && typeSel.value === "Sale";
           const globalEditBtn = document.getElementById("globalEditBtn");
-          const isGlobalEditing = globalEditBtn && globalEditBtn.dataset.editing === "true";
+          const isGlobalEditing = !globalEditBtn || globalEditBtn.dataset.editing === "true";
           row.querySelectorAll("input").forEach(input => {
             const td = input.closest("td");
             if (!td || td.closest("tr") !== row) return;
@@ -2849,7 +3322,7 @@
               input.removeAttribute("readonly");
               input.classList.remove("order-detail-readonly");
               input.tabIndex = 0;
-              input.style.border = "1px solid #ffc107";
+              input.style.border = "1px solid var(--border)";
               input.style.borderRadius = "4px";
               return;
             }
@@ -2892,9 +3365,9 @@
           }
         });
 
-        // Respect global edit state
+        // Respect global edit state (no Edit button = always editable like global edit on)
         const globalEditBtn = document.getElementById('globalEditBtn');
-        const isGlobalEditing = globalEditBtn && globalEditBtn.dataset.editing === "true";
+        const isGlobalEditing = !globalEditBtn || globalEditBtn.dataset.editing === "true";
 
         const orderDetailIndices = [3, 4, 5, 6, 7]; // Lbr.% (8) removed from edit list
         orderDetailIndices.forEach(idx => {
@@ -2906,7 +3379,7 @@
               if (isPurchase || isGlobalEditing) {
                 input.removeAttribute("readonly");
                 input.classList.remove("order-detail-readonly");
-                input.style.border = isGlobalEditing ? "1px solid #ffc107" : "";
+                input.style.border = isGlobalEditing ? "1px solid var(--border)" : "";
                 input.style.borderRadius = isGlobalEditing ? "4px" : "";
               } else {
                 input.setAttribute("readonly", "readonly");
@@ -2985,12 +3458,12 @@
                 if (isPurchase) {
                   input.removeAttribute("readonly");
                   input.classList.remove("order-detail-readonly");
-                  input.style.border = becomingActive ? "1px solid #ffc107" : "";
+                  input.style.border = becomingActive ? "1px solid var(--border)" : "";
                   input.style.borderRadius = becomingActive ? "4px" : "";
                 } else if (becomingActive) {
                   input.removeAttribute("readonly");
                   input.classList.remove("order-detail-readonly");
-                  input.style.border = "1px solid #ffc107";
+                  input.style.border = "1px solid var(--border)";
                   input.style.borderRadius = "4px";
                 } else {
                   input.setAttribute("readonly", "readonly");
@@ -3287,13 +3760,7 @@
         return est;
       }
 
-      /** Est. Total column (col 9) only — for **Total** summary panel. */
-      function getReadyOrderRowEstCol9(tr) {
-        if (!tr || !tr.cells || !tr.cells[9] || !tr.cells[9].children[0]) return 0;
-        return parseFloat(tr.cells[9].children[0].value) || 0;
-      }
-
-      /** Est. Total (Final) column (col 15) only — for **Est. Total (Final)** breakdown panel. */
+      /** Est. Total (Final) column (col 15) only — Payment Summary **Total** breakdown. */
       function getReadyOrderRowFinalCol15(tr) {
         if (!tr || !tr.cells || !tr.cells[15] || !tr.cells[15].children[0]) return 0;
         return parseFloat(tr.cells[15].children[0].value) || 0;
@@ -3305,6 +3772,8 @@
       var NEW_ORDER_PURCHASE_SHEETS_KEY = "newOrderPurchaseSheets";
       /** Which storage the open purchase popup reads/writes: "new-order" | "ready-extra". */
       var activePurchaseSheetSource = "ready-extra";
+      /** True while New Order purchase popup is open: rows are view-only (edit on New Order page). */
+      var advancePurchasePopupReadOnly = false;
 
       function readPurchaseSheetsMap() {
         try {
@@ -3469,17 +3938,285 @@
           .filter(p => {
             const billMatch = p && String(p.billNo || "").trim() === key;
             if (!billMatch) return false;
-            if (typeFilter === 'Paid') return p.type === 'Paid';
+            if (typeFilter === 'Paid') return isPaidTypePayment(p);
             // Advanced = explicit 'Advanced' OR no type (legacy)
-            if (typeFilter === 'Advanced') return p.type !== 'Paid';
+            if (typeFilter === 'Advanced') return !isPaidTypePayment(p);
             return true; // All payments for this bill
           })
           .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
       }
 
-      /** Same rule as getPaidAmount(..., 'Advanced'): not type Paid → advance / legacy advance */
+      /** True when payment is recorded as Paid (case-insensitive; trims type string). */
+      function isPaidTypePayment(p) {
+        return !!(p && String(p.type || '').trim().toLowerCase() === 'paid');
+      }
+
+      /** Same rule as getPaidAmount(..., 'Advanced'): not Paid-type → advance / legacy */
       function isAdvancedPaymentRecord(p) {
-        return p && p.type !== 'Paid';
+        return p && !isPaidTypePayment(p);
+      }
+
+      /** All advance (non‑Paid) payment rows for a bill — same filter as getPaidAmount(bill, 'Advanced'). */
+      function getAdvancedPaymentRecordsForBill(billNoVal) {
+        if (!billNoVal) return [];
+        const key = String(billNoVal).trim();
+        let payments = [];
+        try {
+          payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        } catch (e) {
+          return [];
+        }
+        return payments.filter(function (p) {
+          return p && String(p.billNo || "").trim() === key && isAdvancedPaymentRecord(p);
+        });
+      }
+
+      /** Paid-type payment rows for a bill — same filter as getPaidAmount(bill, 'Paid'). */
+      function getPaidPaymentRecordsForBill(billNoVal) {
+        if (!billNoVal) return [];
+        const key = String(billNoVal).trim();
+        let payments = [];
+        try {
+          payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        } catch (e) {
+          return [];
+        }
+        return payments.filter(function (p) {
+          return p && String(p.billNo || "").trim() === key && isPaidTypePayment(p);
+        });
+      }
+
+      function openAdvancedPaymentsPopup() {
+        if (!billNo || !String(billNo.value || "").trim()) {
+          alert("Order number is required");
+          return;
+        }
+        var root = getSearchRoot();
+        var popup = root.querySelector("#ready-order-advanced-payments-popup") || document.getElementById("ready-order-advanced-payments-popup");
+        var listEl = root.querySelector("#advancedPaymentsPopupList");
+        var totalEl = root.querySelector("#advancedPaymentsPopupTotal");
+        if (!popup || !listEl) return;
+        var billVal = String(billNo.value).trim();
+        var adv = getAdvancedPaymentRecordsForBill(billVal);
+        var sum = adv.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+        if (totalEl) totalEl.textContent = "Total: " + formatCurrency(sum);
+        var escCell = function (s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/"/g, "&quot;");
+        };
+        if (adv.length === 0) {
+          listEl.innerHTML = '<div class="empty-state" style="padding:16px;">No advance payments for this bill.</div>';
+        } else {
+          var html = '<table class="advanced-payments-table"><colgroup>' +
+            '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
+            '<col class="advanced-payments-col--amt"><col class="advanced-payments-col--narr">' +
+            '<col class="advanced-payments-col--action"></colgroup>' +
+            "<thead><tr><th>Date</th><th>Payment Mode</th><th>Amount</th><th>Narration</th><th>Edit</th></tr></thead><tbody>";
+          adv.slice().reverse().forEach(function (p) {
+            var dateStr = p.date ? new Date(p.date).toLocaleDateString() : "—";
+            var modeStr = p.mode ? String(p.mode) : "Cash";
+            var narrRaw = p.narration != null && String(p.narration).trim() !== ""
+              ? String(p.narration).trim()
+              : "—";
+            var dateIsoForKey = "";
+            if (p.date) {
+              var ds = String(p.date);
+              if (ds.indexOf("T") >= 0) dateIsoForKey = ds.split("T")[0];
+              else if (/^\d{4}-\d{2}-\d{2}/.test(ds)) dateIsoForKey = ds.substring(0, 10);
+              else {
+                try { dateIsoForKey = new Date(p.date).toISOString().split("T")[0]; } catch (e) { dateIsoForKey = ""; }
+              }
+            } else if (p.timestamp) {
+              dateIsoForKey = String(p.timestamp).split("T")[0];
+            }
+            var payKey = (p.id != null) ? String(p.id) : String(p.timestamp || (dateIsoForKey ? dateIsoForKey + "-" + (p.amount || 0) : ""));
+            var amountRaw = String(Number(p.amount) || 0);
+            html += '<tr data-payment-key="' + escCell(payKey) + '" data-payment-timestamp="' + escCell(p.timestamp || "") + '" data-bill-no="' + escCell(billVal) + '"' +
+              ' data-payment-date-iso="' + escCell(dateIsoForKey) + '" data-payment-amount="' + escCell(amountRaw) + '">' +
+              "<td>" + escCell(dateStr) + "</td><td>" + escCell(modeStr) + "</td>" +
+              '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + "</td>" +
+              '<td class="advanced-payments-table__narr">' + escCell(narrRaw) + '</td>' +
+              '<td><button type="button" class="advanced-payment-table-edit-btn" onclick="event.stopPropagation();openPaymentDetailTableEdit(this);" title="Edit">✏️</button></td></tr>';
+          });
+          html += "</tbody></table>";
+          listEl.innerHTML = html;
+        }
+        popup.style.display = "flex";
+        popup.style.alignItems = "center";
+        popup.style.justifyContent = "center";
+      }
+
+      function closeAdvancedPaymentsPopup() {
+        var popup = getSearchRoot().querySelector("#ready-order-advanced-payments-popup") || document.getElementById("ready-order-advanced-payments-popup");
+        if (popup) popup.style.display = "none";
+      }
+
+      function openPaidPaymentsPopup() {
+        if (!billNo || !String(billNo.value || "").trim()) {
+          alert("Order number is required");
+          return;
+        }
+        var root = getSearchRoot();
+        var popup = root.querySelector("#ready-order-paid-payments-popup") || document.getElementById("ready-order-paid-payments-popup");
+        var listEl = root.querySelector("#paidPaymentsPopupList");
+        var totalEl = root.querySelector("#paidPaymentsPopupTotal");
+        if (!popup || !listEl) return;
+        var billVal = String(billNo.value).trim();
+        var paidRows = getPaidPaymentRecordsForBill(billVal);
+        var sum = paidRows.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+        if (totalEl) totalEl.textContent = "Total: " + formatCurrency(sum);
+        var escCell = function (s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/"/g, "&quot;");
+        };
+        if (paidRows.length === 0) {
+          listEl.innerHTML = '<div class="empty-state" style="padding:16px;">No Paid payments for this bill.</div>';
+        } else {
+          var html = '<table class="advanced-payments-table"><colgroup>' +
+            '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
+            '<col class="advanced-payments-col--amt"><col class="advanced-payments-col--narr">' +
+            '<col class="advanced-payments-col--action"></colgroup>' +
+            "<thead><tr><th>Date</th><th>Payment Mode</th><th>Amount</th><th>Narration</th><th>Edit</th></tr></thead><tbody>";
+          paidRows.slice().reverse().forEach(function (p) {
+            var dateStr = p.date ? new Date(p.date).toLocaleDateString() : "—";
+            var modeStr = p.mode ? String(p.mode) : "Cash";
+            var narrRaw = p.narration != null && String(p.narration).trim() !== ""
+              ? String(p.narration).trim()
+              : "—";
+            var dateIsoForKey = "";
+            if (p.date) {
+              var ds = String(p.date);
+              if (ds.indexOf("T") >= 0) dateIsoForKey = ds.split("T")[0];
+              else if (/^\d{4}-\d{2}-\d{2}/.test(ds)) dateIsoForKey = ds.substring(0, 10);
+              else {
+                try { dateIsoForKey = new Date(p.date).toISOString().split("T")[0]; } catch (e) { dateIsoForKey = ""; }
+              }
+            } else if (p.timestamp) {
+              dateIsoForKey = String(p.timestamp).split("T")[0];
+            }
+            var payKey = (p.id != null) ? String(p.id) : String(p.timestamp || (dateIsoForKey ? dateIsoForKey + "-" + (p.amount || 0) : ""));
+            var amountRaw = String(Number(p.amount) || 0);
+            html += '<tr data-payment-key="' + escCell(payKey) + '" data-payment-timestamp="' + escCell(p.timestamp || "") + '" data-bill-no="' + escCell(billVal) + '"' +
+              ' data-payment-date-iso="' + escCell(dateIsoForKey) + '" data-payment-amount="' + escCell(amountRaw) + '">' +
+              "<td>" + escCell(dateStr) + "</td><td>" + escCell(modeStr) + "</td>" +
+              '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + "</td>" +
+              '<td class="advanced-payments-table__narr">' + escCell(narrRaw) + '</td>' +
+              '<td><button type="button" class="advanced-payment-table-edit-btn" onclick="event.stopPropagation();openPaymentDetailTableEdit(this);" title="Edit">✏️</button></td></tr>';
+          });
+          html += "</tbody></table>";
+          listEl.innerHTML = html;
+        }
+        popup.style.display = "flex";
+        popup.style.alignItems = "center";
+        popup.style.justifyContent = "center";
+      }
+
+      function closePaidPaymentsPopup() {
+        var popup = getSearchRoot().querySelector("#ready-order-paid-payments-popup") || document.getElementById("ready-order-paid-payments-popup");
+        if (popup) popup.style.display = "none";
+      }
+
+      /** Inline edit form in Advance / Paid payment detail tables (same storage as payment panel). */
+      function openPaymentDetailTableEdit(btnEl) {
+        var tr = btnEl && btnEl.closest("tr");
+        if (!tr || tr.classList.contains("advanced-payments-row--editing")) return;
+        var payKey = tr.getAttribute("data-payment-key") || "";
+        var timestamp = tr.getAttribute("data-payment-timestamp") || "";
+        var billNoVal = tr.getAttribute("data-bill-no") || "";
+        var dateIso = tr.getAttribute("data-payment-date-iso") || "";
+        var amountRaw = tr.getAttribute("data-payment-amount") || "0";
+        var tds = tr.querySelectorAll("td");
+        var mode = tds[1] ? tds[1].textContent.trim() : "Cash";
+        var narr = tds[3] ? tds[3].textContent.trim() : "";
+        if (narr === "—") narr = "";
+        var modes = ["Cash", "Card", "Cheque", "UPI", "Online"];
+        var options = modes.map(function (m) {
+          return "<option value=\"" + m + "\"" + (m === mode ? " selected" : "") + ">" + m + "</option>";
+        }).join("");
+        var narrForTa = String(narr).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+        tr.classList.add("advanced-payments-row--editing");
+        tr.setAttribute("data-payment-key", payKey);
+        tr.setAttribute("data-payment-timestamp", timestamp);
+        tr.setAttribute("data-bill-no", billNoVal);
+        tr.innerHTML =
+          '<td colspan="5"><div class="advanced-payments-popup-edit-form">' +
+          '<div class="advanced-payments-popup-edit-form-grid">' +
+          '<label>Amount (₹)</label><input type="number" class="payment-edit-amount" step="0.01" min="0" value="' +
+          String(amountRaw).replace(/"/g, "&quot;") + '" placeholder="0.00">' +
+          '<label>Mode</label><select class="payment-edit-mode">' + options + "</select>" +
+          '<label>Date</label><input type="date" class="payment-edit-date" value="' +
+          String(dateIso || "").replace(/"/g, "&quot;") + '">' +
+          '<label>Narration</label><textarea class="payment-edit-narration" rows="2" placeholder="Narration">' +
+          narrForTa + "</textarea></div>" +
+          '<div class="advanced-payments-popup-edit-actions">' +
+          '<button type="button" onclick="savePaymentDetailTableEdit(this)">Save</button>' +
+          '<button type="button" onclick="cancelPaymentDetailTableEdit(this)">Cancel</button>' +
+          "</div></div></td>";
+      }
+
+      function refreshPaymentDetailPopupAfterEdit() {
+        var root = getSearchRoot();
+        var adv = root.querySelector("#ready-order-advanced-payments-popup");
+        var paid = root.querySelector("#ready-order-paid-payments-popup");
+        if (adv && adv.style.display === "flex") {
+          openAdvancedPaymentsPopup();
+        } else if (paid && paid.style.display === "flex") {
+          openPaidPaymentsPopup();
+        }
+      }
+
+      function savePaymentDetailTableEdit(btnEl) {
+        var wrap = btnEl && btnEl.closest(".advanced-payments-popup-edit-form");
+        var tr = btnEl && btnEl.closest("tr");
+        if (!wrap || !tr) return;
+        var amountInput = wrap.querySelector(".payment-edit-amount");
+        var modeSelect = wrap.querySelector(".payment-edit-mode");
+        var dateInput = wrap.querySelector(".payment-edit-date");
+        var narrInput = wrap.querySelector(".payment-edit-narration");
+        var amount = parseFloat(amountInput ? amountInput.value : 0) || 0;
+        if (amount <= 0) {
+          alert("Please enter a valid amount");
+          return;
+        }
+        var payKey = tr.getAttribute("data-payment-key");
+        var timestamp = tr.getAttribute("data-payment-timestamp");
+        var billNoVal = tr.getAttribute("data-bill-no");
+        var bKey = String(billNoVal || "").trim();
+        var payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        var idx = payments.findIndex(function (p) {
+          if (!p || String(p.billNo || "").trim() !== bKey) return false;
+          if (String(p.id) === payKey || String(p.id) === String(Number(payKey))) return true;
+          if (timestamp != null && timestamp !== "" && (p.timestamp === timestamp || String(p.timestamp) === String(timestamp))) return true;
+          return false;
+        });
+        if (idx === -1) {
+          alert("Payment not found");
+          refreshPaymentDetailPopupAfterEdit();
+          return;
+        }
+        payments[idx].amount = amount;
+        payments[idx].mode = modeSelect ? modeSelect.value : "Cash";
+        payments[idx].date = dateInput ? dateInput.value : new Date().toISOString().split("T")[0];
+        if (narrInput) payments[idx].narration = narrInput.value || "";
+        if (payments[idx].timestamp && dateInput && dateInput.value) {
+          var d = new Date(dateInput.value);
+          if (!isNaN(d.getTime())) payments[idx].timestamp = d.toISOString();
+        }
+        localStorage.setItem("payments", JSON.stringify(payments));
+        window.dispatchEvent(new CustomEvent("paymentSaved"));
+        if (window.parent && window.parent !== window) {
+          try { window.parent.dispatchEvent(new CustomEvent("paymentSaved")); } catch (e) { }
+        }
+        refreshPaymentDetailPopupAfterEdit();
+        updatePaymentPanel();
+      }
+
+      function cancelPaymentDetailTableEdit(btnEl) {
+        refreshPaymentDetailPopupAfterEdit();
       }
 
       function syncBillToStatement(customer, bill, billNoVal) {
@@ -3748,8 +4485,8 @@
               if (due == null) {
                 const bno = b.orderNo || b.billNo || "";
                 const bAmt = parseFloat(b.amount || b.netAmount || 0);
-                const bAdv = paymentsAll.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
-                const bPaid = paymentsAll.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                const bAdv = paymentsAll.filter(p => p.billNo === bno && !isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+                const bPaid = paymentsAll.filter(p => p.billNo === bno && isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
                 let bRateDiff = 0;
                 if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
                 due = bAmt - bAdv - bPaid - bRateDiff;
@@ -4201,8 +4938,8 @@
             if (due == null) {
               const bno = b.orderNo || b.billNo || "";
               const bAmt = parseFloat(b.amount || b.netAmount || 0);
-              const bAdv = paymentsAll2.filter(p => p.billNo === bno && p.type !== 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
-              const bPaid = paymentsAll2.filter(p => p.billNo === bno && p.type === 'Paid').reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              const bAdv = paymentsAll2.filter(p => p.billNo === bno && !isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              const bPaid = paymentsAll2.filter(p => p.billNo === bno && isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
               let bRateDiff = 0;
               if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
               due = bAmt - bAdv - bPaid - bRateDiff;
@@ -5476,12 +6213,12 @@
       }
 
       function recalcPurchaseSheetRow(tr) {
-        if (!tr || !tr.cells || tr.cells.length < 7) return;
-        var grossIn = tr.cells[2].querySelector("input");
-        var lessIn = tr.cells[3].querySelector("input");
-        var netIn = tr.cells[4].querySelector("input");
-        var rateIn = tr.cells[5].querySelector("input");
-        var amtIn = tr.cells[6].querySelector("input");
+        if (!tr || !tr.cells || tr.cells.length < 8) return;
+        var grossIn = tr.cells[3].querySelector("input");
+        var lessIn = tr.cells[4].querySelector("input");
+        var netIn = tr.cells[5].querySelector("input");
+        var rateIn = tr.cells[6].querySelector("input");
+        var amtIn = tr.cells[7].querySelector("input");
         if (!grossIn || !lessIn || !netIn || !rateIn || !amtIn) return;
         var gross = parsePurchaseSheetWeight(grossIn);
         var less = parsePurchaseSheetWeight(lessIn);
@@ -5512,15 +6249,17 @@
         var out = [];
         tb.querySelectorAll("tr").forEach(function (tr) {
           var c = tr.cells;
-          if (!c || c.length < 7) return;
+          if (!c || c.length < 8) return;
+          var stEl = tr.querySelector(".ps-stamp");
           out.push({
             onDate: c[0].querySelector("input") ? c[0].querySelector("input").value : "",
             itemName: c[1].querySelector("input") ? c[1].querySelector("input").value : "",
-            grossWt: c[2].querySelector("input") ? c[2].querySelector("input").value : "",
-            lessWt: c[3].querySelector("input") ? c[3].querySelector("input").value : "",
-            netWt: c[4].querySelector("input") ? c[4].querySelector("input").value : "",
-            rate: c[5].querySelector("input") ? c[5].querySelector("input").value : "",
-            amount: c[6].querySelector("input") ? c[6].querySelector("input").value : ""
+            grossWt: c[3].querySelector("input") ? c[3].querySelector("input").value : "",
+            lessWt: c[4].querySelector("input") ? c[4].querySelector("input").value : "",
+            netWt: c[5].querySelector("input") ? c[5].querySelector("input").value : "",
+            rate: c[6].querySelector("input") ? c[6].querySelector("input").value : "",
+            amount: c[7].querySelector("input") ? c[7].querySelector("input").value : "",
+            stamp: stEl ? stEl.value : ""
           });
         });
         return out;
@@ -5529,6 +6268,10 @@
       function savePurchaseSheet() {
         if (!billNo || !String(billNo.value || "").trim()) {
           showError("Order number is required. Save the order first.");
+          return;
+        }
+        if (advancePurchasePopupReadOnly) {
+          showError("New Order purchases can only be edited on the New Order page.");
           return;
         }
         var bn = String(billNo.value).trim();
@@ -5550,6 +6293,13 @@
           ? getNewOrderPurchaseSheetRecord(billNoVal)
           : getPurchaseSheetRecord(billNoVal);
         tb.innerHTML = "";
+        if (advancePurchasePopupReadOnly && (!rec || !rec.rows || !rec.rows.length)) {
+          var emptyTr = document.createElement("tr");
+          emptyTr.innerHTML = '<td colspan="9" style="text-align:center;padding:20px;color:#666;">No purchase lines from New Order for this bill yet. Open <strong>New Order</strong> with the same order number to add them.</td>';
+          tb.appendChild(emptyTr);
+          updatePurchaseSheetTotalDisplay();
+          return;
+        }
         if (rec && rec.rows && rec.rows.length) {
           rec.rows.forEach(function (r) {
             addPurchaseSheetRow(r);
@@ -5560,23 +6310,29 @@
         updatePurchaseSheetTotalDisplay();
       }
 
-      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount */
+      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount, stamp */
       function addPurchaseSheetRow(preset) {
         var tb = getPurchaseSheetTbody();
         if (!tb) return;
+        var ro = advancePurchasePopupReadOnly;
         var orderDateVal = orderDate && orderDate.value
           ? orderDate.value
           : new Date().toISOString().split("T")[0];
         var tr = document.createElement("tr");
+        var roAttr = ro ? " readonly tabindex=\"-1\"" : "";
+        var lastCell = ro
+          ? "<td></td>"
+          : '<td><button type="button" title="Remove row">❌</button></td>';
         tr.innerHTML =
-          '<td><input type="date" class="ps-ondate"></td>' +
-          '<td><input type="text" class="ps-item" placeholder="Item"></td>' +
-          '<td><input type="number" class="ps-gross" step="0.001" min="0" placeholder="0" title="GROSS WT."></td>' +
-          '<td><input type="number" class="ps-less" step="0.001" min="0" placeholder="0" title="Subtract from net only: Net = GROSS WT. − Less Wt"></td>' +
-          '<td><input type="number" class="ps-net purchase-sheet-computed" step="0.001" readonly tabindex="-1" placeholder="0" title="Net = GROSS WT. − Less Wt (same as Gross when Less is empty)"></td>' +
-          '<td><input type="number" class="ps-rate" step="0.01" min="0" placeholder="0"></td>' +
-          '<td><input type="number" class="ps-amt purchase-sheet-computed" step="0.01" readonly tabindex="-1" placeholder="0"></td>' +
-          '<td><button type="button" title="Remove row">❌</button></td>';
+          "<td><input type=\"date\" class=\"ps-ondate\"" + roAttr + "></td>" +
+          "<td><input type=\"text\" class=\"ps-item\" placeholder=\"Item\"" + roAttr + "></td>" +
+          "<td><input type=\"text\" class=\"ps-stamp\" placeholder=\"Stamp\"" + roAttr + "></td>" +
+          "<td><input type=\"number\" class=\"ps-gross\" step=\"0.001\" min=\"0\" placeholder=\"0\" title=\"GROSS WT.\"" + roAttr + "></td>" +
+          "<td><input type=\"number\" class=\"ps-less\" step=\"0.001\" min=\"0\" placeholder=\"0\" title=\"Less Wt\"" + roAttr + "></td>" +
+          "<td><input type=\"number\" class=\"ps-net\" step=\"0.001\" min=\"0\" placeholder=\"0\" title=\"Net Weight\"" + roAttr + "></td>" +
+          "<td><input type=\"number\" class=\"ps-rate\" step=\"0.01\" min=\"0\" placeholder=\"0\"" + roAttr + "></td>" +
+          "<td><input type=\"number\" class=\"ps-amt\" step=\"0.01\" min=\"0\" placeholder=\"0\" title=\"Amount\"" + roAttr + "></td>" +
+          lastCell;
         tb.appendChild(tr);
         var onDate = tr.querySelector(".ps-ondate");
         if (onDate) onDate.value = preset && preset.onDate ? String(preset.onDate) : orderDateVal;
@@ -5589,19 +6345,48 @@
           if (l && preset.lessWt != null && preset.lessWt !== "") l.value = String(preset.lessWt);
           var rt = tr.querySelector(".ps-rate");
           if (rt && preset.rate != null && preset.rate !== "") rt.value = String(preset.rate);
+          var st = tr.querySelector(".ps-stamp");
+          if (st && preset.stamp != null && preset.stamp !== "") st.value = String(preset.stamp);
         }
         var btn = tr.querySelector("button");
+        var netIn = tr.querySelector(".ps-net");
+        var amtIn = tr.querySelector(".ps-amt");
         function recalc() { recalcPurchaseSheetRow(tr); }
-        ["input", "change", "blur"].forEach(function (ev) {
-          tr.querySelector(".ps-gross").addEventListener(ev, recalc);
-          tr.querySelector(".ps-less").addEventListener(ev, recalc);
-          tr.querySelector(".ps-rate").addEventListener(ev, recalc);
-        });
-        if (btn) btn.addEventListener("click", function () {
-          tr.remove();
-          updatePurchaseSheetTotalDisplay();
-        });
+        if (!ro) {
+          ["input", "change", "blur"].forEach(function (ev) {
+            tr.querySelector(".ps-gross").addEventListener(ev, recalc);
+            tr.querySelector(".ps-less").addEventListener(ev, recalc);
+            tr.querySelector(".ps-rate").addEventListener(ev, recalc);
+          });
+          function syncAmtFromNet() {
+            if (!netIn || !amtIn) return;
+            var n = parsePurchaseSheetWeight(netIn);
+            var r = parsePurchaseSheetWeight(tr.querySelector(".ps-rate"));
+            amtIn.value = (n * r).toFixed(2);
+            updatePurchaseSheetTotalDisplay();
+          }
+          ["input", "change", "blur"].forEach(function (ev) {
+            if (netIn) netIn.addEventListener(ev, syncAmtFromNet);
+          });
+          ["input", "change", "blur"].forEach(function (ev) {
+            if (amtIn) amtIn.addEventListener(ev, function () { updatePurchaseSheetTotalDisplay(); });
+          });
+          if (btn) btn.addEventListener("click", function () {
+            tr.remove();
+            updatePurchaseSheetTotalDisplay();
+          });
+        }
         recalc();
+        if (preset) {
+          if (netIn && preset.netWt != null && preset.netWt !== "") netIn.value = String(preset.netWt);
+          if (amtIn && preset.amount != null && preset.amount !== "") amtIn.value = String(preset.amount);
+          else if (!ro && netIn && amtIn) {
+            var n = parsePurchaseSheetWeight(netIn);
+            var r = parsePurchaseSheetWeight(tr.querySelector(".ps-rate"));
+            amtIn.value = (n * r).toFixed(2);
+            updatePurchaseSheetTotalDisplay();
+          }
+        }
       }
 
       function wirePurchaseSheetOpenButton() {
@@ -5624,6 +6409,7 @@
 
       function openPurchaseSheet(source) {
         activePurchaseSheetSource = source === "new-order" ? "new-order" : "ready-extra";
+        advancePurchasePopupReadOnly = activePurchaseSheetSource === "new-order";
         if (!custName || !billNo) {
           if (!initElements()) {
             alert("Form not initialized. Please refresh the page.");
@@ -5640,6 +6426,9 @@
         }
         var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
         if (!popup) return;
+        popup.classList.toggle("purchase-sheet-popup--readonly", advancePurchasePopupReadOnly);
+        var hintEl = popup.querySelector("#rex-purchase-popup-readonly-hint");
+        if (hintEl) hintEl.style.display = advancePurchasePopupReadOnly ? "block" : "none";
         var titleEl = popup.querySelector("#rex-purchase-popup-title");
         if (titleEl) {
           titleEl.textContent = activePurchaseSheetSource === "new-order"
@@ -5660,8 +6449,14 @@
 
       function closePurchaseSheetPopup() {
         var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
-        if (popup) popup.style.display = "none";
+        if (popup) {
+          popup.style.display = "none";
+          popup.classList.remove("purchase-sheet-popup--readonly");
+        }
+        var hintEl = popup && popup.querySelector("#rex-purchase-popup-readonly-hint");
+        if (hintEl) hintEl.style.display = "none";
         activePurchaseSheetSource = "ready-extra";
+        advancePurchasePopupReadOnly = false;
       }
 
       function openRateBook(rowElement = null) {
@@ -6216,10 +7011,7 @@
       function updatePaymentPanel() {
         if (!billNo || !billNo.value) return;
 
-        // Total panel: **col 9 (Est. Total)** only. Est. Total (Final) panel: **col 15** only.
-        let estOrderCol9 = 0;
-        let estSaleCol9 = 0;
-        let estPurchaseCol9 = 0;
+        // Total section (Final col 15): breakdown — Sub total → both purchase sheets / advance / rate → Net Balance → paid / legacy table purchase → Pending balance Net Total Amount
         let finalOrderTotal = 0;
         let finalSaleTotal = 0;
         let finalPurchaseTotal = 0;
@@ -6228,18 +7020,13 @@
           itemBody.querySelectorAll("tr").forEach(r => {
             const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
             const type = typeSelect ? typeSelect.value : "Other";
-            const estOnly = getReadyOrderRowEstCol9(r);
             const finOnly = getReadyOrderRowFinalCol15(r);
 
             if (type === "Purchase") {
-              estPurchaseCol9 += estOnly;
               finalPurchaseTotal += finOnly;
             } else if (type === "Sale") {
-              estSaleCol9 += estOnly;
               finalSaleTotal += finOnly;
             } else {
-              // Order, Other, Repair, legacy — same bucket as before Repair line was removed from UI
-              estOrderCol9 += estOnly;
               finalOrderTotal += finOnly;
             }
           });
@@ -6248,8 +7035,6 @@
         const newOrderPurchaseRupees = getNewOrderPurchaseSheetTotal(billNo.value);
         const readyExtraPurchaseRupees = getSavedPurchaseSheetTotal(billNo.value);
         const combinedPurchaseSheets = newOrderPurchaseRupees + readyExtraPurchaseRupees;
-        const estPurchaseCombined = estPurchaseCol9 + combinedPurchaseSheets;
-        const estTotalNetMain = estOrderCol9 + estSaleCol9 - estPurchaseCombined;
 
         const rateDiffStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
         const rateDiffVal = parseRateDiffFromStored(rateDiffStored);
@@ -6257,31 +7042,15 @@
 
         const advanced = getPaidAmount(billNo.value, 'Advanced');
         const paid = getPaidAmount(billNo.value, 'Paid');
-        // Paid line = sum of all payment rows (matches new-order.html getPaidAmount + panelPaid). Purchase is not added here — it's already subtracted in Net Bill Total.
-        const totalPaymentsApplied = getPaidAmount(billNo.value);
 
-        // Total section (Final col 15): breakdown — Sub total → both purchase sheets / advance / rate → Net Balance → paid / legacy table purchase → Pending balance Net Total Amount
         const subTotalFinal = finalOrderTotal + finalSaleTotal;
         const netBalanceMid = subTotalFinal - combinedPurchaseSheets - advanced - rateDiffAbs;
         const netTotalAmount = netBalanceMid - paid - finalPurchaseTotal;
-
-        // Est. Total section: Balance must follow **col 9** (same as Net Bill Total), not col 15 — otherwise
-        // opening from All Bill / mixed New Order rows shows stale Final totals and wrong Balance (e.g. ₹104704 vs ₹144280).
-        const balanceFromEstNet = estTotalNetMain - totalPaymentsApplied;
 
         const root = getSearchRoot();
         const pickPanelEl = function (sel) {
           return (root && root.querySelector(sel)) || document.querySelector(sel);
         };
-        const setPanel = function (id, text) {
-          var el = pickPanelEl(id);
-          if (el) el.textContent = text;
-        };
-        setPanel("#panelOrderTotal", formatCurrency(estOrderCol9 + estSaleCol9));
-        setPanel("#panelPurchaseTotal", formatCurrency(estPurchaseCombined));
-        setPanel("#panelBillTotal", formatCurrency(estTotalNetMain));
-        setPanel("#panelAdvanced", formatCurrency(totalPaymentsApplied));
-        setPanel("#panelBalance", formatCurrency(balanceFromEstNet));
 
         const panelWrap = pickPanelEl("#panelPurchaseSaleDetailWrap");
         const orderAddEl = pickPanelEl("#panelOrderAdd");
@@ -6346,13 +7115,11 @@
               const isAdv = isAdvancedPaymentRecord(p);
               const advAttr = isAdv ? ' data-payment-advanced="1"' : '';
               const advClass = isAdv ? ' panel-item-advanced' : '';
-              const editBtn = isAdv ? '' : `<button type="button" class="edit-payment-btn" onclick="event.stopPropagation(); openPaymentCardEdit(this);" title="Edit payment">✏️</button>`;
               html += `
           <div class="panel-item${advClass}"${advAttr} data-payment-key="${String(payKey).replace(/"/g, '&quot;')}" data-payment-timestamp="${(p.timestamp || '').replace(/"/g, '&quot;')}" data-bill-no="${(billNoVal || '').replace(/"/g, '&quot;')}">
             <div class="panel-item-header">
               <span class="payment-amount">${formatCurrency(p.amount)}</span>
               <span class="payment-mode">${p.mode || 'Cash'}</span>
-              ${editBtn}
             </div>
             <div class="panel-item-detail payment-date">${date} — ${narration}</div>
           </div>
@@ -6893,10 +7660,17 @@
         window.closePopup = closePopup;
         window.calculatePaymentBalance = calculatePaymentBalance;
         window.closePaymentPopup = closePaymentPopup;
+        window.openAdvancedPaymentsPopup = openAdvancedPaymentsPopup;
+        window.closeAdvancedPaymentsPopup = closeAdvancedPaymentsPopup;
+        window.openPaidPaymentsPopup = openPaidPaymentsPopup;
+        window.closePaidPaymentsPopup = closePaidPaymentsPopup;
         window.savePaymentFromPopup = savePaymentFromPopup;
         window.openPaymentCardEdit = openPaymentCardEdit;
         window.savePaymentCardEdit = savePaymentCardEdit;
         window.cancelPaymentCardEdit = cancelPaymentCardEdit;
+        window.openPaymentDetailTableEdit = openPaymentDetailTableEdit;
+        window.savePaymentDetailTableEdit = savePaymentDetailTableEdit;
+        window.cancelPaymentDetailTableEdit = cancelPaymentDetailTableEdit;
         window.saveRateBook = saveRateBook;
         window.closeRateBookPopup = closeRatebookPopup;
         window.closeRatebookPopup = closeRatebookPopup;
@@ -6964,7 +7738,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();

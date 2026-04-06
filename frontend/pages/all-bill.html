@@ -282,14 +282,11 @@
 
   <div class="balance-wrap">
 
-    <!-- All Bill = bill ledger (customerBalances). One row per bill. Edit / Transfer / Remove. Different from Customer Balance = one row per customer (customers). -->
+    <!-- All Bill = bill ledger (customerBalances). One row per bill. Edit. Different from Customer Balance = one row per customer (customers). -->
     <div class="balance-toolbar">
       <h2>All Bill</h2>
-      <span style="font-size:14px; color:#6e6e73;">One row per bill — Edit, Transfer to customer, Remove</span>
+      <span style="font-size:14px; color:#6e6e73;">One row per bill — Edit</span>
       <button class="btn" onclick="loadBalances()">🔄 Refresh</button>
-
-      <button class="btn" type="button" onclick="transferAllToCustomerBalance()"
-        title="Transfer all untransferred bills to Customer Balance">Transfers</button>
 
       <label>Customer</label>
       <input type="text" id="customerFilter" onkeyup="filterTable()" placeholder="Filter by customer...">
@@ -532,8 +529,6 @@
           row.dataset.balanceTimestamp = balance.timestamp || "";
           row.dataset.orderNo = balance.orderNo || "";
           const typeVal = (balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order");
-          const custEsc = (balance.customer || "").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-
           // Overall customer balance: used for Clear / Pending status only (Balance column = Net amount per bill)
           const overallBal = getCustomerBalance(balance.customer);
 
@@ -635,7 +630,6 @@
         <td class="center">
           <div class="action-buttons">
             <button onclick="editBill(${index}, '${balance.timestamp || ''}')" style="padding:4px 10px; border-radius:6px; border:none; background:#0d6efd; color:#fff; font-size:11px; cursor:pointer; font-weight:500;">Edit</button>
-            <button onclick="removeBill(${index}, '${balance.timestamp || ''}', '${custEsc}')" style="padding:4px 10px; border-radius:6px; border:none; background:#dc3545; color:#fff; font-size:11px; cursor:pointer; font-weight:500;">Remove</button>
           </div>
         </td>
       `;
@@ -825,58 +819,6 @@
     }, 1000);
 
     /* =========================
-       REMOVE BILL FUNCTION
-    ========================= */
-    function removeBill(balanceIndex, timestamp, customerName) {
-      try {
-        // Confirm deletion
-        if (!confirm(`Are you sure you want to DELETE this bill entry${customerName ? ' for customer "' + customerName + '"' : ''}? This action cannot be undone.`)) {
-          return;
-        }
-
-        const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-
-        // Find balance entry by timestamp (most reliable) or index
-        let balanceEntryIndex = -1;
-        if (timestamp) {
-          balanceEntryIndex = balances.findIndex(b => b.timestamp === timestamp);
-        } else if (balanceIndex >= 0 && balanceIndex < balances.length) {
-          balanceEntryIndex = balanceIndex;
-        }
-
-        if (balanceEntryIndex === -1) {
-          alert("Bill entry not found");
-          return;
-        }
-
-        // Remove the entry
-        balances.splice(balanceEntryIndex, 1);
-
-        // Save updated balances
-        localStorage.setItem("customerBalances", JSON.stringify(balances));
-
-        // Reload the table
-        loadBalances();
-
-        // Dispatch event to refresh other pages
-        const refreshEvent = new CustomEvent('customerBalancesUpdated', {});
-        window.dispatchEvent(refreshEvent);
-        if (window.parent && window.parent !== window) {
-          window.parent.dispatchEvent(refreshEvent);
-        }
-        if (window.top && window.top !== window) {
-          window.top.dispatchEvent(refreshEvent);
-        }
-
-        alert("Bill entry removed successfully");
-
-      } catch (e) {
-        console.error("Error removing bill:", e);
-        alert("Error removing bill entry: " + (e.message || String(e)));
-      }
-    }
-
-    /* =========================
        EDIT BILL FUNCTION
     ========================= */
     function editBill(balanceIndex, timestamp) {
@@ -981,302 +923,6 @@
     }
 
     /* =========================
-       SYNC BILL TO STATEMENT (Private Helper)
-    ========================= */
-    function syncBillToStatement(customer, bill, billNoVal) {
-      if (!customer || !billNoVal) return;
-
-      const stmtKey = 'stmt_' + (customer.lfno || customer.name);
-      let transactions = [];
-      try {
-        transactions = JSON.parse(localStorage.getItem(stmtKey) || "[]");
-      } catch (e) { transactions = []; }
-
-      // Prevent duplicate bill entry in statement
-      if (transactions.some(t => t.narration && t.narration.includes(billNoVal) && t.debit > 0)) return;
-
-      let nextId = transactions.length > 0 ? Math.max(...transactions.map(t => t.id || 0)) + 1 : 1;
-      const dateVal = bill.date || new Date().toISOString().split("T")[0];
-
-      // 1. Add Bill Debit entry (Total)
-      const billTotal = parseFloat(bill.netAmount || bill.amount || bill.totalAmount || 0);
-      transactions.push({
-        id: nextId++,
-        date: dateVal,
-        narration: "Bill No: " + billNoVal,
-        debit: billTotal,
-        credit: 0,
-        cleared: false
-      });
-
-      // 2. Add Payments Credit entries
-      const advanced = getPaidAmount(billNoVal, 'Advanced');
-      const paid = getPaidAmount(billNoVal, 'Paid');
-
-      if (advanced > 0) {
-        transactions.push({
-          id: nextId++,
-          date: dateVal,
-          narration: "Advanced for Bill " + billNoVal,
-          debit: 0,
-          credit: advanced,
-          cleared: false
-        });
-      }
-      if (paid > 0) {
-        transactions.push({
-          id: nextId++,
-          date: dateVal,
-          narration: "Paid (minus) for Bill " + billNoVal,
-          debit: 0,
-          credit: paid,
-          cleared: false
-        });
-      }
-
-      localStorage.setItem(stmtKey, JSON.stringify(transactions));
-
-      // 3. Update customer currentBalance according to statement logic
-      let balance = parseFloat(customer.openingBalance || 0);
-      transactions.forEach(tx => {
-        balance += (tx.debit || 0) - (tx.credit || 0);
-      });
-      customer.currentBalance = Math.abs(balance);
-      customer.currentBalanceType = balance >= 0 ? 'Dr' : 'Cr';
-    }
-
-    /* =========================
-       EDIT BILL FUNCTION
-    ========================= */
-
-    /* =========================
-       TRANSFER ALL TO CUSTOMER BALANCE (Toolbar button)
-    ========================= */
-    function transferAllToCustomerBalance() {
-      try {
-        const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-        const indices = [];
-        balances.forEach((b, i) => {
-          if (!b.transferred && b.customer && (b.customer || "").trim()) indices.push(i);
-        });
-        if (indices.length === 0) {
-          alert("No untransferred bills to transfer. All bills are already saved to Customer Balance.");
-          return;
-        }
-        if (!confirm("Transfer " + indices.length + " bill(s) to Customer Balance?")) return;
-
-        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-        const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-        let transferredCount = 0;
-
-        indices.forEach(index => {
-          const bill = balances[index];
-          if (!bill || bill.transferred) return;
-          const fullOrder = orders.find(o => o.orderNo === bill.orderNo || o.id === bill.orderNo);
-          const fullBill = bills.find(b => b.billNo === bill.orderNo);
-          const phone = fullOrder?.customerId || fullBill?.customerId || bill.phone || "—";
-          const mobile = fullOrder?.mobile || fullBill?.mobile || bill.mobile || phone;
-          const station = fullOrder?.station || fullBill?.station || bill.station || "—";
-          const relation = fullOrder?.relation || fullBill?.relation || bill.relation || "—";
-          const relationName = fullOrder?.relationName || fullBill?.relationName || bill.relationName || "—";
-          const lfno = fullOrder?.lfno || fullBill?.lfno || bill.lfno || "—";
-          const cid = fullOrder?.cid || fullBill?.cid || bill.cid || "—";
-          const custNameNorm = (bill.customer || "").trim().toLowerCase();
-          let customer = customers.find(c => (c.name || "").trim().toLowerCase() === custNameNorm);
-          const amountVal = parseFloat(bill.amount || 0);
-
-          if (customer) {
-            if (!customer.transferredBills) customer.transferredBills = [];
-            if (customer.transferredBills.includes(bill.orderNo)) return;
-
-            // Sync to statement and update currentBalance
-            syncBillToStatement(customer, bill, bill.orderNo);
-
-            customer.transferredBills.push(bill.orderNo);
-            customer.timestamp = new Date().toISOString();
-            if ((!customer.phone || customer.phone === "—") && phone !== "—") customer.phone = phone;
-            if ((!customer.mobile || customer.mobile === "—") && mobile !== "—") customer.mobile = mobile;
-            if ((!customer.station || customer.station === "—") && station !== "—") customer.station = station;
-            if ((!customer.relation || customer.relation === "—") && relation !== "—") customer.relation = relation;
-            if ((!customer.relationName || customer.relationName === "—") && relationName !== "—") customer.relationName = relationName;
-            if ((!customer.lfno || customer.lfno === "—") && lfno !== "—") customer.lfno = lfno;
-            if ((!customer.cid || customer.cid === "—") && cid !== "—") customer.cid = cid;
-          } else {
-            customer = {
-              cid: cid,
-              name: bill.customer,
-              openingBalance: "0.00", // Keep opening 0, let syncBillToStatement set currentBalance
-              phone: phone,
-              mobile: mobile,
-              station: station,
-              relation: relation,
-              relationName: relationName,
-              lfno: lfno,
-              timestamp: new Date().toISOString(),
-              openingDate: bill.date || new Date().toISOString().split("T")[0],
-              transferredBills: [bill.orderNo]
-            };
-            syncBillToStatement(customer, bill, bill.orderNo);
-            customers.push(customer);
-          }
-          bill.transferred = true;
-          balances[index] = bill;
-          transferredCount++;
-        });
-
-        localStorage.setItem("customers", JSON.stringify(customers));
-        localStorage.setItem("customerBalances", JSON.stringify(balances));
-        window.dispatchEvent(new CustomEvent("customersUpdated"));
-        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
-        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
-        window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
-        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
-        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
-        loadBalances();
-        alert("Transferred " + transferredCount + " bill(s) to Customer Balance.");
-      } catch (e) {
-        console.error("Transfer all failed:", e);
-        alert("Transfer failed: " + (e && e.message ? e.message : String(e)));
-      }
-    }
-
-    /* =========================
-       TRANSFER BILL FUNCTION
-    ========================= */
-    function transferBill(index) {
-      try {
-        const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-        const bill = balances[index];
-
-        if (!bill) {
-          alert("Bill not found!");
-          return;
-        }
-
-        if (bill.transferred) {
-          alert("This bill has already been transferred.");
-          return;
-        }
-
-        if (!bill.customer || !bill.customer.trim()) {
-          alert("This bill has no customer name. Cannot transfer.");
-          return;
-        }
-
-        if (!confirm(`Transfer Bill Amount (₹ ${bill.amount}) to Customer Balance for "${bill.customer}"?`)) {
-          return;
-        }
-
-        // 1. LOOKUP FULL ORDER/BILL DETAILS
-        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-        const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-
-        // Try to find the full order or bill record
-        const fullOrder = orders.find(o => o.orderNo === bill.orderNo || o.id === bill.orderNo);
-        const fullBill = bills.find(b => b.billNo === bill.orderNo);
-
-        // Extract all available details (prefer order, fallback to bill, then defaults)
-        const phone = fullOrder?.customerId || fullBill?.customerId || bill.phone || "—";
-        const mobile = fullOrder?.mobile || fullBill?.mobile || bill.mobile || phone;
-        const station = fullOrder?.station || fullBill?.station || bill.station || "—";
-        const relation = fullOrder?.relation || fullBill?.relation || bill.relation || "—";
-        const relationName = fullOrder?.relationName || fullBill?.relationName || bill.relationName || "—";
-        const lfno = fullOrder?.lfno || fullBill?.lfno || bill.lfno || "—";
-        const cid = fullOrder?.cid || fullBill?.cid || bill.cid || "—";
-
-        // 2. FIND OR CREATE CUSTOMER
-        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
-        const custNameNorm = (bill.customer || "").trim().toLowerCase();
-        let customer = customers.find(c => (c.name || "").trim().toLowerCase() === custNameNorm);
-
-        const amountVal = parseFloat(bill.amount || 0);
-
-        if (customer) {
-          // CHECK DUPLICATE
-          if (!customer.transferredBills) customer.transferredBills = [];
-          if (customer.transferredBills.includes(bill.orderNo)) {
-            alert("This Bill No (" + bill.orderNo + ") has already been transferred to this customer.");
-            return;
-          }
-
-          // Sync to statement and update currentBalance
-          syncBillToStatement(customer, bill, bill.orderNo);
-
-          customer.transferredBills.push(bill.orderNo);
-          customer.timestamp = new Date().toISOString();
-
-          // Update missing fields with data from this transfer
-          if ((!customer.phone || customer.phone === "—") && phone !== "—") customer.phone = phone;
-          if ((!customer.mobile || customer.mobile === "—") && mobile !== "—") customer.mobile = mobile;
-          if ((!customer.station || customer.station === "—") && station !== "—") customer.station = station;
-          if ((!customer.relation || customer.relation === "—") && relation !== "—") customer.relation = relation;
-          if ((!customer.relationName || customer.relationName === "—") && relationName !== "—") customer.relationName = relationName;
-          if ((!customer.lfno || customer.lfno === "—") && lfno !== "—") customer.lfno = lfno;
-          if ((!customer.cid || customer.cid === "—") && cid !== "—") customer.cid = cid;
-
-          alert(`Updated existing customer "${customer.name}".\nNew Balance: ₹ ${customer.currentBalance} (${customer.currentBalanceType})`);
-        } else {
-          // Create new customer with all available data
-          customer = {
-            cid: cid,
-            name: bill.customer,
-            openingBalance: "0.00",
-            phone: phone,
-            mobile: mobile,
-            station: station,
-            relation: relation,
-            relationName: relationName,
-            lfno: lfno,
-            timestamp: new Date().toISOString(),
-            openingDate: bill.date || new Date().toISOString().split("T")[0],
-            transferredBills: [bill.orderNo]
-          };
-          syncBillToStatement(customer, bill, bill.orderNo);
-          customers.push(customer);
-          alert(`Created new customer "${customer.name}" and transferred bill.`);
-        }
-
-        // 3. SAVE DATA
-        localStorage.setItem("customers", JSON.stringify(customers));
-
-        // Mark Bill as Transferred
-        bill.transferred = true;
-        balances[index] = bill;
-        localStorage.setItem("customerBalances", JSON.stringify(balances));
-
-        // 4. DISPATCH EVENTS
-        const event = new CustomEvent('customersUpdated');
-        window.dispatchEvent(event);
-        if (window.parent && window.parent !== window) {
-          window.parent.dispatchEvent(event);
-        }
-        if (window.top && window.top !== window) {
-          window.top.dispatchEvent(event);
-        }
-
-        // 5. NAVIGATE TO CUSTOMER BALANCE PAGE
-        setTimeout(() => {
-          if (typeof loadPage === 'function') {
-            loadPage("pages/customer-balance.html");
-          } else if (window.parent && typeof window.parent.loadPage === 'function') {
-            window.parent.loadPage("pages/customer-balance.html");
-          } else if (window.top && typeof window.top.loadPage === 'function') {
-            window.top.loadPage("pages/customer-balance.html");
-          } else {
-            window.location.href = "customer-balance.html";
-          }
-        }, 500);
-
-      } catch (e) {
-        console.error("Transfer failed:", e);
-        alert("Error transferring bill: " + (e.message || e));
-      }
-    }
-
-
-
-    /* =========================
        ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE
     ========================= */
     function ensureFunctionsGlobal() {
@@ -1287,9 +933,6 @@
       window.initBalancePage = initBalancePage;
       window.initElements = initElements;
       window.editBill = editBill;
-      window.transferBill = transferBill;
-      window.transferAllToCustomerBalance = transferAllToCustomerBalance;
-      window.removeBill = removeBill;
     }
 
     ensureFunctionsGlobal();
