@@ -651,6 +651,7 @@
             <th>Job Worker</th>
             <th>Order No</th>
             <th>Order Date</th>
+            <th>Ready Date</th>
             <th>Customer</th>
             <th>Relation Name</th>
             <th class="right">Weight (g)</th>
@@ -1066,6 +1067,7 @@
     </td>
     <td><strong>${order.orderNo || order.billNo || "\u2014"}</strong></td>
     <td>${formatDate(order.orderDate || order.date)}</td>
+    <td>${formatDate(order.readyDate || order.readyAt || order.timestamp || order.orderDate || order.date)}</td>
     <td>${customerName}</td>
     <td>${relationName}</td>
     <td class="right">${displayWeight.toFixed(3)}</td>
@@ -1129,7 +1131,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
     <tr>
-      <td colspan="13" style="border:none;">
+      <td colspan="12" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">⚠️</div>
           <div class="empty-state-text">Error Loading Orders</div>

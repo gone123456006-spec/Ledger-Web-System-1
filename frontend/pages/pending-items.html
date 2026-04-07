@@ -1344,6 +1344,7 @@
             <th class="center">Status</th>
             <th class="right">Qty</th>
             <th>Item Name</th>
+            <th>Stamp</th>
             <th>Sample Details</th>
             <th>Design</th>
             <th>Size</th>
@@ -1770,6 +1771,7 @@
               orderId: order.id, itemIdx: idx,
               qty: parseFloat(v[7]) || 0,
               itemName: (v[2] || '').trim() || '—',
+              stamp: (v[3] || '').trim() || '—',
               sampleDetails: item.sample || order.sampleDetails || '—',
               design: (v[5] || '').trim() || '—',
               size: (v[6] || '').trim() || '—',
@@ -1786,7 +1788,7 @@
         });
 
         if (rows.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="15" style="border:none;">
+          tbody.innerHTML = `<tr><td colspan="16" style="border:none;">
                 <div class="empty-state">
             <div class="icon">⏳</div>
             <div class="title">No Pending Items</div>
@@ -1828,6 +1830,7 @@
             </td>
             <td class="right">${r.qty}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.itemName)}</td>
+            <td>${esc(r.stamp)}</td>
             <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.sampleDetails)}</td>
             <td>${esc(r.design)}</td>
             <td>${esc(r.size)}</td>
@@ -1848,7 +1851,7 @@
         applyTableFilters(); updateUI();
       } catch (e) {
         console.error(e);
-        tbody.innerHTML = `<tr><td colspan="15"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
         ftText.textContent = 'Error';
       }
     }
