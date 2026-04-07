@@ -3996,9 +3996,31 @@
       function getNewOrderPurchaseSheetRecord(billNoVal) {
         var map = readNewOrderPurchaseSheetsMap();
         var k1 = billNoVal ? String(billNoVal).trim() : "";
-        if (k1 && map[k1]) return map[k1];
         var k2 = window.sgjBillNo && window.sgjBillNo.value ? String(window.sgjBillNo.value).trim() : "";
-        if (k2 && map[k2]) return map[k2];
+
+        // New Order purchase sheets are keyed by the New Order bill number; older flows sometimes used
+        // variations like "SGJ/0/0003" vs "0/0003". Try a few safe fallbacks.
+        var candidates = [];
+        [k1, k2, billNoVal].forEach(function (k) {
+          if (!k) return;
+          var s = String(k).trim();
+          if (!s) return;
+          candidates.push(s);
+          // Strip leading "SGJ/" (case-insensitive)
+          candidates.push(s.replace(/^SGJ\//i, ""));
+          // Also try dropping the first segment (e.g. "SGJ/0/0003" -> "0/0003")
+          var parts = s.split("/").filter(Boolean);
+          if (parts.length >= 2) candidates.push(parts.slice(1).join("/"));
+          if (parts.length >= 1) candidates.push(parts[parts.length - 1]); // last segment
+        });
+        // Deduplicate while keeping order
+        var seen = {};
+        for (var i = 0; i < candidates.length; i++) {
+          var key = candidates[i];
+          if (!key || seen[key]) continue;
+          seen[key] = true;
+          if (map[key]) return map[key];
+        }
         return null;
       }
 
