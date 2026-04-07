@@ -2101,8 +2101,8 @@
         title="Ready / Extra purchase sheet (saved here for this bill)"> Purchase</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button type="button" class="btn-bill" onclick="onBillButtonClick()"
-        title="Bill view (preview only) + save to Ready Orders. Open from Ready Orders and Save once to post to All Bill + Customer Balance."> Bill</button>
-      <button type="button" onclick="saveOrder()" title="Save to Ready Orders. If this order was saved after Bill view, saving from Ready Orders edit will post to All Bill + Customer Balance."> Save</button>
+        title="Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."> Bill</button>
+      <button type="button" onclick="saveOrder()" title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only."> Save</button>
       <button onclick="showInvoice()"> A4 Invoice</button>
       <button onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
     </div>
@@ -2713,6 +2713,8 @@
       var activeRow = null;
       /** When true, Ut. Wt.–Est. Total columns are hidden; persisted on save (bills / customer balance). */
       var billMidColumnsHidden = false;
+      /** Set true only when user taps Bill (UI preview). Next Save uses All Bill finalization and skips Ready Orders. Cleared on Order view restore or after successful finalize. */
+      var billButtonPendingAllBillSave = false;
 
       (function hideOtherPagesPopupsOnInit() {
         var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-advanced-payments-popup', 'ready-order-paid-payments-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
@@ -2774,6 +2776,7 @@
 
       function applyBillMidColumnsHidden(hidden) {
         billMidColumnsHidden = !!hidden;
+        if (!billMidColumnsHidden) billButtonPendingAllBillSave = false;
         var root = getSearchRoot();
         var tbl = getReadyOrderItemTableEl();
         if (tbl) tbl.classList.toggle("ready-order-bill-hide-mid", billMidColumnsHidden);
@@ -2795,8 +2798,7 @@
 
       function onBillButtonClick() {
         applyBillMidColumnsHidden(true);
-        /* Preview only — do NOT post to All Bill here. */
-        saveOrder(false, false, null, null, null, { readyOnly: true });
+        billButtonPendingAllBillSave = true;
       }
 
       /* INIT */
@@ -4730,8 +4732,9 @@
       window.transferToCustomerBalance = transferToCustomerBalance;
 
       /* SAVE ORDER
-       * Save / Save & New: writes `orders` only with status READY (Ready Orders list). No `bills` or customerBalances.
-       * Bill button & transfer: finalizeToAllBill — full write to bills + customerBalances, remove from orders (All Bill flow).
+       * Save (normal): writes `orders` with status READY (Ready Orders). No `bills` or customerBalances.
+       * After Bill (UI) + Save: finalizeToAllBill — bills + customerBalances, remove from `orders` (not written to Ready in that save).
+       * Transfer / explicit finalize: same All Bill path.
        */
       function saveOrder(resetAfterSave = false, silent = false, targetCustOverride = null, dateOverride = null, narrationOverride = null, opts) {
         opts = opts || {};
@@ -4784,7 +4787,11 @@
           existingOrder = orders[existingOrderIndex];
         }
 
-        /* After Bill+Save to Ready, order has billStagedForAllBill. Save from Ready Orders edit (not readyOnly) finalizes to All Bill + customerBalances. */
+        /* Bill button is UI-only; when user then clicks Save, finalize to All Bill and do not write Ready Orders. */
+        if (!finalizeToAllBill && billButtonPendingAllBillSave) {
+          finalizeToAllBill = true;
+        }
+        /* Legacy: order was staged for All Bill from Ready Orders edit (billStagedForAllBill). */
         if (!finalizeToAllBill && !readyOnly && editOrderId && existingOrder && existingOrder.billStagedForAllBill) {
           finalizeToAllBill = true;
         }
@@ -5238,6 +5245,8 @@
         // Clear session bill number so next new order gets a fresh auto-incremented number
         clearSessionBillNo();
         if (typeof clearSessionSgjBillNo === "function") clearSessionSgjBillNo();
+
+        billButtonPendingAllBillSave = false;
 
         if (!silent) alert("Bill Save Successfully");
 
