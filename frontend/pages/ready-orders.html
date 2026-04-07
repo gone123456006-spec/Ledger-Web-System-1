@@ -650,7 +650,6 @@
             <th>Status</th>
             <th>Job Worker</th>
             <th>Order No</th>
-            <th>Bill No.</th>
             <th>Order Date</th>
             <th>Customer</th>
             <th>Relation Name</th>
@@ -1066,7 +1065,6 @@
           : jobWorkerDisplay}
     </td>
     <td><strong>${order.orderNo || order.billNo || "\u2014"}</strong></td>
-    <td><strong style="color:#1d6fa8;">${order.sgjBillNo || '—'}</strong></td>
     <td>${formatDate(order.orderDate || order.date)}</td>
     <td>${customerName}</td>
     <td>${relationName}</td>
@@ -1114,7 +1112,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
     <tr>
-      <td colspan="13" style="border:none;">
+      <td colspan="12" style="border:none;">
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-text">No Ready Orders</div>
@@ -1229,6 +1227,10 @@
         localStorage.removeItem("editOrderPayload");
         localStorage.removeItem("editCustomerReadOnly");
         localStorage.removeItem("selectedCustomerData");
+        localStorage.removeItem("readyExtraOrderState");
+        localStorage.removeItem("ratebookOpened");
+        localStorage.removeItem("receiptOpened");
+        localStorage.removeItem("readyExtraForceRestore");
 
         // Store order ID for ready-extra-order.html
         localStorage.setItem("editOrderId", String(orderId));

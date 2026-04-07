@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>GST Order</title>
+  <title>Bill Invoice</title>
 
   <style>
     /* =====================================================
@@ -259,6 +259,31 @@
       max-width: 100%;
     }
 
+    /* Other column: extra compact */
+    #ready-order-item-table td.other-col input {
+      padding: 3px 4px;
+      font-size: 11px;
+      max-width: 100%;
+    }
+
+    /* Making compact */
+    #ready-order-item-table thead th:nth-child(15),
+    #ready-order-item-table tbody td:nth-child(15) {
+      width: 54px;
+    }
+
+    /* Other smaller */
+    #ready-order-item-table thead th:nth-child(16),
+    #ready-order-item-table tbody td:nth-child(16) {
+      width: 44px;
+    }
+
+    /* Keep Total column compact too */
+    #ready-order-item-table thead th:nth-child(17),
+    #ready-order-item-table tbody td:nth-child(17) {
+      width: 112px;
+    }
+
     table input,
     table select {
       width: 100%;
@@ -338,6 +363,74 @@
       box-sizing: border-box;
       border-radius: 0;
       border: 1px solid var(--border, #dee2e6);
+    }
+
+    /* =========================
+       Equal column + row sizing (final override)
+    ========================= */
+    .order-details-table-wrap #ready-order-item-table {
+      table-layout: fixed !important;
+    }
+
+    /* Remove per-column widths so visible columns share space equally */
+    .order-details-table-wrap #ready-order-item-table colgroup col {
+      width: auto !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table thead th,
+    .order-details-table-wrap #ready-order-item-table tbody td {
+      width: auto !important;
+      height: 36px;
+    }
+
+    /* Ensure special cells don't use flex sizing */
+    .order-details-table-wrap #ready-order-item-table td.other-col,
+    .order-details-table-wrap #ready-order-item-table td.total.total-col,
+    .order-details-table-wrap #ready-order-item-table td.making-col {
+      display: table-cell !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+
+    /* Uniform input/select look across columns */
+    .order-details-table-wrap #ready-order-item-table input,
+    .order-details-table-wrap #ready-order-item-table select {
+      height: 32px !important;
+      padding: 0 6px !important;
+      font-size: 13px !important;
+      border-radius: 0 !important;
+    }
+
+    /* Item Name (col 3): slightly wider for readability */
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(3),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(3) {
+      width: 220px !important;
+    }
+
+    /* Total (col 17): wider + bigger input for emphasis */
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(17),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(17) {
+      width: 150px !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table td.total.total-col input {
+      height: 34px !important;
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      padding: 0 10px !important;
+    }
+
+    /* Remove visual gap before the cut (X) column */
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(17),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(17) {
+      padding-right: 0 !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table thead th:last-child,
+    .order-details-table-wrap #ready-order-item-table tbody td:last-child {
+      width: 32px !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
 
     .order-details-table-wrap #itemTable .row-del-btn,
@@ -1880,7 +1973,7 @@
 
   <div class="app no-print ready-order-page" id="orderApp" data-page-root="ready-extra-order" data-bill-mode="0">
 
-    <div class="order-title">GST Order</div>
+    <div class="order-title">Bill Invoice</div>
 
     <!-- TOP -->
     <div class="order-top">
@@ -1989,6 +2082,7 @@
               <th>R. Wt</th>
               <th>Rate</th>
               <th>Making</th>
+              <th>Other</th>
               <th class="total">Total</th>
               <th>❌</th>
             </tr>
@@ -2007,8 +2101,8 @@
         title="Ready / Extra purchase sheet (saved here for this bill)"> Purchase</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button type="button" class="btn-bill" onclick="onBillButtonClick()"
-        title="Post to All Bill and Customer Balance (removes from Ready Orders)"> Bill</button>
-      <button type="button" onclick="saveOrder()" title="Save to Ready Orders list only (not All Bill)"> Save</button>
+        title="Bill view (preview only) + save to Ready Orders. Open from Ready Orders and Save once to post to All Bill + Customer Balance."> Bill</button>
+      <button type="button" onclick="saveOrder()" title="Save to Ready Orders. If this order was saved after Bill view, saving from Ready Orders edit will post to All Bill + Customer Balance."> Save</button>
       <button onclick="showInvoice()"> A4 Invoice</button>
       <button onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
     </div>
@@ -2032,7 +2126,6 @@
         <div class="panel-section">
           <div class="panel-section-header">
             <h3>Payment Summary</h3>
-            <button class="panel-add-btn" onclick="openPayment()">+ Add</button>
           </div>
           <div class="panel-content" id="paymentPanelContent">
             <div class="payment-summary-columns">
@@ -2702,11 +2795,8 @@
 
       function onBillButtonClick() {
         applyBillMidColumnsHidden(true);
-        try {
-          if (typeof saveOrderState === "function") saveOrderState();
-        } catch (e) { }
-        /* Finalize: All Bill + Customer Balance (same as previous default Save behaviour). */
-        saveOrder(false, false, null, null, null, { finalizeToAllBill: true });
+        /* Preview only — do NOT post to All Bill here. */
+        saveOrder(false, false, null, null, null, { readyOnly: true });
       }
 
       /* INIT */
@@ -2945,11 +3035,17 @@
                 updateInfoPanel();
               }, 100);
             }
-            // If ratebook was closed and we have saved state, restore it
+            // If ratebook/receipt flow saved return-state, restore it (avoid overwriting Ready-Order edit loads)
             if (e.key === 'readyExtraOrderState' && e.newValue) {
-              setTimeout(() => {
-                restoreOrderState();
-              }, 200);
+              const isReturnFlow =
+                localStorage.getItem("readyExtraForceRestore") === "true" ||
+                localStorage.getItem("ratebookOpened") === "true" ||
+                localStorage.getItem("receiptOpened") === "true";
+              if (isReturnFlow) {
+                setTimeout(() => {
+                  restoreOrderState();
+                }, 200);
+              }
             }
           });
 
@@ -2966,9 +3062,13 @@
                 updateInfoPanel();
                 updateReceiptPanel();
               }, 200);
-              // Check if we need to restore state
+              // Restore only when returning from ratebook/receipt (not on every tab focus)
               const savedState = localStorage.getItem("readyExtraOrderState");
-              if (savedState) {
+              const isReturnFlowVis =
+                localStorage.getItem("readyExtraForceRestore") === "true" ||
+                localStorage.getItem("ratebookOpened") === "true" ||
+                localStorage.getItem("receiptOpened") === "true";
+              if (savedState && isReturnFlowVis) {
                 setTimeout(() => {
                   restoreOrderState();
                 }, 300);
@@ -2984,7 +3084,11 @@
               updateReceiptPanel();
             }, 100);
             const savedState = localStorage.getItem("readyExtraOrderState");
-            if (savedState) {
+            const isReturnFlowFocus =
+              localStorage.getItem("readyExtraForceRestore") === "true" ||
+              localStorage.getItem("ratebookOpened") === "true" ||
+              localStorage.getItem("receiptOpened") === "true";
+            if (savedState && isReturnFlowFocus) {
               setTimeout(() => {
                 restoreOrderState();
               }, 200);
@@ -3151,11 +3255,11 @@
         return selected ? selected.textContent : "";
       }
 
-      /* Read row values by column index (same as calc: cells[i].children[0]). 0=Type..15=Total. */
+      /* Read row values by column index (same as calc: cells[i].children[0]). 0=Type..16=Total (Other=15). */
       function getReadyOrderRowValues(tr) {
         if (!tr || !tr.cells) return [];
         var out = [];
-        for (var c = 0; c <= 15; c++) {
+        for (var c = 0; c <= 16; c++) {
           var cell = tr.cells[c];
           var el = cell && cell.children && cell.children[0];
           if (el && (el.tagName === "INPUT" || el.tagName === "SELECT"))
@@ -3166,10 +3270,17 @@
         return out;
       }
 
-      /* Set row values by column index. New Order row has 13 inputs: 0–3 Type..Stamp, 4–6 Remark/Design/Size, 7–12 Pc..Est.Total. Ready Order has 16. */
+      /* Set row values by column index. New Order row has 13 inputs: 0–3 Type..Stamp, 4–6 Remark/Design/Size, 7–12 Pc..Est.Total. Ready Order has 17 (Other=15, Total=16). */
       function setReadyOrderRowValues(tr, vals, fromNewOrder, onlyIfEmpty) {
         if (!tr || !tr.cells) return;
         vals = vals || [];
+        // Legacy migration: older saves used 16 values with Total at [15] and no Other.
+        if (!fromNewOrder && vals.length === 16) {
+          vals = vals.slice();
+          var legacyFinal = vals[15];
+          vals[15] = "";
+          vals[16] = legacyFinal;
+        }
         function setCol(cellIdx, val) {
           var cell = tr.cells[cellIdx];
           if (!cell || !cell.children || !cell.children[0]) return;
@@ -3185,17 +3296,15 @@
           var el = cell.children[0];
           if (el.tagName === "INPUT" || el.tagName === "SELECT") el.value = "";
         }
-        var typeVal = vals[0];
-        if (typeVal === "Purchase") typeVal = "Other";
-        setCol(0, typeVal); setCol(1, vals[1]); setCol(2, vals[2]); setCol(3, vals[3]);
+        setCol(0, vals[0]); setCol(1, vals[1]); setCol(2, vals[2]); setCol(3, vals[3]);
         if (fromNewOrder && vals.length === 13) {
           /* New Order: cols 4–6 are Remark/Design/Size; Pc=7, Ut.Wt=8, Est.Total Wt=9, Rate=10, Lbr%=11, Est.Total=12 */
           setCol(4, vals[7]); setCol(5, vals[8]); setCol(6, vals[9]); setCol(7, vals[10]); setCol(8, vals[11]); setCol(9, vals[12]);
-          for (var i = 10; i <= 15; i++) clearCol(i);
+          for (var i = 10; i <= 16; i++) clearCol(i);
         } else {
           setCol(4, vals[4]); setCol(5, vals[5]); setCol(6, vals[6]); setCol(7, vals[7]); setCol(8, vals[8]); setCol(9, vals[9]);
-          /* Ready order: cols 10–15 are R. Metal, Neg, R. Wt, Rate, Making, Total – restore from saved values */
-          for (var i = 10; i <= 15; i++) setCol(i, vals[i]);
+          /* Ready order: cols 10–16 are R. Metal, Neg, R. Wt, Rate, Making, Other, Total – restore from saved values */
+          for (var i = 10; i <= 16; i++) setCol(i, vals[i]);
         }
       }
 
@@ -3209,8 +3318,8 @@
         tr.innerHTML = `
 <td>
   <select onchange="handleTypeChange(this)">
-    <option selected>Other</option>
-    <option>Sale</option>
+    <option value="Other" selected>Other</option>
+    <option value="Sale">Sale</option>
   </select>
 </td>
 <td><input readonly></td>
@@ -3227,6 +3336,7 @@
 <td><input type="number" step="0.001" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Auto: Ready metal minus Neg"></td>
 <td><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
 <td class="making-col"><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
+<td class="other-col"><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Added to Total"></td>
 <td class="total total-col"><input type="number" step="0.01" readonly placeholder="0.00"></td>
 <td><button type="button" class="row-del-btn" onclick="this.closest('tr').remove()">X</button></td>
 `;
@@ -3252,12 +3362,13 @@
         // Apply global edit state if active (no Edit button = always treat as global editing on)
         const globalEditBtn = document.getElementById('globalEditBtn');
         if (!globalEditBtn || globalEditBtn.dataset.editing === "true") {
-          const orderDetailIndices = [4, 5, 6, 7]; // Pc..Rate; Stamp (3) always editable; Lbr.% (8) separate
+          const orderDetailIndices = [4, 5, 6, 7]; // Pc..Rate
           orderDetailIndices.forEach(idx => {
             const cell = tr.cells[idx];
             if (cell) {
               const input = cell.querySelector("input");
               if (input) {
+                // Stamp..Est.Total are always locked by setPurchaseOptionalFieldsState()
                 input.removeAttribute("readonly");
                 input.classList.remove("order-detail-readonly");
                 input.style.border = "1px solid var(--border)";
@@ -3287,6 +3398,7 @@
       function setPurchaseOptionalFieldsState(row, isPurchase) {
         if (!row) return;
         const typeSel = row.cells[0] ? row.cells[0].querySelector("select") : null;
+        const alwaysLockedIdx = function (idx) { return idx >= 3 && idx <= 9; }; // Stamp..Est.Total
 
         // Other / Sale: respect Global Edit — off = template-style locks (Edit unlocks all); on = full edit + highlight
         if (isReadyExtraFullLineRow(typeSel)) {
@@ -3318,6 +3430,16 @@
               input.style.borderRadius = "";
               return;
             }
+            // FORCE lock Stamp..Est.Total always (root-cause fix: Global Edit must never unlock these)
+            // EXCEPTION: For Sale rows, Stamp (3) and Pc (4) remain editable
+            if (alwaysLockedIdx(idx) && !(isSale && (idx === 3 || idx === 4))) {
+              input.setAttribute("readonly", "readonly");
+              input.classList.add("order-detail-readonly");
+              input.tabIndex = -1;
+              input.style.border = "";
+              input.style.borderRadius = "";
+              return;
+            }
             if (isGlobalEditing) {
               input.removeAttribute("readonly");
               input.classList.remove("order-detail-readonly");
@@ -3328,11 +3450,8 @@
             }
             input.style.border = "";
             input.style.borderRadius = "";
-            /* Stamp (3) and Pc (4) always editable for Other/Sale; lock Ut. Wt.–Est. Total (5–9) until Global Edit */
-            if (idx >= 5 && idx <= 9) {
-              input.setAttribute("readonly", "readonly");
-              input.classList.add("order-detail-readonly");
-            } else if (idx === 15) {
+            /* Other column (15) editable, Total (16) always readonly */
+            if (idx === 15) {
               input.setAttribute("readonly", "readonly");
               input.classList.remove("order-detail-readonly");
             } else {
@@ -3375,6 +3494,14 @@
           if (cell) {
             var input = cell.querySelector("input");
             if (input) {
+              // FORCE lock Stamp..Rate always, even in Global Edit
+              if (alwaysLockedIdx(idx)) {
+                input.setAttribute("readonly", "readonly");
+                input.classList.add("order-detail-readonly");
+                input.style.border = "";
+                input.style.borderRadius = "";
+                return;
+              }
               // Purchase rows must stay editable (Pc, wt, rate, etc.) without Global Edit
               if (isPurchase || isGlobalEditing) {
                 input.removeAttribute("readonly");
@@ -3407,15 +3534,11 @@
         if (estCell) {
           var estIn = estCell.querySelector("input");
           if (estIn) {
-            if (isPurchase) {
-              estIn.removeAttribute("readonly");
-              estIn.classList.remove("order-detail-readonly");
-              estIn.tabIndex = 0;
-              estIn.style.visibility = "visible";
-            } else {
-              estIn.setAttribute("readonly", "readonly");
-              estIn.classList.add("order-detail-readonly");
-            }
+            // FORCE lock Est. Total always
+            estIn.setAttribute("readonly", "readonly");
+            estIn.classList.add("order-detail-readonly");
+            estIn.tabIndex = -1;
+            estIn.style.visibility = "visible";
           }
         }
       }
@@ -3707,7 +3830,7 @@
         }
       }
 
-      /* Total = Ready Weight × Rate × Making. For Purchase rows: Total = Est. Total (col 9). */
+      /* Total = R.Wt×Rate×Making + Other (col 15). Purchase: Est. Total (col 9) + Other → col 16. */
       function syncSecondTotalFromRow(r) {
         if (!r || !r.cells) return;
         try {
@@ -3715,23 +3838,26 @@
           const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
           const isPurchase = typeSelect && typeSelect.value === "Purchase";
 
+          const otherAmt = parseFloat(r.cells[15] && r.cells[15].children[0] ? r.cells[15].children[0].value : 0) || 0;
           if (isPurchase) {
-            // For Purchase: Total (col 15) = Est. Total (col 9)
             const estTotal = parseFloat(r.cells[9] && r.cells[9].children[0] ? r.cells[9].children[0].value : 0) || 0;
-            if (r.cells[15] && r.cells[15].children[0]) {
-              r.cells[15].children[0].value = estTotal.toFixed(2);
+            if (r.cells[16] && r.cells[16].children[0]) {
+              r.cells[16].children[0].value = (estTotal + otherAmt).toFixed(2);
             }
           } else {
             const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
             const rate = parseFloat(r.cells[13].children[0].value) || 0;
             const making = parseFloat(r.cells[14].children[0].value) || 0;
+            let mainPart = 0;
+            let haveMain = false;
             if (readyWeight > 0 && rate > 0) {
               const base = readyWeight * rate;
               const labor = base * (making / 100);
-              const secondTotal = base + labor;
-              if (r.cells[15] && r.cells[15].children[0]) {
-                r.cells[15].children[0].value = secondTotal.toFixed(2);
-              }
+              mainPart = base + labor;
+              haveMain = true;
+            }
+            if (r.cells[16] && r.cells[16].children[0] && (haveMain || otherAmt !== 0)) {
+              r.cells[16].children[0].value = (mainPart + otherAmt).toFixed(2);
             }
           }
         } catch (e) {
@@ -3749,21 +3875,21 @@
       }
 
       /**
-       * Bill amount for one row: prefer **Est. Total (Final)** (col 15). Fallback to Est. Total (col 9) when Final is 0.
+       * Bill amount for one row: prefer **Final Total** (col 16). Fallback to Est. Total (col 9) when Final is 0.
        * Using `est || ready` was wrong — col 9 is almost always set first, so Final (col 15) was never used.
        */
       function getReadyOrderRowLineTotal(tr) {
         if (!tr || !tr.cells) return 0;
         const est = (tr.cells[9] && tr.cells[9].children[0]) ? (parseFloat(tr.cells[9].children[0].value) || 0) : 0;
-        const fin = (tr.cells[15] && tr.cells[15].children[0]) ? (parseFloat(tr.cells[15].children[0].value) || 0) : 0;
+        const fin = (tr.cells[16] && tr.cells[16].children[0]) ? (parseFloat(tr.cells[16].children[0].value) || 0) : 0;
         if (fin !== 0) return fin;
         return est;
       }
 
       /** Est. Total (Final) column (col 15) only — Payment Summary **Total** breakdown. */
       function getReadyOrderRowFinalCol15(tr) {
-        if (!tr || !tr.cells || !tr.cells[15] || !tr.cells[15].children[0]) return 0;
-        return parseFloat(tr.cells[15].children[0].value) || 0;
+        if (!tr || !tr.cells || !tr.cells[16] || !tr.cells[16].children[0]) return 0;
+        return parseFloat(tr.cells[16].children[0].value) || 0;
       }
 
       /** Ready Extra purchase entries (keyed by order / bill no and mirrored SGJ). */
@@ -4529,7 +4655,8 @@
        */
       function saveOrder(resetAfterSave = false, silent = false, targetCustOverride = null, dateOverride = null, narrationOverride = null, opts) {
         opts = opts || {};
-        const finalizeToAllBill = !!opts.finalizeToAllBill;
+        let finalizeToAllBill = !!opts.finalizeToAllBill;
+        const readyOnly = !!opts.readyOnly;
 
         if (!custName || !billNo || !itemBody) {
           if (!initElements()) {
@@ -4575,6 +4702,11 @@
         }
         if (!existingOrder && existingOrderIndex >= 0) {
           existingOrder = orders[existingOrderIndex];
+        }
+
+        /* After Bill+Save to Ready, order has billStagedForAllBill. Save from Ready Orders edit (not readyOnly) finalizes to All Bill + customerBalances. */
+        if (!finalizeToAllBill && !readyOnly && editOrderId && existingOrder && existingOrder.billStagedForAllBill) {
+          finalizeToAllBill = true;
         }
 
         if (!finalizeToAllBill) {
@@ -4632,6 +4764,7 @@
           orderDataR.ratebookDeliveredWeight = rbSafeNum(existingOrder && existingOrder.ratebookDeliveredWeight, 0).toFixed(3);
           orderDataR.timestamp = orderTimestampR;
           orderDataR.hideBillMidColumns = billMidColumnsHidden;
+          orderDataR.billStagedForAllBill = billMidColumnsHidden ? true : !!(existingOrder && existingOrder.billStagedForAllBill);
 
           const ordersReady = orders.filter(o => o && o.orderNo !== billNo.value);
           ordersReady.push(orderDataR);
