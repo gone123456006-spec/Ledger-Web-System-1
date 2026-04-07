@@ -293,6 +293,20 @@
 
       <label>Search</label>
       <input type="text" id="searchBox" placeholder="Search..." onkeyup="searchTable()">
+
+      <label>Date</label>
+      <select id="datePreset" onchange="onDatePresetChange()">
+        <option value="clear" selected>Clear</option>
+        <option value="today">Today</option>
+        <option value="week">Week</option>
+        <option value="month">Month</option>
+        <option value="year">Year</option>
+        <option value="custom">Custom</option>
+        <option value="next">Next N days</option>
+      </select>
+      <input type="date" id="dateFrom" style="display:none; min-width:150px;" onchange="filterTable()">
+      <input type="date" id="dateTo" style="display:none; min-width:150px;" onchange="filterTable()">
+      <input type="number" id="nextDays" min="1" step="1" placeholder="N" style="display:none; width:80px; min-width:80px;" oninput="filterTable()">
     </div>
 
 
@@ -670,9 +684,77 @@
       const root = document.querySelector(".balance-wrap") || document.querySelector(".workspace") || document;
       const searchBox = root.querySelector("#searchBox") || document.getElementById("searchBox");
       const customerFilter = root.querySelector("#customerFilter") || document.getElementById("customerFilter");
+      const datePreset = root.querySelector("#datePreset") || document.getElementById("datePreset");
+      const dateFrom = root.querySelector("#dateFrom") || document.getElementById("dateFrom");
+      const dateTo = root.querySelector("#dateTo") || document.getElementById("dateTo");
+      const nextDays = root.querySelector("#nextDays") || document.getElementById("nextDays");
 
       const searchValue = searchBox ? searchBox.value.toLowerCase() : "";
       const customerValue = customerFilter ? customerFilter.value.toLowerCase() : "";
+      const preset = datePreset ? (datePreset.value || "clear") : "clear";
+
+      function parseBillDateToTs(val) {
+        if (!val) return null;
+        const s = String(val).trim();
+        if (!s) return null;
+        const d1 = new Date(s);
+        if (!isNaN(d1.getTime())) return d1.setHours(0, 0, 0, 0);
+        const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (m) {
+          const dd = parseInt(m[1], 10);
+          const mm = parseInt(m[2], 10);
+          const yy = parseInt(m[3], 10);
+          const d2 = new Date(yy, mm - 1, dd);
+          if (!isNaN(d2.getTime())) return d2.setHours(0, 0, 0, 0);
+        }
+        const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m2) {
+          const dd = parseInt(m2[1], 10);
+          const mm = parseInt(m2[2], 10);
+          const yy = parseInt(m2[3], 10);
+          const d3 = new Date(yy, mm - 1, dd);
+          if (!isNaN(d3.getTime())) return d3.setHours(0, 0, 0, 0);
+        }
+        return null;
+      }
+
+      function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+      function endOfDay(d) { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; }
+
+      function getRangeFromPreset() {
+        const now = new Date();
+        if (preset === "clear") return null;
+        if (preset === "today") return { from: startOfDay(now), to: endOfDay(now) };
+        if (preset === "week") {
+          const from = startOfDay(now);
+          const to = endOfDay(new Date(from.getTime() + 6 * 86400000));
+          return { from, to };
+        }
+        if (preset === "month") {
+          const from = new Date(now.getFullYear(), now.getMonth(), 1);
+          const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          return { from: startOfDay(from), to: endOfDay(to) };
+        }
+        if (preset === "year") {
+          const from = new Date(now.getFullYear(), 0, 1);
+          const to = new Date(now.getFullYear(), 11, 31);
+          return { from: startOfDay(from), to: endOfDay(to) };
+        }
+        if (preset === "next") {
+          const n = Math.max(1, parseInt((nextDays && nextDays.value) || "1", 10) || 1);
+          const from = startOfDay(now);
+          const to = endOfDay(new Date(from.getTime() + (n - 1) * 86400000));
+          return { from, to };
+        }
+        if (preset === "custom") {
+          const f = dateFrom && dateFrom.value ? new Date(dateFrom.value) : null;
+          const t = dateTo && dateTo.value ? new Date(dateTo.value) : null;
+          if (!f && !t) return null;
+          return { from: f ? startOfDay(f) : null, to: t ? endOfDay(t) : null };
+        }
+        return null;
+      }
+      const range = getRangeFromPreset();
 
       const rows = tbody.querySelectorAll("tr");
       let visibleCount = 0;
@@ -681,6 +763,7 @@
         const rowText = row.innerText.toLowerCase();
         const cells = row.querySelectorAll("td");
         const customerCell = cells[3] ? cells[3].textContent.toLowerCase() : "";
+        const billDateCell = cells[4] ? cells[4].textContent : "";
 
         let show = true;
 
@@ -690,6 +773,16 @@
 
         if (customerValue && !customerCell.includes(customerValue)) {
           show = false;
+        }
+
+        if (show && range) {
+          const ts = parseBillDateToTs(billDateCell);
+          if (ts == null) {
+            show = false;
+          } else {
+            if (range.from && ts < range.from.getTime()) show = false;
+            if (range.to && ts > range.to.getTime()) show = false;
+          }
         }
 
         row.style.display = show ? "" : "none";
@@ -704,6 +797,19 @@
           footer.textContent = visibleCount ? `Showing ${visibleCount} entries` : "No balance entries available";
         }
       }
+    }
+
+    function onDatePresetChange() {
+      const root = document.querySelector(".balance-wrap") || document.querySelector(".workspace") || document;
+      const presetEl = root.querySelector("#datePreset") || document.getElementById("datePreset");
+      const fromEl = root.querySelector("#dateFrom") || document.getElementById("dateFrom");
+      const toEl = root.querySelector("#dateTo") || document.getElementById("dateTo");
+      const nextEl = root.querySelector("#nextDays") || document.getElementById("nextDays");
+      const v = presetEl ? presetEl.value : "clear";
+      if (fromEl) fromEl.style.display = v === "custom" ? "" : "none";
+      if (toEl) toEl.style.display = v === "custom" ? "" : "none";
+      if (nextEl) nextEl.style.display = v === "next" ? "" : "none";
+      filterTable();
     }
 
     /* =========================
