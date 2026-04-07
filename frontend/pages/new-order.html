@@ -2129,10 +2129,16 @@
       function loadCustomers() {
         if (!AppState.elements.custName) return;
 
+        // Preserve current selection (important in Edit mode so name never "disappears")
+        const select = AppState.elements.custName;
+        const prevValue = select.value != null ? String(select.value) : '';
+        const prevText = (select.selectedOptions && select.selectedOptions[0] && select.selectedOptions[0].textContent)
+          ? String(select.selectedOptions[0].textContent).trim()
+          : '';
+
         const customers = JSON.parse(localStorage.getItem('customers') || '[]');
         customers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-        const select = AppState.elements.custName;
         select.innerHTML = '<option value="">-- Select Customer --</option>';
 
         if (customers.length === 0) {
@@ -2149,6 +2155,16 @@
           select.appendChild(opt);
         });
 
+        // Restore selection after repopulating
+        if (prevValue) {
+          const matchById = Array.from(select.options).find(opt => String(opt.value) === prevValue);
+          if (matchById) select.value = matchById.value;
+        } else if (prevText) {
+          const lower = prevText.toLowerCase();
+          const matchByName = Array.from(select.options).find(opt => (opt.textContent || '').trim().toLowerCase() === lower);
+          if (matchByName) select.value = matchByName.value;
+        }
+
         select.onchange = handleCustomerChange;
       }
 
@@ -2157,6 +2173,24 @@
         const opt = select.selectedOptions[0];
 
         if (!opt || !opt.value || !opt.dataset.customer) {
+          // In Edit mode, never auto-clear customer fields due to transient dropdown repopulation.
+          if (AppState.editMode && select && select.value) {
+            try {
+              const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+              const c = customers.find(x => x && (x.id == select.value || String(x.id) === String(select.value)));
+              if (c) {
+                if (AppState.elements.currentBal) AppState.elements.currentBal.value = safeNumber(c.openingBalance).toFixed(2);
+                if (AppState.elements.relation) {
+                  const rel = c.relation || '';
+                  const relName = c.relationName || '';
+                  AppState.elements.relation.value = rel && relName ? `${rel} ${relName}` : (rel || relName);
+                }
+                if (AppState.elements.station) AppState.elements.station.value = c.station || '';
+                updateInfoPanel();
+              }
+            } catch (e) { }
+            return;
+          }
           clearCustomerFields();
           return;
         }
@@ -4231,6 +4265,9 @@
         // Load customers
         loadCustomers();
 
+        // Track billNo to detect fresh order entry
+        try { AppState.lastBillNo = String(AppState.elements.billNo && AppState.elements.billNo.value ? AppState.elements.billNo.value : '').trim(); } catch (e) { }
+
         // Edit mode must take priority over return-state restoration
         const pendingEditOrderId = localStorage.getItem('editOrderId');
 
@@ -4318,10 +4355,19 @@
         function setupBillNoHandler() {
           if (AppState.elements.billNo) {
             AppState.elements.billNo.oninput = () => {
+              // If user starts a NEW order number, clear current form state everywhere (UI-only).
+              // This prevents previous order's rows/panels from carrying over when customer stays same.
+              const nextBn = String(AppState.elements.billNo.value || '').trim();
+              if (!AppState.editMode && AppState.lastBillNo && nextBn && nextBn !== AppState.lastBillNo) {
+                const keepBn = nextBn;
+                clearOrderFormAndState();
+                if (AppState.elements.billNo) AppState.elements.billNo.value = keepBn;
+              }
               AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
                 const billInput = tr.cells[1]?.children[0];
                 if (billInput) billInput.value = AppState.elements.billNo.value;
               });
+              AppState.lastBillNo = String(AppState.elements.billNo.value || '').trim();
               updateInfoPanel();
             };
           }
