@@ -4125,9 +4125,8 @@
 
       /** Permanently clear the entire order form, table, state, and UI for a fresh order. */
       function clearOrderFormAndState() {
-        var prevBillForPurchase = AppState.elements.billNo && AppState.elements.billNo.value
-          ? String(AppState.elements.billNo.value).trim() : '';
-        if (prevBillForPurchase) removePurchaseSheetForBill(prevBillForPurchase);
+        // IMPORTANT: Do NOT delete saved purchase sheets when starting a new order.
+        // They are historical data for previous bills and are used by Ready / Extra (Advance purchase minus).
 
         // Clear all input fields
         if (AppState.elements.custName) AppState.elements.custName.value = '';
