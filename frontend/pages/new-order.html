@@ -2565,8 +2565,9 @@
         if (!billNo) return 0;
 
         const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+        const key = String(billNo).trim();
         return payments
-          .filter(p => p.billNo === billNo)
+          .filter(p => p && String(p.billNo || '').trim() === key)
           .reduce((sum, p) => sum + safeNumber(p.amount), 0);
       }
 
@@ -3485,7 +3486,8 @@
         setPanel('#panelBillTotal', formatCurrency(netTotal));
 
         const payments = JSON.parse(localStorage.getItem('payments') || '[]');
-        const billPayments = payments.filter(p => p.billNo === AppState.elements.billNo.value);
+        const billKey = String(AppState.elements.billNo.value || '').trim();
+        const billPayments = payments.filter(p => p && String(p.billNo || '').trim() === billKey);
 
         if (netTotal === 0) {
           setPanel('#panelPaid', formatCurrency(0));
@@ -3911,10 +3913,14 @@
             const idToSelect = String(customerIdRaw || (customer && customer.id) || '');
             const nameToShow = customerName || (customer && customer.name) || '';
 
-            let option = Array.from(select.options).find(opt =>
-              (opt.value === idToSelect || String(opt.value) === idToSelect) ||
-              ((opt.textContent || '').trim().toLowerCase() === nameToShow.toLowerCase())
-            );
+            let option = null;
+            if (idToSelect) {
+              option = Array.from(select.options).find(opt => String(opt.value) === idToSelect);
+            } else if (nameToShow) {
+              option = Array.from(select.options).find(opt =>
+                ((opt.textContent || '').trim().toLowerCase() === nameToShow.toLowerCase())
+              );
+            }
             if (!option && (idToSelect || nameToShow)) {
               option = document.createElement('option');
               option.value = idToSelect || `legacy_${editOrderId}`;
@@ -3930,7 +3936,10 @@
               select.appendChild(option);
             }
             if (option) {
-              select.value = option.value;
+              // Avoid flipping selection if already correct
+              if (String(select.value) !== String(option.value)) {
+                select.value = option.value;
+              }
               if (!option.dataset.customer && (currentBalVal !== '' || relationVal !== '' || stationVal !== '')) {
                 option.dataset.customer = JSON.stringify({
                   id: idToSelect,
