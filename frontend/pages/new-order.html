@@ -2010,6 +2010,19 @@
         editOrderId: null,
       };
 
+      function newDraftPaymentKey() {
+        return 'DRAFT-' + Date.now();
+      }
+
+      /** Returns the key used to store/fetch payments for current screen state. */
+      function getCurrentPaymentKey() {
+        const bn = String(AppState.elements.billNo && AppState.elements.billNo.value ? AppState.elements.billNo.value : '').trim();
+        if (AppState.editMode) return bn;
+        if (AppState.billNoClaimed === true) return bn;
+        if (!AppState.draftPaymentKey) AppState.draftPaymentKey = newDraftPaymentKey();
+        return AppState.draftPaymentKey;
+      }
+
       // =====================================================
       // UTILITY FUNCTIONS
       // =====================================================
@@ -2596,10 +2609,10 @@
       }
 
       function getPaidAmount(billNo) {
-        if (!billNo) return 0;
+        const key = getCurrentPaymentKey();
+        if (!key) return 0;
 
         const payments = JSON.parse(localStorage.getItem('payments') || '[]');
-        const key = String(billNo).trim();
         return payments
           .filter(p => p && String(p.billNo || '').trim() === key)
           .reduce((sum, p) => sum + safeNumber(p.amount), 0);
@@ -2924,7 +2937,7 @@
 
         const payment = {
           id: Date.now(),
-          billNo: AppState.elements.billNo.value,
+          billNo: getCurrentPaymentKey(),
           customer: getCustomerName(),
           customerId: AppState.elements.custName.value,
           amount: amount,
@@ -3045,17 +3058,13 @@
       }
 
       function openNewOrderPaymentsDetailPopup() {
-        if (!AppState.elements.billNo || !String(AppState.elements.billNo.value || '').trim()) {
-          showError('Order number is required');
-          return;
-        }
         const root = getSearchRoot();
         const popup = root.querySelector('#new-order-payments-detail-popup') || document.getElementById('new-order-payments-detail-popup');
         const listEl = root.querySelector('#newOrderPaymentsDetailList');
         const totalEl = root.querySelector('#newOrderPaymentsDetailTotal');
         if (!popup || !listEl) return;
-        const billVal = String(AppState.elements.billNo.value).trim();
-        const rows = getPaymentRecordsForBillNewOrder(billVal);
+        const payKey = getCurrentPaymentKey();
+        const rows = getPaymentRecordsForBillNewOrder(payKey);
         const sum = rows.reduce((s, p) => s + (Number(p.amount) || 0), 0);
         if (totalEl) totalEl.textContent = 'Total: ' + formatCurrency(sum);
         const escCell = function (s) {
@@ -3091,7 +3100,7 @@
             }
             const payKey = (p.id != null) ? String(p.id) : String(p.timestamp || (dateIsoForKey ? dateIsoForKey + '-' + (p.amount || 0) : ''));
             const amountRaw = String(Number(p.amount) || 0);
-            html += '<tr data-payment-key="' + escCell(payKey) + '" data-payment-timestamp="' + escCell(p.timestamp || '') + '" data-bill-no="' + escCell(billVal) + '"' +
+            html += '<tr data-payment-key="' + escCell(payKey) + '" data-payment-timestamp="' + escCell(p.timestamp || '') + '" data-bill-no="' + escCell(String(payKey).trim()) + '"' +
               ' data-payment-date-iso="' + escCell(dateIsoForKey) + '" data-payment-amount="' + escCell(amountRaw) + '">' +
               '<td>' + escCell(dateStr) + '</td><td>' + escCell(modeStr) + '</td>' +
               '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + '</td>' +
@@ -3520,39 +3529,28 @@
         setPanel('#panelBillTotal', formatCurrency(netTotal));
 
         const payments = JSON.parse(localStorage.getItem('payments') || '[]');
-        const billKey = String(AppState.elements.billNo.value || '').trim();
-        const billPayments = payments.filter(p => p && String(p.billNo || '').trim() === billKey);
+        const payKey = getCurrentPaymentKey();
+        const billPayments = payments.filter(p => p && String(p.billNo || '').trim() === String(payKey).trim());
 
-        if (netTotal === 0) {
-          setPanel('#panelPaid', formatCurrency(0));
-          setPanel('#panelBalance', formatCurrency(0));
-          if (listEl) listEl.innerHTML = '<div class="empty-state">No payments yet</div>';
+        // Always show Paid/Balance, and never pull other bill's payments (draft uses draft key).
+        setPanel('#panelPaid', formatCurrency(paid));
+        setPanel('#panelBalance', formatCurrency(balance));
+
+        if (!listEl) return;
+        if (billPayments.length === 0) {
+          listEl.innerHTML = '<div class="empty-state">No payments yet</div>';
         } else {
-          setPanel('#panelPaid', formatCurrency(paid));
-          setPanel('#panelBalance', formatCurrency(balance));
-          if (!listEl) return;
-          if (billPayments.length === 0) {
-            listEl.innerHTML = '<div class="empty-state">No payments yet</div>';
-          } else {
-            const billNoVal = AppState.elements.billNo.value;
-            let html = '';
-            billPayments.slice(-5).reverse().forEach(p => {
-              const date = p.date ? new Date(p.date).toLocaleDateString() : '—';
-              const dateIso = (p.date && (p.date.includes('-') || p.date.includes('/'))) ? (p.date.includes('T') ? p.date.split('T')[0] : p.date) : (p.timestamp ? p.timestamp.split('T')[0] : '');
-              const payKey = (p.id != null) ? String(p.id) : (p.timestamp || dateIso + '-' + (p.amount || 0));
-              html += `
-            <div class="panel-item" data-payment-key="${String(payKey).replace(/"/g, '&quot;')}" data-payment-timestamp="${(p.timestamp || '').replace(/"/g, '&quot;')}" data-bill-no="${(billNoVal || '').replace(/"/g, '&quot;')}">
+          // Show only ONE row in Payment Summary (no multiple rows).
+          const sum = billPayments.reduce((s, p) => s + safeNumber(p.amount), 0);
+          listEl.innerHTML = `
+            <div class="panel-item" style="cursor:pointer;" onclick="typeof openNewOrderPaymentsDetailPopup==='function'&&openNewOrderPaymentsDetailPopup()" title="Tap to view payments">
               <div class="panel-item-header">
-                <span class="payment-amount">${formatCurrency(p.amount)}</span>
-                <span class="payment-mode">${p.mode || 'Cash'}</span>
-                <button type="button" class="edit-payment-btn" onclick="event.stopPropagation(); openPaymentCardEdit(this);" title="Edit payment">✏️</button>
+                <span class="payment-amount">${formatCurrency(sum)}</span>
+                <span class="payment-mode">${billPayments.length > 1 ? 'Multiple' : (billPayments[0].mode || 'Cash')}</span>
               </div>
-              <div class="panel-item-detail payment-date">${date} — ${(p.narration || '—').substring(0, 30)}</div>
+              <div class="panel-item-detail payment-date">${billPayments.length} payment(s)</div>
             </div>
           `;
-            });
-            listEl.innerHTML = html;
-          }
         }
       }
 
@@ -3648,6 +3646,23 @@
               }
             }
             AppState.elements.billNo.value = claimed;
+            AppState.billNoClaimed = true;
+            // Migrate draft payments to the claimed bill number so they become permanent.
+            try {
+              const draftKey = String(AppState.draftPaymentKey || '').trim();
+              if (draftKey) {
+                const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+                let changed = false;
+                payments.forEach(p => {
+                  if (p && String(p.billNo || '').trim() === draftKey) {
+                    p.billNo = claimed;
+                    changed = true;
+                  }
+                });
+                if (changed) localStorage.setItem('payments', JSON.stringify(payments));
+              }
+            } catch (e) { }
+            AppState.draftPaymentKey = null;
             // Also update the read-only bill-no cell in every table row
             AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
               const billInput = tr.cells[1]?.children[0];
@@ -4131,6 +4146,8 @@
         // Clear all input fields
         if (AppState.elements.custName) AppState.elements.custName.value = '';
         if (AppState.elements.billNo) AppState.elements.billNo.value = peekNextBillNo();
+        AppState.billNoClaimed = false;
+        AppState.draftPaymentKey = newDraftPaymentKey();
         if (AppState.elements.orderDate) AppState.elements.orderDate.valueAsDate = new Date();
         if (AppState.elements.dueDate) AppState.elements.dueDate.value = '';
         if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
