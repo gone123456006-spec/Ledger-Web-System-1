@@ -3935,7 +3935,20 @@
 
       function readNewOrderPurchaseSheetsMap() {
         try {
-          return JSON.parse(localStorage.getItem(NEW_ORDER_PURCHASE_SHEETS_KEY) || "{}");
+          var parsed = JSON.parse(localStorage.getItem(NEW_ORDER_PURCHASE_SHEETS_KEY) || "{}");
+          // Back-compat: some older builds stored purchase sheets as an array of records
+          // like [{ billNo, rows, total, savedAt }, ...] instead of a map.
+          if (Array.isArray(parsed)) {
+            var obj = {};
+            parsed.forEach(function (rec) {
+              if (!rec) return;
+              var k = rec.billNo || rec.orderNo || rec.key;
+              if (!k) return;
+              obj[String(k).trim()] = { rows: rec.rows || [], total: rec.total, savedAt: rec.savedAt };
+            });
+            return obj;
+          }
+          return parsed && typeof parsed === "object" ? parsed : {};
         } catch (e) {
           return {};
         }
@@ -4021,6 +4034,51 @@
           seen[key] = true;
           if (map[key]) return map[key];
         }
+
+        // Last-resort: fuzzy match by normalized key (handles cases like "SGJ/0/0003" vs "0/0003" vs "0003")
+        function normKey(s) {
+          if (!s) return "";
+          // Keep only letters+digits, lowercase (drop slashes/spaces)
+          return String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+        }
+        var nk1 = normKey(k1);
+        var nk2 = normKey(k2);
+        var want = nk1 || nk2;
+        if (want) {
+          try {
+            var keys = Object.keys(map || {});
+            for (var j = 0; j < keys.length; j++) {
+              var mk = keys[j];
+              var nmk = normKey(mk);
+              if (!nmk) continue;
+              // Exact normalized match OR suffix match (e.g. "...0003")
+              if (nmk === want || nmk.endsWith(want) || want.endsWith(nmk)) {
+                return map[mk];
+              }
+            }
+          } catch (e) { }
+        }
+
+        // Root-cause fallback: New Order also stores purchaseSheet inside `orders` and `bills`.
+        // If the standalone map is missing/out-of-sync, read from those payloads.
+        try {
+          function matchOrderKey(obj) {
+            if (!obj) return false;
+            var bno = obj.orderNo || obj.billNo || "";
+            if (!bno) return false;
+            var nb = normKey(bno);
+            if (!nb || !want) return false;
+            return nb === want || nb.endsWith(want) || want.endsWith(nb);
+          }
+          var orders = JSON.parse(localStorage.getItem("orders") || "[]");
+          for (var oi = 0; oi < orders.length; oi++) {
+            if (matchOrderKey(orders[oi]) && orders[oi].purchaseSheet) return orders[oi].purchaseSheet;
+          }
+          var bills = JSON.parse(localStorage.getItem("bills") || "[]");
+          for (var bi = 0; bi < bills.length; bi++) {
+            if (matchOrderKey(bills[bi]) && bills[bi].purchaseSheet) return bills[bi].purchaseSheet;
+          }
+        } catch (e3) { }
         return null;
       }
 
