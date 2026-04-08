@@ -1126,6 +1126,15 @@
             const jwFilter = document.getElementById('jwFilter');
             if (!jwFilter) return;
 
+            // Requirement: Job Worker filter is ONLY available in "In Process".
+            // For Ready/All: keep only "All Job Workers" and disable the dropdown.
+            if (activeIpFilter !== 'PROCESS') {
+                jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>';
+                jwFilter.value = '';
+                jwFilter.disabled = true;
+                return;
+            }
+
             // Always rebuild options from storage to avoid stale/empty lists.
             try {
                 const items = JSON.parse(localStorage.getItem('itemProcess') || '[]');
