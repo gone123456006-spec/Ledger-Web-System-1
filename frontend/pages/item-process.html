@@ -1139,7 +1139,8 @@
             try {
                 const items = JSON.parse(localStorage.getItem('itemProcess') || '[]');
                 const nameMap = new Map();
-                (items || []).forEach(i => {
+                // Only include workers from "In Process" entries (status != READY)
+                (items || []).filter(i => i && String(i.status || '').toUpperCase() !== 'READY').forEach(i => {
                     const label = (i && i.jobworkerName ? String(i.jobworkerName) : '').trim();
                     if (!label) return;
                     const key = ipNormJwName(label);
@@ -1152,7 +1153,8 @@
             } catch (eRebuild) { }
 
             const currentVal = jwFilter.value;
-            jwFilter.disabled = false;
+            // Disable dropdown if there are no In Process items (nothing to filter)
+            jwFilter.disabled = !(ipAllJobWorkerOptions && ipAllJobWorkerOptions.length > 0);
             jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>' +
                 (ipAllJobWorkerOptions || []).map(o => `<option value="${escapeHtml(o.key)}">${escapeHtml(o.label)}</option>`).join('');
 
@@ -1258,8 +1260,20 @@
             if(btnR) btnR.classList.toggle('active', f === 'READY');
             const btnA = document.getElementById('fBtnAll');
             if(btnA) btnA.classList.toggle('active', f === 'ALL');
+            // Reset JW filter selection when switching status view
+            const jwFilter = document.getElementById('jwFilter');
+            if (jwFilter) jwFilter.value = '';
             updateIpJwFilterOptions();
             ipFilterTable();
+        }
+
+        function ipUpdateFooterVisibleCount() {
+            if (!footer || !tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr[data-search]'));
+            const visible = rows.filter(r => r.style.display !== 'none').length;
+            if (activeIpFilter === 'READY') footer.textContent = `${visible} item(s) ready`;
+            else if (activeIpFilter === 'ALL') footer.textContent = `${visible} item(s)`;
+            else footer.textContent = `${visible} item(s) in process`;
         }
 
         function ipFilterTable() {
@@ -1283,6 +1297,7 @@
                 tr.style.display = (matchesSearch && matchesJw && matchesType) ? '' : 'none';
             });
             ipUpdateUI();
+            ipUpdateFooterVisibleCount();
         }
 
         /* ── MARK READY MODAL ── */
