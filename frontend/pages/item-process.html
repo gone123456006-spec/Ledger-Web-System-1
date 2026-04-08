@@ -1113,27 +1113,43 @@
         var activeIpFilter = 'PROCESS'; // Default to In Process
 
         /* ── LOAD TABLE ── */
-        let ipAllJobWorkerNames = [];
+        let ipAllJobWorkerOptions = []; // { key, label }
+
+        function ipNormJwName(s) {
+            return String(s || '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, ' ');
+        }
 
         function updateIpJwFilterOptions() {
             const jwFilter = document.getElementById('jwFilter');
             if (!jwFilter) return;
 
-            // For In Process view: only show "All Job Workers"
-            if (activeIpFilter === 'PROCESS') {
-                jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>';
-                jwFilter.value = '';
-                jwFilter.disabled = true;
-                return;
-            }
+            // Always rebuild options from storage to avoid stale/empty lists.
+            try {
+                const items = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+                const nameMap = new Map();
+                (items || []).forEach(i => {
+                    const label = (i && i.jobworkerName ? String(i.jobworkerName) : '').trim();
+                    if (!label) return;
+                    const key = ipNormJwName(label);
+                    if (!key) return;
+                    if (!nameMap.has(key)) nameMap.set(key, label);
+                });
+                ipAllJobWorkerOptions = [...nameMap.entries()]
+                    .map(([key, label]) => ({ key, label }))
+                    .sort((a, b) => String(a.label).localeCompare(String(b.label), undefined, { sensitivity: 'base' }));
+            } catch (eRebuild) { }
 
             const currentVal = jwFilter.value;
             jwFilter.disabled = false;
             jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>' +
-                (ipAllJobWorkerNames || []).map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+                (ipAllJobWorkerOptions || []).map(o => `<option value="${escapeHtml(o.key)}">${escapeHtml(o.label)}</option>`).join('');
 
             // Restore selection if still available; otherwise reset to All
-            if (!currentVal || !(ipAllJobWorkerNames || []).includes(currentVal)) jwFilter.value = '';
+            const keys = (ipAllJobWorkerOptions || []).map(o => o.key);
+            if (!currentVal || !keys.includes(currentVal)) jwFilter.value = '';
             else jwFilter.value = currentVal;
         }
 
@@ -1168,6 +1184,7 @@
                     const tr = document.createElement('tr');
                     tr.dataset.search = [r.itemName, r.stamp || '', r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
                     tr.dataset.jobworker = (r.jobworkerName || '').trim();
+                    tr.dataset.jobworkerKey = ipNormJwName(r.jobworkerName || '');
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
 
@@ -1203,7 +1220,16 @@
                 if (footer) footer.textContent = `${items.length} item(s) in process`;
 
                 // Cache JW names and update dropdown according to active filter
-                ipAllJobWorkerNames = [...new Set(items.map(i => (i.jobworkerName || '').trim()).filter(Boolean))].sort();
+                // Build JW dropdown options (stable key comparison; keeps original label for display)
+                const nameMap = new Map();
+                items.map(i => (i.jobworkerName || '').trim()).filter(Boolean).forEach(n => {
+                    const key = ipNormJwName(n);
+                    if (!key) return;
+                    if (!nameMap.has(key)) nameMap.set(key, n);
+                });
+                ipAllJobWorkerOptions = [...nameMap.entries()]
+                    .map(([key, label]) => ({ key, label }))
+                    .sort((a, b) => String(a.label).localeCompare(String(b.label), undefined, { sensitivity: 'base' }));
                 updateIpJwFilterOptions();
 
                 ipFilterTable();
@@ -1236,7 +1262,7 @@
 
             tbody.querySelectorAll('tr[data-search]').forEach(tr => {
                 const matchesSearch = !query || tr.dataset.search.includes(query);
-                const matchesJw = !jwQuery || tr.dataset.jobworker === jwQuery;
+                const matchesJw = !jwQuery || (tr.dataset.jobworkerKey || '') === jwQuery;
                 
                 const cb = tr.querySelector('.ip-row-cb');
                 const st = cb ? cb.dataset.status : '';
