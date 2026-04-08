@@ -2160,6 +2160,7 @@
               customerRelation: order.customerRelation || '—',
               itemIdx: iIdx,
               itemName: item.values[2] || '—',
+              stamp: (item.values[3] != null && String(item.values[3]).trim() !== '') ? String(item.values[3]).trim() : '—',
               qty: parseFloat(item.values[7]) || 0,
               estUnitWt: parseFloat(item.values[8]) || 0,
               estTotalWt: parseFloat(item.values[9]) || 0,

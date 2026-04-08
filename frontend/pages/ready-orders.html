@@ -126,6 +126,96 @@
     }
 
     /* =========================
+       DUE DATE FILTER DROPDOWN
+    ========================= */
+    .due-filter {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .due-filter .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .due-filter-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 270px;
+      background: #fff;
+      border: 1px solid #d1d6de;
+      border-radius: 12px;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, .12);
+      padding: 12px;
+      z-index: 50;
+      display: none;
+    }
+
+    .due-filter-panel.is-open {
+      display: block;
+    }
+
+    .due-filter-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #374151;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin: 4px 0 10px;
+    }
+
+    .due-filter-btn {
+      width: 100%;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid #d1d6de;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 6px 0;
+    }
+
+    .due-filter-btn:hover {
+      border-color: #007aff;
+      color: #007aff;
+      background: #f0f7ff;
+    }
+
+    .due-filter-row {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .due-filter-sub {
+      font-size: 12px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .due-filter-next {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .due-filter-next input {
+      min-width: 0;
+      width: 100%;
+      height: 40px;
+    }
+
+    .due-filter-apply {
+      margin-top: 8px;
+    }
+
+    /* =========================
    TABLE
 ========================= */
     .table-wrap {
@@ -638,6 +728,27 @@
     <!-- TOOLBAR -->
     <div class="ready-toolbar">
       <h2>📦 Ready Orders</h2>
+      <div class="due-filter" id="dueFilterWrap">
+        <button type="button" class="btn" id="dueFilterBtn" onclick="toggleDueFilterPanel(event)">Date Filter</button>
+        <div class="due-filter-panel" id="dueFilterPanel" aria-hidden="true">
+          <div class="due-filter-title">Date Filter</div>
+
+          <button type="button" class="due-filter-btn" onclick="clearDueFilter()">Clear</button>
+          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('TODAY')">Today</button>
+          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('WEEK')">Week</button>
+          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('MONTH')">Month</button>
+          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('YEAR')">Year</button>
+
+          <div class="due-filter-row">
+            <div class="due-filter-sub">Custom</div>
+            <div class="due-filter-next">
+              <input type="number" id="dueFilterNextDays" min="0" value="7" />
+              <div style="font-size:12px;color:#6b7280;padding-left:2px;">days</div>
+              <button type="button" class="due-filter-btn due-filter-apply" onclick="applyDueFilterNextDays()">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <input type="text" id="searchBox" placeholder="🔍 Search ready orders..." onkeyup="searchOrders()">
       <button class="btn" onclick="loadReadyOrders()">🔄 Refresh</button>
     </div>
@@ -655,10 +766,10 @@
             <th>Customer</th>
             <th>Relation Name</th>
             <th class="right">Weight (g)</th>
-            <th class="right">Net (Rs)</th>
+            <th class="right" title="Same as Orders list Order Total (gross non-Purchase lines)">Net (Rs)</th>
             <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
             <th class="right" title="Non-Paid payments + purchase line totals">Advance</th>
-            <th class="right" title="Same as Orders list: Net − all payments">Balance</th>
+            <th class="right" title="Net bill after purchases − all payments (same as Orders list Balance)">Balance</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -718,6 +829,7 @@
               <th style="text-align:center">Status</th>
               <th style="text-align:right">Qty</th>
               <th>Item Name</th>
+              <th>Stamp</th>
               <th>Sample Details</th>
               <th>Design</th>
               <th style="text-align:right">Est. Unit Wt</th>
@@ -743,6 +855,14 @@
     let tbody = null;
     let footer = null;
     let searchBox = null;
+    let dueFilterPanel = null;
+    let dueFilterBtn = null;
+    let dueFilterNextDays = null;
+
+    // Due date filter state
+    let dueFilterMode = ''; // '', TODAY, WEEK, MONTH, YEAR, NEXT
+    let dueFilterNextDaysCount = 7;
+    let dueFilterOutsideClickBound = false;
 
     /* =========================
        INITIALIZE ELEMENTS
@@ -756,14 +876,23 @@
         tbody = workspace.querySelector("#tableBody");
         footer = workspace.querySelector("#footerText");
         searchBox = workspace.querySelector("#searchBox");
+        dueFilterPanel = workspace.querySelector("#dueFilterPanel");
+        dueFilterBtn = workspace.querySelector("#dueFilterBtn");
+        dueFilterNextDays = workspace.querySelector("#dueFilterNextDays");
 
         if (!tbody) tbody = document.getElementById("tableBody");
         if (!footer) footer = document.getElementById("footerText");
         if (!searchBox) searchBox = document.getElementById("searchBox");
+        if (!dueFilterPanel) dueFilterPanel = document.getElementById("dueFilterPanel");
+        if (!dueFilterBtn) dueFilterBtn = document.getElementById("dueFilterBtn");
+        if (!dueFilterNextDays) dueFilterNextDays = document.getElementById("dueFilterNextDays");
       } else {
         tbody = document.getElementById("tableBody");
         footer = document.getElementById("footerText");
         searchBox = document.getElementById("searchBox");
+        dueFilterPanel = document.getElementById("dueFilterPanel");
+        dueFilterBtn = document.getElementById("dueFilterBtn");
+        dueFilterNextDays = document.getElementById("dueFilterNextDays");
       }
 
       if (!tbody || !footer) {
@@ -772,6 +901,88 @@
       }
 
       console.log("✅ Elements initialized");
+      return true;
+    }
+
+    /* =========================
+       DUE DATE FILTER
+    ========================= */
+    function toggleDueFilterPanel(e) {
+      try { if (e) e.stopPropagation(); } catch (err) { }
+      if (!dueFilterPanel) return;
+      const isOpen = dueFilterPanel.classList.contains('is-open');
+      if (isOpen) {
+        dueFilterPanel.classList.remove('is-open');
+        dueFilterPanel.setAttribute('aria-hidden', 'true');
+      } else {
+        dueFilterPanel.classList.add('is-open');
+        dueFilterPanel.setAttribute('aria-hidden', 'false');
+        if (dueFilterNextDays) dueFilterNextDays.value = String(dueFilterNextDaysCount || 7);
+      }
+    }
+
+    function closeDueFilterPanel() {
+      if (!dueFilterPanel) return;
+      dueFilterPanel.classList.remove('is-open');
+      dueFilterPanel.setAttribute('aria-hidden', 'true');
+    }
+
+    function clearDueFilter() {
+      dueFilterMode = '';
+      closeDueFilterPanel();
+      searchOrders();
+    }
+
+    function setDueFilterPreset(mode) {
+      dueFilterMode = String(mode || '').toUpperCase();
+      closeDueFilterPanel();
+      searchOrders();
+    }
+
+    function applyDueFilterNextDays() {
+      const n = dueFilterNextDays ? Number(dueFilterNextDays.value) : NaN;
+      dueFilterNextDaysCount = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 7;
+      dueFilterMode = 'NEXT';
+      closeDueFilterPanel();
+      searchOrders();
+    }
+
+    function parseDueDateValue(v) {
+      if (!v) return null;
+      const d = new Date(v);
+      if (isNaN(d.getTime())) return null;
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function isDueDateInActiveFilter(dueDateStr) {
+      if (!dueFilterMode) return true;
+      const d = parseDueDateValue(dueDateStr);
+      if (!d) return false;
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+
+      const end = new Date(now);
+      if (dueFilterMode === 'TODAY') {
+        return d.getTime() === now.getTime();
+      }
+      if (dueFilterMode === 'WEEK') {
+        end.setDate(end.getDate() + 7);
+        return d >= now && d <= end;
+      }
+      if (dueFilterMode === 'MONTH') {
+        end.setMonth(end.getMonth() + 1);
+        return d >= now && d <= end;
+      }
+      if (dueFilterMode === 'YEAR') {
+        end.setFullYear(end.getFullYear() + 1);
+        return d >= now && d <= end;
+      }
+      if (dueFilterMode === 'NEXT') {
+        end.setDate(end.getDate() + (Number(dueFilterNextDaysCount) || 0));
+        return d >= now && d <= end;
+      }
       return true;
     }
 
@@ -1003,7 +1214,12 @@
         });
       } else {
         displayWeight = parseFloat(order.grWt || 0);
-        orderSideTotal = parseFloat(order.netAmount || 0);
+        const storedGross = order.orderTotal != null && order.orderTotal !== ""
+          ? parseFloat(order.orderTotal)
+          : NaN;
+        orderSideTotal = Number.isFinite(storedGross)
+          ? storedGross
+          : parseFloat(order.netAmount || 0);
       }
 
       // Format item names
@@ -1020,9 +1236,11 @@
       const sheetPurchaseTotal = purchaseSheetTotalResolved(order, billNo);
       const fullPurchase = purchaseTotal + sheetPurchaseTotal;
 
-      const netBill = order.items && order.items.length > 0
+      const hasItems = order.items && Array.isArray(order.items) && order.items.length > 0;
+      // Net bill after purchases (used as fallback if stored netAmount is missing)
+      const netBill = hasItems
         ? orderSideTotal - fullPurchase
-        : orderSideTotal;
+        : parseFloat(order.netAmount || 0);
 
       let advanceOnly = getAdvancePaymentsForBill(billNo);
       if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
@@ -1030,9 +1248,15 @@
       let totalPaymentsForBalance = getPaidAmountForBill(billNo);
       if (!totalPaymentsForBalance) totalPaymentsForBalance = parseFloat(order.advance || 0) || 0;
 
-      const displayAmount = netBill;
+      // In Ready Orders, show exactly what ready-extra-order saves:
+      // - Net (Rs) = netAmount (Net Total Amount)
+      // - Balance = balance (Pending balance)
+      const storedNet = Number(order.netAmount);
+      const storedBal = Number(order.balance);
+      const displayNetAmount = Number.isFinite(storedNet) ? storedNet : netBill;
+      const displayBalance = Number.isFinite(storedBal) ? storedBal : (netBill - totalPaymentsForBalance);
+
       const totalAdvance = advanceOnly + purchaseTotal;
-      const displayBalance = netBill - totalPaymentsForBalance;
       const totalPurchaseDisplay = fullPurchase;
 
       // Create row
@@ -1041,6 +1265,7 @@
       tr.dataset.orderNo = order.orderNo || order.billNo || "";
       tr.dataset.customer = customerName;
       tr.dataset.items = itemNamesStr;
+      tr.dataset.dueDate = order.dueDate || order.due_date || order.deliveryDate || "";
 
       const jobWorker = order.jobWorker || order.jobWorkerName || order.assignedWorker || "";
       // Look up from itemProcess (saved by Pending Items when assigning to a Job Worker)
@@ -1071,7 +1296,7 @@
     <td>${customerName}</td>
     <td>${relationName}</td>
     <td class="right">${displayWeight.toFixed(3)}</td>
-    <td class="right"><strong>\u20b9${displayAmount.toFixed(2)}</strong></td>
+    <td class="right"><strong>\u20b9${displayNetAmount.toFixed(2)}</strong></td>
     <td class="right">\u20b9${totalPurchaseDisplay.toFixed(2)}</td>
     <td class="right">\u20b9${totalAdvance.toFixed(2)}</td>
     <td class="right" style="font-weight:700; color:${displayBalance > 0 ? '#d32f2f' : '#2e7d32'};">
@@ -1170,8 +1395,11 @@
           items.includes(searchValue) ||
           rowText.includes(searchValue);
 
-        row.style.display = matches ? "" : "none";
-        if (matches) visibleCount++;
+        const dueOk = isDueDateInActiveFilter(row.dataset.dueDate || "");
+
+        const show = matches && dueOk;
+        row.style.display = show ? "" : "none";
+        if (show) visibleCount++;
       });
 
       updateFooter(visibleCount);
@@ -1300,6 +1528,19 @@
       loadReadyOrders();
       ensureFunctionsGlobal();
 
+      // Close due filter when clicking outside (bind once)
+      if (!dueFilterOutsideClickBound) {
+        dueFilterOutsideClickBound = true;
+        document.addEventListener('click', function (e) {
+          try {
+            if (!dueFilterPanel || !dueFilterPanel.classList.contains('is-open')) return;
+            const wrap = document.getElementById('dueFilterWrap');
+            if (wrap && wrap.contains(e.target)) return;
+            closeDueFilterPanel();
+          } catch (err) { }
+        });
+      }
+
       console.log("✅ Ready Orders page initialized");
     }
 
@@ -1379,6 +1620,10 @@
         editOrder,
         navigateToReadyExtraOrder,
         searchOrders,
+        toggleDueFilterPanel,
+        clearDueFilter,
+        setDueFilterPreset,
+        applyDueFilterNextDays,
         updateFooter,
         initReadyOrdersPage,
         initElements,
@@ -1468,7 +1713,7 @@
         if (filterEl) filterEl.value = 'ALL';
 
         if (items.length === 0) {
-          itemsBodyEl.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
+          itemsBodyEl.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
         } else {
           itemsBodyEl.innerHTML = items.map(r => {
             const isReady = r.status === 'READY';
@@ -1479,6 +1724,7 @@
                 : `<span class="badge process">In Process</span>`}</td>
               <td class="num num-neutral">${(r.qty || 0).toFixed(0)}</td>
               <td style="max-width:160px;white-space:normal;word-break:break-word;">${roEscapeHtml(r.itemName)}</td>
+              <td style="font-size:12px;">${roEscapeHtml(r.stamp != null && String(r.stamp).trim() !== '' ? String(r.stamp) : '—')}</td>
               <td style="max-width:160px;white-space:normal;word-break:break-word;">${roEscapeHtml(r.sampleDetails)}</td>
               <td>${roEscapeHtml(r.design)}</td>
               <td class="num num-neutral">${(r.estUnitWt || 0).toFixed(3)}</td>

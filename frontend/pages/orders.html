@@ -91,6 +91,68 @@
       transform: translateY(0);
     }
 
+    .orders-filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .orders-filter-menu {
+      position: relative;
+    }
+
+    .orders-filter-menu > summary {
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .orders-filter-menu > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .orders-filter-menu-trigger::after {
+      content: " ▾";
+      font-size: 0.85em;
+      opacity: 0.75;
+    }
+
+    .orders-filter-menu-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 6px);
+      min-width: 200px;
+      background: #fff;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+      z-index: 100;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      box-sizing: border-box;
+    }
+
+    .orders-filter-menu-item {
+      width: 100%;
+      text-align: left;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1d1d1f;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    .orders-filter-menu-item:hover {
+      background: #eef1f5;
+    }
+
     label {
       font-size: 14px;
       color: #3a3a3c;
@@ -170,6 +232,24 @@
       text-align: right;
     }
 
+    #ordersTable thead th:first-child,
+    #ordersTable tbody td:first-child {
+      width: 40px;
+      max-width: 40px;
+      min-width: 40px;
+      padding: 8px 4px;
+      box-sizing: border-box;
+      vertical-align: middle;
+      text-align: center;
+      overflow: visible;
+    }
+
+    #ordersTable thead th:first-child {
+      padding: 10px 4px;
+      font-size: 11px;
+      letter-spacing: 0.03em;
+    }
+
     tbody td {
       padding: 18px;
       border: 1px solid #d1d6de;
@@ -232,12 +312,47 @@
       font-variant-numeric: tabular-nums;
     }
 
-    /* Checkbox styling */
-    tbody input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
+    /* Mark column: thick square checkbox (fixed box — avoid stretch to cell width) */
+    #ordersTable tbody td:first-child input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      display: inline-block;
+      width: 20px !important;
+      min-width: 20px !important;
+      max-width: 20px !important;
+      height: 20px !important;
+      min-height: 20px !important;
+      max-height: 20px !important;
+      aspect-ratio: 1;
+      margin: 0 auto;
+      padding: 0;
       cursor: pointer;
-      accent-color: #007aff;
+      vertical-align: middle;
+      box-sizing: border-box;
+      border: 3px solid #2c2c2e;
+      border-radius: 2px;
+      background: #fff;
+      flex: 0 0 auto;
+      transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    #ordersTable tbody td:first-child input[type="checkbox"]:hover {
+      border-color: #007aff;
+      box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.35);
+    }
+
+    #ordersTable tbody td:first-child input[type="checkbox"]:checked {
+      background-color: #007aff;
+      border-color: #0051a8;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' d='M2.2 6.2l2.7 2.6 5.1-5.8'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 12px 12px;
+    }
+
+    #ordersTable tbody td:first-child input[type="checkbox"]:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #007aff;
     }
 
     /* =========================
@@ -313,6 +428,15 @@
         font-size: 12px;
       }
 
+      .orders-filter-group {
+        gap: 8px;
+      }
+
+      .orders-filter-menu-panel {
+        left: 0;
+        right: auto;
+      }
+
       .table-wrap {
         overflow-x: scroll;
         overflow-y: auto;
@@ -345,21 +469,27 @@
     <div class="orders-toolbar">
       <button class="btn" onclick="newOrder()">➕ New Order</button>
 
-      <label>From date</label>
-      <input type="date" id="filterFromDate" onchange="filterTable()">
+      <div class="orders-filter-group" aria-label="Filter orders">
+        <label for="filterStation">Station</label>
+        <select id="filterStation" title="Filter by customer station" onchange="filterTable()">
+          <option value="">All stations</option>
+        </select>
 
-      <label>To date</label>
-      <input type="date" id="filterToDate" onchange="filterTable()">
-
-      <label for="filterStation">Station</label>
-      <select id="filterStation" title="Filter by customer station" onchange="filterTable()">
-        <option value="">All stations</option>
-      </select>
-
-      <button class="btn" onclick="clearDateFilter()" style="padding:6px 12px; font-size:12px;">Clear filters</button>
-
-      <button type="button" class="btn" onclick="setMarkAllVisible(true)" style="padding:6px 12px; font-size:12px;" title="Mark every order currently shown in the list (respects date and station filters)">Mark all</button>
-      <button type="button" class="btn" onclick="setMarkAllVisible(false)" style="padding:6px 12px; font-size:12px;" title="Clear mark on every order currently shown in the list (respects date and station filters)">Unmark all</button>
+        <details class="orders-filter-menu" id="ordersFilterMenu">
+          <summary class="btn orders-filter-menu-trigger">Filter</summary>
+          <div class="orders-filter-menu-panel">
+            <button type="button" class="orders-filter-menu-item" onclick="closeOrdersFilterMenu(); clearDateFilter();">
+              Clear filters
+            </button>
+            <button type="button" class="orders-filter-menu-item" title="Mark every order currently shown in the list (respects station filter)" onclick="closeOrdersFilterMenu(); setMarkAllVisible(true);">
+              Mark all
+            </button>
+            <button type="button" class="orders-filter-menu-item" title="Clear mark on every order currently shown in the list (respects station filter)" onclick="closeOrdersFilterMenu(); setMarkAllVisible(false);">
+              Unmark all
+            </button>
+          </div>
+        </details>
+      </div>
     </div>
 
     <!-- TABLE -->
@@ -576,7 +706,8 @@
           const row = document.createElement("tr");
           row.dataset.orderId = order.id;
 
-          // Same rules as new-order payment panel: net = order lines − line purchases − purchase sheet; balance = net − all payments.
+          // Order Total column = Payment Summary "Order Total:" (sum of non-Purchase lines only).
+          // Net bill for balance = order lines − line purchases − purchase sheet; balance = net − all payments.
           // Advance column = payment advances (non-Paid) + purchase line totals only (see header title).
           let displayGrWt = 0;
           let orderSideTotal = 0;
@@ -611,7 +742,12 @@
             });
           } else {
             displayGrWt = parseFloat(order.grWt || 0);
-            orderSideTotal = parseFloat(order.netAmount || 0);
+            const storedGross = order.orderTotal != null && order.orderTotal !== ""
+              ? parseFloat(order.orderTotal)
+              : NaN;
+            orderSideTotal = Number.isFinite(storedGross)
+              ? storedGross
+              : parseFloat(order.netAmount || 0);
           }
 
           const billNo = order.orderNo || order.billNo;
@@ -620,7 +756,7 @@
 
           const netBill = order.items && order.items.length > 0
             ? orderSideTotal - fullPurchase
-            : orderSideTotal;
+            : parseFloat(order.netAmount || 0);
 
           let advanceOnly = getAdvancePaymentsForBill(billNo);
           if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
@@ -628,7 +764,6 @@
           let totalPaymentsForBalance = getPaidAmountForBill(billNo);
           if (!totalPaymentsForBalance) totalPaymentsForBalance = parseFloat(order.advance || 0) || 0;
 
-          const displayNet = netBill;
           const displayAdvance = advanceOnly + purchaseTotal;
           const displayBalance = netBill - totalPaymentsForBalance;
           const totalPurchaseDisplay = fullPurchase;
@@ -647,7 +782,7 @@
         <td>${order.orderDate || "-"}</td>
         <td>${order.dueDate || "-"}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
-        <td class="right">${displayNet.toFixed(2)}</td>
+        <td class="right">${orderSideTotal.toFixed(2)}</td>
         <td class="right">${totalPurchaseDisplay.toFixed(2)}</td>
         <td class="right">${displayAdvance.toFixed(2)}</td>
         <td class="right">${displayBalance.toFixed(2)}</td>
@@ -1038,7 +1173,7 @@
       }
     }
 
-    /** Set marked true/false for every order row currently visible (respects date range filter). */
+    /** Set marked true/false for every order row currently visible (respects station filter). */
     function setMarkAllVisible(marked) {
       if (!tbody && !initElements()) return;
       try {
@@ -1074,7 +1209,7 @@
     }
 
     /* =========================
-       DATE FILTER (by month, day, date)
+       TABLE FILTER (station)
     ========================= */
     function filterTable() {
       if (!tbody) {
@@ -1082,43 +1217,20 @@
       }
 
       const workspace = document.querySelector(".workspace");
-      let fromEl = workspace ? workspace.querySelector("#filterFromDate") : null;
-      let toEl = workspace ? workspace.querySelector("#filterToDate") : null;
       let stationEl = workspace ? workspace.querySelector("#filterStation") : null;
-      if (!fromEl) fromEl = document.querySelector("#filterFromDate") || document.getElementById("filterFromDate");
-      if (!toEl) toEl = document.querySelector("#filterToDate") || document.getElementById("filterToDate");
       if (!stationEl) stationEl = document.querySelector("#filterStation") || document.getElementById("filterStation");
 
-      const fromValue = fromEl ? fromEl.value : "";
-      const toValue = toEl ? toEl.value : "";
       const stationFilter = stationEl ? normalizeStationValue(stationEl.value) : "";
-      const fromDate = fromValue ? new Date(fromValue) : null;
-      const toDate = toValue ? new Date(toValue) : null;
-      if (toDate) toDate.setHours(23, 59, 59, 999);
 
       const rows = tbody.querySelectorAll("tr");
       rows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-        const orderDateCell = cells[4] ? cells[4].textContent.trim() : "";
-
-        let showByDate = true;
-        if (fromValue || toValue) {
-          const rowDate = orderDateCell ? new Date(orderDateCell) : null;
-          if (!rowDate || isNaN(rowDate.getTime())) {
-            showByDate = false;
-          } else {
-            if (fromDate && rowDate < fromDate) showByDate = false;
-            if (toDate && rowDate > toDate) showByDate = false;
-          }
-        }
-
         let showByStation = true;
         if (stationFilter) {
           const rowSt = normalizeStationValue(row.dataset.station || "");
           showByStation = rowSt.toLowerCase() === stationFilter.toLowerCase();
         }
 
-        row.style.display = showByDate && showByStation ? "" : "none";
+        row.style.display = showByStation ? "" : "none";
       });
 
       updateFooter();
@@ -1126,16 +1238,15 @@
 
     function clearDateFilter() {
       const workspace = document.querySelector(".workspace");
-      let fromEl = workspace ? workspace.querySelector("#filterFromDate") : null;
-      let toEl = workspace ? workspace.querySelector("#filterToDate") : null;
       let stationEl = workspace ? workspace.querySelector("#filterStation") : null;
-      if (!fromEl) fromEl = document.querySelector("#filterFromDate") || document.getElementById("filterFromDate");
-      if (!toEl) toEl = document.querySelector("#filterToDate") || document.getElementById("filterToDate");
       if (!stationEl) stationEl = document.querySelector("#filterStation") || document.getElementById("filterStation");
-      if (fromEl) fromEl.value = "";
-      if (toEl) toEl.value = "";
       if (stationEl) stationEl.value = "";
       filterTable();
+    }
+
+    function closeOrdersFilterMenu() {
+      const menu = document.getElementById("ordersFilterMenu");
+      if (menu) menu.open = false;
     }
 
     /* =========================
@@ -1257,6 +1368,7 @@
       window.toggleOrderStatus = toggleOrderStatus;
       window.filterTable = filterTable;
       window.clearDateFilter = clearDateFilter;
+      window.closeOrdersFilterMenu = closeOrdersFilterMenu;
       window.setMarkAllVisible = setMarkAllVisible;
       window.updateFooter = updateFooter;
       window.initOrdersPage = initOrdersPage;

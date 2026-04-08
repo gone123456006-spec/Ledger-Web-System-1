@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Bill Invoice</title>
+  <title>Order</title>
 
   <style>
     /* =====================================================
@@ -589,10 +589,13 @@
       background: #f5f5f7;
     }
 
-    /* Bill mode: hide Ut. Wt. through Est. Total (columns 6–10); data remains in row for save/calc */
+    /* Hide Ut. Wt. through Est. Total (columns 6–10); data remains in row for save/calc */
     #ready-order-item-table.ready-order-bill-hide-mid col:nth-child(n+6):nth-child(-n+10),
     #ready-order-item-table.ready-order-bill-hide-mid thead th:nth-child(n+6):nth-child(-n+10),
-    #ready-order-item-table.ready-order-bill-hide-mid tbody td:nth-child(n+6):nth-child(-n+10) {
+    #ready-order-item-table.ready-order-bill-hide-mid tbody td:nth-child(n+6):nth-child(-n+10),
+    #ready-order-item-table.ready-order-hide-mid col:nth-child(n+6):nth-child(-n+10),
+    #ready-order-item-table.ready-order-hide-mid thead th:nth-child(n+6):nth-child(-n+10),
+    #ready-order-item-table.ready-order-hide-mid tbody td:nth-child(n+6):nth-child(-n+10) {
       display: none !important;
     }
 
@@ -603,9 +606,9 @@
       display: none !important;
     }
 
-    /* Bill mode: A4 line items — hide Net Wt / Rate / Est. Total (cols 3–5), aligned with main table */
-    #invoice.invoice-bill-mode table.invoice-line-items-table thead th:nth-child(n+3):nth-child(-n+5),
-    #invoice.invoice-bill-mode table.invoice-line-items-table tbody td:nth-child(n+3):nth-child(-n+5) {
+    /* Bill mode: A4 line items — hide Net Wt / Rate / Est. Total (after Item + Stamp + Pc) */
+    #invoice.invoice-bill-mode table.invoice-line-items-table thead th:nth-child(n+4):nth-child(-n+6),
+    #invoice.invoice-bill-mode table.invoice-line-items-table tbody td:nth-child(n+4):nth-child(-n+6) {
       display: none !important;
     }
 
@@ -1097,16 +1100,16 @@
     }
 
     .billing-detail .panel-open-purchase-sheet-btn--paid-purchase {
-      color: #0f766e;
+      color: #d63384;
     }
 
     .billing-detail .panel-open-purchase-sheet-btn--paid-purchase .summary-label,
     .billing-detail .panel-open-purchase-sheet-btn--paid-purchase .summary-value {
-      color: #0f766e;
+      color: #d63384;
     }
 
     .billing-detail .panel-open-purchase-sheet-btn--paid-purchase:hover {
-      background: rgba(15, 118, 110, 0.08);
+      background: rgba(214, 51, 132, 0.08);
     }
 
     .panel-open-purchase-sheet-btn:hover {
@@ -1528,7 +1531,51 @@
 
     #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn--paid-purchase .summary-label,
     #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn--paid-purchase .summary-value {
-      color: #0f766e;
+      color: #d63384;
+    }
+
+    /* Full-width tap row: outer grid has 2 cols but only one child — span so label/value align like other rows */
+    #panelPurchaseSaleDetailWrap .summary-item.purchase-minus > .panel-open-purchase-sheet-btn {
+      grid-column: 1 / -1;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--advance-minus-open,
+    #panelPurchaseSaleDetailWrap button.summary-item.summary-item--paid-minus-open {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* Bill-only block: wrapper must not break table-like rows (children join billing-detail flow) */
+    #paymentSummaryPaidBillRows.payment-summary-bill-only {
+      display: none;
+    }
+
+    #paymentSummaryPaidBillRows.payment-summary-bill-only.is-visible {
+      display: contents;
+    }
+
+    /* Rupee column: same inset “cell” look for all Total rows */
+    #panelPurchaseSaleDetailWrap .summary-item > .summary-value,
+    #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-value {
+      background: #f0f2f5;
+      font-weight: 600;
+      border-left: 1px solid #d1d6de;
+      min-width: 7rem;
+      justify-content: flex-end;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-line--add > .summary-value {
+      background: #f7f9fc;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-net-balance > .summary-value {
+      background: #eef0f3;
+    }
+
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-est-total > .summary-value {
+      background: #e8eaee;
     }
 
     .billing-detail .summary-label {
@@ -1936,7 +1983,7 @@
     }
 
     #panelPurchaseSaleDetailWrap .summary-item.summary-item--paid-minus-open:hover {
-      background: #e8f4f2;
+      background: #f5e9ee;
     }
 
     /* Full-row tap targets: match other rows — no dark focus ring / button border */
@@ -1973,7 +2020,7 @@
 
   <div class="app no-print ready-order-page" id="orderApp" data-page-root="ready-extra-order" data-bill-mode="0">
 
-    <div class="order-title">Bill Invoice</div>
+    <div class="order-title">Order</div>
 
     <!-- TOP -->
     <div class="order-top">
@@ -2014,22 +2061,28 @@
         <div class="box-title" id="rexOrderInfoBoxTitle">Order Information</div>
 
         <div class="row">
-          <label>Order No</label>
+          <label id="rexOrderNoLabel">Order No</label>
           <input id="billNo" readonly>
-        </div>
-
-        <div class="row">
-          <label>Bill No.</label>
-          <input id="sgjBillNo" readonly>
         </div>
 
         <div class="row">
           <label id="rexOrderDateLabel">Date</label>
           <input type="date" id="orderDate">
         </div>
+
+        <div class="row">
+          <label id="rexSgjBillNoLabel">Bill No.</label>
+          <input id="sgjBillNo" readonly>
+        </div>
+
         <div class="row" id="rexDueDateRow">
           <label>Due Date</label>
           <input type="date" id="dueDate">
+        </div>
+
+        <div class="row" id="rexBillDateRow" style="display: none;">
+          <label id="rexBillDateLabel">Bill Date</label>
+          <input type="date" id="billDate">
         </div>
 
         <div class="row" style="display: none;">
@@ -2102,6 +2155,8 @@
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button type="button" class="btn-bill" onclick="onBillButtonClick()"
         title="Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."> Bill</button>
+      <button type="button" id="rexHideUnhideColumnsBtn" class="btn-bill" onclick="onHideUnhideColumnsClick()"
+        title="Hide or Unhide the same columns as Bill view — display only. Does not change Save destination (use Bill before Save for All Bill)."> Hide</button>
       <button type="button" onclick="saveOrder()" title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only."> Save</button>
       <button onclick="showInvoice()"> A4 Invoice</button>
       <button onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
@@ -2140,6 +2195,10 @@
                 <span class="summary-label">Sale (add):</span>
                 <span class="summary-value" id="panelSaleAdd">₹ 0.00</span>
               </div>
+              <div class="summary-item billing-detail-line--add">
+                <span class="summary-label">Other (add):</span>
+                <span class="summary-value" id="panelOtherAdd">₹ 0.00</span>
+              </div>
               <div class="summary-item billing-detail-line--add billing-detail-subtotal-row">
                 <span class="summary-label">Sub total:</span>
                 <span class="summary-value" id="panelSubTotalAdd">₹ 0.00</span>
@@ -2166,6 +2225,7 @@
                 <span class="summary-label">Net Balance:</span>
                 <span class="summary-value" id="panelNetBalanceMid">₹ 0.00</span>
               </div>
+              <div id="paymentSummaryPaidBillRows" class="payment-summary-bill-only" aria-hidden="true">
               <button type="button" class="summary-item purchase-minus summary-item--paid-minus-open"
                 title="Tap to view Paid payment lines for this bill"
                 onclick="typeof openPaidPaymentsPopup==='function'&&openPaidPaymentsPopup()">
@@ -2179,6 +2239,7 @@
                   <span class="summary-label">Paid Purchase minus:</span>
                   <span class="summary-value" id="panelPaidPurchaseMinus">₹ 0.00</span>
                 </button>
+              </div>
               </div>
               <div class="summary-item billing-detail-est-total">
                 <span class="summary-label">Pending balance Net Total Amount:</span>
@@ -2226,6 +2287,7 @@
       <div class="invoice-header-left">
         <p style="margin:5px 0;"><strong>Customer:</strong> <span id="iCustomer"></span></p>
         <p style="margin:5px 0;"><strong id="iOrderDateLabel">Order Date:</strong> <span id="iOrderDate"></span></p>
+        <p id="iBillDateInvoiceRow" style="display: none; margin: 5px 0;"><strong>Bill Date:</strong> <span id="iBillDate"></span></p>
         <p style="margin:5px 0;"><strong>Order No:</strong> <span id="iBillNo"></span></p>
         <p style="margin:5px 0;"><strong>Bill No:</strong> <span id="iSgjBillNo"></span></p>
       </div>
@@ -2237,12 +2299,13 @@
     <table class="invoice-line-items-table">
       <thead>
         <tr>
-          <th style="width:25%;">Item</th>
+          <th style="width:22%;">Item</th>
+          <th style="width:10%;">Stamp</th>
           <th style="width:8%;">Pc</th>
           <th style="width:10%;">Net Wt</th>
           <th style="width:10%;">Rate</th>
           <th style="width:12%;">Est. Total</th>
-          <th style="width:35%;">Order Details</th>
+          <th style="width:28%;">Order Details</th>
         </tr>
       </thead>
       <tbody id="iItems"></tbody>
@@ -2690,6 +2753,7 @@
       var station = null;
       var orderDate = null;
       var dueDate = null;
+      var billDate = null;
       var billNo = null;
       var gstRate = null;
       var itemBody = null;
@@ -2715,6 +2779,8 @@
       var billMidColumnsHidden = false;
       /** Set true only when user taps Bill (UI preview). Next Save uses All Bill finalization and skips Ready Orders. Cleared on Order view restore or after successful finalize. */
       var billButtonPendingAllBillSave = false;
+      /** When true, hide only Ut. Wt.–Est. Total columns (display-only; does not affect Bill flow). */
+      var midColumnsHiddenOnly = false;
 
       (function hideOtherPagesPopupsOnInit() {
         var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-advanced-payments-popup', 'ready-order-paid-payments-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
@@ -2742,6 +2808,7 @@
         station = searchRoot.querySelector("#station");
         orderDate = searchRoot.querySelector("#orderDate");
         dueDate = searchRoot.querySelector("#dueDate");
+        billDate = searchRoot.querySelector("#billDate");
         billNo = searchRoot.querySelector("#billNo");
         window.sgjBillNo = searchRoot.querySelector("#sgjBillNo");
         gstRate = searchRoot.querySelector("#gstRate");
@@ -2774,6 +2841,21 @@
         return getSearchRoot().querySelector("#ready-order-item-table");
       }
 
+      function updateHideUnhideColumnsBtnLabel() {
+        var root = getSearchRoot();
+        var hideTgl = root.querySelector("#rexHideUnhideColumnsBtn");
+        if (!hideTgl) return;
+        var effectiveHidden = !!(billMidColumnsHidden || midColumnsHiddenOnly);
+        hideTgl.textContent = effectiveHidden ? "Unhide" : "Hide";
+      }
+
+      function applyMidColumnsHiddenOnly(hidden) {
+        midColumnsHiddenOnly = !!hidden;
+        var tbl = getReadyOrderItemTableEl();
+        if (tbl) tbl.classList.toggle("ready-order-hide-mid", midColumnsHiddenOnly);
+        updateHideUnhideColumnsBtnLabel();
+      }
+
       function applyBillMidColumnsHidden(hidden) {
         billMidColumnsHidden = !!hidden;
         if (!billMidColumnsHidden) billButtonPendingAllBillSave = false;
@@ -2784,16 +2866,54 @@
         var app = root.querySelector("#orderApp");
         if (app) app.setAttribute("data-bill-mode", billMidColumnsHidden ? "1" : "0");
 
+        var pageHeading = root.querySelector(".order-title");
+        if (pageHeading) pageHeading.textContent = billMidColumnsHidden ? "Bill Invoice" : "Order";
+        try {
+          document.title = billMidColumnsHidden ? "Bill Invoice" : "Order";
+        } catch (eTitle) { }
+
         var infoTitle = root.querySelector("#rexOrderInfoBoxTitle");
         if (infoTitle) infoTitle.textContent = billMidColumnsHidden ? "Bill Information" : "Order Information";
 
+        var orderNoLbl = root.querySelector("#rexOrderNoLabel");
+        if (orderNoLbl) orderNoLbl.textContent = billMidColumnsHidden ? "Order No." : "Order No";
+
         var dateLabel = root.querySelector("#rexOrderDateLabel");
-        if (dateLabel) dateLabel.textContent = billMidColumnsHidden ? "Bill Date" : "Date";
+        if (dateLabel) dateLabel.textContent = billMidColumnsHidden ? "Order Date" : "Date";
 
         var dueRow = root.querySelector("#rexDueDateRow");
         if (dueRow) dueRow.style.display = billMidColumnsHidden ? "none" : "";
 
         if (billMidColumnsHidden && dueDate) dueDate.value = "";
+
+        var billDateRow = root.querySelector("#rexBillDateRow");
+        var billDateInput = root.querySelector("#billDate");
+        if (billDateRow) {
+          billDateRow.style.display = billMidColumnsHidden ? "" : "none";
+          if (billMidColumnsHidden && billDateInput && !billDateInput.value) {
+            var odVal = orderDate && orderDate.value ? orderDate.value : "";
+            billDateInput.value = odVal || new Date().toISOString().split("T")[0];
+          }
+        }
+
+        var paidBillRows = root.querySelector("#paymentSummaryPaidBillRows");
+        if (paidBillRows) {
+          if (billMidColumnsHidden) {
+            paidBillRows.classList.add("is-visible");
+          } else {
+            paidBillRows.classList.remove("is-visible");
+          }
+          paidBillRows.setAttribute("aria-hidden", billMidColumnsHidden ? "false" : "true");
+        }
+
+        try {
+          if (typeof updatePaymentPanel === "function") updatePaymentPanel();
+        } catch (ePanel) { }
+        updateHideUnhideColumnsBtnLabel();
+      }
+
+      function onHideUnhideColumnsClick() {
+        applyMidColumnsHiddenOnly(!midColumnsHiddenOnly);
       }
 
       function onBillButtonClick() {
@@ -3405,6 +3525,7 @@
         // Other / Sale: respect Global Edit — off = template-style locks (Edit unlocks all); on = full edit + highlight
         if (isReadyExtraFullLineRow(typeSel)) {
           const isSale = typeSel && typeSel.value === "Sale";
+          const isOther = typeSel && typeSel.value === "Other";
           const globalEditBtn = document.getElementById("globalEditBtn");
           const isGlobalEditing = !globalEditBtn || globalEditBtn.dataset.editing === "true";
           row.querySelectorAll("input").forEach(input => {
@@ -3432,9 +3553,36 @@
               input.style.borderRadius = "";
               return;
             }
-            // FORCE lock Stamp..Est.Total always (root-cause fix: Global Edit must never unlock these)
-            // EXCEPTION: For Sale rows, Stamp (3) and Pc (4) remain editable
-            if (alwaysLockedIdx(idx) && !(isSale && (idx === 3 || idx === 4))) {
+
+            // Other row: col 3 (ex-Stamp / text "Other") read-only — not unlocked by Global Edit.
+            if (isOther && idx === 3) {
+              input.setAttribute("readonly", "readonly");
+              input.classList.add("order-detail-readonly", "purchase-field-disabled");
+              input.tabIndex = -1;
+              input.style.visibility = "visible";
+              input.style.backgroundColor = "#f5f5f7";
+              input.style.border = "";
+              input.style.borderRadius = "";
+              input.style.cursor = "not-allowed";
+              return;
+            }
+
+            // Other row: Making (14) always read-only / 0% — not unlocked by Global Edit.
+            if (isOther && idx === 14) {
+              input.value = "0";
+              input.setAttribute("readonly", "readonly");
+              input.classList.add("order-detail-readonly", "purchase-field-disabled");
+              input.tabIndex = -1;
+              input.style.visibility = "visible";
+              input.style.backgroundColor = "#f5f5f7";
+              input.style.border = "";
+              input.style.borderRadius = "";
+              input.style.cursor = "not-allowed";
+              return;
+            }
+
+            // FORCE lock col 3..9 always. EXCEPTION: Sale — cols 3 & 4; Other — Pc (4) only.
+            if (alwaysLockedIdx(idx) && !(isSale && (idx === 3 || idx === 4)) && !(isOther && idx === 4)) {
               input.setAttribute("readonly", "readonly");
               input.classList.add("order-detail-readonly");
               input.tabIndex = -1;
@@ -3849,7 +3997,8 @@
           } else {
             const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
             const rate = parseFloat(r.cells[13].children[0].value) || 0;
-            const making = parseFloat(r.cells[14].children[0].value) || 0;
+            const isOtherRow = typeSelect && typeSelect.value === "Other";
+            const making = isOtherRow ? 0 : (parseFloat(r.cells[14].children[0].value) || 0);
             let mainPart = 0;
             let haveMain = false;
             if (readyWeight > 0 && rate > 0) {
@@ -4839,6 +4988,7 @@
           orderDataR.customerId = custName.value;
           orderDataR.orderDate = orderDate.value;
           orderDataR.dueDate = dueDate.value || "";
+          orderDataR.billDate = billDate && billDate.value ? billDate.value : "";
           orderDataR.type = orderTypeR;
           orderDataR.pc = totalPcR;
           orderDataR.grWt = totalGrWtR.toFixed(3);
@@ -4884,6 +5034,7 @@
         const existingBillIndex = bills.findIndex(b => b.billNo === billNo.value);
         const billData = {
           date: orderDate.value,
+          billDate: billDate && billDate.value ? billDate.value : "",
           billNo: billNo.value,
           sgjBillNo: window.sgjBillNo ? window.sgjBillNo.value : "",
           customer: getCustomerName(),
@@ -5001,6 +5152,7 @@
           customer: getCustomerName(),
           customerId: custName.value,
           orderDate: orderDate.value,
+          billDate: billDate && billDate.value ? billDate.value : "",
           dueDate: dueDate.value || "",
           type: orderType, // Order, Sale, Purchase, Repair
           pc: totalPc,
@@ -5039,6 +5191,7 @@
           customer: targetCustOverride ? targetCustOverride.name : getCustomerName(),
           customerId: targetCustOverride ? targetCustOverride.id : custName.value,
           date: orderDate.value,
+          billDate: billDate && billDate.value ? billDate.value : "",
           dueDate: dueDate.value || "",
           amount: billTotal.toFixed(2),
           totalAmount: billTotal,
@@ -5096,7 +5249,7 @@
           amount: billTotal.toFixed(2),
           netAmount: billTotal.toFixed(2),
           finalBalanceAmount: finalBalanceAmount.toFixed(2),
-          date: dateOverride || orderDate.value || new Date().toISOString().split("T")[0],
+          date: dateOverride || (billDate && billDate.value) || orderDate.value || new Date().toISOString().split("T")[0],
           timestamp: orderTimestamp,
           readyWeight: totalGrWt.toFixed(3),
           neg: 0,
@@ -5343,6 +5496,7 @@
         if (window.sgjBillNo) window.sgjBillNo.value = getSessionSgjBillNo();
         if (orderDate) orderDate.valueAsDate = new Date();
         if (dueDate) dueDate.value = "";
+        if (billDate) billDate.value = "";
         if (gstRate) gstRate.value = "";
 
         // Clear table rows
@@ -5450,6 +5604,7 @@
         // Load order details
         if (orderDate) orderDate.value = order.orderDate || orderDate.value;
         if (dueDate) dueDate.value = order.dueDate || "";
+        if (billDate) billDate.value = order.billDate || "";
         if (billNo) {
           billNo.value = order.orderNo || order.billNo || billNo.value;
           // Make Bill No read-only when editing
@@ -5593,6 +5748,7 @@
 
         if (orderDate) orderDate.value = b.date || "";
         if (dueDate) dueDate.value = b.dueDate || "";
+        if (billDate) billDate.value = b.billDate || b.date || "";
         if (billNo) {
           billNo.value = b.billNo || "";
           billNo.readOnly = true;
@@ -5678,7 +5834,16 @@
         if (iCustomer) iCustomer.textContent = getCustomerName() || "—";
         if (iOrderDate) iOrderDate.textContent = orderDate.value || "—";
         var iOrderDateLabelEl = searchRoot.querySelector("#iOrderDateLabel");
-        if (iOrderDateLabelEl) iOrderDateLabelEl.textContent = billMidColumnsHidden ? "Bill Date:" : "Order Date:";
+        if (iOrderDateLabelEl) iOrderDateLabelEl.textContent = "Order Date:";
+        var iBillDateInvoiceRow = searchRoot.querySelector("#iBillDateInvoiceRow");
+        var iBillDateSpan = searchRoot.querySelector("#iBillDate");
+        if (billMidColumnsHidden && billDate && billDate.value) {
+          if (iBillDateInvoiceRow) iBillDateInvoiceRow.style.display = "";
+          if (iBillDateSpan) iBillDateSpan.textContent = billDate.value;
+        } else {
+          if (iBillDateInvoiceRow) iBillDateInvoiceRow.style.display = "none";
+          if (iBillDateSpan) iBillDateSpan.textContent = "";
+        }
         if (iBillNo) iBillNo.textContent = billNo.value || "—";
         const iSgjBillNo = searchRoot.querySelector("#iSgjBillNo");
         if (iSgjBillNo && window.sgjBillNo) iSgjBillNo.textContent = window.sgjBillNo.value || "—";
@@ -5697,9 +5862,11 @@
             const itemType = r.cells[0] && r.cells[0].children[0] ? r.cells[0].children[0].value : "";
             const orderDetails = (itemType === "Order" && delivery) ? `Delivery: ${delivery}${sample ? ' | Sample: ' + sample : ''}` : "—";
             const itemName = (r.cells[2] && r.cells[2].children[0] ? r.cells[2].children[0].value || "—" : "—").substring(0, 25);
+            const stampVal = (r.cells[3] && r.cells[3].children[0] ? r.cells[3].children[0].value || "—" : "—").substring(0, 12);
             const rowHTML = `
 <tr>
   <td style="word-break:break-word; font-size:9px;">${itemName}</td>
+  <td style="font-size:9px;">${stampVal}</td>
   <td style="font-size:9px;">${r.cells[4] && r.cells[4].children[0] ? r.cells[4].children[0].value || "0" : "0"}</td>
   <td style="font-size:9px;">${r.cells[6] && r.cells[6].children[0] ? r.cells[6].children[0].value || "0" : "0"}</td>
   <td style="font-size:9px;">${r.cells[7] && r.cells[7].children[0] ? r.cells[7].children[0].value || "0" : "0"}</td>
@@ -6801,6 +6968,7 @@
             billNo: billNo ? billNo.value : "",
             orderDate: orderDate ? orderDate.value : "",
             dueDate: dueDate ? dueDate.value : "",
+            billDate: billDate ? billDate.value : "",
             gstRate: gstRate ? gstRate.value : "",
             hideBillMidColumns: billMidColumnsHidden,
             rows: []
@@ -6874,6 +7042,7 @@
               if (orderState.billNo && billNo) billNo.value = orderState.billNo;
               if (orderState.orderDate && orderDate) orderDate.value = orderState.orderDate;
               if (orderState.dueDate && dueDate) dueDate.value = orderState.dueDate;
+              if (orderState.billDate && billDate) billDate.value = orderState.billDate;
               if (orderState.gstRate && gstRate) gstRate.value = orderState.gstRate;
 
               // Restore rows (overwrite): clear and rebuild exactly
@@ -6955,6 +7124,7 @@
               if (orderState.billNo && billNo && !billNo.value) billNo.value = orderState.billNo;
               if (orderState.orderDate && orderDate && !orderDate.value) orderDate.value = orderState.orderDate;
               if (orderState.dueDate && dueDate && !dueDate.value) dueDate.value = orderState.dueDate;
+              if (orderState.billDate && billDate && !billDate.value) billDate.value = orderState.billDate;
               if (orderState.gstRate && gstRate && !gstRate.value) gstRate.value = orderState.gstRate;
 
               // Restore rows - MERGE with existing instead of replacing
@@ -7233,9 +7403,10 @@
       function updatePaymentPanel() {
         if (!billNo || !billNo.value) return;
 
-        // Total section (Final col 15): breakdown — Sub total → both purchase sheets / advance / rate → Net Balance → paid / legacy table purchase → Pending balance Net Total Amount
+        // Total section (Final col 15): breakdown — Order / Sale / Other (add) → Sub total → purchase sheets / advance / rate → Net Balance → paid / legacy purchase → Pending balance Net Total Amount
         let finalOrderTotal = 0;
         let finalSaleTotal = 0;
+        let finalOtherTotal = 0;
         let finalPurchaseTotal = 0;
 
         if (itemBody) {
@@ -7248,6 +7419,8 @@
               finalPurchaseTotal += finOnly;
             } else if (type === "Sale") {
               finalSaleTotal += finOnly;
+            } else if (type === "Other") {
+              finalOtherTotal += finOnly;
             } else {
               finalOrderTotal += finOnly;
             }
@@ -7265,7 +7438,7 @@
         const advanced = getPaidAmount(billNo.value, 'Advanced');
         const paid = getPaidAmount(billNo.value, 'Paid');
 
-        const subTotalFinal = finalOrderTotal + finalSaleTotal;
+        const subTotalFinal = finalOrderTotal + finalSaleTotal + finalOtherTotal;
         const netBalanceMid = subTotalFinal - combinedPurchaseSheets - advanced - rateDiffAbs;
         const netTotalAmount = netBalanceMid - paid - finalPurchaseTotal;
 
@@ -7277,6 +7450,7 @@
         const panelWrap = pickPanelEl("#panelPurchaseSaleDetailWrap");
         const orderAddEl = pickPanelEl("#panelOrderAdd");
         const saleAddEl = pickPanelEl("#panelSaleAdd");
+        const otherAddEl = pickPanelEl("#panelOtherAdd");
         const subTotalAddEl = pickPanelEl("#panelSubTotalAdd");
         const advancePurchaseMinusEl = pickPanelEl("#panelAdvancePurchaseMinus");
         const advancedMinusEl = pickPanelEl("#panelAdvancedMinus");
@@ -7289,13 +7463,21 @@
         if (panelWrap) panelWrap.style.display = "";
         if (orderAddEl) orderAddEl.textContent = formatCurrency(finalOrderTotal);
         if (saleAddEl) saleAddEl.textContent = formatCurrency(finalSaleTotal);
+        if (otherAddEl) otherAddEl.textContent = formatCurrency(finalOtherTotal);
         if (subTotalAddEl) subTotalAddEl.textContent = formatCurrency(subTotalFinal);
         if (advancePurchaseMinusEl) advancePurchaseMinusEl.textContent = formatCurrency(newOrderPurchaseRupees);
         if (advancedMinusEl) advancedMinusEl.textContent = formatCurrency(advanced);
         if (rateDiffAmtEl) rateDiffAmtEl.textContent = rateDiffAbs > 0 ? formatCurrencySigned(-rateDiffAbs) : formatCurrency(0);
         if (netBalanceMidEl) netBalanceMidEl.textContent = formatCurrency(netBalanceMid);
-        if (paidMinusEl) paidMinusEl.textContent = formatCurrency(paid);
-        if (paidPurchaseMinusEl) paidPurchaseMinusEl.textContent = formatCurrency(readyExtraPurchaseRupees);
+        if (paidMinusEl && paidPurchaseMinusEl) {
+          if (billMidColumnsHidden) {
+            paidMinusEl.textContent = formatCurrency(paid);
+            paidPurchaseMinusEl.textContent = formatCurrency(readyExtraPurchaseRupees);
+          } else {
+            paidMinusEl.textContent = formatCurrency(0);
+            paidPurchaseMinusEl.textContent = formatCurrency(0);
+          }
+        }
         if (netDetailEl) netDetailEl.textContent = formatCurrency(netTotalAmount);
 
         var paymentListEl = pickPanelEl("#paymentList");
@@ -7861,6 +8043,7 @@
         window.transferToCustomerBalance = transferToCustomerBalance;
         window.resetOrder = resetOrder;
         window.onBillButtonClick = onBillButtonClick;
+        window.onHideUnhideColumnsClick = onHideUnhideColumnsClick;
         window.showInvoice = showInvoice;
         window.back = back;
         window.openPayment = openPayment;

@@ -3711,15 +3711,20 @@
           }
           localStorage.setItem('bills', JSON.stringify(bills));
 
-          // Calculate total Pc and GR.Wt from all items
+          // Calculate total Pc and GR.Wt from all items; gross Order Total matches Payment Summary "Order Total:"
           let totalPc = 0;
           let totalGrWt = 0;
+          let panelOrderTotal = 0;
           rows.forEach(row => {
             // Pc is at index 7, Gr.Wt (Est. Total Wt) is at index 9
             const pc = parseFloat(row.values[7] || 0);
             const grWt = parseFloat(row.values[9] || 0);
             totalPc += pc;
             totalGrWt += grWt;
+            const lineAmt = safeNumber(row.values[12]);
+            if ((row.type || 'Order') !== 'Purchase') {
+              panelOrderTotal += lineAmt;
+            }
           });
 
           // Save to orders
@@ -3738,6 +3743,7 @@
             type: rows[0]?.type || 'Order',
             pc: totalPc,
             grWt: totalGrWt,
+            orderTotal: panelOrderTotal.toFixed(2),
             netAmount: billTotal.toFixed(2),
             advance: getPaidAmount(AppState.elements.billNo.value).toFixed(2),
             balance: (billTotal - getPaidAmount(AppState.elements.billNo.value)).toFixed(2),

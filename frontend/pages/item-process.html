@@ -872,6 +872,7 @@
                         <th class="center">Status</th>
                         <th class="right">Qty</th>
                         <th>Item Name</th>
+                        <th>Stamp</th>
                         <th>Sample Details</th>
                         <th>Design</th>
                         <th>Size</th>
@@ -989,6 +990,7 @@
                             <th style="text-align:center">Status</th>
                             <th style="text-align:right">Qty</th>
                             <th>Item Name</th>
+                            <th>Stamp</th>
                             <th>Sample Details</th>
                             <th>Design</th>
                             <th>Size</th>
@@ -1108,7 +1110,33 @@
             });
         }
 
+        var activeIpFilter = 'PROCESS'; // Default to In Process
+
         /* ── LOAD TABLE ── */
+        let ipAllJobWorkerNames = [];
+
+        function updateIpJwFilterOptions() {
+            const jwFilter = document.getElementById('jwFilter');
+            if (!jwFilter) return;
+
+            // For In Process view: only show "All Job Workers"
+            if (activeIpFilter === 'PROCESS') {
+                jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>';
+                jwFilter.value = '';
+                jwFilter.disabled = true;
+                return;
+            }
+
+            const currentVal = jwFilter.value;
+            jwFilter.disabled = false;
+            jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>' +
+                (ipAllJobWorkerNames || []).map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+
+            // Restore selection if still available; otherwise reset to All
+            if (!currentVal || !(ipAllJobWorkerNames || []).includes(currentVal)) jwFilter.value = '';
+            else jwFilter.value = currentVal;
+        }
+
         function loadProcessItems() {
             if (!tbody && !initElements()) {
                 setTimeout(loadProcessItems, 100);
@@ -1122,7 +1150,7 @@
                 if (items.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                          <td colspan="14" style="border:none;">
+                            <td colspan="15" style="border:none;">
                             <div class="empty-state">
                               <div class="empty-state-icon">⚙️</div>
                               <div class="empty-state-text">No Items in Process</div>
@@ -1138,7 +1166,7 @@
                 items.forEach((r, idx) => {
                     const isReady = r.status === 'READY';
                     const tr = document.createElement('tr');
-                    tr.dataset.search = [r.itemName, r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
+                    tr.dataset.search = [r.itemName, r.stamp || '', r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
                     tr.dataset.jobworker = (r.jobworkerName || '').trim();
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
@@ -1158,6 +1186,7 @@
                         </td>
                         <td class="right">${(r.qty || 0).toFixed(0)}</td>
                         <td class="col-item-name">${escapeHtml(r.itemName)}</td>
+                        <td>${escapeHtml(r.stamp != null && String(r.stamp).trim() !== '' ? String(r.stamp) : '—')}</td>
                         <td class="col-sample">${escapeHtml(r.sampleDetails)}</td>
                         <td>${escapeHtml(r.design)}</td>
                         <td>${escapeHtml(r.size)}</td>
@@ -1173,26 +1202,19 @@
 
                 if (footer) footer.textContent = `${items.length} item(s) in process`;
 
-                // Update JW filter dropdown
-                const jwFilter = document.getElementById('jwFilter');
-                if (jwFilter) {
-                    const currentVal = jwFilter.value;
-                    const names = [...new Set(items.map(i => (i.jobworkerName || '').trim()).filter(Boolean))].sort();
-                    jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>' +
-                        names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
-                    jwFilter.value = currentVal;
-                }
+                // Cache JW names and update dropdown according to active filter
+                ipAllJobWorkerNames = [...new Set(items.map(i => (i.jobworkerName || '').trim()).filter(Boolean))].sort();
+                updateIpJwFilterOptions();
 
                 ipFilterTable();
                 ipUpdateUI();
             } catch (e) {
                 console.error('Error loading process items:', e);
-                tbody.innerHTML = `<tr><td colspan="13" class="empty-state">Error loading data.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="15" class="empty-state">Error loading data.</td></tr>`;
                 if (footer) footer.textContent = 'Error';
             }
         }
 
-        let activeIpFilter = 'PROCESS'; // Default to In Process
         function setIpFilter(f) {
             activeIpFilter = f;
             const btnP = document.getElementById('fBtnProcess');
@@ -1201,6 +1223,7 @@
             if(btnR) btnR.classList.toggle('active', f === 'READY');
             const btnA = document.getElementById('fBtnAll');
             if(btnA) btnA.classList.toggle('active', f === 'ALL');
+            updateIpJwFilterOptions();
             ipFilterTable();
         }
 
@@ -1244,8 +1267,8 @@
                     const tds = tr.querySelectorAll('td');
                     orderMap[oid] = {
                         orderId: oid,
-                        orderNo: tds[10] ? tds[10].textContent.trim() : oid,
-                        customer: tds[11] ? tds[11].textContent.trim() : '—',
+                        orderNo: tds[12] ? tds[12].textContent.trim() : oid,
+                        customer: tds[13] ? tds[13].textContent.trim() : '—',
                         items: []
                     };
                 }
@@ -1370,8 +1393,8 @@
                     const tds = tr.querySelectorAll('td');
                     orderMap[oid] = {
                         orderId: oid,
-                        orderNo: tds[10] ? tds[10].textContent.trim() : oid,
-                        customer: tds[11] ? tds[11].textContent.trim() : '—',
+                        orderNo: tds[12] ? tds[12].textContent.trim() : oid,
+                        customer: tds[13] ? tds[13].textContent.trim() : '—',
                         items: []
                     };
                 }
@@ -1537,7 +1560,7 @@
                 if (filterEl) filterEl.value = 'ALL';
 
                 if (items.length === 0) {
-                    itemsBodyEl.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
+                    itemsBodyEl.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
                 } else {
                     itemsBodyEl.innerHTML = items.map(r => {
                         const isReady = r.status === 'READY';
@@ -1549,6 +1572,7 @@
                             </td>
                             <td class="num num-neutral">${(r.qty || 0).toFixed(0)}</td>
                             <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(r.itemName)}</td>
+                            <td style="font-size:12px;">${escapeHtml(r.stamp != null && String(r.stamp).trim() !== '' ? String(r.stamp) : '—')}</td>
                             <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(r.sampleDetails)}</td>
                             <td>${escapeHtml(r.design)}</td>
                             <td>${escapeHtml(r.size)}</td>

@@ -280,8 +280,15 @@
     }
     #customerListSection #searchCustomer::placeholder { color: var(--muted); }
     .table-wrap { width: 100%; overflow: auto; border-radius: var(--radius-sm); flex: 1; min-height: 0; border: 1px solid var(--border); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04); }
-    #customerListSection table { width: 100%; min-width: 1200px; border-collapse: collapse; background: #fff; }
-    #customerListSection th, #customerListSection td { padding: 12px 16px; font-size: 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    #customerListSection table { width: 100%; min-width: 1320px; border-collapse: collapse; background: #fff; }
+    #customerListSection th,
+    #customerListSection td {
+      padding: 16px 20px;
+      font-size: 15px;
+      line-height: 1.45;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
     #customerListSection th {
       background: linear-gradient(to bottom, #f8f9fa, #f1f3f4);
       font-weight: 600;
@@ -291,35 +298,73 @@
       z-index: 10;
       font-size: 13px;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
       color: var(--muted);
+      padding: 14px 20px;
     }
     #customerListSection tbody tr { transition: background 0.15s ease; }
+    #customerListSection tbody tr:nth-child(even) { background: #fafbfd; }
     #customerListSection tbody tr:hover { background: #e8f0fe; }
     #customerListSection tbody tr:last-child td { border-bottom: none; }
-    #customerListSection table button {
-      padding: 6px 12px;
+    /* Actions column: tighter cell + smaller buttons */
+    #customerListSection tbody td:last-child {
+      padding: 8px 10px;
+      vertical-align: middle;
+      white-space: nowrap;
+      width: 1%;
+    }
+    #customerListSection thead th:last-child {
+      padding: 12px 10px;
       font-size: 12px;
+    }
+
+    /* Customer list: make Name column bigger (S.N=1, Customer id=2, Name=3) */
+    #customerListTable[data-list="Customer"] thead th:nth-child(3),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(3) {
+      min-width: 220px;
+      max-width: 360px;
+      font-size: 15px;
+      font-weight: 700;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* Customer list: make S.N column small (S.N=1) */
+    #customerListTable[data-list="Customer"] thead th:nth-child(1),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(1) {
+      min-width: 54px;
+      width: 54px;
+      max-width: 54px;
+      padding-left: 10px;
+      padding-right: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      text-align: center;
+    }
+    #customerListSection tbody td:last-child button {
+      padding: 4px 8px;
+      font-size: 11px;
       font-weight: 500;
-      margin: 0 3px;
-      border-radius: 6px;
+      margin: 0 2px;
+      border-radius: 5px;
       border: 1px solid var(--border);
       background: #fff;
       color: var(--text);
       cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease;
     }
-    #customerListSection table button:hover {
+    #customerListSection tbody td:last-child button:hover {
       background: #e8f0fe;
       border-color: var(--primary);
       color: var(--primary);
     }
-    #customerListSection table button.primary {
+    #customerListSection tbody td:last-child button.primary {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
     }
-    #customerListSection table button.primary:hover {
+    #customerListSection tbody td:last-child button.primary:hover {
       background: var(--primary-hover);
       border-color: var(--primary-hover);
       color: #fff;
@@ -362,8 +407,10 @@
   <style>
     .erp-form .field label .required { color: #ff3b30; margin-left: 4px; font-weight: bold; }
     #customerListSection table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
-    #customerListSection th, #customerListSection td { border: 1px solid #ddd !important; padding: 10px; text-align: left; }
-    #customerListSection th { background: #f8f9fa; font-weight: 600; color: #333; }
+    #customerListSection th, #customerListSection td { border: 1px solid #ddd !important; padding: 16px 20px; text-align: left; font-size: 15px; }
+    #customerListSection th { background: #f8f9fa; font-weight: 600; color: #333; font-size: 13px; }
+    #customerListSection tbody td:last-child { padding: 8px 10px !important; }
+    #customerListSection tbody td:last-child button { padding: 4px 8px !important; font-size: 11px !important; }
     #customerListSection tr:hover { background: #f1f7ff; }
   </style>
 </head>
@@ -514,9 +561,9 @@
         <input id="searchCustomer" placeholder="Search by name or mobile…" onkeyup="renderCustomerList()">
       </div>
       <div class="table-wrap">
-        <table>
+        <table id="customerListTable">
           <thead>
-            <tr>
+            <tr id="customerTableHeadRow">
               <th>CID</th>
               <th>Name</th>
               <th>Mobile</th>
@@ -1002,10 +1049,13 @@
     function renderCustomerList() {
       const tbody = $("customerTableBody");
       const searchBox = $("searchCustomer");
+      const headRow = $("customerTableHeadRow");
+      const listTable = $("customerListTable");
       if (!tbody) return;
       const search = (searchBox ? searchBox.value || "" : "").toLowerCase();
       const listType = getListType();
       tbody.innerHTML = "";
+      if (listTable) listTable.setAttribute("data-list", listType || "");
 
       const fmtDate = (d) => { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString(); };
       const fmtNum = (n) => (n != null && n !== "") ? Number(n) : "—";
@@ -1039,17 +1089,53 @@
 
       if (listType === "Customer") {
         const title = $("listSectionTitle"); if (title) title.textContent = "Customer List";
+        if (headRow) headRow.innerHTML = `
+          <th>S.N</th>
+          <th>Customer id</th>
+          <th>Name</th>
+          <th>Lf no.</th>
+          <th>Relation</th>
+          <th>Relation name</th>
+          <th>Address</th>
+          <th>Station</th>
+          <th>Phone</th>
+          <th>Mobile</th>
+          <th>Actions</th>
+        `;
         getCustomers()
           .filter(c => (c.name || "").toLowerCase().includes(search) || (c.mobile || "").includes(search))
-          .forEach(c => {
+          .forEach((c, idx) => {
             const nameEsc = (c.name || "").replace(/'/g, "&#39;");
+            // Keep old balance logic intact; balance is no longer a visible column in Customer list.
             const dispBal = getCalculatedBalance(c.name, c.openingBalance, c.openingBalanceType, c.currentBalance, c.currentBalanceType);
             tbody.innerHTML += `<tr ondblclick="selectCustomerForOrder('${nameEsc}')">
-    <td>${c.cid || ""}</td><td>${c.name || ""}</td><td>${c.mobile || ""}</td><td>${c.station || ""}</td><td>${dispBal}</td><td>${fmtBal(c.silverBalance)}</td><td>${fmtBal(c.goldBalance)}</td><td>${fmtDate(c.openingDate)}</td><td>${c.aadhar || "—"}</td><td>${c.pan || "—"}</td>
+    <td>${idx + 1}</td>
+    <td>${c.cid || ""}</td>
+    <td>${c.name || ""}</td>
+    <td>${c.lfno || ""}</td>
+    <td>${c.relationType || c.relation || ""}</td>
+    <td>${c.relationName || ""}</td>
+    <td>${c.address || ""}</td>
+    <td>${c.station || ""}</td>
+    <td>${c.phone || ""}</td>
+    <td>${c.mobile || ""}</td>
     <td><button onclick="editCustomer(${c.id})">Edit</button><button onclick="deleteCustomer(${c.id})">Delete</button><button onclick="selectCustomerForOrder('${nameEsc}')">Select</button></td></tr>`;
           });
       } else if (listType === "Jeweller") {
         const title = $("listSectionTitle"); if (title) title.textContent = "Jeweller List";
+        if (headRow) headRow.innerHTML = `
+          <th>CID</th>
+          <th>Name</th>
+          <th>Mobile</th>
+          <th>Station</th>
+          <th>Balance</th>
+          <th>Silver Balance</th>
+          <th>Gold Balance</th>
+          <th>Opening Date</th>
+          <th>Aadhar Number</th>
+          <th>PAN Number</th>
+          <th>Actions</th>
+        `;
         getJewellers()
           .filter(j => (j.name || "").toLowerCase().includes(search) || (j.mobile || "").includes(search))
           .forEach(j => {
@@ -1060,6 +1146,19 @@
           });
       } else {
         const title = $("listSectionTitle"); if (title) title.textContent = "Agent List";
+        if (headRow) headRow.innerHTML = `
+          <th>CID</th>
+          <th>Name</th>
+          <th>Mobile</th>
+          <th>Station</th>
+          <th>Balance</th>
+          <th>Silver Balance</th>
+          <th>Gold Balance</th>
+          <th>Opening Date</th>
+          <th>Aadhar Number</th>
+          <th>PAN Number</th>
+          <th>Actions</th>
+        `;
         getAgents()
           .filter(a => (a.name || "").toLowerCase().includes(search) || (a.mobile || "").includes(search) || (a.email || "").toLowerCase().includes(search))
           .forEach(a => {

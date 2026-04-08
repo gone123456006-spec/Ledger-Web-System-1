@@ -423,10 +423,10 @@
             <th>Order Date</th>
             <th>Due Date</th>
             <th class="right">Gr.Wt</th>
-            <th class="right">Net (Rs)</th>
+            <th class="right" title="Same as Orders list Order Total (gross non-Purchase lines)">Net (Rs)</th>
             <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
             <th class="right" title="Non-Paid payments + purchase line totals">Advance (Rs)</th>
-            <th class="right" title="Same as Orders list: Net − all payments">Balance</th>
+            <th class="right" title="Net bill after purchases − all payments (same as Orders list Balance)">Balance</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -680,16 +680,22 @@
         });
       } else {
         displayGrWt = parseFloat(order.grWt || 0);
-        orderSideTotal = parseFloat(order.netAmount || 0);
+        const storedGross = order.orderTotal != null && order.orderTotal !== ""
+          ? parseFloat(order.orderTotal)
+          : NaN;
+        orderSideTotal = Number.isFinite(storedGross)
+          ? storedGross
+          : parseFloat(order.netAmount || 0);
       }
 
       const billNo = order.orderNo || order.billNo;
       const sheetPurchaseTotal = purchaseSheetTotalResolved(order, billNo);
       const fullPurchase = purchaseTotal + sheetPurchaseTotal;
 
-      const netBill = order.items && order.items.length > 0
+      const hasItems = order.items && Array.isArray(order.items) && order.items.length > 0;
+      const netBill = hasItems
         ? orderSideTotal - fullPurchase
-        : orderSideTotal;
+        : parseFloat(order.netAmount || 0);
 
       let advanceOnly = getAdvancePaymentsForBill(billNo);
       if (!advanceOnly) advanceOnly = parseFloat(order.advance || 0) || 0;
@@ -697,7 +703,8 @@
       let totalPaymentsForBalance = getPaidAmountForBill(billNo);
       if (!totalPaymentsForBalance) totalPaymentsForBalance = parseFloat(order.advance || 0) || 0;
 
-      const displayNet = netBill;
+      /** Net (Rs) column = same as Orders list Order Total (gross non-Purchase lines). */
+      const displayOrderTotalGross = orderSideTotal;
       const displayAdvance = advanceOnly + purchaseTotal;
       const displayBalance = netBill - totalPaymentsForBalance;
       const totalPurchaseDisplay = fullPurchase;
@@ -728,7 +735,7 @@
         <td>${formatDate(order.orderDate)}</td>
         <td>${formatDate(order.dueDate)}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
-        <td class="right"><strong>₹${displayNet.toFixed(2)}</strong></td>
+        <td class="right"><strong>₹${displayOrderTotalGross.toFixed(2)}</strong></td>
         <td class="right">₹${totalPurchaseDisplay.toFixed(2)}</td>
         <td class="right">₹${displayAdvance.toFixed(2)}</td>
         <td class="right">₹${displayBalance.toFixed(2)}</td>
