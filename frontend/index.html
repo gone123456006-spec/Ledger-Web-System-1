@@ -63,7 +63,7 @@
     </nav>
 
 
-    <div class="app-container">
+    <div class="app-container sidebar-hidden" id="appContainer">
 
         <main class="workspace" id="workspace"></main>
 
@@ -408,6 +408,21 @@
         }
 
 
+    </script>
+    <script>
+        (function () {
+            function toggleLedgerSidebar() {
+                var app = document.getElementById("appContainer");
+                if (!app) return;
+                app.classList.toggle("sidebar-hidden");
+            }
+            document.addEventListener("keydown", function (e) {
+                if (e.ctrlKey && !e.altKey && !e.shiftKey && (e.key === "m" || e.key === "M")) {
+                    e.preventDefault();
+                    toggleLedgerSidebar();
+                }
+            });
+        })();
     </script>
     <script src="js/form-persistence.js"></script>
     <script src="script.js"></script>
