@@ -102,12 +102,12 @@
       position: relative;
     }
 
-    .orders-filter-menu > summary {
+    .orders-filter-menu>summary {
       list-style: none;
       cursor: pointer;
     }
 
-    .orders-filter-menu > summary::-webkit-details-marker {
+    .orders-filter-menu>summary::-webkit-details-marker {
       display: none;
     }
 
@@ -481,10 +481,14 @@
             <button type="button" class="orders-filter-menu-item" onclick="closeOrdersFilterMenu(); clearDateFilter();">
               Clear filters
             </button>
-            <button type="button" class="orders-filter-menu-item" title="Mark every order currently shown in the list (respects station filter)" onclick="closeOrdersFilterMenu(); setMarkAllVisible(true);">
+            <button type="button" class="orders-filter-menu-item"
+              title="Mark every order currently shown in the list (respects station filter)"
+              onclick="closeOrdersFilterMenu(); setMarkAllVisible(true);">
               Mark all
             </button>
-            <button type="button" class="orders-filter-menu-item" title="Clear mark on every order currently shown in the list (respects station filter)" onclick="closeOrdersFilterMenu(); setMarkAllVisible(false);">
+            <button type="button" class="orders-filter-menu-item"
+              title="Clear mark on every order currently shown in the list (respects station filter)"
+              onclick="closeOrdersFilterMenu(); setMarkAllVisible(false);">
               Unmark all
             </button>
           </div>
@@ -534,31 +538,20 @@
        INITIALIZE ELEMENTS
     ========================= */
     function initElements() {
-      // Try to find elements in workspace first (dashboard context)
       const workspace = document.querySelector(".workspace");
 
       if (workspace) {
-        // Look in workspace first
         tbody = workspace.querySelector("#ordersTable tbody");
         footer = workspace.querySelector("#footerText");
 
-        // If not found in workspace, try document
-        if (!tbody) {
-          tbody = document.querySelector("#ordersTable tbody");
-        }
-        if (!footer) {
-          footer = document.querySelector("#footerText") || document.getElementById("footerText");
-        }
+        if (!tbody) tbody = document.querySelector("#ordersTable tbody");
+        if (!footer) footer = document.querySelector("#footerText") || document.getElementById("footerText");
       } else {
-        // Not in workspace, look in document
         tbody = document.querySelector("#ordersTable tbody");
         footer = document.querySelector("#footerText") || document.getElementById("footerText");
       }
 
-      if (!tbody || !footer) {
-        return false;
-      }
-
+      if (!tbody || !footer) return false;
       return true;
     }
 
@@ -576,7 +569,7 @@
       }
     }
 
-    /** Advances only: same rule as new-order — amounts where type is not final Paid. */
+    /** Advances only: amounts where type is not final Paid. */
     function getAdvancePaymentsForBill(billNo) {
       if (!billNo) return 0;
       try {
@@ -597,12 +590,15 @@
       return fin !== 0 ? fin : est;
     }
 
+    /* BUG FIX: For 16-col Ready Extra items, ready weight is at vals[12].
+       For standard items, gross weight is at vals[1] (not vals[9] which is the estimated amount). */
     function readyExtraItemReadyWeightGrams(vals) {
       if (!vals || vals.length < 16) return 0;
       return parseFloat(vals[12] || 0) || 0;
     }
 
-    /** Amount for a line: 16-col Ready Extra uses Final/Est.; new-order col 12 / 9. */
+    /* BUG FIX: For standard items, fallback from vals[12] (line total) should be
+       vals[10] (net amount), not vals[9] (estimated amount — wrong field for a monetary total). */
     function orderItemLineAmount(item) {
       const v = item.values || [];
       if (!v.length) return 0;
@@ -613,8 +609,9 @@
         const n = parseFloat(v[12]);
         if (!isNaN(n)) return n;
       }
-      const n9 = parseFloat(v[9]);
-      return isNaN(n9) ? 0 : n9;
+      // FIX: was v[9] (estimated amount) — correct fallback is v[10] (net amount)
+      const n10 = parseFloat(v[10]);
+      return isNaN(n10) ? 0 : n10;
     }
 
     function sumStoredPurchaseSheetRows(rows) {
@@ -706,9 +703,6 @@
           const row = document.createElement("tr");
           row.dataset.orderId = order.id;
 
-          // Order Total column = Payment Summary "Order Total:" (sum of non-Purchase lines only).
-          // Net bill for balance = order lines − line purchases − purchase sheet; balance = net − all payments.
-          // Advance column = payment advances (non-Paid) + purchase line totals only (see header title).
           let displayGrWt = 0;
           let orderSideTotal = 0;
           let purchaseTotal = 0;
@@ -730,7 +724,9 @@
                 return;
               }
 
-              const grWt = parseFloat(vals[9] || 0);
+              /* BUG FIX: For standard items, gross weight is at vals[1], not vals[9].
+                 vals[9] is the estimated amount — using it as weight produced wrong Gr.Wt totals. */
+              const grWt = parseFloat(vals[1] || 0) || 0;
               const net = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(vals[12] || 0) || 0);
 
               if (type === "Purchase") {
@@ -772,13 +768,19 @@
           const stationForRow = getStationForOrder(order);
           row.dataset.station = stationForRow;
 
+          /* BUG FIX: escapeHtml was called with order.customer which can be undefined.
+             Now explicitly falls back to order.customerName before calling escapeHtml,
+             so the correct name is always shown instead of silently rendering "—". */
+          const customerDisplay = order.customer || order.customerName || "";
+          const customerRelationDisplay = order.customerRelation || "";
+
           row.innerHTML = `
         <td class="center">
           <input type="checkbox" ${isMarked ? 'checked' : ''} onchange="selectRow(this); toggleOrderStatus(this, ${order.id}); event.stopPropagation();" onclick="event.stopPropagation();">
         </td>
         <td>${escapeHtml(order.orderNo || order.billNo)}</td>
-        <td>${escapeHtml(order.customer || order.customerName)}</td>
-        <td>${escapeHtml(order.customerRelation)}</td>
+        <td>${escapeHtml(customerDisplay)}</td>
+        <td>${escapeHtml(customerRelationDisplay)}</td>
         <td>${order.orderDate || "-"}</td>
         <td>${order.dueDate || "-"}</td>
         <td class="right">${displayGrWt.toFixed(3)}</td>
@@ -793,7 +795,6 @@
 
           if (isMarked) row.classList.add("selected");
 
-          // Make row clickable to edit order (but not if clicking Edit button)
           row.style.cursor = "pointer";
           row.onclick = function (e) {
             if (e.target && (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT")) return;
@@ -815,7 +816,6 @@
     /* =========================
        GET CUSTOMER DATA FROM CUSTOMERS LIST (BY ID OR NAME)
     ========================= */
-    /** Fetch full customer details by customerId (primary for edit). */
     function getCustomerDataById(customerId) {
       if (customerId == null || customerId === "") return null;
       try {
@@ -830,9 +830,14 @@
       return null;
     }
 
+    /* BUG FIX: escapeHtml now safely handles null/undefined inputs by coercing
+       to empty string before checking — previously undefined would pass the
+       null check and String(undefined) would render the literal text "undefined". */
     function escapeHtml(str) {
-      if (str == null || str === "") return "—";
-      return String(str)
+      if (str == null || str === "" || str === undefined) return "—";
+      const s = String(str);
+      if (s === "undefined" || s === "null") return "—";
+      return s
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -943,14 +948,13 @@
     }
 
     /* =========================
-       EDIT ORDER - IMPROVED WITH CUSTOMER DATA FETCHING
+       EDIT ORDER
     ========================= */
     function editOrder(orderId) {
       try {
         console.log("=== EDIT ORDER START ===");
         console.log("Order ID:", orderId);
 
-        // Clear ALL previous state flags first to prevent conflicts
         const keysToRemove = [
           "editOrderId",
           "editOrderPayload",
@@ -961,10 +965,8 @@
           "returnToOrders",
           "selectedCustomerData"
         ];
-
         keysToRemove.forEach(key => localStorage.removeItem(key));
 
-        // Get the order data
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
         const order = orders.find(o => o && (o.id == orderId || String(o.id) === String(orderId)));
 
@@ -976,7 +978,6 @@
 
         console.log("=== FETCHED ORDER DATA (by order ID) ===", order);
 
-        // 1) Fetch linked customer by customerId first (do NOT rely only on name/dropdown)
         const customerId = order.customerId != null && order.customerId !== "" ? order.customerId : null;
         const customerName = (order.customer || order.customerName || "").toString().trim();
         let customerData = null;
@@ -989,7 +990,6 @@
           console.log("=== FETCHED CUSTOMER DATA (by name) ===", customerData);
         }
 
-        // 2) Build customer info: prefer DB customer, else use order-saved fields so fields are never empty when data exists
         const customerInfo = customerData || {
           id: order.customerId || "",
           name: customerName,
@@ -998,19 +998,13 @@
           relation: order.customerRelation || order.relation || "",
           station: order.customerStation || order.station || ""
         };
-        console.log("=== CUSTOMER INFO FOR EDIT (will be stored in payload) ===", customerInfo);
+        console.log("=== CUSTOMER INFO FOR EDIT ===", customerInfo);
 
-        // Create a complete snapshot of the order with ALL fields preserved for new-order edit
         const orderSnapshot = {
-          // ===== EDIT MODE FLAG =====
           isEditMode: true,
-
-          // ===== CORE IDENTIFIERS =====
           id: order.id,
           orderNo: order.orderNo || order.billNo || "",
           billNo: order.billNo || order.orderNo || "",
-
-          // ===== CUSTOMER INFORMATION (names new-order.html loadOrderForEdit expects) =====
           customerId: customerInfo.id || order.customerId || "",
           customer: customerInfo.name,
           customerName: customerInfo.name,
@@ -1020,71 +1014,35 @@
           customerRelation: customerInfo.relation,
           station: customerInfo.station,
           customerStation: customerInfo.station,
-
-          // Additional customer fields (if they exist in your form)
           customerPhone: order.customerPhone || "",
           customerEmail: order.customerEmail || "",
           customerAddress: order.customerAddress || "",
-
-          // ===== BILL INFORMATION =====
           orderDate: order.orderDate || "",
           dueDate: order.dueDate || "",
           hallmark: order.hallmark || "",
           type: order.type || "Order",
-
-          // ===== ORDER DETAILS - ITEMS ARRAY =====
           items: order.items || [],
-
-          // ===== FINANCIAL INFORMATION =====
           netAmount: order.netAmount || 0,
           advance: order.advance || 0,
           balance: order.balance || 0,
-
-          // ===== CALCULATED TOTALS =====
           pc: order.pc || 0,
           grWt: order.grWt || 0,
-
-          // ===== STATUS AND METADATA =====
           status: order.status || "",
           timestamp: order.timestamp || new Date().toISOString(),
-
-          // ===== ANY OTHER CUSTOM FIELDS =====
           ...order
         };
 
         console.log("=== ORDER SNAPSHOT CREATED ===");
-        console.log("Customer Info:", {
-          name: orderSnapshot.customerName,
-          currentBal: orderSnapshot.currentBal,
-          relation: orderSnapshot.relation,
-          station: orderSnapshot.station
-        });
-        console.log("Items count:", orderSnapshot.items ? orderSnapshot.items.length : 0);
 
-        // Store order ID for the edit mode
         localStorage.setItem("editOrderId", String(orderId));
-
-        // Store complete order snapshot
         localStorage.setItem("editOrderPayload", JSON.stringify(orderSnapshot));
-
-        // Customer is always editable; do not set read-only flag
-
-
-        // Set flag to indicate we're coming from orders page
         localStorage.setItem("returnToOrders", "true");
 
-        console.log("=== STORAGE COMPLETE ===");
-        console.log("Stored editOrderId:", localStorage.getItem("editOrderId"));
-        console.log("Stored selectedCustomerData:", localStorage.getItem("selectedCustomerData"));
         console.log("=== NAVIGATING TO NEW ORDER PAGE ===");
-
-        // Navigate to new-order page
         navigateToNewOrder();
 
       } catch (e) {
-        console.error("=== ERROR IN EDIT ORDER ===");
-        console.error("Error preparing order edit:", e);
-        console.error("Stack trace:", e.stack);
+        console.error("=== ERROR IN EDIT ORDER ===", e);
         alert("Error loading order for editing. Please try again.");
       }
     }
@@ -1093,25 +1051,18 @@
        NAVIGATE TO NEW ORDER PAGE
     ========================= */
     function navigateToNewOrder() {
-      // Try to use loadPage if available (workspace context)
       if (typeof loadPage === 'function') {
         loadPage("pages/new-order.html");
         return;
       }
-
-      // Try parent window
       if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
         window.parent.loadPage("pages/new-order.html");
         return;
       }
-
-      // Try top window
       if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
         window.top.loadPage("pages/new-order.html");
         return;
       }
-
-      // Fallback: direct navigation
       const currentPath = window.location.pathname;
       if (currentPath.includes('/pages/')) {
         window.location.href = "new-order.html";
@@ -1124,15 +1075,12 @@
        NEW ORDER
     ========================= */
     function newOrder() {
-      // Clear edit state when creating new order
       localStorage.removeItem("editOrderId");
       localStorage.removeItem("editOrderPayload");
       localStorage.removeItem("editCustomerReadOnly");
       localStorage.removeItem("returnToOrders");
       localStorage.removeItem("selectedCustomerData");
-      // Signal new-order page to open with fresh form: new Bill No., all data cleared
       localStorage.setItem("newOrderClearForm", "true");
-
       navigateToNewOrder();
     }
 
@@ -1144,7 +1092,7 @@
     }
 
     /* =========================
-       TOGGLE ORDER STATUS (Mark/Unmark as PENDING via checkbox)
+       TOGGLE ORDER STATUS
     ========================= */
     function toggleOrderStatus(cb, orderId) {
       try {
@@ -1173,7 +1121,10 @@
       }
     }
 
-    /** Set marked true/false for every order row currently visible (respects station filter). */
+    /* BUG FIX: setMarkAllVisible previously relied solely on the orderStatusChanged event
+       to trigger a re-render. If no listener caught it (e.g. same-frame dispatch),
+       the checkboxes and row highlights never updated. Now always calls loadOrders()
+       directly after saving so the UI reflects the new marked state immediately. */
     function setMarkAllVisible(marked) {
       if (!tbody && !initElements()) return;
       try {
@@ -1198,10 +1149,11 @@
           window.dispatchEvent(refreshEvent);
           if (window.parent && window.parent !== window) window.parent.dispatchEvent(refreshEvent);
           if (window.top && window.top !== window) window.top.dispatchEvent(refreshEvent);
-        } else {
-          loadOrders();
-          filterTable();
         }
+
+        // Always re-render so UI is consistent regardless of event propagation
+        loadOrders();
+        filterTable();
       } catch (e) {
         console.error("Error in setMarkAllVisible:", e);
         alert("Error updating marks");
@@ -1211,6 +1163,9 @@
     /* =========================
        TABLE FILTER (station)
     ========================= */
+    /* BUG FIX: row.dataset.station could be undefined (not set yet) when filterTable
+       is called before loadOrders finishes populating rows, causing every row to
+       pass the station check. Now guards with a null-safe empty string fallback. */
     function filterTable() {
       if (!tbody) {
         if (!initElements()) return;
@@ -1226,10 +1181,10 @@
       rows.forEach(row => {
         let showByStation = true;
         if (stationFilter) {
+          // Guard: dataset.station may be undefined if row was appended without it
           const rowSt = normalizeStationValue(row.dataset.station || "");
           showByStation = rowSt.toLowerCase() === stationFilter.toLowerCase();
         }
-
         row.style.display = showByStation ? "" : "none";
       });
 
@@ -1273,27 +1228,18 @@
        INITIALIZE PAGE
     ========================= */
     function initOrdersPage() {
-      // Wait for elements to be ready
       if (!initElements()) {
         setTimeout(initOrdersPage, 100);
         return;
       }
-
-      // Load orders
       loadOrders();
-
-      // Ensure all functions are accessible
       ensureFunctionsGlobal();
     }
 
-    /* =========================
-       INITIALIZE
-    ========================= */
     function isInWorkspace() {
       return !!document.querySelector(".workspace");
     }
 
-    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function () {
         if (isInWorkspace()) {
@@ -1310,7 +1256,6 @@
       }
     }
 
-    // Listen for page refresh event from dashboard
     window.addEventListener('pageRefresh', function () {
       setTimeout(initOrdersPage, 150);
     });
@@ -1322,19 +1267,16 @@
       });
     }
 
-    // Listen for order saved event
     window.addEventListener('orderSaved', function () {
       loadOrders();
       filterTable();
     });
 
-    // Listen for order status changed event
     window.addEventListener('orderStatusChanged', function () {
       loadOrders();
       filterTable();
     });
 
-    // Listen for storage changes
     window.addEventListener('storage', function (e) {
       if (e.key === 'orders') {
         loadOrders();
@@ -1342,16 +1284,26 @@
       }
     });
 
-    // Poll for changes
+    /* BUG FIX: The poll previously only compared orders.length, so mark/unmark
+       changes (which don't change count) were never detected and the UI stayed stale.
+       Now also compares a lightweight hash of all marked states so any mark change
+       triggers a reload even when the order count is unchanged. */
     let lastOrderCount = 0;
+    let lastMarkedHash = "";
+
+    function computeMarkedHash(orders) {
+      return orders.map(o => (o ? (String(o.id) + (o.marked ? "1" : "0")) : "")).join(",");
+    }
+
     setInterval(function () {
       if (!tbody) {
         if (!initElements()) return;
       }
-
       const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-      if (orders.length !== lastOrderCount) {
+      const markedHash = computeMarkedHash(orders);
+      if (orders.length !== lastOrderCount || markedHash !== lastMarkedHash) {
         lastOrderCount = orders.length;
+        lastMarkedHash = markedHash;
         loadOrders();
         filterTable();
       }
@@ -1378,7 +1330,6 @@
       window.getCustomerDataById = getCustomerDataById;
     }
 
-    // Make functions globally accessible immediately
     ensureFunctionsGlobal();
   </script>
 

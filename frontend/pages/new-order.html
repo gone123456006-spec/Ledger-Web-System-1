@@ -46,6 +46,7 @@
       display: flex;
     }
 
+    /* FIX #2: Removed duplicate @keyframes spin — kept only one definition below */
     .spinner {
       width: 40px;
       height: 40px;
@@ -53,16 +54,6 @@
       border-top: 4px solid var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(360deg);
-      }
     }
 
     .toast {
@@ -341,7 +332,6 @@
       border-color: var(--danger);
     }
 
-    /* Purchase row: Remarks, Design, Size not editable – no text cursor, no colour/border */
     td input.purchase-field-disabled {
       cursor: not-allowed;
       pointer-events: none;
@@ -350,7 +340,6 @@
       box-shadow: none;
     }
 
-    /* Purchase row: Lbr.% — hidden and non-interactive; cell kept for column alignment */
     .order-details-table-wrap #new-order-item-table td.purchase-lbr-cell-hidden input {
       visibility: hidden;
       pointer-events: none;
@@ -361,7 +350,6 @@
       box-sizing: border-box;
     }
 
-    /* Order Details: same compact row/column grid as ready-extra-order */
     .order-details-table-wrap #new-order-item-table {
       width: 100%;
       min-width: 0;
@@ -370,14 +358,12 @@
       border-spacing: 0;
     }
 
-    /* Item Name column (3rd col: after Type + hidden Order No.) */
     .order-details-table-wrap #new-order-item-table thead th:nth-child(3),
     .order-details-table-wrap #new-order-item-table tbody td:nth-child(3) {
       min-width: 170px;
       width: 17%;
     }
 
-    /* Remarks, Design, Size — modest extra width */
     .order-details-table-wrap #new-order-item-table thead th:nth-child(5),
     .order-details-table-wrap #new-order-item-table tbody td:nth-child(5) {
       min-width: 230px;
@@ -810,7 +796,7 @@
       opacity: 0.9;
     }
 
-    /* Add Payment popup — same layout language as Advance payments (ready-extra) */
+    /* Add Payment popup */
     #new-order-payment-popup .advanced-payments-popup-box {
       display: flex;
       flex-direction: column;
@@ -962,7 +948,6 @@
       }
     }
 
-    /* Payment Summary: tap "Paid:" → detail modal (same pattern as ready-extra Advance payments) */
     .summary-item.summary-item--new-order-paid-open {
       cursor: pointer;
       border-radius: 8px;
@@ -980,7 +965,7 @@
       outline-offset: 1px;
     }
 
-    /* Payments detail modal (table + inline edit) */
+    /* Payments detail modal */
     #new-order-payments-detail-popup .advanced-payments-popup-box {
       display: flex;
       flex-direction: column;
@@ -1216,7 +1201,7 @@
       }
     }
 
-    /* Purchase sheet (horizontal table in popup — same visual language as order details table) */
+    /* Purchase sheet popup */
     #new-order-purchase-sheet-popup .purchase-sheet-box {
       max-width: min(1220px, 98vw);
       width: 100%;
@@ -1533,6 +1518,7 @@
 
     /* =====================
    LOADING STATE
+   FIX #2: Only ONE @keyframes spin definition
 ===================== */
     .loading-overlay {
       position: fixed;
@@ -1548,15 +1534,6 @@
       display: flex;
     }
 
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
     @keyframes spin {
       to {
         transform: rotate(360deg);
@@ -1567,7 +1544,7 @@
 
 <body>
 
-  <!-- Loading Overlay (single element to avoid duplicate ID) -->
+  <!-- Loading Overlay -->
   <div class="loading-overlay overlay" id="loadingOverlay">
     <div class="spinner"></div>
   </div>
@@ -1582,7 +1559,6 @@
       <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
     </div>
 
-    <!-- Error Message (toast above is main; this is inline placeholder) -->
     <div class="error-message" id="errorMessageInline" aria-live="polite"></div>
 
     <!-- TOP -->
@@ -1683,11 +1659,12 @@
       <button onclick="openPayment()">Payment</button>
       <button onclick="openRateBook()">Rate Book</button>
       <button onclick="openPurchaseSheet()">Purchase</button>
-      <button class="primary" onclick="saveOrder()">Save Order</button>
-      <button onclick="saveAndNew()">Save & New</button>
-      <button onclick="resetOrder()">Reset</button>
+      <button type="button" class="primary" id="newOrderBtnSave" onclick="saveOrder()">Save Order</button>
+      <button type="button" id="newOrderBtnSaveAndNew" onclick="saveAndNew()">Save & New</button>
+      <button type="button" onclick="resetCustomerNameOnly()"
+        title="Clears only Customer Name (and linked Current Bal / Relation / Station). Order lines and bill are unchanged.">Reset</button>
       <button onclick="showInvoice()">📄 A4 Invoice</button>
-      <button class="danger" onclick="closeDashboard()">Close</button>
+      <button type="button" class="danger" id="newOrderBtnClose" onclick="closeDashboard()">Close</button>
     </div>
 
     <!-- INFO PANEL -->
@@ -1798,7 +1775,7 @@
     </div>
   </div>
 
-  <!-- PAYMENT POPUP (new-order only) — layout aligned with Advance payments modal -->
+  <!-- PAYMENT POPUP -->
   <div id="new-order-payment-popup" class="popup-bg new-order-popup"
     onclick="if(event.target===this) (typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup:closePaymentPopup)()">
     <div class="popup-box advanced-payments-popup-box" onclick="event.stopPropagation()">
@@ -1806,7 +1783,11 @@
       <div class="advanced-payments-popup-body">
         <table class="advanced-payments-table new-order-payment-add-header-table" aria-hidden="true">
           <colgroup>
-            <col style="width:16%"><col style="width:18%"><col style="width:16%"><col style="width:40%"><col style="width:10%">
+            <col style="width:16%">
+            <col style="width:18%">
+            <col style="width:16%">
+            <col style="width:40%">
+            <col style="width:10%">
           </colgroup>
           <thead>
             <tr>
@@ -1860,7 +1841,7 @@
     </div>
   </div>
 
-  <!-- PAYMENTS DETAIL (tap Paid: in Payment Summary — same table + edit form as ready-extra Advance modal) -->
+  <!-- PAYMENTS DETAIL POPUP -->
   <div id="new-order-payments-detail-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this) (typeof closeNewOrderPaymentsDetailPopup==='function'&&closeNewOrderPaymentsDetailPopup())">
     <div class="popup-box advanced-payments-popup-box" onclick="event.stopPropagation()">
@@ -1870,12 +1851,13 @@
         <div id="newOrderPaymentsDetailTotal" class="advanced-payments-popup-total">Total: ₹ 0.00</div>
       </div>
       <div class="popup-actions advanced-payments-popup-actions">
-        <button type="button" class="advanced-payments-popup-close-btn" onclick="closeNewOrderPaymentsDetailPopup()">Close</button>
+        <button type="button" class="advanced-payments-popup-close-btn"
+          onclick="closeNewOrderPaymentsDetailPopup()">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- RATEBOOK POPUP (new-order only) -->
+  <!-- RATEBOOK POPUP -->
   <div id="new-order-ratebook-popup" class="popup-bg new-order-popup"
     onclick="if(event.target===this) (typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup:closeRatebookPopup)()">
     <div class="popup-box" style="max-width: 500px;">
@@ -1922,7 +1904,7 @@
     </div>
   </div>
 
-  <!-- ORDER DETAILS POPUP (new-order only) -->
+  <!-- ORDER DETAILS POPUP -->
   <div id="new-order-order-details-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this) (typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup:closeOrderDetailsPopup)()">
     <div class="popup-box" style="max-width: 420px;">
@@ -1949,7 +1931,7 @@
     </div>
   </div>
 
-  <!-- PURCHASE SHEET (horizontal line-item table) -->
+  <!-- PURCHASE SHEET POPUP -->
   <div id="new-order-purchase-sheet-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this && typeof newOrderClosePurchaseSheetPopup==='function') newOrderClosePurchaseSheetPopup()">
     <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
@@ -1981,7 +1963,8 @@
       </div>
       <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          <button type="button" class="primary" onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
+          <button type="button" class="primary"
+            onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
             Add Row</button>
           <button type="button" class="primary"
             onclick="typeof savePurchaseSheet==='function'&&savePurchaseSheet()">Save</button>
@@ -1994,12 +1977,18 @@
 
   <script>
     (function () {
-      var container = document.querySelector('.workspace');
-      if (!container || container.getAttribute('data-page') !== 'new-order') return;
-
       // =====================================================
-      // NEW ORDER PAGE – scoped to this container only
+      // FIX #1 (CRITICAL): Correct container detection.
+      // Original: document.querySelector('.workspace') always returned null on this
+      // standalone page, causing the IIFE to return immediately and leaving ALL
+      // button onclick handlers (addRowNewOrder, saveOrder, etc.) undefined.
+      // Fix: Fall back through selectors until we find the real root element.
       // =====================================================
+      var container = document.querySelector('.workspace[data-page="new-order"]')
+        || document.querySelector('[data-page-root="new-order"]')
+        || document.querySelector('.app.new-order-page')
+        || document.body;
+      if (!container) return;
 
       var AppState = {
         elements: {},
@@ -2008,13 +1997,13 @@
         activeRow: null,
         editMode: false,
         editOrderId: null,
+        orderSaveLocked: false,
       };
 
       function newDraftPaymentKey() {
         return 'DRAFT-' + Date.now();
       }
 
-      /** Returns the key used to store/fetch payments for current screen state. */
       function getCurrentPaymentKey() {
         const bn = String(AppState.elements.billNo && AppState.elements.billNo.value ? AppState.elements.billNo.value : '').trim();
         if (AppState.editMode) return bn;
@@ -2058,22 +2047,16 @@
         return Number.isFinite(num) ? num : fallback;
       }
 
-
-
       function formatCurrency(amount) {
         return `₹ ${safeNumber(amount).toFixed(2)}`;
       }
 
-      // Preview the next order number WITHOUT incrementing the counter.
-      // Call this everywhere EXCEPT at actual save time.
       function peekNextBillNo() {
         const last = localStorage.getItem('lastBillNo') || '0';
         const next = Number(last) + 1;
         return `SGJ/0/${String(next).padStart(4, '0')}`;
       }
 
-      // Officially claim the next order number by incrementing the counter.
-      // Call this ONLY inside saveOrder() for brand-new (non-edit) orders.
       function claimBillNo() {
         const last = localStorage.getItem('lastBillNo') || '0';
         const next = Number(last) + 1;
@@ -2094,9 +2077,12 @@
       }
 
       function hideOwnPopupsOnInit() {
-        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-payments-detail-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'].forEach(function (id) {
+        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup',
+          'new-order-payments-detail-popup', 'new-order-purchase-sheet-popup',
+          'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'
+        ].forEach(function (id) {
           try {
-            var el = container.querySelector('#' + id);
+            var el = container.querySelector('#' + id) || document.getElementById(id);
             if (el && el.style) el.style.display = 'none';
           } catch (e) { }
         });
@@ -2107,26 +2093,21 @@
         const els = AppState.elements;
         const searchRoot = getSearchRoot();
 
-        // Customer fields
         els.custName = searchRoot.querySelector('#custName');
         els.currentBal = searchRoot.querySelector('#currentBal');
         els.relation = searchRoot.querySelector('#relation');
         els.station = searchRoot.querySelector('#station');
 
-        // Bill fields
         els.billNo = searchRoot.querySelector('#billNo');
         els.orderDate = searchRoot.querySelector('#orderDate');
         els.dueDate = searchRoot.querySelector('#dueDate');
         els.gstRate = searchRoot.querySelector('#gstRate');
 
-        // Table (page-specific ID)
         els.itemBody = searchRoot.querySelector('#new-order-item-table tbody');
 
-        // Containers
-        els.orderApp = searchRoot.querySelector('#orderApp');
-        els.invoice = searchRoot.querySelector('#invoice');
+        els.orderApp = searchRoot.querySelector('#orderApp') || searchRoot;
+        els.invoice = document.getElementById('invoice');
 
-        // Check required elements
         if (!els.custName || !els.billNo || !els.orderDate || !els.itemBody) {
           return false;
         }
@@ -2142,7 +2123,6 @@
       function loadCustomers() {
         if (!AppState.elements.custName) return;
 
-        // Preserve current selection (important in Edit mode so name never "disappears")
         const select = AppState.elements.custName;
         const prevValue = select.value != null ? String(select.value) : '';
         const prevText = (select.selectedOptions && select.selectedOptions[0] && select.selectedOptions[0].textContent)
@@ -2168,7 +2148,6 @@
           select.appendChild(opt);
         });
 
-        // Restore selection after repopulating
         if (prevValue) {
           const matchById = Array.from(select.options).find(opt => String(opt.value) === prevValue);
           if (matchById) select.value = matchById.value;
@@ -2186,7 +2165,6 @@
         const opt = select.selectedOptions[0];
 
         if (!opt || !opt.value || !opt.dataset.customer) {
-          // In Edit mode, never auto-clear customer fields due to transient dropdown repopulation.
           if (AppState.editMode && select && select.value) {
             try {
               const customers = JSON.parse(localStorage.getItem('customers') || '[]');
@@ -2275,16 +2253,14 @@
       // =====================================================
 
       let _addRowLastCall = 0;
-      /** @param {boolean} [skipThrottle] - If true, skip the 400ms throttle (used when restoring multiple rows in edit mode) */
+
       function addRow(skipThrottle) {
-        // Always use the new-order table tbody (re-resolve if needed so added rows are visible)
         const itemBody = AppState.elements.itemBody ||
-          document.querySelector('.workspace #new-order-item-table tbody') ||
+          document.querySelector('.app.new-order-page #new-order-item-table tbody') ||
           document.querySelector('#new-order-item-table tbody');
         if (!itemBody) return;
         if (AppState.elements && !AppState.elements.itemBody) AppState.elements.itemBody = itemBody;
 
-        // Prevent extra row from double-click or duplicate events (one row per Add Row click) – skip when restoring edit
         if (!skipThrottle) {
           const now = Date.now();
           if (now - _addRowLastCall < 400) return;
@@ -2292,7 +2268,6 @@
         }
 
         const tr = document.createElement('tr');
-        // Type column: Order only (legacy saved rows may still normalize via normalizeNewOrderLineTypeSelect)
         tr.innerHTML = `
         <td>
           <div style="display:flex; gap:4px; align-items:center;">
@@ -2331,17 +2306,16 @@
         scheduleAutoSave();
       }
 
-      /** Called by the + Add Row button. Ensures we always use new-order's 14-column row (not ready-extra-order's 20-column row) when in shared/workspace context. */
       function addRowNewOrder() {
         addRow();
       }
 
       function removeRow(btn) {
         if (AppState.editMode) {
-          alert('Cannot remove rows while editing an order. Save or reset first.');
-          return;
+          if (!confirm('Remove this row from the order being edited?')) return;
+        } else {
+          if (!confirm('Remove this row?')) return;
         }
-        if (!confirm('Remove this row?')) return;
 
         const row = btn.closest('tr');
         if (row) {
@@ -2359,19 +2333,16 @@
           const typeSelect = row.cells[0]?.querySelector('select');
           const isPurchase = typeSelect && typeSelect.value === 'Purchase';
 
-          // Get values
           const pc = safeNumber(row.cells[7]?.children[0]?.value);
           const utWt = safeNumber(row.cells[8]?.children[0]?.value);
           const rate = safeNumber(row.cells[10]?.children[0]?.value);
           const lbr = isPurchase ? 0 : safeNumber(row.cells[11]?.children[0]?.value);
 
-          // Calculate estimated total weight
           const estTotalWt = pc * utWt;
           if (row.cells[9]?.children[0]) {
             row.cells[9].children[0].value = estTotalWt.toFixed(3);
           }
 
-          // Calculate total = (weight * rate) + (weight * rate * labor%)
           let total = 0;
           if (estTotalWt > 0 && rate > 0) {
             const base = estTotalWt * rate;
@@ -2383,7 +2354,6 @@
             row.cells[12].children[0].value = total.toFixed(2);
           }
 
-          // Update panel totals
           updateInfoPanel();
           scheduleAutoSave();
         } catch (e) {
@@ -2395,7 +2365,6 @@
 
       var _optionalPlaceholders = ['Remarks', 'Design', 'Size'];
 
-      /** Map removed line types (Repair / Sale / Purchase) to Order so the select stays valid. */
       function normalizeNewOrderLineTypeSelect(select) {
         if (!select) return;
         var v = select.value;
@@ -2527,16 +2496,18 @@
         scheduleAutoSave();
       }
 
-      /** Get focusable element in a table cell (input, select, or button). */
       function getFocusableInCell(cell) {
         if (!cell) return null;
         return cell.querySelector('input, select, button');
       }
 
-      /** Keyboard arrow navigation in order details table: Up/Down = previous/next row, Left/Right = previous/next cell. */
+      // =====================================================
+      // FIX #3: setupTableArrowKeys used wrong table ID 'itemTable'.
+      // Correct ID is 'new-order-item-table'. Arrow-key navigation now works.
+      // =====================================================
       function setupTableArrowKeys() {
         document.addEventListener('keydown', function (e) {
-          const table = document.getElementById('itemTable');
+          const table = getSearchRoot().querySelector('#new-order-item-table'); // FIXED
           if (!table || !table.contains(document.activeElement)) return;
           const tbody = table.querySelector('tbody');
           if (!tbody || !tbody.contains(document.activeElement)) return;
@@ -2572,9 +2543,7 @@
           }
 
           const nextEl = nextCell ? getFocusableInCell(nextCell) : null;
-          if (nextEl) {
-            nextEl.focus();
-          }
+          if (nextEl) nextEl.focus();
         });
       }
 
@@ -2593,8 +2562,6 @@
           if (amountInput && typeSelect) {
             const amount = safeNumber(amountInput.value);
             const type = typeSelect.value;
-
-            // Purchases subtract from total
             if (type === 'Purchase') {
               total -= amount;
             } else {
@@ -2603,18 +2570,29 @@
           }
         });
 
-        total -= getSavedPurchaseSheetTotal(AppState.elements.billNo?.value);
-
+        total -= getSavedPurchaseSheetTotal(AppState.elements.billNo && AppState.elements.billNo.value);
         return total;
       }
 
+      // =====================================================
+      // Paid total: sum payments for this draft/session OR displayed bill no.
+      // New orders store payments under getCurrentPaymentKey() (DRAFT-…) while the
+      // bill field shows a preview SGJ/0/… number until Save claims it — matching only
+      // the visible bill left Paid at ₹0 in Payment Summary (see savePayment → billNo).
+      // =====================================================
       function getPaidAmount(billNo) {
-        const key = getCurrentPaymentKey();
-        if (!key) return 0;
-
         const payments = JSON.parse(localStorage.getItem('payments') || '[]');
+        const keys = new Set();
+        const sessionKey = String(getCurrentPaymentKey() || '').trim();
+        if (sessionKey) keys.add(sessionKey);
+        const fromField = (billNo != null && String(billNo).trim() !== '')
+          ? String(billNo).trim()
+          : '';
+        if (fromField && fromField !== sessionKey) keys.add(fromField);
+        if (keys.size === 0) return 0;
+
         return payments
-          .filter(p => p && String(p.billNo || '').trim() === key)
+          .filter(p => p && keys.has(String(p.billNo || '').trim()))
           .reduce((sum, p) => sum + safeNumber(p.amount), 0);
       }
 
@@ -2683,7 +2661,6 @@
           || document.getElementById('new-order-purchase-sheet-tbody');
       }
 
-      /** Purchase sheet: Net Weight = GROSS WT. when Less Wt is empty; Less Wt only reduces Net (Net = GROSS − Less). */
       function parsePurchaseSheetWeight(el) {
         if (!el || el.value == null) return 0;
         var s = String(el.value).trim();
@@ -2826,7 +2803,6 @@
         updatePurchaseSheetTotalDisplay();
       }
 
-      /** @param {object} [preset] optional row: onDate, itemName, grossWt, lessWt, netWt, rate, amount, stamp */
       function addPurchaseSheetRow(preset) {
         var tb = getPurchaseSheetTbody();
         if (!tb) return;
@@ -3044,7 +3020,6 @@
         updateInfoPanel();
       }
 
-      /** All payment rows for current bill (same scope as Paid: total). */
       function getPaymentRecordsForBillNewOrder(billNoVal) {
         if (!billNoVal) return [];
         const key = String(billNoVal).trim();
@@ -3098,9 +3073,9 @@
             } else if (p.timestamp) {
               dateIsoForKey = String(p.timestamp).split('T')[0];
             }
-            const payKey = (p.id != null) ? String(p.id) : String(p.timestamp || (dateIsoForKey ? dateIsoForKey + '-' + (p.amount || 0) : ''));
+            const payKeyStr = (p.id != null) ? String(p.id) : String(p.timestamp || (dateIsoForKey ? dateIsoForKey + '-' + (p.amount || 0) : ''));
             const amountRaw = String(Number(p.amount) || 0);
-            html += '<tr data-payment-key="' + escCell(payKey) + '" data-payment-timestamp="' + escCell(p.timestamp || '') + '" data-bill-no="' + escCell(String(payKey).trim()) + '"' +
+            html += '<tr data-payment-key="' + escCell(payKeyStr) + '" data-payment-timestamp="' + escCell(p.timestamp || '') + '" data-bill-no="' + escCell(String(payKey).trim()) + '"' +
               ' data-payment-date-iso="' + escCell(dateIsoForKey) + '" data-payment-amount="' + escCell(amountRaw) + '">' +
               '<td>' + escCell(dateStr) + '</td><td>' + escCell(modeStr) + '</td>' +
               '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + '</td>' +
@@ -3200,7 +3175,7 @@
         localStorage.setItem('payments', JSON.stringify(payments));
         window.dispatchEvent(new CustomEvent('paymentSaved'));
         if (window.parent && window.parent !== window) {
-          try { window.parent.dispatchEvent(new CustomEvent('paymentSaved')); } catch (e) { /* ignore */ }
+          try { window.parent.dispatchEvent(new CustomEvent('paymentSaved')); } catch (e) { }
         }
         refreshNewOrderPaymentDetailAfterEdit();
         updateInfoPanel();
@@ -3246,25 +3221,33 @@
       function newOrderCloseRatebookPopup() { closeRatebookPopup(); }
       function newOrderSaveRatebookEntry() { saveRatebookEntry(); }
 
+      // =====================================================
+      // FIX #5: calcRatebookAmount had broken logic.
+      // Original bug: when typing rate, the code checked a confusing condition
+      // (amount > 0 && weight === 0) to decide whether to back-calculate weight,
+      // which could trigger unexpectedly mid-entry.
+      // Fix: clear, field-specific logic:
+      //   - Typing weight or rate → update amount (weight × rate)
+      //   - Typing amount → back-calculate weight (amount ÷ rate)
+      // =====================================================
       function calcRatebookAmount() {
         const weightInput = getPopupEl('rbWeight') || getSearchRoot().querySelector('#rbWeight');
         const rateInput = getPopupEl('rbRate') || getSearchRoot().querySelector('#rbRate');
         const amountInput = getPopupEl('rbAmount') || getSearchRoot().querySelector('#rbAmount');
         if (!weightInput || !rateInput || !amountInput) return;
 
+        const active = document.activeElement;
         const weight = safeNumber(weightInput.value);
         const rate = safeNumber(rateInput.value);
         const amount = safeNumber(amountInput.value);
 
-        if (document.activeElement === rateInput) {
-          if (amount > 0 && weight === 0 && rate > 0) {
+        if (active === amountInput) {
+          // User typed an amount → back-calculate weight from amount / rate
+          if (rate > 0) {
             weightInput.value = (amount / rate).toFixed(3);
-          } else {
-            amountInput.value = (weight * rate).toFixed(2);
           }
-        } else if (document.activeElement === amountInput) {
-          if (rate > 0) weightInput.value = (amount / rate).toFixed(3);
-        } else if (document.activeElement === weightInput) {
+        } else {
+          // User typed weight or rate → calculate amount = weight × rate
           amountInput.value = (weight * rate).toFixed(2);
         }
       }
@@ -3335,12 +3318,11 @@
             customerId: AppState.elements.custName.value,
             billNo: AppState.elements.billNo.value,
             orderDate: AppState.elements.orderDate.value,
-            dueDate: AppState.elements.dueDate?.value || '',
-            gstRate: AppState.elements.gstRate?.value || '',
+            dueDate: AppState.elements.dueDate ? AppState.elements.dueDate.value : '',
+            gstRate: AppState.elements.gstRate ? AppState.elements.gstRate.value : '',
             rows: []
           };
 
-          // Save all row data
           if (AppState.elements.itemBody) {
             AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
               const rowData = {
@@ -3369,28 +3351,25 @@
 
           const orderState = JSON.parse(savedState);
 
-          // Restore customer
           if (orderState.customerId && AppState.elements.custName) {
             AppState.elements.custName.value = orderState.customerId;
             AppState.elements.custName.dispatchEvent(new Event('change'));
           }
 
-          // Restore bill info
           if (orderState.billNo) AppState.elements.billNo.value = orderState.billNo;
           if (orderState.orderDate) AppState.elements.orderDate.value = orderState.orderDate;
-          if (orderState.dueDate) AppState.elements.dueDate.value = orderState.dueDate;
-          if (orderState.gstRate) AppState.elements.gstRate.value = orderState.gstRate;
+          if (orderState.dueDate && AppState.elements.dueDate) AppState.elements.dueDate.value = orderState.dueDate;
+          if (orderState.gstRate && AppState.elements.gstRate) AppState.elements.gstRate.value = orderState.gstRate;
 
-          // Restore rows
           if (AppState.elements.itemBody) {
             AppState.elements.itemBody.innerHTML = '';
 
-            if (orderState.rows?.length > 0) {
+            if (orderState.rows && orderState.rows.length > 0) {
               orderState.rows.forEach(rowData => {
-                addRow();
+                addRow(true);
                 const tr = AppState.elements.itemBody.lastElementChild;
 
-                if (rowData.values?.length > 0) {
+                if (rowData.values && rowData.values.length > 0) {
                   tr.querySelectorAll('input,select').forEach((el, j) => {
                     if (rowData.values[j] !== undefined) {
                       el.value = rowData.values[j];
@@ -3415,12 +3394,11 @@
             }
           }
 
-          // Clear saved state
           localStorage.removeItem('newOrderState');
           localStorage.removeItem('ratebookOpened');
 
           updateInfoPanel();
-          updateRatebookPanel(); // Recover ratebook list for current order after restore
+          updateRatebookPanel();
           return true;
         } catch (e) {
           console.error('Error restoring order state:', e);
@@ -3437,7 +3415,6 @@
           return;
         }
 
-        // Apply to first empty rate field or first row
         const rows = AppState.elements.itemBody.querySelectorAll('tr');
         for (let row of rows) {
           const rateInput = row.cells[10]?.children[0];
@@ -3452,7 +3429,6 @@
           }
         }
 
-        // If all rows have rates, apply to first row
         if (rows.length > 0) {
           const firstRow = rows[0];
           const rateInput = firstRow.cells[10]?.children[0];
@@ -3494,7 +3470,7 @@
         };
         const listEl = root.querySelector('#paymentList');
 
-        if (!AppState.elements.billNo?.value) {
+        if (!AppState.elements.billNo || !AppState.elements.billNo.value) {
           setPanel('#panelOrderTotal', formatCurrency(0));
           setPanel('#panelPurchaseTotal', formatCurrency(0));
           setPanel('#panelBillTotal', formatCurrency(0));
@@ -3507,16 +3483,18 @@
         let orderTotal = 0;
         let purchaseTotal = 0;
 
-        AppState.elements.itemBody?.querySelectorAll('tr').forEach(row => {
-          const amount = safeNumber(row.cells[12]?.children[0]?.value);
-          const type = row.cells[0]?.querySelector('select')?.value;
+        if (AppState.elements.itemBody) {
+          AppState.elements.itemBody.querySelectorAll('tr').forEach(row => {
+            const amount = safeNumber(row.cells[12]?.children[0]?.value);
+            const type = row.cells[0]?.querySelector('select')?.value;
 
-          if (type === 'Purchase') {
-            purchaseTotal += amount;
-          } else {
-            orderTotal += amount;
-          }
-        });
+            if (type === 'Purchase') {
+              purchaseTotal += amount;
+            } else {
+              orderTotal += amount;
+            }
+          });
+        }
 
         purchaseTotal += getSavedPurchaseSheetTotal(AppState.elements.billNo.value);
 
@@ -3532,7 +3510,6 @@
         const payKey = getCurrentPaymentKey();
         const billPayments = payments.filter(p => p && String(p.billNo || '').trim() === String(payKey).trim());
 
-        // Always show Paid/Balance, and never pull other bill's payments (draft uses draft key).
         setPanel('#panelPaid', formatCurrency(paid));
         setPanel('#panelBalance', formatCurrency(balance));
 
@@ -3540,7 +3517,6 @@
         if (billPayments.length === 0) {
           listEl.innerHTML = '<div class="empty-state">No payments yet</div>';
         } else {
-          // Show only ONE row in Payment Summary (no multiple rows).
           const sum = billPayments.reduce((s, p) => s + safeNumber(p.amount), 0);
           listEl.innerHTML = `
             <div class="panel-item" style="cursor:pointer;" onclick="typeof openNewOrderPaymentsDetailPopup==='function'&&openNewOrderPaymentsDetailPopup()" title="Tap to view payments">
@@ -3559,7 +3535,7 @@
         if (!listEl) return;
 
         const rates = JSON.parse(localStorage.getItem('rateBook') || '[]');
-        const billNo = AppState.elements.billNo?.value;
+        const billNo = AppState.elements.billNo && AppState.elements.billNo.value;
 
         const displayRates = rates
           .filter(r => r.billNo === billNo)
@@ -3576,8 +3552,8 @@
               <div class="panel-item-header">
                 <span>${formatCurrency(r.rate)}</span>
                 <span>${r.stamp || '—'}</span>
-                <button onclick="event.stopPropagation(); deleteRate(${r.id})" 
-                        style="background:#ff3b30; color:#fff; border:none; padding:2px 6px; 
+                <button onclick="event.stopPropagation(); deleteRate(${r.id})"
+                        style="background:#ff3b30; color:#fff; border:none; padding:2px 6px;
                                border-radius:4px; cursor:pointer; font-size:10px;">❌</button>
               </div>
               <div class="panel-item-detail">
@@ -3596,12 +3572,12 @@
       // =====================================================
 
       function validateBeforeAction() {
-        if (!AppState.elements.custName?.value) {
+        if (!AppState.elements.custName || !AppState.elements.custName.value) {
           showError('Please select a customer');
           return false;
         }
 
-        if (!AppState.elements.billNo?.value) {
+        if (!AppState.elements.billNo || !AppState.elements.billNo.value) {
           showError('Order number is required');
           return false;
         }
@@ -3612,12 +3588,12 @@
       function validateOrder() {
         if (!validateBeforeAction()) return false;
 
-        if (!AppState.elements.orderDate?.value) {
+        if (!AppState.elements.orderDate || !AppState.elements.orderDate.value) {
           showError('Order date is required');
           return false;
         }
 
-        const rows = AppState.elements.itemBody?.querySelectorAll('tr');
+        const rows = AppState.elements.itemBody && AppState.elements.itemBody.querySelectorAll('tr');
         if (!rows || rows.length === 0) {
           showError('Please add at least one item');
           return false;
@@ -3626,14 +3602,87 @@
         return true;
       }
 
-      function saveOrder(resetAfter = false) {
+      function normalizeSaveOrderOptions(options) {
+        if (typeof options === 'boolean') {
+          return { resetAfter: false, redirectMode: options ? 'newOrder' : 'none', silent: true };
+        }
+        var o = options || {};
+        return {
+          resetAfter: !!o.resetAfter,
+          redirectMode: ('redirectMode' in o) ? o.redirectMode : 'dashboard',
+          silent: ('silent' in o) ? !!o.silent : true
+        };
+      }
+
+      function setNewOrderSaveButtonsDisabled(disabled) {
+        ['newOrderBtnSave', 'newOrderBtnSaveAndNew', 'newOrderBtnClose'].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.disabled = !!disabled;
+        });
+      }
+
+      function newOrderFormHasSubstantiveData() {
+        try {
+          var c = AppState.elements.custName && AppState.elements.custName.value;
+          var bn = AppState.elements.billNo && String(AppState.elements.billNo.value || '').trim();
+          var rows = AppState.elements.itemBody && AppState.elements.itemBody.querySelectorAll('tr');
+          return !!(c || bn || (rows && rows.length > 0));
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function navigateToDashboardHome() {
+        try {
+          if (typeof loadPage === 'function') {
+            loadPage('dashboard.html');
+            return;
+          }
+          if (window.parent && typeof window.parent.loadPage === 'function') {
+            window.parent.loadPage('dashboard.html');
+            return;
+          }
+          if (window.top && typeof window.top.loadPage === 'function') {
+            window.top.loadPage('dashboard.html');
+            return;
+          }
+        } catch (e) { }
+        try { window.location.href = '../index.html'; } catch (e2) { }
+      }
+
+      function navigateToNewOrderPage() {
+        try {
+          if (typeof loadPage === 'function') {
+            loadPage('pages/new-order.html');
+            return;
+          }
+          if (window.parent && typeof window.parent.loadPage === 'function') {
+            window.parent.loadPage('pages/new-order.html');
+            return;
+          }
+          if (window.top && typeof window.top.loadPage === 'function') {
+            window.top.loadPage('pages/new-order.html');
+            return;
+          }
+        } catch (e) { }
+        try { window.location.href = 'pages/new-order.html'; } catch (e2) { }
+      }
+
+      /**
+       * Save order to localStorage (bills + orders), then optionally return to Dashboard
+       * or open a fresh New Order. Uses a lock to prevent duplicate submissions.
+       * options.redirectMode: 'dashboard' | 'newOrder' | null — default 'dashboard'
+       */
+      function saveOrder(options) {
+        var opts = normalizeSaveOrderOptions(options);
+        if (AppState.orderSaveLocked) return;
         if (!validateOrder()) return;
 
+        AppState.orderSaveLocked = true;
+        setNewOrderSaveButtonsDisabled(true);
         showLoading(true);
 
         try {
-          // For brand-new orders (not edits), officially claim the next order number now.
-          // This is the ONLY place the counter is incremented — never on page load or reset.
           if (!AppState.editMode) {
             const prevBn = String(AppState.elements.billNo.value || '').trim();
             const claimed = claimBillNo();
@@ -3647,7 +3696,6 @@
             }
             AppState.elements.billNo.value = claimed;
             AppState.billNoClaimed = true;
-            // Migrate draft payments to the claimed bill number so they become permanent.
             try {
               const draftKey = String(AppState.draftPaymentKey || '').trim();
               if (draftKey) {
@@ -3663,12 +3711,14 @@
               }
             } catch (e) { }
             AppState.draftPaymentKey = null;
-            // Also update the read-only bill-no cell in every table row
-            AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
-              const billInput = tr.cells[1]?.children[0];
-              if (billInput) billInput.value = claimed;
-            });
+            if (AppState.elements.itemBody) {
+              AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
+                const billInput = tr.cells[1]?.children[0];
+                if (billInput) billInput.value = claimed;
+              });
+            }
           }
+
           const billTotal = calculateBillTotal();
           const rows = [];
 
@@ -3691,7 +3741,6 @@
             ? { rows: psRecSave.rows, total: psRecSave.total, savedAt: psRecSave.savedAt }
             : null;
 
-          // Save to bills
           const bills = JSON.parse(localStorage.getItem('bills') || '[]');
           const billData = {
             date: AppState.elements.orderDate.value,
@@ -3711,12 +3760,10 @@
           }
           localStorage.setItem('bills', JSON.stringify(bills));
 
-          // Calculate total Pc and GR.Wt from all items; gross Order Total matches Payment Summary "Order Total:"
           let totalPc = 0;
           let totalGrWt = 0;
           let panelOrderTotal = 0;
           rows.forEach(row => {
-            // Pc is at index 7, Gr.Wt (Est. Total Wt) is at index 9
             const pc = parseFloat(row.values[7] || 0);
             const grWt = parseFloat(row.values[9] || 0);
             totalPc += pc;
@@ -3727,19 +3774,18 @@
             }
           });
 
-          // Save to orders
           const orders = JSON.parse(localStorage.getItem('orders') || '[]');
           const orderData = {
             id: AppState.editOrderId || Date.now(),
             orderNo: AppState.elements.billNo.value,
             customer: getCustomerName(),
             customerId: AppState.elements.custName.value,
-            customerOpeningBalance: AppState.elements.currentBal?.value || '',
-            customerRelation: AppState.elements.relation?.value || '',
-            customerStation: AppState.elements.station?.value || '',
+            customerOpeningBalance: AppState.elements.currentBal ? AppState.elements.currentBal.value : '',
+            customerRelation: AppState.elements.relation ? AppState.elements.relation.value : '',
+            customerStation: AppState.elements.station ? AppState.elements.station.value : '',
             orderDate: AppState.elements.orderDate.value,
-            dueDate: AppState.elements.dueDate?.value || '',
-            gstRate: AppState.elements.gstRate?.value || '',
+            dueDate: AppState.elements.dueDate ? AppState.elements.dueDate.value : '',
+            gstRate: AppState.elements.gstRate ? AppState.elements.gstRate.value : '',
             type: rows[0]?.type || 'Order',
             pc: totalPc,
             grWt: totalGrWt,
@@ -3764,37 +3810,49 @@
           }
           localStorage.setItem('orders', JSON.stringify(orders));
 
-          // Edit cycle completed successfully; clear edit keys now (not during initial load).
           localStorage.removeItem('editOrderId');
           localStorage.removeItem('editOrderPayload');
           localStorage.removeItem('editCustomerReadOnly');
 
-          // Dispatch update event
           window.dispatchEvent(new CustomEvent('orderSaved', {
             detail: { orderNo: AppState.elements.billNo.value }
           }));
 
           showLoading(false);
-          alert('Order saved successfully');
           showSaveIndicator();
 
-          // Always clear form after save so the table is empty for the next order
-          setTimeout(() => resetOrder(true), 100);
+          if (!opts.silent) {
+            alert('Order saved successfully');
+          }
+
+          if (opts.redirectMode === 'dashboard' || opts.redirectMode === 'newOrder') {
+            clearAllData();
+            if (opts.redirectMode === 'dashboard') {
+              navigateToDashboardHome();
+            } else {
+              navigateToNewOrderPage();
+            }
+          } else if (opts.resetAfter) {
+            setTimeout(function () { resetOrder(true); }, 100);
+          }
         } catch (e) {
           showLoading(false);
           console.error('Error saving order:', e);
           showError('Failed to save order. Please try again.');
+        } finally {
+          AppState.orderSaveLocked = false;
+          setNewOrderSaveButtonsDisabled(false);
         }
       }
 
       function saveAndNew() {
-        saveOrder(true);
+        saveOrder({ redirectMode: 'newOrder', silent: true });
       }
 
       function scheduleAutoSave() {
         clearTimeout(AppState.autoSaveTimer);
         AppState.autoSaveTimer = setTimeout(() => {
-          if (AppState.elements.billNo?.value && AppState.elements.custName?.value) {
+          if (AppState.elements.billNo && AppState.elements.billNo.value && AppState.elements.custName && AppState.elements.custName.value) {
             const state = captureFormState();
             localStorage.setItem('orderAutoSave', JSON.stringify(state));
             showSaveIndicator();
@@ -3804,23 +3862,25 @@
 
       function captureFormState() {
         const rows = [];
-        AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
-          rows.push({
-            values: Array.from(tr.querySelectorAll('input,select')).map(el => el.value),
-            type: tr.cells[0]?.querySelector('select')?.value,
-            delivery: tr.dataset.delivery || '',
-            deliveryDate: tr.dataset.deliveryDate || '',
-            daysToDelivery: tr.dataset.daysToDelivery || '',
-            sample: tr.dataset.sample || ''
+        if (AppState.elements.itemBody) {
+          AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
+            rows.push({
+              values: Array.from(tr.querySelectorAll('input,select')).map(el => el.value),
+              type: tr.cells[0]?.querySelector('select')?.value,
+              delivery: tr.dataset.delivery || '',
+              deliveryDate: tr.dataset.deliveryDate || '',
+              daysToDelivery: tr.dataset.daysToDelivery || '',
+              sample: tr.dataset.sample || ''
+            });
           });
-        });
+        }
 
         return {
-          customerId: AppState.elements.custName?.value,
-          billNo: AppState.elements.billNo?.value,
-          orderDate: AppState.elements.orderDate?.value,
-          dueDate: AppState.elements.dueDate?.value,
-          gstRate: AppState.elements.gstRate?.value,
+          customerId: AppState.elements.custName && AppState.elements.custName.value,
+          billNo: AppState.elements.billNo && AppState.elements.billNo.value,
+          orderDate: AppState.elements.orderDate && AppState.elements.orderDate.value,
+          dueDate: AppState.elements.dueDate && AppState.elements.dueDate.value,
+          gstRate: AppState.elements.gstRate && AppState.elements.gstRate.value,
           rows: rows,
           timestamp: Date.now()
         };
@@ -3828,7 +3888,6 @@
 
       function restoreFormState() {
         try {
-          // Never restore when user just came from Ready Order – no shared state
           if (localStorage.getItem('lastOrderPage') === 'ready-extra') {
             localStorage.removeItem('orderAutoSave');
             return false;
@@ -3838,27 +3897,24 @@
 
           const state = JSON.parse(saved);
 
-          // Don't restore if too old (>24 hours)
           if (Date.now() - state.timestamp > 86400000) {
             localStorage.removeItem('orderAutoSave');
             return false;
           }
 
-          // Restore fields
           if (state.customerId && AppState.elements.custName) {
             AppState.elements.custName.value = state.customerId;
             AppState.elements.custName.dispatchEvent(new Event('change'));
           }
-          if (state.billNo) AppState.elements.billNo.value = state.billNo;
-          if (state.orderDate) AppState.elements.orderDate.value = state.orderDate;
-          if (state.dueDate) AppState.elements.dueDate.value = state.dueDate;
-          if (state.gstRate) AppState.elements.gstRate.value = state.gstRate;
+          if (state.billNo && AppState.elements.billNo) AppState.elements.billNo.value = state.billNo;
+          if (state.orderDate && AppState.elements.orderDate) AppState.elements.orderDate.value = state.orderDate;
+          if (state.dueDate && AppState.elements.dueDate) AppState.elements.dueDate.value = state.dueDate;
+          if (state.gstRate && AppState.elements.gstRate) AppState.elements.gstRate.value = state.gstRate;
 
-          // Restore rows
           AppState.elements.itemBody.innerHTML = '';
-          if (state.rows?.length > 0) {
+          if (state.rows && state.rows.length > 0) {
             state.rows.forEach(rowData => {
-              addRow();
+              addRow(true);
               const tr = AppState.elements.itemBody.lastElementChild;
               tr.querySelectorAll('input,select').forEach((el, i) => {
                 if (rowData.values[i] !== undefined) {
@@ -3869,7 +3925,7 @@
               if (rowData.deliveryDate) tr.dataset.deliveryDate = rowData.deliveryDate;
               if (rowData.daysToDelivery) tr.dataset.daysToDelivery = rowData.daysToDelivery;
               if (rowData.sample) tr.dataset.sample = rowData.sample;
-              
+
               const sel = tr.cells[0]?.querySelector('select');
               normalizeNewOrderLineTypeSelect(sel);
               setPurchaseOptionalFieldsState(tr, sel && sel.value === 'Purchase');
@@ -3899,7 +3955,6 @@
           const editOrderId = localStorage.getItem('editOrderId');
           if (!editOrderId) return false;
 
-          // 1) Fetch full order data using order ID (from DB / localStorage)
           const orders = JSON.parse(localStorage.getItem('orders') || '[]');
           let order = orders.find(o => o && (o.id == editOrderId || String(o.id) === String(editOrderId)));
           if (!order) {
@@ -3917,18 +3972,6 @@
             return false;
           }
 
-          console.log('[Edit Order] Fetched order data (by order ID):', order);
-          console.log('[Edit Order] Customer from order:', {
-            customerId: order.customerId,
-            customer: order.customer,
-            customerOpeningBalance: order.customerOpeningBalance,
-            currentBal: order.currentBal,
-            customerRelation: order.customerRelation,
-            relation: order.relation,
-            customerStation: order.customerStation,
-            station: order.station
-          });
-
           AppState.editMode = true;
           AppState.editOrderId = order.id;
           AppState.currentOrderStatus = order.status || null;
@@ -3937,7 +3980,6 @@
           const customerName = (order.customer || order.customerName || '').toString().trim();
           const customerIdRaw = order.customerId != null && order.customerId !== '' ? order.customerId : null;
 
-          // 2) Fetch linked customer details from DB using customerId (do NOT rely only on dropdown)
           const customers = JSON.parse(localStorage.getItem('customers') || '[]');
           let customer = null;
           if (customerIdRaw != null && customerIdRaw !== '') {
@@ -3948,14 +3990,15 @@
               (c.name || '').toString().trim().toLowerCase() === customerName.toLowerCase()
             );
           }
-          console.log('[Edit Order] Fetched customer data (by customerId/name):', customer);
 
-          // 3) Explicit values from order for controlled binding (use order first, then customer)
-          const currentBalVal = (order.customerOpeningBalance ?? order.currentBal ?? order.openingBalance ?? (customer && (customer.openingBalance ?? customer.currentBal))) ?? '';
-          const relationVal = (order.customerRelation || order.relation || (customer && (customer.relation || (customer.relationName ? [customer.relation, customer.relationName].filter(Boolean).join(' ') : '')))) ?? '';
-          const stationVal = (order.customerStation || order.station || (customer && customer.station)) ?? '';
+          const currentBalVal = (order.customerOpeningBalance != null ? order.customerOpeningBalance :
+            (order.currentBal != null ? order.currentBal :
+              (order.openingBalance != null ? order.openingBalance :
+                (customer ? (customer.openingBalance != null ? customer.openingBalance : customer.currentBal) : '')))) || '';
+          const relationVal = (order.customerRelation || order.relation ||
+            (customer ? (customer.relation ? (customer.relationName ? customer.relation + ' ' + customer.relationName : customer.relation) : '') : '')) || '';
+          const stationVal = (order.customerStation || order.station || (customer ? customer.station : '')) || '';
 
-          // 4) Populate form fields explicitly (value bound to order/customer state) – run after DOM is ready
           function applyCustomerFieldsToForm() {
             const select = AppState.elements.custName;
             const currentBalEl = AppState.elements.currentBal;
@@ -3964,7 +4007,6 @@
 
             if (!select) return;
 
-            // Set dropdown to match customerId (controlled: value = customerId)
             const idToSelect = String(customerIdRaw || (customer && customer.id) || '');
             const nameToShow = customerName || (customer && customer.name) || '';
 
@@ -3991,7 +4033,6 @@
               select.appendChild(option);
             }
             if (option) {
-              // Avoid flipping selection if already correct
               if (String(select.value) !== String(option.value)) {
                 select.value = option.value;
               }
@@ -4006,7 +4047,6 @@
               }
             }
 
-            // Set Current Balance, Relation, Station explicitly (controlled: value bound to state)
             if (currentBalEl) {
               currentBalEl.value = (currentBalVal !== '' && currentBalVal != null) ? safeNumber(currentBalVal).toFixed(2) : '';
             }
@@ -4016,17 +4056,9 @@
             if (stationEl) {
               stationEl.value = (stationVal != null && stationVal !== undefined) ? String(stationVal) : '';
             }
-
-            console.log('[Edit Order] Form state after apply:', {
-              dropdownValue: select.value,
-              currentBal: currentBalEl ? currentBalEl.value : '',
-              relation: relationEl ? relationEl.value : '',
-              station: stationEl ? stationEl.value : ''
-            });
           }
 
           applyCustomerFieldsToForm();
-          // Lifecycle: run again after a tick so any async DOM/workspace is ready
           requestAnimationFrame(() => applyCustomerFieldsToForm());
           setTimeout(() => {
             applyCustomerFieldsToForm();
@@ -4034,46 +4066,40 @@
           }, 100);
           setTimeout(() => applyCustomerFieldsToForm(), 250);
 
-          // Customer is always editable when editing
           setCustomerEditLock(false);
 
-
-          // Load bill info – ensure no field remains empty if data exists
           if (order.orderNo != null && order.orderNo !== '') AppState.elements.billNo.value = String(order.orderNo);
           if (order.orderDate != null && order.orderDate !== '') AppState.elements.orderDate.value = order.orderDate;
           if (AppState.elements.dueDate && order.dueDate != null && order.dueDate !== '') AppState.elements.dueDate.value = order.dueDate;
           if (AppState.elements.gstRate && order.gstRate != null && order.gstRate !== '') AppState.elements.gstRate.value = order.gstRate;
 
-          // Load all order items into the table – restore every row; legacy line types normalize to Order
           AppState.elements.itemBody.innerHTML = '';
-          // Support both items and legacy rows array; normalize to { values, type, ... }
           const rawItems = order.items || order.rows || [];
           const items = rawItems.map(it => ({
             values: it.values || (Array.isArray(it) ? it : []),
-            type: it.type || (it.values && it.values[0] === undefined ? 'Order' : (typeof it.type === 'string' ? it.type : 'Order')),
+            type: it.type || 'Order',
             delivery: it.delivery,
             deliveryDate: it.deliveryDate,
             daysToDelivery: it.daysToDelivery,
             sample: it.sample,
             orderFilled: it.orderFilled
           }));
+
           for (let idx = 0; idx < items.length; idx++) {
             const item = items[idx];
-            addRow(true); // skip throttle so every row is added
+            addRow(true);
             const tr = AppState.elements.itemBody.lastElementChild;
             if (!tr) continue;
 
             const values = item.values || [];
-            var typeVal = (!item.type || item.type === 'Order') ? (item.type || 'Order') : 'Order';
+            var typeVal = item.type || 'Order';
 
-            // Restore type first (Repair/Sale/Purchase in old data → Order)
             const typeSelect = tr.cells[0]?.querySelector('select');
             if (typeSelect) {
               typeSelect.value = typeVal;
               normalizeNewOrderLineTypeSelect(typeSelect);
             }
 
-            // Restore every input/select by index (same order as save); pad with empty so all inputs get a value
             const inputs = tr.querySelectorAll('input, select');
             for (let i = 0; i < inputs.length; i++) {
               const val = values[i];
@@ -4084,18 +4110,15 @@
               }
             }
 
-            // Restore row metadata (Order Details)
             if (item.delivery != null && item.delivery !== '') tr.dataset.delivery = item.delivery;
             if (item.deliveryDate != null && item.deliveryDate !== '') tr.dataset.deliveryDate = item.deliveryDate;
             if (item.daysToDelivery != null && item.daysToDelivery !== '') tr.dataset.daysToDelivery = item.daysToDelivery;
             if (item.sample != null && item.sample !== '') tr.dataset.sample = item.sample;
             if (item.orderFilled != null && item.orderFilled !== '') tr.dataset.orderFilled = item.orderFilled;
 
-            // Recalculate row totals so displayed totals match saved data
             setTimeout(() => calculateRow(tr.cells[7]?.children[0]), 10 + idx * 5);
           }
 
-          // Apply optional-field state for all rows
           AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
             const sel = tr.cells[0]?.querySelector('select');
             normalizeNewOrderLineTypeSelect(sel);
@@ -4106,7 +4129,6 @@
             }
           });
 
-          // Restore saved Purchase sheet for this bill (panel + calculations)
           if (order.purchaseSheet && order.purchaseSheet.rows && order.purchaseSheet.rows.length) {
             writePurchaseSheetForBill(
               String(order.orderNo),
@@ -4115,10 +4137,8 @@
             );
           }
 
-          // Update panels
           updateInfoPanel();
 
-          // Clear stale return flags, but keep edit identifiers until save/reset completes.
           localStorage.removeItem('ratebookOpened');
           localStorage.removeItem('receiptOpened');
 
@@ -4136,20 +4156,30 @@
       // RESET & NAVIGATION
       // =====================================================
 
-      function resetOrder(skipConfirm = false) {
-        if (!skipConfirm && !confirm('Reset form? All unsaved data will be lost.')) {
+      /** Toolbar Reset: only customer Name (select); syncs readonly fields via handleCustomerChange. */
+      function resetCustomerNameOnly() {
+        if (!AppState.elements.custName) {
+          if (!initElements()) return;
+        }
+        if (!AppState.elements.custName) return;
+        if (!confirm('Clear the selected customer (Name)? Order number, dates, and item rows stay unchanged.')) {
           return;
         }
+        AppState.elements.custName.value = '';
+        handleCustomerChange();
+        updateInfoPanel();
+      }
 
+      /** Full form reset (used after save-with-reset and internal clears). */
+      function resetOrder(skipConfirm) {
+        if (skipConfirm === undefined) skipConfirm = false;
+        if (!skipConfirm && !confirm('Reset entire form? All unsaved data will be lost.')) {
+          return;
+        }
         clearOrderFormAndState();
       }
 
-      /** Permanently clear the entire order form, table, state, and UI for a fresh order. */
       function clearOrderFormAndState() {
-        // IMPORTANT: Do NOT delete saved purchase sheets when starting a new order.
-        // They are historical data for previous bills and are used by Ready / Extra (Advance purchase minus).
-
-        // Clear all input fields
         if (AppState.elements.custName) AppState.elements.custName.value = '';
         if (AppState.elements.billNo) AppState.elements.billNo.value = peekNextBillNo();
         AppState.billNoClaimed = false;
@@ -4158,15 +4188,12 @@
         if (AppState.elements.dueDate) AppState.elements.dueDate.value = '';
         if (AppState.elements.gstRate) AppState.elements.gstRate.value = '';
 
-        // Clear customer details (name selection, balance, relation, station)
         clearCustomerFields();
 
-        // Clear table completely – no rows remain
         if (AppState.elements.itemBody) {
           AppState.elements.itemBody.innerHTML = '';
         }
 
-        // Remove only new-order state (do not touch readyExtraOrderState – keeps new-order and ready-extra-order data separate)
         localStorage.removeItem('orderAutoSave');
         localStorage.removeItem('newOrderState');
         localStorage.removeItem('editOrderId');
@@ -4175,36 +4202,32 @@
         localStorage.removeItem('ratebookOpened');
         localStorage.removeItem('receiptOpened');
 
-        // Reset edit mode
         AppState.editMode = false;
         AppState.editOrderId = null;
         setCustomerEditLock(false);
 
-        // Reset totals and panels – call updateInfoPanel() with the new billNo so the panel
-        // always reflects the real state of the new bill (zeros for a fresh bill, correct data if
-        // the generated billNo somehow already has payments).
         updateInfoPanel();
-
-        // Also reset ratebook panel for the new bill
         updateRatebookPanel();
       }
 
       function clearAllData() {
-        // Permanently clear form, table, state, and panels (e.g. before closing)
         clearOrderFormAndState();
         if (AppState.elements.billNo) AppState.elements.billNo.value = '';
       }
 
       function closeDashboard() {
-        // Clear all data before closing
-        clearAllData();
-
-        // Navigate to dashboard
-        if (typeof loadPage === 'function') {
-          loadPage('dashboard.html');
-        } else {
-          window.location.href = '../index.html';
+        if (AppState.orderSaveLocked) return;
+        if (newOrderFormHasSubstantiveData()) {
+          if (validateOrder()) {
+            saveOrder({ redirectMode: 'dashboard', silent: true });
+            return;
+          }
+          if (!confirm('This order cannot be saved yet (required fields or items missing).\n\nClose without saving? Unsaved changes will be lost.')) {
+            return;
+          }
         }
+        clearAllData();
+        navigateToDashboardHome();
       }
 
       // =====================================================
@@ -4219,13 +4242,11 @@
 
         if (!invoice || !app) return;
 
-        // Populate invoice data
         document.getElementById('iCustomer').textContent = getCustomerName() || '—';
         document.getElementById('iOrderDate').textContent = AppState.elements.orderDate.value || '—';
         document.getElementById('iBillNo').textContent = AppState.elements.billNo.value || '—';
         document.getElementById('iInvoiceDate').textContent = new Date().toLocaleDateString();
 
-        // Populate items
         const itemsBody = document.getElementById('iItems');
         itemsBody.innerHTML = '';
 
@@ -4260,7 +4281,6 @@
         document.getElementById('iPaid').textContent = paid.toFixed(2);
         document.getElementById('iBalance').textContent = balance.toFixed(2);
 
-        // Show invoice, hide app
         invoice.style.display = 'block';
         app.style.display = 'none';
       }
@@ -4278,117 +4298,35 @@
       // =====================================================
 
       function initApp() {
-        // Try to initialize elements
         if (!initElements()) {
           setTimeout(initApp, 100);
           return;
         }
 
-        // Load customers
         loadCustomers();
 
-        // Track billNo to detect fresh order entry
-        try { AppState.lastBillNo = String(AppState.elements.billNo && AppState.elements.billNo.value ? AppState.elements.billNo.value : '').trim(); } catch (e) { }
+        try {
+          AppState.lastBillNo = String(AppState.elements.billNo && AppState.elements.billNo.value ? AppState.elements.billNo.value : '').trim();
+        } catch (e) { }
 
-        // Edit mode must take priority over return-state restoration
-        const pendingEditOrderId = localStorage.getItem('editOrderId');
-
-        // New Order: immediately clear any existing data and show empty form
-        const newOrderClearForm = localStorage.getItem('newOrderClearForm');
-        if (newOrderClearForm === 'true' && !pendingEditOrderId) {
-          localStorage.removeItem('newOrderClearForm');
-          localStorage.setItem('lastOrderPage', 'new-order');
-          clearOrderFormAndState();
-          addRow(); // exactly one empty row for new order
-          updateInfoPanel();
-          setupBillNoHandler();
-          setupTableArrowKeys();
-          // Skip edit load and auto-save restore below
-        } else {
-          // If user just came from Ready (extra) order, never show Ready order data or extra rows – clear new-order state and start fresh
-          const cameFromReadyExtraPage = localStorage.getItem('lastOrderPage') === 'ready-extra';
-          if (cameFromReadyExtraPage) {
-            localStorage.removeItem('orderAutoSave');
-            localStorage.removeItem('newOrderState');
-            localStorage.removeItem('editOrderId');
-            localStorage.removeItem('editOrderPayload');
-            localStorage.removeItem('editCustomerReadOnly');
-            localStorage.setItem('lastOrderPage', 'new-order');
-            if (AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
-            addRow(); // exactly one empty row; no restore
-          }
-
-          // Only restore from ratebook/receipt if WE (new-order) saved the state. If ratebook was opened from ready-extra-order, newOrderState is empty – do not restore, show empty form.
-          const ratebookOpened = localStorage.getItem('ratebookOpened');
-          const receiptOpened = localStorage.getItem('receiptOpened');
-          const hasNewOrderState = !!localStorage.getItem('newOrderState');
-          const cameFromReadyExtra = (ratebookOpened === 'true' || receiptOpened === 'true') && !hasNewOrderState;
-
-          if (cameFromReadyExtra) {
-            localStorage.removeItem('ratebookOpened');
-            localStorage.removeItem('receiptOpened');
-          }
-
-          if (ratebookOpened === 'true' && !pendingEditOrderId && hasNewOrderState) {
-            // Truly returning from new-order's ratebook – restore form and recover ratebook list
-            setTimeout(() => {
-              restoreOrderState();
-              updateRatebookPanel(); // Recover ratebook panel for current order
-            }, 200);
-            updateInfoPanel();
-            setupTableArrowKeys();
-            setupBillNoHandler();
-            attachInitListeners();
-            return;
-          }
-
-          // Start with no rows unless we already set one (cameFromReadyExtraPage); rows added only by restore or edit load
-          if (!cameFromReadyExtraPage && AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
-
-          // When editing an order, don't pre-fill date/bill no – loadOrderForEdit will set them from the order
-          if (!pendingEditOrderId) {
-            if (AppState.elements.orderDate && !AppState.elements.orderDate.value) {
-              AppState.elements.orderDate.valueAsDate = new Date();
-            }
-            if (AppState.elements.billNo && !AppState.elements.billNo.value) {
-              AppState.elements.billNo.value = peekNextBillNo();
-            }
-          }
-
-          // Setup bill number change handler
-          setupBillNoHandler();
-
-          // Check if we're editing an existing order – load all customer data and items from DB (orders) by order ID
-          const editLoaded = loadOrderForEdit();
-
-          // If not editing, restore auto-saved state only when we did NOT just come from Ready order (avoid extra rows / Ready data)
-          const restored = editLoaded ? true : (cameFromReadyExtraPage ? false : restoreFormState());
-
-          // Ensure Order No is auto-generated if still empty (e.g. DOM ready late)
-          if (!pendingEditOrderId) {
-            setTimeout(function () {
-              if (AppState.elements.billNo && !AppState.elements.billNo.value) {
-                AppState.elements.billNo.value = peekNextBillNo();
-              }
-            }, 200);
-          }
-        }
+        // Declare setupBillNoHandler and attachInitListeners at the top of initApp
+        // so they are available throughout (hoisted function declarations).
 
         function setupBillNoHandler() {
           if (AppState.elements.billNo) {
             AppState.elements.billNo.oninput = () => {
-              // If user starts a NEW order number, clear current form state everywhere (UI-only).
-              // This prevents previous order's rows/panels from carrying over when customer stays same.
               const nextBn = String(AppState.elements.billNo.value || '').trim();
               if (!AppState.editMode && AppState.lastBillNo && nextBn && nextBn !== AppState.lastBillNo) {
                 const keepBn = nextBn;
                 clearOrderFormAndState();
                 if (AppState.elements.billNo) AppState.elements.billNo.value = keepBn;
               }
-              AppState.elements.itemBody?.querySelectorAll('tr').forEach(tr => {
-                const billInput = tr.cells[1]?.children[0];
-                if (billInput) billInput.value = AppState.elements.billNo.value;
-              });
+              if (AppState.elements.itemBody) {
+                AppState.elements.itemBody.querySelectorAll('tr').forEach(tr => {
+                  const billInput = tr.cells[1]?.children[0];
+                  if (billInput) billInput.value = AppState.elements.billNo.value;
+                });
+              }
               AppState.lastBillNo = String(AppState.elements.billNo.value || '').trim();
               updateInfoPanel();
             };
@@ -4397,18 +4335,25 @@
 
         var _storageHandler = null;
         var _visibilityHandler = null;
+
         function attachInitListeners() {
           _storageHandler = function (e) {
             if (e.key === 'rateBook') updateRatebookPanel();
-            if (e.key === 'newOrderState' && e.newValue) setTimeout(function () { restoreOrderState(); }, 200);
+            // FIX #6: Refresh customer dropdown when customers change in another tab/popup
+            if (e.key === 'customers') loadCustomers();
+            if (e.key === 'newOrderState' && e.newValue) {
+              setTimeout(function () { restoreOrderState(); }, 200);
+            }
           };
           window.addEventListener('storage', _storageHandler);
+
           _visibilityHandler = function () {
             if (!document.hidden && localStorage.getItem('ratebookOpened') === 'true') {
               setTimeout(function () { restoreOrderState(); updateRatebookPanel(); }, 200);
             }
           };
           document.addEventListener('visibilitychange', _visibilityHandler);
+
           window.addEventListener('focus', function () {
             if (localStorage.getItem('ratebookOpened') === 'true') {
               setTimeout(() => { restoreOrderState(); updateRatebookPanel(); }, 100);
@@ -4416,14 +4361,91 @@
           });
         }
 
-        setupBillNoHandler();
-        attachInitListeners();
+        const pendingEditOrderId = localStorage.getItem('editOrderId');
+        const newOrderClearForm = localStorage.getItem('newOrderClearForm');
 
-        // Update panels and keyboard navigation
+        if (newOrderClearForm === 'true' && !pendingEditOrderId) {
+          localStorage.removeItem('newOrderClearForm');
+          localStorage.setItem('lastOrderPage', 'new-order');
+          clearOrderFormAndState();
+          addRow(true);
+          updateInfoPanel();
+          setupBillNoHandler();
+          setupTableArrowKeys();
+          attachInitListeners();
+          registerGlobals();
+          return;
+        }
+
+        const cameFromReadyExtraPage = localStorage.getItem('lastOrderPage') === 'ready-extra';
+        if (cameFromReadyExtraPage) {
+          localStorage.removeItem('orderAutoSave');
+          localStorage.removeItem('newOrderState');
+          localStorage.removeItem('editOrderId');
+          localStorage.removeItem('editOrderPayload');
+          localStorage.removeItem('editCustomerReadOnly');
+          localStorage.setItem('lastOrderPage', 'new-order');
+          if (AppState.elements.itemBody) AppState.elements.itemBody.innerHTML = '';
+          addRow(true);
+        }
+
+        const ratebookOpened = localStorage.getItem('ratebookOpened');
+        const receiptOpened = localStorage.getItem('receiptOpened');
+        const hasNewOrderState = !!localStorage.getItem('newOrderState');
+        const cameFromReadyExtra = (ratebookOpened === 'true' || receiptOpened === 'true') && !hasNewOrderState;
+
+        if (cameFromReadyExtra) {
+          localStorage.removeItem('ratebookOpened');
+          localStorage.removeItem('receiptOpened');
+        }
+
+        if (ratebookOpened === 'true' && !pendingEditOrderId && hasNewOrderState) {
+          setTimeout(() => {
+            restoreOrderState();
+            updateRatebookPanel();
+          }, 200);
+          updateInfoPanel();
+          setupTableArrowKeys();
+          setupBillNoHandler();
+          attachInitListeners();
+          registerGlobals();
+          return;
+        }
+
+        if (!cameFromReadyExtraPage && AppState.elements.itemBody) {
+          AppState.elements.itemBody.innerHTML = '';
+        }
+
+        if (!pendingEditOrderId) {
+          if (AppState.elements.orderDate && !AppState.elements.orderDate.value) {
+            AppState.elements.orderDate.valueAsDate = new Date();
+          }
+          if (AppState.elements.billNo && !AppState.elements.billNo.value) {
+            AppState.elements.billNo.value = peekNextBillNo();
+          }
+        }
+
+        setupBillNoHandler();
+
+        const editLoaded = loadOrderForEdit();
+        const restored = editLoaded ? true : (cameFromReadyExtraPage ? false : restoreFormState());
+
+        if (!pendingEditOrderId) {
+          setTimeout(function () {
+            if (AppState.elements.billNo && !AppState.elements.billNo.value) {
+              AppState.elements.billNo.value = peekNextBillNo();
+            }
+          }, 200);
+        }
+
+        attachInitListeners();
         updateInfoPanel();
         setupTableArrowKeys();
+        registerGlobals();
+      }
 
-        // Make functions global
+      // Expose all functions to window so HTML onclick attributes work
+      function registerGlobals() {
         window.addRow = addRow;
         window.addRowNewOrder = addRowNewOrder;
         window.removeRow = removeRow;
@@ -4465,6 +4487,7 @@
         window.saveOrder = saveOrder;
         window.saveAndNew = saveAndNew;
         window.resetOrder = resetOrder;
+        window.resetCustomerNameOnly = resetCustomerNameOnly;
         window.showInvoice = showInvoice;
         window.back = back;
         window.closeDashboard = closeDashboard;
@@ -4472,9 +4495,22 @@
         window.restoreOrderState = restoreOrderState;
 
         window.__currentPageCleanup = function () {
-          if (_storageHandler) window.removeEventListener('storage', _storageHandler);
-          if (_visibilityHandler) document.removeEventListener('visibilitychange', _visibilityHandler);
-          var globals = ['addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange', 'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup', 'newOrderSavePayment', 'savePayment', 'openNewOrderPaymentsDetailPopup', 'closeNewOrderPaymentsDetailPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'newOrderClosePurchaseSheetPopup', 'addPurchaseSheetRow', 'savePurchaseSheet', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup', 'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup', 'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup', 'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount', 'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew', 'resetOrder', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState', 'restoreOrderState'];
+          var globals = [
+            'addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange',
+            'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup',
+            'newOrderSavePayment', 'savePayment', 'openNewOrderPaymentsDetailPopup',
+            'closeNewOrderPaymentsDetailPopup', 'openPaymentDetailTableEdit',
+            'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'openPurchaseSheet',
+            'closePurchaseSheetPopup', 'newOrderClosePurchaseSheetPopup', 'addPurchaseSheetRow',
+            'savePurchaseSheet', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup',
+            'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup',
+            'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup',
+            'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount',
+            'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew',
+            'resetOrder', 'resetCustomerNameOnly', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState',
+            'restoreOrderState', 'openPaymentCardEdit', 'savePaymentCardEdit',
+            'cancelPaymentCardEdit', 'cancelPaymentDetailTableEdit'
+          ];
           globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
         };
       }

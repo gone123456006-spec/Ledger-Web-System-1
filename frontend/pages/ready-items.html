@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Item Process</title>
+    <title>Ready Items</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         /* =========================
@@ -520,35 +520,6 @@
             white-space: nowrap;
         }
 
-        .mark-ready-qty-row {
-            flex-wrap: wrap;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .mark-ready-qty-row .mark-ready-qty-meta {
-            flex: 1;
-            min-width: 140px;
-            overflow: hidden;
-        }
-
-        .mark-ready-qty-input {
-            width: 76px;
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            text-align: right;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .mark-ready-qty-input:focus {
-            outline: none;
-            border-color: #2a50d8;
-            box-shadow: 0 0 0 2px rgba(42, 80, 216, 0.15);
-        }
-
         .modal-footer {
             display: flex;
             align-items: center;
@@ -869,25 +840,22 @@
     <div class="process-items-wrap">
         <!-- TOOLBAR -->
         <div class="process-toolbar">
-            <h2>⚙️ Item Process</h2>
+            <h2>📦 Ready Items</h2>
             <span class="sel-pill" id="ipSelPill">0 selected</span>
 
-            <button type="button" class="filter-btn active" id="fBtnProcess" onclick="setIpFilter('PROCESS')">In
-                Process</button>
-            <button type="button" class="filter-btn" id="fBtnReady" onclick="setIpFilter('READY')">Ready</button>
-            <button type="button" class="filter-btn" id="fBtnAll" onclick="setIpFilter('ALL')">All</button>
-
             <input type="text" id="searchBox" placeholder="🔍 Search by item, job worker, order..."
-                onkeyup="ipFilterTable()">
+                onkeyup="ipFilterTable()" style="margin-left: auto;">
             <select id="jwFilter" onchange="ipFilterTable()">
                 <option value="">👤 All Job Workers</option>
             </select>
             <button class="btn" onclick="loadProcessItems()">🔄 Refresh</button>
-            <button class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled>
-                ✅ Mark Ready
+            <button class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled
+                title=""
+                style="background:#0f5132;color:#fff;border-color:#0f5132;">
+                📦 Move to Ready Orders
             </button>
             <button class="btn btn-unready" id="markUnReadyBtn" onclick="openMarkUnReadyModal()" disabled>
-                ❌ Mark UnReady
+                ↩️ Recall to In Process
             </button>
         </div>
 
@@ -924,14 +892,13 @@
         <div class="footer" id="footerText">No items in process</div>
     </div>
 
-    <!-- MARK READY CONFIRMATION MODAL -->
+    <!-- MOVE TO READY ORDERS MODAL -->
     <div class="modal-overlay" id="markReadyModal">
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-header-text">
-                    <h3>✅ Mark as Ready</h3>
-                    <p id="modalSubtitle">Choose how many units to mark ready for each selected row. Partial quantities stay in
-                        Item Processing.</p>
+                    <h3>📦 Move to Ready Orders</h3>
+                    <p id="modalSubtitle">The selected orders will be marked as Ready Orders.</p>
                 </div>
                 <button class="modal-close-btn" onclick="closeMarkReadyModal()">✕</button>
             </div>
@@ -941,8 +908,9 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel-modal" onclick="closeMarkReadyModal()">Cancel</button>
-                <button class="btn-confirm-ready" id="confirmReadyBtn" onclick="confirmMarkReady()">
-                    ✅ Confirm — Mark Ready
+                <button class="btn-confirm-ready" id="confirmReadyBtn" onclick="confirmMarkReady()"
+                    style="background:#0f5132;border-color:#0f5132;">
+                    ✅ Confirm — Make Ready Order
                 </button>
             </div>
         </div>
@@ -953,15 +921,15 @@
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-header-text">
-                    <h3 style="color:#ff3b30;">❌ Mark as UnReady</h3>
-                    <p id="unReadyModalSubtitle">The selected items will be moved back to In Process.</p>
+                    <h3 style="color:#ff3b30;">↩️ Recall to In Process</h3>
+                    <p id="unReadyModalSubtitle">The selected items will be moved back to Item Process.</p>
                 </div>
                 <button class="modal-close-btn" onclick="closeMarkUnReadyModal()">✕</button>
             </div>
             <div class="modal-body">
                 <div class="modal-body-info" id="unReadyModalInfo"
                     style="background:#fff5f5; border-color:#feb2b2; color:#c53030;">
-                    These items will be marked as "In Process" again.
+                    These items will be marked as "In Process" again and leave this list.
                 </div>
                 <div class="modal-item-list" id="unReadyModalItemList"></div>
             </div>
@@ -969,7 +937,7 @@
                 <button class="btn-cancel-modal" onclick="closeMarkUnReadyModal()">Cancel</button>
                 <button class="btn-confirm-ready" id="confirmUnReadyBtn" onclick="confirmMarkUnReady()"
                     style="background:#ff3b30;">
-                    ❌ Confirm — Mark UnReady
+                    ↩️ Confirm — Recall Item
                 </button>
             </div>
         </div>
@@ -1097,10 +1065,10 @@
         }
 
         /**
-         * Same rules as pending-items: ready-extra-order saves long rows (Pc at v[4], …);
-         * shorter arrays use type / empty-first-cell offset.
+         * Same rules as pending-items: ready-extra-order saves 17-value rows (Pc at v[4], …);
+         * new-order uses a shorter array with optional type-prefix offset.
          */
-        function ipMapOrderItemValuesForDisplay(item, order) {
+        function riMapOrderItemValuesForDisplay(item, order) {
             const ord = order || {};
             const v = item.values || [];
             if (v.length >= 16) {
@@ -1131,10 +1099,7 @@
             };
         }
 
-        /**
-         * Repair labels/weights from orders[].items[itemIdx] for display.
-         * Keeps itemProcess row qty (supports split rows); est. total wt = unit × row qty when unit is known.
-         */
+        /** Rebuild qty/name/weights from orders[].items[itemIdx] so old itemProcess rows display correctly. */
         function normalizeItemProcessRowForDisplay(r, orders) {
             const row = Object.assign({}, r);
             const ord = (orders || []).find(o => o && String(o.id) === String(row.orderId));
@@ -1152,7 +1117,7 @@
             const idx = parseInt(row.itemIdx, 10);
             const item = ord && ord.items && !isNaN(idx) && ord.items[idx] ? ord.items[idx] : null;
             if (item && item.values && Array.isArray(item.values) && item.values.length > 0) {
-                const f = ipMapOrderItemValuesForDisplay(item, ord);
+                const f = riMapOrderItemValuesForDisplay(item, ord);
                 row.itemName = f.itemName;
                 row.stamp = f.stamp;
                 row.sampleDetails = f.sampleDetails;
@@ -1168,25 +1133,70 @@
             return row;
         }
 
+        /**
+         * Move to Ready Orders is allowed only when every selected row's order passes
+         * OrderProcessing.isOrderFullyReady (no Pending Items / no In Process / 100% qty ready).
+         */
+        function ipEvaluateMoveToReadyOrdersForSelection() {
+            const checked = [...document.querySelectorAll('.ip-row-cb:not(:disabled):checked')];
+            if (checked.length === 0) {
+                return { allowed: false, message: 'Select at least one ready item.' };
+            }
+            const OP = window.OrderProcessing;
+            if (!OP || typeof OP.isOrderFullyReady !== 'function') {
+                return { allowed: false, message: 'Order rules not loaded. Refresh the page.' };
+            }
+            let orders = [];
+            let itemProcess = [];
+            try {
+                orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+            } catch (e) {
+                return { allowed: false, message: 'Could not read order data.' };
+            }
+            const orderIds = [...new Set(checked.map(cb => String(cb.dataset.orderId || '')).filter(Boolean))];
+            for (const oid of orderIds) {
+                const order = orders.find(o => o && String(o.id) === String(oid));
+                const orderNo = order ? (order.orderNo || order.billNo || oid) : oid;
+                if (!OP.isOrderFullyReady(orders, itemProcess, oid)) {
+                    let msg = `Order ${orderNo}: finish every item on this order first (no Pending / In Process, 100% quantities ready).`;
+                    try {
+                        if (order && OP.orderHasUnassignedPendingLines(order)) {
+                            msg = `Order ${orderNo}: some lines are still Pending on Pending Items — assign and complete all items.`;
+                        } else if (OP.orderHasNonTerminalProcessRows(itemProcess, oid)) {
+                            msg = `Order ${orderNo}: some lines are still In Process — complete them before moving this order.`;
+                        } else if (order && !OP.orderEveryLineReadyAtFullQuantity(order, itemProcess, oid)) {
+                            msg = `Order ${orderNo}: not every line is at 100% ready quantity yet.`;
+                        }
+                    } catch (e) { }
+                    return { allowed: false, message: msg };
+                }
+            }
+            return { allowed: true, message: '' };
+        }
+
         /* ── UI STATE ── */
         function ipUpdateUI() {
             const checked = document.querySelectorAll('.ip-row-cb:checked');
             const n = checked.length;
 
-            const hasInProcess = [...checked].some(cb => cb.dataset.status !== 'READY');
-            const hasReady = [...checked].some(cb => cb.dataset.status === 'READY');
+            const moveGate = ipEvaluateMoveToReadyOrdersForSelection();
+            const readyBtn = document.getElementById('markReadyBtn');
+            if (readyBtn) {
+                readyBtn.disabled = n === 0 || !moveGate.allowed;
+                readyBtn.title = n === 0 ? 'Select ready items to move.' : (moveGate.allowed
+                    ? 'All items on each selected order are complete — move to Ready Orders.'
+                    : moveGate.message);
+            }
+
+            const unReadyBtn = document.getElementById('markUnReadyBtn');
+            if (unReadyBtn) unReadyBtn.disabled = n === 0;
 
             const pill = document.getElementById('ipSelPill');
             if (pill) {
                 pill.style.display = n > 0 ? 'inline-block' : 'none';
                 pill.textContent = n + ' selected';
             }
-
-            const readyBtn = document.getElementById('markReadyBtn');
-            if (readyBtn) readyBtn.disabled = !hasInProcess;
-
-            const unReadyBtn = document.getElementById('markUnReadyBtn');
-            if (unReadyBtn) unReadyBtn.disabled = !hasReady;
 
             // Update select-all checkbox state
             const all = [...document.querySelectorAll('.ip-row-cb')].filter(c => {
@@ -1215,7 +1225,7 @@
             });
         }
 
-        var activeIpFilter = 'PROCESS'; // Default to In Process
+        var activeIpFilter = 'READY'; // Only Ready items belong here
 
         /* ── LOAD TABLE ── */
         let ipAllJobWorkerOptions = []; // { key, label }
@@ -1231,21 +1241,22 @@
             const jwFilter = document.getElementById('jwFilter');
             if (!jwFilter) return;
 
-            // Requirement: Job Worker filter is ONLY available in "In Process".
-            // For Ready/All: keep only "All Job Workers" and disable the dropdown.
+            // In Ready Items page, we only have Ready items, no need to disable dropdown unless there are no items.
+            /*
             if (activeIpFilter !== 'PROCESS') {
                 jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>';
                 jwFilter.value = '';
                 jwFilter.disabled = true;
                 return;
             }
+            */
 
             // Always rebuild options from storage to avoid stale/empty lists.
             try {
                 const items = JSON.parse(localStorage.getItem('itemProcess') || '[]');
                 const nameMap = new Map();
-                // Only include workers from "In Process" entries (status != READY)
-                (items || []).filter(i => i && !['READY', 'READY_ORDER'].includes(String(i.status || '').toUpperCase())).forEach(i => {
+                // Ready Items page: workers come from READY queue rows
+                (items || []).filter(i => i && String(i.status || '').toUpperCase() === 'READY').forEach(i => {
                     const label = (i && i.jobworkerName ? String(i.jobworkerName) : '').trim();
                     if (!label) return;
                     const key = ipNormJwName(label);
@@ -1277,15 +1288,15 @@
             tbody.innerHTML = '';
 
             try {
-                const rawItems = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+                const allItems = JSON.parse(localStorage.getItem('itemProcess') || '[]');
                 let orders = [];
                 try {
                     orders = JSON.parse(localStorage.getItem('orders') || '[]');
                 } catch (eOrd) {
                     orders = [];
                 }
-                const items = (rawItems || [])
-                    .filter(r => String(r.status || '').toUpperCase() !== 'READY_ORDER')
+                const items = allItems
+                    .filter(i => i.status === 'READY')
                     .map(r => normalizeItemProcessRowForDisplay(r, orders));
 
                 if (items.length === 0) {
@@ -1293,13 +1304,13 @@
                         <tr>
                             <td colspan="15" style="border:none;">
                             <div class="empty-state">
-                              <div class="empty-state-icon">⚙️</div>
-                              <div class="empty-state-text">No Items in Process</div>
-                              <div class="empty-state-subtext">Items assigned to Job Workers will appear here</div>
+                              <div class="empty-state-icon">📦</div>
+                              <div class="empty-state-text">No Ready Items</div>
+                              <div class="empty-state-subtext">Items marked as ready from Item Process will appear here</div>
                             </div>
                           </td>
                         </tr>`;
-                    if (footer) footer.textContent = 'No items in process';
+                    if (footer) footer.textContent = 'No ready items';
                     ipUpdateUI();
                     return;
                 }
@@ -1312,22 +1323,18 @@
                     tr.dataset.jobworkerKey = ipNormJwName(r.jobworkerName || '');
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
-
                     const rowQty = Math.max(0, parseFloat(r.qty) || 0);
+
                     tr.innerHTML = `
                         <td class="center cb-cell">
                             <input type="checkbox" class="ip-row-cb"
                                 data-process-id="${escapeHtml(r.id)}"
                                 data-order-id="${escapeHtml(r.orderId)}"
-                                data-item-idx="${escapeHtml(String(r.itemIdx != null ? r.itemIdx : ''))}"
-                                data-qty="${escapeHtml(String(rowQty))}"
                                 data-status="${escapeHtml(r.status || '')}"
                                 onchange="ipOnCbChange(this)">
                         </td>
                         <td class="center">
-                            ${isReady
-                            ? `<span class="badge ready-done">✓ Ready</span>`
-                            : `<span class="badge process">In Process</span>`}
+                            <span class="badge ready-done">✓ Ready item</span>
                         </td>
                         <td class="right">${rowQty.toFixed(0)}</td>
                         <td class="col-item-name">${escapeHtml(r.itemName)}</td>
@@ -1345,7 +1352,7 @@
                     tbody.appendChild(tr);
                 });
 
-                if (footer) footer.textContent = `${items.length} item(s) in process`;
+                if (footer) footer.textContent = `${items.length} item(s) ready`;
 
                 // Cache JW names and update dropdown according to active filter
                 // Build JW dropdown options (stable key comparison; keeps original label for display)
@@ -1390,7 +1397,7 @@
             const visible = rows.filter(r => r.style.display !== 'none').length;
             if (activeIpFilter === 'READY') footer.textContent = `${visible} item(s) ready`;
             else if (activeIpFilter === 'ALL') footer.textContent = `${visible} item(s)`;
-            else footer.textContent = `${visible} item(s) in process`;
+            else footer.textContent = `${visible} item(s) ready`;
         }
 
         function ipFilterTable() {
@@ -1419,13 +1426,19 @@
 
         /* ── MARK READY MODAL ── */
         function openMarkReadyModal() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:not(:disabled):checked')]
-                .filter(cb => String(cb.dataset.status || '').toUpperCase() !== 'READY');
+            const checked = [...document.querySelectorAll('.ip-row-cb:not(:disabled):checked')];
             if (checked.length === 0) {
-                showIpToast('⚠️ Please select at least one in-process row first');
+                showIpToast('⚠️ Please select at least one item first');
                 return;
             }
 
+            const moveGate = ipEvaluateMoveToReadyOrdersForSelection();
+            if (!moveGate.allowed) {
+                showIpToast(moveGate.message);
+                return;
+            }
+
+            // Group by orderId to show what orders will be affected
             const orderMap = {};
             checked.forEach(cb => {
                 const oid = cb.dataset.orderId;
@@ -1448,32 +1461,17 @@
             const orderCount = orders.length;
 
             document.getElementById('modalSubtitle').textContent =
-                `${itemCount} row${itemCount > 1 ? 's' : ''} from ${orderCount} order${orderCount > 1 ? 's' : ''} — set quantity to mark ready (default: full row qty).`;
+                `${itemCount} item${itemCount > 1 ? 's' : ''} from ${orderCount} order${orderCount > 1 ? 's' : ''} will be marked as Ready.`;
             document.getElementById('modalInfo').textContent =
-                `Ready units move to Ready Items. Orders appear under Ready Orders only when every line's full order quantity is ready.`;
+                `✅ Each order shown below is fully complete (no Pending / In Process left). Confirm to finalize these rows and update Ready Orders.`;
 
             const list = document.getElementById('modalItemList');
-            list.innerHTML = checked.map(cb => {
-                const tr = cb.closest('tr');
-                const tds = tr ? tr.querySelectorAll('td') : [];
-                const orderNo = tds[12] ? tds[12].textContent.trim() : cb.dataset.orderId;
-                const itemName = tds[3] ? tds[3].textContent.trim() : '—';
-                const maxQ = Math.max(0, parseFloat(cb.dataset.qty) || 0);
-                const pid = String(cb.dataset.processId || '');
-                const step = maxQ % 1 !== 0 ? 'any' : '1';
-                return `<div class="modal-item-row mark-ready-qty-row" data-process-id="${escapeHtml(pid)}">
-                    <div class="mark-ready-qty-meta">
-                        <span class="modal-item-order">${escapeHtml(orderNo)}</span>
-                        <span style="color:#6b7a95;"> · ${escapeHtml(itemName)}</span>
-                    </div>
-                    <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b;">
-                        Qty
-                        <input type="number" class="mark-ready-qty-input" data-process-id="${escapeHtml(pid)}"
-                            min="0" ${step === '1' ? 'step="1"' : 'step="0.01"'}
-                            max="${maxQ}" value="${maxQ}">
-                    </label>
-                </div>`;
-            }).join('');
+            list.innerHTML = orders.map(o => `
+                <div class="modal-item-row">
+                    <span class="modal-item-order">${escapeHtml(o.orderNo)}</span>
+                    <span style="color:#6b7a95;">| ${escapeHtml(o.customer)}</span>
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#374151;">${escapeHtml(o.items.join(', '))}</span>
+                </div>`).join('');
 
             document.getElementById('markReadyModal').classList.add('open');
         }
@@ -1482,13 +1480,19 @@
             document.getElementById('markReadyModal').classList.remove('open');
         }
 
-        /* ── CONFIRM MARK READY ── */
+        /* ── CONFIRM MAKE READY ORDER ── */
         function confirmMarkReady() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:checked')]
-                .filter(cb => String(cb.dataset.status || '').toUpperCase() !== 'READY');
+            const checked = [...document.querySelectorAll('.ip-row-cb:checked')];
             if (checked.length === 0) { closeMarkReadyModal(); return; }
 
             const btn = document.getElementById('confirmReadyBtn');
+            const moveGate = ipEvaluateMoveToReadyOrdersForSelection();
+            if (!moveGate.allowed) {
+                showIpToast(moveGate.message);
+                closeMarkReadyModal();
+                return;
+            }
+
             btn.disabled = true;
             btn.textContent = 'Saving…';
 
@@ -1496,97 +1500,54 @@
                 try {
                     const orders = JSON.parse(localStorage.getItem('orders') || '[]');
                     const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
-                    const now = new Date().toISOString();
                     const OP = window.OrderProcessing;
-
-                    const qtyByPid = {};
-                    document.querySelectorAll('#markReadyModal .mark-ready-qty-input').forEach(inp => {
-                        const id = inp.getAttribute('data-process-id');
-                        if (id) qtyByPid[id] = parseFloat(inp.value);
-                    });
-
-                    let movedUnits = 0;
-                    let splitRows = 0;
-
-                    checked.forEach(cb => {
-                        const pid = String(cb.dataset.processId);
-                        let readyQty = qtyByPid[pid];
-                        const entry = itemProcess.find(e => String(e.id) === pid);
-                        if (!entry) return;
-                        const canon = normalizeItemProcessRowForDisplay(entry, orders);
-                        entry.itemName = canon.itemName;
-                        entry.stamp = canon.stamp;
-                        entry.sampleDetails = canon.sampleDetails;
-                        entry.design = canon.design;
-                        entry.size = canon.size;
-                        entry.estUnitWt = canon.estUnitWt;
-                        if (canon.orderNo && (!entry.orderNo || entry.orderNo === '—')) entry.orderNo = canon.orderNo;
-                        if (canon.customerName && (!entry.customerName || entry.customerName === '—')) entry.customerName = canon.customerName;
-                        if (canon.customerRelation && (!entry.customerRelation || entry.customerRelation === '—')) entry.customerRelation = canon.customerRelation;
-
-                        const maxQ = Math.max(0, parseFloat(entry.qty) || 0);
-                        if (!(readyQty > 0)) readyQty = maxQ;
-                        readyQty = Math.min(maxQ, readyQty);
-                        if (readyQty <= 0) return;
-
-                        const unitWt = parseFloat(entry.estUnitWt) || 0;
-
-                        if (readyQty + 1e-9 >= maxQ) {
-                            entry.status = 'READY';
-                            entry.readyDate = now;
-                            entry.qty = maxQ;
-                            entry.estTotalWt = unitWt * maxQ;
-                            movedUnits += maxQ;
-                        } else {
-                            const remain = maxQ - readyQty;
-                            const readyPart = Object.assign({}, entry, {
-                                id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
-                                qty: readyQty,
-                                estTotalWt: unitWt * readyQty,
-                                status: 'READY',
-                                readyDate: now
-                            });
-                            itemProcess.push(readyPart);
-                            entry.qty = remain;
-                            entry.estTotalWt = unitWt * remain;
-                            splitRows++;
-                            movedUnits += readyQty;
-                        }
-                    });
 
                     const wasOrderReady = {};
                     orders.forEach(o => {
                         if (o && o.id != null) wasOrderReady[String(o.id)] = o.status === 'READY';
                     });
 
+                    checked.forEach(cb => {
+                        const pid = String(cb.dataset.processId);
+                        const entry = itemProcess.find(e => String(e.id) === pid);
+                        if (entry) entry.status = 'READY_ORDER';
+                    });
+
                     if (OP && typeof OP.syncOrdersReadyFromProcess === 'function') {
                         OP.syncOrdersReadyFromProcess(orders, itemProcess);
                     }
-
-                    const newlyReadyCount = orders.filter(o => o && o.id != null && o.status === 'READY' && !wasOrderReady[String(o.id)]).length;
 
                     localStorage.setItem('orders', JSON.stringify(orders));
                     localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
 
                     closeMarkReadyModal();
 
-                    btn.disabled = false;
-                    btn.textContent = '✅ Confirm — Mark Ready';
-
-                    let msg = `✅ Marked ${movedUnits} unit${movedUnits !== 1 ? 's' : ''} ready`;
-                    if (splitRows) msg += ` (${splitRows} row${splitRows !== 1 ? 's' : ''} split)`;
-                    if (newlyReadyCount > 0) {
-                        msg += `. ${newlyReadyCount} order${newlyReadyCount !== 1 ? 's' : ''} complete — now in Ready Orders.`;
-                    } else {
-                        msg += '. Use Ready Items to finalize lines; orders complete when every quantity is ready.';
-                    }
-                    showIpToast(msg);
+                    const count = checked.length;
+                    const newlyReadyOrders = orders.filter(o => o && o.id != null && o.status === 'READY' && !wasOrderReady[String(o.id)]);
+                    const nNew = newlyReadyOrders.length;
+                    showIpToast(nNew > 0
+                        ? `✅ Finalized ${count} row${count > 1 ? 's' : ''}. ${nNew} order${nNew > 1 ? 's' : ''} moved to Ready Orders (all quantities complete).`
+                        : `✅ Finalized ${count} row${count > 1 ? 's' : ''}. No order moved yet — complete all line quantities first.`);
 
                     tbody = null;
                     loadProcessItems();
 
                     try { window.dispatchEvent(new Event('storage')); } catch (e) { }
                     try { window.dispatchEvent(new CustomEvent('orderStatusChanged', { detail: { status: 'READY' } })); } catch (e) { }
+
+                    if (nNew > 0) {
+                        setTimeout(() => {
+                            if (confirm(`${nNew} order${nNew > 1 ? 's' : ''} ${nNew > 1 ? 'are' : 'is'} now complete and in Ready Orders. Open Ready Orders now?`)) {
+                                if (typeof loadPage === 'function') {
+                                    loadPage('pages/ready-orders.html');
+                                } else if (typeof window.loadPage === 'function') {
+                                    window.loadPage('pages/ready-orders.html');
+                                } else {
+                                    window.open('pages/ready-orders.html', '_blank');
+                                }
+                            }
+                        }, 400);
+                    }
 
                 } catch (err) {
                     console.error('Mark Ready error:', err);
@@ -1599,9 +1560,9 @@
 
         /* ── MARK UNREADY MODAL ── */
         function openMarkUnReadyModal() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status === 'READY');
+            const checked = [...document.querySelectorAll('.ip-row-cb:checked')];
             if (checked.length === 0) {
-                showIpToast('⚠️ Please select at least one READY item first');
+                showIpToast('⚠️ Please select at least one item first');
                 return;
             }
 
@@ -1645,7 +1606,7 @@
         }
 
         function confirmMarkUnReady() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status === 'READY');
+            const checked = [...document.querySelectorAll('.ip-row-cb:checked')];
             if (checked.length === 0) { closeMarkUnReadyModal(); return; }
 
             const btn = document.getElementById('confirmUnReadyBtn');
@@ -1769,10 +1730,10 @@
                 (jwId && (String(e.jobworkerId) === String(jwId))) ||
                 (e.jobworkerName || '').trim().toLowerCase() === (jwName || '').trim().toLowerCase()
             );
-            const inProcessCount = items.filter(e => !['READY', 'READY_ORDER'].includes(String(e.status || '').toUpperCase())).length;
-            const readyCount = items.length - inProcessCount;
+            const inProcess = items.filter(e => e.status !== 'READY').length;
+            const ready = items.filter(e => e.status === 'READY').length;
 
-            if (subEl) subEl.textContent = `${items.length} item${items.length !== 1 ? 's' : ''} assigned (${inProcessCount} in process, ${readyCount} ready)`;
+            if (subEl) subEl.textContent = `${items.length} item${items.length !== 1 ? 's' : ''} assigned in Item Process`;
 
             const itemsBodyEl = document.getElementById('jwModalItemsBody');
             if (itemsBodyEl) {
@@ -1784,14 +1745,12 @@
                 } else {
                     itemsBodyEl.innerHTML = items.map(r => {
                         const disp = normalizeItemProcessRowForDisplay(r, ordersJw);
-                        const st = String(disp.status || '').toUpperCase();
-                        const isReady = st === 'READY' || st === 'READY_ORDER';
+                        const isReady = disp.status === 'READY';
                         const statusVal = isReady ? 'READY' : 'PROCESS';
-                        const readyLabel = st === 'READY_ORDER' ? '✓ Finalized' : '✓ Ready';
                         const rowQty = Math.max(0, parseFloat(disp.qty) || 0);
                         return `<tr class="jw-modal-item-row" data-status="${statusVal}">
                             <td style="text-align:center">${isReady
-                                ? `<span class="badge ready-done">${readyLabel}</span>`
+                                ? `<span class="badge ready-done">✓ Ready</span>`
                                 : `<span class="badge process">In Process</span>`}
                             </td>
                             <td class="num num-neutral">${rowQty.toFixed(0)}</td>
@@ -1814,8 +1773,8 @@
             const footerEl = document.getElementById('jwModalFooter');
             if (footerEl) {
                 footerEl.innerHTML = `
-                    <span class="jw-stat-chip process">⚙ ${inProcessCount} In Process</span>
-                    <span class="jw-stat-chip ready">✓ ${readyCount} Ready</span>
+                    <span class="jw-stat-chip process">⚙ ${inProcess} In Process</span>
+                    <span class="jw-stat-chip ready">✓ ${ready} Ready</span>
                     <span style="margin-left:auto;font-weight:600;color:#1e293b;">${items.length} total item${items.length !== 1 ? 's' : ''}</span>`;
             }
 
@@ -1848,6 +1807,7 @@
         window.openMarkReadyModal = openMarkReadyModal;
         window.closeMarkReadyModal = closeMarkReadyModal;
         window.confirmMarkReady = confirmMarkReady;
+        window.ipEvaluateMoveToReadyOrdersForSelection = ipEvaluateMoveToReadyOrdersForSelection;
         window.openMarkUnReadyModal = openMarkUnReadyModal;
         window.closeMarkUnReadyModal = closeMarkUnReadyModal;
         window.confirmMarkUnReady = confirmMarkUnReady;

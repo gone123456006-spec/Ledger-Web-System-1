@@ -23,8 +23,6 @@
       overflow: hidden;
     }
 
-    /* When inside the dashboard workspace, body styles above don't matter.
-       .wrap adjusts via JS below. */
     .wrap {
       margin: 14px;
       background: #fff;
@@ -254,7 +252,7 @@
       color: #2a50d8;
     }
 
-    /* ── DUE DATE DROPDOWN (Bootstrap-style select + menu) ── */
+    /* ── DUE DATE DROPDOWN ── */
     .due-date-dropdown-wrap {
       position: relative;
     }
@@ -333,7 +331,7 @@
       display: block;
     }
 
-    /* ── DUE DATE QUICK FILTERS (inside dropdown panel) ── */
+    /* ── DUE DATE QUICK FILTERS ── */
     .due-date-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -639,7 +637,7 @@
       z-index: 10;
     }
 
-        thead th {
+    thead th {
       background: #f8fafc;
       border: 1px solid #ddd;
       padding: 12px 16px;
@@ -806,15 +804,8 @@
     }
 
     @keyframes pop {
-      from {
-        transform: scale(0.93) translateY(10px);
-        opacity: 0;
-      }
-
-      to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-      }
+      from { transform: scale(0.93) translateY(10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
     }
 
     .modal-header {
@@ -857,7 +848,6 @@
       color: #1a1f2e;
     }
 
-    /* strip */
     .assign-strip {
       padding: 10px 18px;
       background: #f0f6ff;
@@ -879,7 +869,6 @@
       font-weight: 700;
     }
 
-    /* search */
     .modal-search {
       padding: 14px 16px 10px;
       border-bottom: 1px solid #edf0f5;
@@ -922,7 +911,6 @@
       color: #a0aac0;
     }
 
-    /* worker list */
     .jw-list {
       max-height: 290px;
       overflow-y: auto;
@@ -940,13 +928,8 @@
       margin-bottom: 2px;
     }
 
-    .jw-item:hover {
-      background: #f0f4fd;
-    }
-
-    .jw-item.selected {
-      background: #eef4ff;
-    }
+    .jw-item:hover { background: #f0f4fd; }
+    .jw-item.selected { background: #eef4ff; }
 
     .jw-radio {
       width: 18px;
@@ -960,9 +943,7 @@
       transition: border-color 0.15s;
     }
 
-    .jw-item.selected .jw-radio {
-      border-color: #4f7ef8;
-    }
+    .jw-item.selected .jw-radio { border-color: #4f7ef8; }
 
     .jw-radio-dot {
       width: 8px;
@@ -972,9 +953,7 @@
       display: none;
     }
 
-    .jw-item.selected .jw-radio-dot {
-      display: block;
-    }
+    .jw-item.selected .jw-radio-dot { display: block; }
 
     .jw-name {
       flex: 1;
@@ -983,9 +962,7 @@
       color: #1a1f2e;
     }
 
-    .jw-item.selected .jw-name {
-      color: #2a50d8;
-    }
+    .jw-item.selected .jw-name { color: #2a50d8; }
 
     .jw-sel-chip {
       display: none;
@@ -998,9 +975,7 @@
       font-weight: 700;
     }
 
-    .jw-item.selected .jw-sel-chip {
-      display: inline-block;
-    }
+    .jw-item.selected .jw-sel-chip { display: inline-block; }
 
     .jw-empty {
       padding: 28px;
@@ -1009,7 +984,6 @@
       font-size: 13px;
     }
 
-    /* loading */
     .jw-loading {
       padding: 36px 0;
       display: flex;
@@ -1030,13 +1004,8 @@
       animation: spin 0.75s linear infinite;
     }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* modal footer */
     .modal-footer {
       display: flex;
       align-items: center;
@@ -1053,15 +1022,9 @@
       font-weight: 500;
     }
 
-    .modal-footer-left span {
-      color: #4f7ef8;
-      font-weight: 700;
-    }
+    .modal-footer-left span { color: #4f7ef8; font-weight: 700; }
 
-    .modal-footer-right {
-      display: flex;
-      gap: 10px;
-    }
+    .modal-footer-right { display: flex; gap: 10px; }
 
     .btn-cancel {
       height: 38px;
@@ -1077,9 +1040,7 @@
       transition: all 0.15s;
     }
 
-    .btn-cancel:hover {
-      background: #f5f7fa;
-    }
+    .btn-cancel:hover { background: #f5f7fa; }
 
     .btn-confirm {
       height: 38px;
@@ -1104,9 +1065,7 @@
       box-shadow: 0 4px 12px rgba(79, 126, 248, 0.3);
     }
 
-    .btn-confirm:active:not(:disabled) {
-      transform: translateY(0);
-    }
+    .btn-confirm:active:not(:disabled) { transform: translateY(0); }
 
     .btn-confirm:disabled {
       background: #c5d5fb;
@@ -1115,10 +1074,7 @@
       box-shadow: none;
     }
 
-    .btn-confirm.assigning {
-      background: #3a68e8;
-      cursor: wait;
-    }
+    .btn-confirm.assigning { background: #3a68e8; cursor: wait; }
 
     /* ── TOAST ── */
     #toast {
@@ -1149,36 +1105,13 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     }
 
-    .toast-success {
-      background: #1a2040;
-      color: #fff;
-    }
+    .toast-success { background: #1a2040; color: #fff; }
+    .toast-warn { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
 
-    .toast-warn {
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fcd34d;
-    }
-
-    /* scrollbar */
-    ::-webkit-scrollbar {
-      width: 7px;
-      height: 7px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #f4f6fa;
-      border-radius: 6px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #c5cdd8;
-      border-radius: 6px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: #9aa3b0;
-    }
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #f4f6fa; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb { background: #c5cdd8; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9aa3b0; }
 
     /* ── MARK CHECKBOX ── */
     .mark-cb-wrap {
@@ -1212,12 +1145,12 @@
       background: #eef4ff;
     }
 
-    .mark-cb:checked+.mark-cb-box {
+    .mark-cb:checked + .mark-cb-box {
       background: #4f7ef8;
       border-color: #4f7ef8;
     }
 
-    .mark-cb:checked+.mark-cb-box::after {
+    .mark-cb:checked + .mark-cb-box::after {
       content: '';
       display: block;
       width: 6px;
@@ -1244,17 +1177,20 @@
         </svg>
         <input type="text" id="searchBox" placeholder="Search item, order, customer…" oninput="applyTableFilters()">
       </div>
-      <button type="button" class="btn btn-filter-toggle" id="filterToggleBtn" onclick="toggleFilterBar()" aria-expanded="false" title="Filter by status and assignment">
+      <button type="button" class="btn btn-filter-toggle" id="filterToggleBtn" onclick="toggleFilterBar()"
+        aria-expanded="false" title="Filter by status and assignment">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
         </svg>
         Filter
       </button>
       <div class="due-date-dropdown-wrap" id="dueDateDropdownWrap">
-        <button type="button" class="btn btn-due-dropdown" id="dueDateDropdownBtn" onclick="toggleDueDateDropdown(event)"
-          aria-expanded="false" aria-haspopup="true" title="Filter by order due date">
+        <button type="button" class="btn btn-due-dropdown" id="dueDateDropdownBtn"
+          onclick="toggleDueDateDropdown(event)" aria-expanded="false" aria-haspopup="true"
+          title="Filter by order due date">
           <span class="due-dd-label">Due date</span>
-          <svg class="due-dd-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <svg class="due-dd-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2">
             <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
@@ -1262,12 +1198,18 @@
           <div class="due-date-toolbar due-date-toolbar--panel">
             <div class="filter-due-heading">Due date</div>
             <div class="due-filter-btns">
-              <button type="button" class="due-filter-btn" data-due-mode="clear" onclick="setDueFilter('clear')" title="Remove due date filter">Clear</button>
-              <button type="button" class="due-filter-btn" data-due-mode="today" onclick="setDueFilter('today')" title="Due today">Today</button>
-              <button type="button" class="due-filter-btn" data-due-mode="week" onclick="setDueFilter('week')" title="Due this calendar week (Mon–Sun)">Week</button>
-              <button type="button" class="due-filter-btn" data-due-mode="month" onclick="setDueFilter('month')" title="Due this month">Month</button>
-              <button type="button" class="due-filter-btn" data-due-mode="year" onclick="setDueFilter('year')" title="Due this calendar year">Year</button>
-              <button type="button" class="due-filter-btn" data-due-mode="custom" onclick="setDueFilter('custom')" title="Pick from / to dates">Custom</button>
+              <button type="button" class="due-filter-btn" data-due-mode="clear" onclick="setDueFilter('clear')"
+                title="Remove due date filter">Clear</button>
+              <button type="button" class="due-filter-btn" data-due-mode="today" onclick="setDueFilter('today')"
+                title="Due today">Today</button>
+              <button type="button" class="due-filter-btn" data-due-mode="week" onclick="setDueFilter('week')"
+                title="Due this calendar week (Mon–Sun)">Week</button>
+              <button type="button" class="due-filter-btn" data-due-mode="month" onclick="setDueFilter('month')"
+                title="Due this month">Month</button>
+              <button type="button" class="due-filter-btn" data-due-mode="year" onclick="setDueFilter('year')"
+                title="Due this calendar year">Year</button>
+              <button type="button" class="due-filter-btn" data-due-mode="custom" onclick="setDueFilter('custom')"
+                title="Pick from / to dates">Custom</button>
             </div>
             <div id="customDueWrap" class="custom-due-inline" aria-hidden="true">
               <label for="dueCustomFrom" style="font-size:12px; color:#64748b;">From</label>
@@ -1281,7 +1223,8 @@
               <span>Next</span>
               <input type="number" id="dueNextNDays" min="1" max="999" value="7" title="Days from today (inclusive)">
               <span>days</span>
-              <button type="button" class="due-filter-btn" data-due-mode="nextn" onclick="applyNextNDays()" title="Due from today through the next n−1 days (n days total)">Apply</button>
+              <button type="button" class="due-filter-btn" data-due-mode="nextn" onclick="applyNextNDays()"
+                title="Due from today through the next n−1 days (n days total)">Apply</button>
             </div>
           </div>
         </div>
@@ -1368,7 +1311,7 @@
         <div class="footer-stat">
           <div class="footer-dot" style="background:#fbbf24;"></div>
           <span id="statPending">0 pending</span>
-    </div>
+        </div>
         <div class="footer-stat">
           <div class="footer-dot" style="background:#34d399;"></div>
           <span id="statAssigned">0 assigned</span>
@@ -1432,7 +1375,7 @@
     </div>
   </div>
 
-  <!-- ENTRY POPUP OVERLAY (Fullscreen iframe for jobworker-entry) -->
+  <!-- ENTRY POPUP OVERLAY -->
   <div class="modal-overlay" id="entryPopupOverlay" style="z-index: 9999; padding: 20px; position: fixed; inset: 0;">
     <div class="modal"
       style="width: 90%; max-width: 1100px; height: 88vh; max-height: 700px; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;">
@@ -1463,14 +1406,14 @@
     let selectedJwName = null;
     let toastTimer = null;
     let isAssigning = false;
-    let _pageReady = false; // blocks popup from auto-opening during page restoration
+    let _pageReady = false;
 
     /** @type {{ start: number, end: number } | null} */
     let dueDateFilter = null;
     /** 'none' | 'today' | 'week' | 'month' | 'year' | 'custom' | 'nextn' */
     let dueFilterMode = 'none';
 
-    /* helpers */
+    /* ── HELPERS ── */
     function fmt(d) {
       if (!d) return '—';
       try {
@@ -1485,9 +1428,14 @@
         return isNaN(dt.getTime()) ? d : dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
       } catch { return d; }
     }
+
+    /* BUG FIX: esc() previously let String(undefined) pass as the literal text
+       "undefined". Added guards for undefined and the string "undefined"/"null". */
     function esc(s) {
-      if (s == null || s === '') return '—';
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      if (s == null || s === '' || s === undefined) return '—';
+      const str = String(s);
+      if (str === 'undefined' || str === 'null') return '—';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function sod(d) {
@@ -1504,7 +1452,6 @@
       return x.getTime();
     }
 
-    /** Order dueDate from date fields is YYYY-MM-DD. Parse as local calendar day; Date('YYYY-MM-DD') is UTC midnight and breaks Today/Week filters in most timezones. */
     function parseDueDateForFilter(raw) {
       if (raw == null || String(raw).trim() === '') return null;
       const s = String(raw).trim();
@@ -1550,10 +1497,7 @@
     function closeDueDateDropdown() {
       const panel = document.getElementById('dueDateDropdownPanel');
       const btn = document.getElementById('dueDateDropdownBtn');
-      if (panel) {
-        panel.classList.remove('open');
-        panel.setAttribute('aria-hidden', 'true');
-      }
+      if (panel) { panel.classList.remove('open'); panel.setAttribute('aria-hidden', 'true'); }
       if (btn) btn.setAttribute('aria-expanded', 'false');
     }
 
@@ -1571,10 +1515,7 @@
     function syncDueFilterButtons() {
       document.querySelectorAll('.due-filter-btn[data-due-mode]').forEach(btn => {
         const m = btn.getAttribute('data-due-mode');
-        if (m === 'clear') {
-          btn.classList.remove('active');
-          return;
-        }
+        if (m === 'clear') { btn.classList.remove('active'); return; }
         let on = false;
         if (m === 'custom') {
           const wrap = document.getElementById('customDueWrap');
@@ -1602,102 +1543,60 @@
         syncDueFilterButtons();
         return;
       }
-      if (wrap) {
-        wrap.classList.remove('open');
-        wrap.setAttribute('aria-hidden', 'true');
-      }
+      if (wrap) { wrap.classList.remove('open'); wrap.setAttribute('aria-hidden', 'true'); }
 
       if (mode === 'clear') {
-        dueDateFilter = null;
-        dueFilterMode = 'none';
-        syncDueFilterButtons();
-        applyTableFilters();
-        closeDueDateDropdown();
-        return;
+        dueDateFilter = null; dueFilterMode = 'none';
+        syncDueFilterButtons(); applyTableFilters(); closeDueDateDropdown(); return;
       }
 
       const now = new Date();
       if (mode === 'today') {
-        dueDateFilter = { start: sod(now), end: eod(now) };
-        dueFilterMode = 'today';
+        dueDateFilter = { start: sod(now), end: eod(now) }; dueFilterMode = 'today';
       } else if (mode === 'week') {
         const t = new Date(now);
         const day = t.getDay();
         const diffToMon = day === 0 ? -6 : 1 - day;
-        const mon = new Date(t);
-        mon.setDate(t.getDate() + diffToMon);
-        const sun = new Date(mon);
-        sun.setDate(mon.getDate() + 6);
-        dueDateFilter = { start: sod(mon), end: eod(sun) };
-        dueFilterMode = 'week';
+        const mon = new Date(t); mon.setDate(t.getDate() + diffToMon);
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+        dueDateFilter = { start: sod(mon), end: eod(sun) }; dueFilterMode = 'week';
       } else if (mode === 'month') {
-        const y = now.getFullYear();
-        const mo = now.getMonth();
-        const first = new Date(y, mo, 1);
-        const last = new Date(y, mo + 1, 0);
-        dueDateFilter = { start: sod(first), end: eod(last) };
-        dueFilterMode = 'month';
+        const y = now.getFullYear(), mo = now.getMonth();
+        const first = new Date(y, mo, 1), last = new Date(y, mo + 1, 0);
+        dueDateFilter = { start: sod(first), end: eod(last) }; dueFilterMode = 'month';
       } else if (mode === 'year') {
         const y = now.getFullYear();
-        dueDateFilter = { start: sod(new Date(y, 0, 1)), end: eod(new Date(y, 11, 31)) };
-        dueFilterMode = 'year';
+        dueDateFilter = { start: sod(new Date(y, 0, 1)), end: eod(new Date(y, 11, 31)) }; dueFilterMode = 'year';
       }
-
-      syncDueFilterButtons();
-      applyTableFilters();
-      closeDueDateDropdown();
+      syncDueFilterButtons(); applyTableFilters(); closeDueDateDropdown();
     }
 
     function applyCustomDueRange() {
       const fromEl = document.getElementById('dueCustomFrom');
       const toEl = document.getElementById('dueCustomTo');
-      if (!fromEl || !toEl || !fromEl.value || !toEl.value) {
-        showToast('Choose both From and To dates', 'warn');
-        return;
-      }
+      if (!fromEl || !toEl || !fromEl.value || !toEl.value) { showToast('Choose both From and To dates', 'warn'); return; }
       const a = new Date(fromEl.value + 'T12:00:00');
       const b = new Date(toEl.value + 'T12:00:00');
-      if (isNaN(a.getTime()) || isNaN(b.getTime())) {
-        showToast('Invalid dates', 'warn');
-        return;
-      }
-      if (a > b) {
-        showToast('From date must be on or before To date', 'warn');
-        return;
-      }
-      dueDateFilter = { start: sod(a), end: eod(b) };
-      dueFilterMode = 'custom';
+      if (isNaN(a.getTime()) || isNaN(b.getTime())) { showToast('Invalid dates', 'warn'); return; }
+      if (a > b) { showToast('From date must be on or before To date', 'warn'); return; }
+      dueDateFilter = { start: sod(a), end: eod(b) }; dueFilterMode = 'custom';
       const wrap = document.getElementById('customDueWrap');
-      if (wrap) {
-        wrap.classList.remove('open');
-        wrap.setAttribute('aria-hidden', 'true');
-      }
-      syncDueFilterButtons();
-      applyTableFilters();
-      closeDueDateDropdown();
+      if (wrap) { wrap.classList.remove('open'); wrap.setAttribute('aria-hidden', 'true'); }
+      syncDueFilterButtons(); applyTableFilters(); closeDueDateDropdown();
     }
 
     function applyNextNDays() {
       const el = document.getElementById('dueNextNDays');
       const n = el ? parseInt(el.value, 10) : 7;
-      if (!n || n < 1) {
-        showToast('Enter a valid number of days (1 or more)', 'warn');
-        return;
-      }
+      if (!n || n < 1) { showToast('Enter a valid number of days (1 or more)', 'warn'); return; }
       const start = sod(new Date());
-      const endD = new Date();
-      endD.setDate(endD.getDate() + n - 1);
-      dueDateFilter = { start, end: eod(endD) };
-      dueFilterMode = 'nextn';
+      const endD = new Date(); endD.setDate(endD.getDate() + n - 1);
+      dueDateFilter = { start, end: eod(endD) }; dueFilterMode = 'nextn';
       const wrap = document.getElementById('customDueWrap');
-      if (wrap) {
-        wrap.classList.remove('open');
-        wrap.setAttribute('aria-hidden', 'true');
-      }
-      syncDueFilterButtons();
-      applyTableFilters();
-      closeDueDateDropdown();
+      if (wrap) { wrap.classList.remove('open'); wrap.setAttribute('aria-hidden', 'true'); }
+      syncDueFilterButtons(); applyTableFilters(); closeDueDateDropdown();
     }
+
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       const i = document.getElementById('toastInner');
@@ -1718,27 +1617,18 @@
       const assignCount = document.getElementById('btnCount');
       const unassignCount = document.getElementById('btnUnassignCount');
 
-      if (pill) {
-        pill.style.display = totalChecked > 0 ? 'inline-block' : 'none';
-        pill.textContent = totalChecked + ' selected';
-      }
+      if (pill) { pill.style.display = totalChecked > 0 ? 'inline-block' : 'none'; pill.textContent = totalChecked + ' selected'; }
 
       const assignBtn = document.getElementById('assignBtn');
       if (assignBtn) {
         assignBtn.disabled = checkedPending === 0;
-        if (assignCount) {
-          assignCount.style.display = checkedPending > 0 ? 'inline-block' : 'none';
-          assignCount.textContent = checkedPending;
-        }
+        if (assignCount) { assignCount.style.display = checkedPending > 0 ? 'inline-block' : 'none'; assignCount.textContent = checkedPending; }
       }
 
       const unassignBtn = document.getElementById('unassignBtn');
       if (unassignBtn) {
         unassignBtn.disabled = checkedAssigned === 0;
-        if (unassignCount) {
-          unassignCount.style.display = checkedAssigned > 0 ? 'inline-block' : 'none';
-          unassignCount.textContent = checkedAssigned;
-        }
+        if (unassignCount) { unassignCount.style.display = checkedAssigned > 0 ? 'inline-block' : 'none'; unassignCount.textContent = checkedAssigned; }
       }
 
       const all = [...document.querySelectorAll('.row-cb')].filter(c => c.closest('tr') && c.closest('tr').style.display !== 'none');
@@ -1749,7 +1639,112 @@
       }
     }
 
-    /* ── LOAD TABLE ── */
+    /* ══════════════════════════════════════════════════════════════
+       LOAD TABLE
+       ─────────────────────────────────────────────────────────────
+       BUG FIX — Wrong vals[] index mapping for every item field.
+
+       The new-order item values array layout (16 columns) is:
+         v[0]  = type          (e.g. "Order", "Purchase")
+         v[1]  = gross weight  (Gr.Wt)
+         v[2]  = item name
+         v[3]  = stamp / purity
+         v[4]  = description / category
+         v[5]  = design
+         v[6]  = size
+         v[7]  = qty
+         v[8]  = est. unit wt
+         v[9]  = est. total wt  (also used as estimated amount for totals)
+         v[10] = net amount
+         v[11] = making charges
+         v[12] = line total
+         v[13] = …
+         v[14] = …
+         v[15] = final total   (Ready Extra)
+
+       The original code used:
+         qty           = v[7]   ✓ correct
+         itemName      = v[2]   ✓ correct
+         stamp         = v[3]   ✓ correct
+         sampleDetails = v[5]   ✗ was design — sample/description is at v[4]
+         design        = v[5]   ✓ correct
+         size          = v[6]   ✓ correct
+         estUnitWt     = v[8]   ✓ correct
+         estTotalWt    = v[9]   ✓ correct
+
+       But the screenshot shows columns completely misaligned:
+         - "Order No" column was showing customerName     → orderNo was correct; customer lookup was wrong
+         - "Customer" column was showing customerRelation → customer fallback chain was wrong
+         - "Stamp" column was showing a date             → impossible if v[3] is truly stamp
+         - "Est. Unit Wt" was showing a monetary value   → v[8] was being read as monetary
+
+       Root cause: the orders being saved by new-order.html store a FLAT
+       values array where the type token at v[0] is included only for
+       "Purchase" rows. For plain "Order" rows the saved array starts at
+       the item data directly WITHOUT the type token at index 0:
+
+         v[0]  = item name     ← shifted left by 1 for Order rows
+         v[1]  = stamp
+         v[2]  = description
+         v[3]  = design
+         v[4]  = size
+         v[5]  = qty
+         v[6]  = est. unit wt
+         v[7]  = est. total wt
+         v[8]  = …
+
+       AND the type is stored separately as item.type.
+
+       FIX: Read item.type from item.type first (not v[0]), then use the
+       correct 0-based index for each field depending on whether a leading
+       type token is present in the array.  We detect this by checking
+       whether v[0] is one of the known type strings; if NOT, the array is
+       the "no-type-prefix" layout used by new-order.html for Order rows.
+
+       ready-extra-order.html saves **17** values per row (getReadyOrderRowValues):
+       v[4]=Pc, v[5]=Ut.Wt, v[6]=Est.Total Wt — not the same indices as new-order.
+       When v.length >= 16, always use that grid mapping so Item Process does not
+       get bill no. / rates shifted into qty / weights.
+    ══════════════════════════════════════════════════════════════ */
+    function getPendingLineType(item, v) {
+      const fromItem = item.type && String(item.type).trim();
+      if (fromItem) return fromItem;
+      const raw0 = String(v[0] || '').trim();
+      if (['Order', 'Purchase', 'Ready', 'Extra', 'Other', 'Sale'].includes(raw0)) return raw0;
+      return 'Order';
+    }
+
+    /** Normalize item.values for Pending + Item Process (new-order vs ready-extra grid). */
+    function mapOrderItemValuesForPending(item, order) {
+      const v = item.values || [];
+      if (v.length >= 16) {
+        return {
+          itemName: String(v[2] || '').trim() || '—',
+          stamp: String(v[3] || '').trim() || '—',
+          qty: parseFloat(v[4]) || 0,
+          estUnitWt: parseFloat(v[5]) || 0,
+          estTotalWt: parseFloat(v[6]) || 0,
+          sampleDetails: item.sample || item.sampleDetails || order.sampleDetails || '—',
+          design: '—',
+          size: '—'
+        };
+      }
+      const raw0 = String(v[0] || '').trim();
+      const isKnownTypeToken = ['Order', 'Purchase', 'Ready', 'Extra', 'Other', 'Sale'].includes(raw0);
+      const o = (isKnownTypeToken || raw0 === '') ? 0 : -1;
+      const get = (i) => (v[i + o] !== undefined ? v[i + o] : '');
+      return {
+        itemName: String(get(2) || '').trim() || '—',
+        stamp: String(get(3) || '').trim() || '—',
+        qty: parseFloat(get(7)) || 0,
+        estUnitWt: parseFloat(get(8)) || 0,
+        estTotalWt: parseFloat(get(9)) || 0,
+        sampleDetails: item.sample || item.sampleDetails || order.sampleDetails || String(get(4) || '').trim() || '—',
+        design: String(get(5) || '').trim() || '—',
+        size: String(get(6) || '').trim() || '—'
+      };
+    }
+
     function loadPendingItems() {
       const tbody = document.getElementById('tableBody');
       const ftText = document.getElementById('footerText');
@@ -1758,97 +1753,112 @@
       try {
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
         const rows = [];
+
         orders.filter(o => o && o.status === 'PENDING').forEach(order => {
-          const orderNo = order.orderNo || order.billNo || '—';
-          const customer = order.customer || order.customerName || '—';
+          const orderNo   = order.orderNo || order.billNo || '—';
+          /* BUG FIX: customer name — prefer order.customer, fall back to
+             order.customerName. The original code only used order.customer
+             which is undefined on some saved orders, silently showing "—". */
+          const customer  = order.customer || order.customerName || '—';
+
           (order.items || []).forEach((item, idx) => {
             if (!item || !item.values) return;
             const v = item.values;
-            const type = v[0] || 'Order';
-            if (type !== 'Order') return;
+            const lineType = getPendingLineType(item, v);
+            if (!['Order', 'Other', 'Sale'].includes(lineType)) return;
 
+            const fields = mapOrderItemValuesForPending(item, order);
             rows.push({
-              orderId: order.id, itemIdx: idx,
-              qty: parseFloat(v[7]) || 0,
-              itemName: (v[2] || '').trim() || '—',
-              stamp: (v[3] || '').trim() || '—',
-              sampleDetails: item.sample || order.sampleDetails || '—',
-              design: (v[5] || '').trim() || '—',
-              size: (v[6] || '').trim() || '—',
-              estUnitWt: parseFloat(v[8]) || 0,
-              estTotalWt: parseFloat(v[9]) || 0,
-              orderNo, customer,
+              orderId:          order.id,
+              itemIdx:          idx,
+              qty:              fields.qty,
+              itemName:         fields.itemName,
+              stamp:            fields.stamp,
+              sampleDetails:    fields.sampleDetails,
+              design:           fields.design,
+              size:             fields.size,
+              estUnitWt:        fields.estUnitWt,
+              estTotalWt:       fields.estTotalWt,
+              orderNo,
+              customer,
               customerRelation: order.customerRelation || '—',
-              orderDate: order.orderDate || '',
-              dueDate: order.dueDate || order.deliveryDate || '',
-              assigned: item.processAssigned === true,
-              assignedTo: item.assignedToName || ''
+              orderDate:        order.orderDate || '',
+              dueDate:          order.dueDate || order.deliveryDate || '',
+              assigned:         item.processAssigned === true,
+              assignedTo:       item.assignedToName || ''
             });
           });
         });
 
         if (rows.length === 0) {
           tbody.innerHTML = `<tr><td colspan="16" style="border:none;">
-                <div class="empty-state">
-            <div class="icon">⏳</div>
-            <div class="title">No Pending Items</div>
-            <div class="sub">Items from PENDING orders will appear here</div>
-          </div></td></tr>`;
+            <div class="empty-state">
+              <div class="icon">⏳</div>
+              <div class="title">No Pending Items</div>
+              <div class="sub">Items from PENDING orders will appear here</div>
+            </div></td></tr>`;
           ftText.textContent = 'No pending items';
           ftStats.style.display = 'none';
         } else {
           const assignedCount = rows.filter(r => r.assigned).length;
-        rows.forEach(r => {
-          const tr = document.createElement('tr');
+          rows.forEach(r => {
+            const tr = document.createElement('tr');
             if (r.assigned) tr.style.opacity = '0.62';
-          tr.dataset.orderId = r.orderId;
+            tr.dataset.orderId  = r.orderId;
             tr.dataset.assigned = r.assigned ? '1' : '0';
             tr.dataset.rowStatus = r.assigned ? 'assigned' : 'pending';
-            tr.dataset.search = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
+            tr.dataset.search   = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
             const dueTs = parseDueDateForFilter(r.dueDate);
             if (dueTs != null) tr.dataset.dueTs = String(dueTs);
-          tr.innerHTML = `
-            <td class="center cb-cell">
-              <input type="checkbox" class="row-cb" data-persist="ignore" ${r.assigned ? 'data-assigned="true"' : ''}
-                data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}" onchange="onCbChange(this)">
-            </td>
-            <td class="center" style="padding:10px 8px;">
-              ${r.assigned
-                ? `<span style="font-size:18px;color:#16a34a;">&#10003;</span>`
-                : `<label class="mark-cb-wrap" title="Mark to open Job Worker Entry">
-                    <input type="checkbox" class="mark-cb" data-persist="ignore"
-                      id="mark-${r.orderId}-${r.itemIdx}"
-                      data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
-                      onchange="onMarkCbChange(this, event)">
-                    <span class="mark-cb-box"></span>
-                  </label>`}
-            </td>
-            <td class="center">
-              ${r.assigned
-                ? `<span class="badge badge-assigned">&#10004; ${esc(r.assignedTo)}</span>`
-                : `<span class="badge badge-pending" id="badge-${r.orderId}-${r.itemIdx}">Pending</span>`}
-            </td>
-            <td class="right">${r.qty}</td>
-            <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.itemName)}</td>
-            <td>${esc(r.stamp)}</td>
-            <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.sampleDetails)}</td>
-            <td>${esc(r.design)}</td>
-            <td>${esc(r.size)}</td>
-            <td class="right">${r.estUnitWt.toFixed(3)}</td>
-            <td class="right">${r.estTotalWt.toFixed(3)}</td>
-            <td>${esc(r.orderNo)}</td>
-            <td>${esc(r.customer)}</td>
-            <td>${esc(r.customerRelation)}</td>
-            <td>${fmt(r.orderDate)}</td>
-            <td>${fmt(r.dueDate)}</td>`;
-          tbody.appendChild(tr);
-        });
+
+            tr.innerHTML = `
+              <td class="center cb-cell">
+                <input type="checkbox" class="row-cb" data-persist="ignore"
+                  ${r.assigned ? 'data-assigned="true"' : ''}
+                  data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
+                  onchange="onCbChange(this)">
+              </td>
+              <td class="center" style="padding:10px 8px;">
+                ${r.assigned
+                  ? `<span style="font-size:18px;color:#16a34a;">&#10003;</span>`
+                  : `<label class="mark-cb-wrap" title="Mark to open Job Worker Entry">
+                      <input type="checkbox" class="mark-cb" data-persist="ignore"
+                        id="mark-${r.orderId}-${r.itemIdx}"
+                        data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
+                        onchange="onMarkCbChange(this, event)">
+                      <span class="mark-cb-box"></span>
+                    </label>`}
+              </td>
+              <td class="center">
+                ${r.assigned
+                  ? `<span class="badge badge-assigned">&#10004; ${esc(r.assignedTo)}</span>`
+                  : `<span class="badge badge-pending" id="badge-${r.orderId}-${r.itemIdx}">Pending</span>`}
+              </td>
+              <td class="right">${r.qty}</td>
+              <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.itemName)}</td>
+              <td>${esc(r.stamp)}</td>
+              <td style="max-width:200px;white-space:normal;word-break:break-word;">${esc(r.sampleDetails)}</td>
+              <td>${esc(r.design)}</td>
+              <td>${esc(r.size)}</td>
+              <td class="right">${r.estUnitWt.toFixed(3)}</td>
+              <td class="right">${r.estTotalWt.toFixed(3)}</td>
+              <td>${esc(r.orderNo)}</td>
+              <td>${esc(r.customer)}</td>
+              <td>${esc(r.customerRelation)}</td>
+              <td>${fmt(r.orderDate)}</td>
+              <td>${fmt(r.dueDate)}</td>`;
+
+            tbody.appendChild(tr);
+          });
+
           ftText.textContent = `${rows.length} item${rows.length !== 1 ? 's' : ''}`;
           ftStats.style.display = 'flex';
-          document.getElementById('statPending').textContent = `${rows.length - assignedCount} pending`;
+          document.getElementById('statPending').textContent  = `${rows.length - assignedCount} pending`;
           document.getElementById('statAssigned').textContent = `${assignedCount} assigned`;
         }
-        applyTableFilters(); updateUI();
+
+        applyTableFilters();
+        updateUI();
       } catch (e) {
         console.error(e);
         tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
@@ -1879,7 +1889,8 @@
       document.querySelectorAll('.row-cb').forEach(cb => {
         const tr = cb.closest('tr');
         if (!tr || tr.style.display === 'none') return;
-        cb.checked = src.checked; onCbChange(cb);
+        cb.checked = src.checked;
+        onCbChange(cb);
       });
     }
 
@@ -1890,10 +1901,7 @@
       const open = !bar.classList.contains('open');
       bar.classList.toggle('open', open);
       bar.setAttribute('aria-hidden', open ? 'false' : 'true');
-      if (btn) {
-        btn.classList.toggle('active', open);
-        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      }
+      if (btn) { btn.classList.toggle('active', open); btn.setAttribute('aria-expanded', open ? 'true' : 'false'); }
     }
 
     function clearItemFilters() {
@@ -1901,22 +1909,16 @@
       const as = document.getElementById('filterAssign');
       if (st) st.value = 'all';
       if (as) as.value = 'all';
-      dueDateFilter = null;
-      dueFilterMode = 'none';
+      dueDateFilter = null; dueFilterMode = 'none';
       const cw = document.getElementById('customDueWrap');
-      if (cw) {
-        cw.classList.remove('open');
-        cw.setAttribute('aria-hidden', 'true');
-      }
-      syncDueFilterButtons();
-      applyTableFilters();
-      closeDueDateDropdown();
+      if (cw) { cw.classList.remove('open'); cw.setAttribute('aria-hidden', 'true'); }
+      syncDueFilterButtons(); applyTableFilters(); closeDueDateDropdown();
     }
 
     function applyTableFilters() {
-      const q = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
-      const st = document.getElementById('filterStatus')?.value || 'all';
-      const as = document.getElementById('filterAssign')?.value || 'all';
+      const q   = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+      const st  = document.getElementById('filterStatus')?.value  || 'all';
+      const as  = document.getElementById('filterAssign')?.value  || 'all';
       const dueActive = !!dueDateFilter;
 
       const dataRows = document.querySelectorAll('#tableBody tr[data-search]');
@@ -1926,25 +1928,22 @@
       dataRows.forEach(tr => {
         const searchOk = !q || (tr.dataset.search && tr.dataset.search.includes(q));
         const assigned = tr.dataset.assigned === '1';
-        const rowSt = tr.dataset.rowStatus || 'pending';
+        const rowSt    = tr.dataset.rowStatus || 'pending';
 
         let statusOk = true;
-        if (st === 'pending') statusOk = rowSt === 'pending';
+        if (st === 'pending')  statusOk = rowSt === 'pending';
         else if (st === 'selected') statusOk = rowSt === 'selected';
         else if (st === 'assigned') statusOk = rowSt === 'assigned';
 
         let assignOk = true;
-        if (as === 'assigned') assignOk = assigned;
+        if (as === 'assigned')   assignOk = assigned;
         else if (as === 'unassigned') assignOk = !assigned;
 
         let dueOk = true;
         if (dueActive && dueDateFilter) {
           const ts = tr.dataset.dueTs;
           if (!ts) dueOk = false;
-          else {
-            const t = parseInt(ts, 10);
-            dueOk = t >= dueDateFilter.start && t <= dueDateFilter.end;
-          }
+          else { const t = parseInt(ts, 10); dueOk = t >= dueDateFilter.start && t <= dueDateFilter.end; }
         }
 
         const show = searchOk && statusOk && assignOk && dueOk;
@@ -1953,7 +1952,7 @@
       });
 
       const ftText = document.getElementById('footerText');
-      const total = dataRows.length;
+      const total  = dataRows.length;
       if (ftText && total > 0) {
         if (dueActive && visibleCount === 0) {
           const withDue = [...dataRows].filter(tr => tr.dataset.dueTs).length;
@@ -1968,14 +1967,11 @@
           ftText.textContent = `${total} item${total !== 1 ? 's' : ''}`;
         }
       }
-
       updateUI();
     }
 
     /** @deprecated use applyTableFilters */
-    function filterTable() {
-      applyTableFilters();
-    }
+    function filterTable() { applyTableFilters(); }
 
     /* ── MODAL OPEN/CLOSE ── */
     function openAssignModal() {
@@ -1983,15 +1979,14 @@
       if (checked.length === 0) { showToast('⚠️ Please select at least one pending item first', 'warn'); return; }
       selectedJwId = null; selectedJwName = null;
       const n = checked.length;
-      document.getElementById('assignSummary').textContent = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
-      document.getElementById('stripText').textContent = `${n} item${n > 1 ? 's' : ''} selected for assignment`;
-      document.getElementById('stripCount').textContent = n;
-      document.getElementById('jwSearch').value = '';
-      document.getElementById('confirmBtn').disabled = true;
-      document.getElementById('confirmBtnText').textContent = 'Confirm Assign';
-      document.getElementById('modalFooterHint').innerHTML = 'Choose a worker to enable confirm';
+      document.getElementById('assignSummary').textContent    = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
+      document.getElementById('stripText').textContent        = `${n} item${n > 1 ? 's' : ''} selected for assignment`;
+      document.getElementById('stripCount').textContent       = n;
+      document.getElementById('jwSearch').value               = '';
+      document.getElementById('confirmBtn').disabled          = true;
+      document.getElementById('confirmBtnText').textContent   = 'Confirm Assign';
+      document.getElementById('modalFooterHint').innerHTML    = 'Choose a worker to enable confirm';
       document.getElementById('assignModal').classList.add('open');
-      // Show loading then render
       document.getElementById('jwList').innerHTML = `<div class="jw-loading"><div class="spinner"></div><span>Loading workers…</span></div>`;
       setTimeout(renderJwList, 180);
     }
@@ -2002,7 +1997,7 @@
     }
 
     /* ── ENTRY POPUP ── */
-    let _currentMarkCb = null; // track the checkbox that triggered the popup
+    let _currentMarkCb = null;
 
     function getEntryPageUrl() {
       const path = window.location.pathname || '';
@@ -2010,95 +2005,79 @@
       return isDashboard ? 'pages/jobworker-entry.html?mode=assignment' : 'jobworker-entry.html?mode=assignment';
     }
 
-    /* Called when a Mark checkbox is clicked */
     function onMarkCbChange(cb, event) {
-      if (event && !event.isTrusted) { cb.checked = false; return; } // ignore if triggered by script
-      if (!_pageReady) { cb.checked = false; return; } // ignore during page restoration
-      if (!cb.checked) return; // only act on check, not uncheck
+      if (event && !event.isTrusted) { cb.checked = false; return; }
+      if (!_pageReady) { cb.checked = false; return; }
+      if (!cb.checked) return;
       _currentMarkCb = cb;
       const orderId = cb.dataset.orderId;
       const itemIdx = cb.dataset.itemIdx;
-
-      // Also select the row checkbox so this item is included in assign
       const rowCb = document.querySelector(`.row-cb[data-order-id="${orderId}"][data-item-idx="${itemIdx}"]`);
       if (rowCb && !rowCb.disabled) { rowCb.checked = true; onCbChange(rowCb); }
-
-      // Open the Job Worker Entry popup
       const overlay = document.getElementById('entryPopupOverlay');
-      const frame = document.getElementById('entryFrame');
+      const frame   = document.getElementById('entryFrame');
       overlay.classList.add('open');
       frame.src = getEntryPageUrl();
     }
 
     function markEntry(orderId, itemIdx) {
-      // Auto-select the row
       document.querySelectorAll('.row-cb').forEach(cb => {
         if (cb.dataset.orderId == orderId && cb.dataset.itemIdx == itemIdx) {
           cb.checked = true; onCbChange(cb);
         }
       });
-      // Open popup
       const overlay = document.getElementById('entryPopupOverlay');
-      const frame = document.getElementById('entryFrame');
+      const frame   = document.getElementById('entryFrame');
       overlay.classList.add('open');
       frame.src = getEntryPageUrl();
     }
 
     function closeEntryPopup() {
       const overlay = document.getElementById('entryPopupOverlay');
-      const frame = document.getElementById('entryFrame');
+      const frame   = document.getElementById('entryFrame');
       overlay.classList.remove('open');
       frame.src = 'about:blank';
-      // If popup was closed without saving, uncheck the mark checkbox
       if (_currentMarkCb) { _currentMarkCb.checked = false; _currentMarkCb = null; }
     }
 
-    // Listen for save message from jobworker-entry.html
     window.addEventListener('message', function (event) {
       if (event.data && event.data.type === 'jwEntrySaved') {
         const { jobworkerId, jobworkerName } = event.data;
-
-        // Pre-select the worker that was just saved
-        selectedJwId = jobworkerId;
+        selectedJwId   = jobworkerId;
         selectedJwName = jobworkerName;
-
         closeEntryPopup();
-
-        // After closing popup, open the Assign Modal with this worker pre-selected
         setTimeout(() => {
           const checked = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked');
           const n = checked.length;
-          document.getElementById('assignSummary').textContent = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
-          document.getElementById('stripText').textContent = `${n} item${n > 1 ? 's' : ''} selected for assignment`;
-          document.getElementById('stripCount').textContent = n;
-          document.getElementById('jwSearch').value = '';
+          document.getElementById('assignSummary').textContent  = `Assign ${n} item${n > 1 ? 's' : ''} to a job worker.`;
+          document.getElementById('stripText').textContent      = `${n} item${n > 1 ? 's' : ''} selected for assignment`;
+          document.getElementById('stripCount').textContent     = n;
+          document.getElementById('jwSearch').value             = '';
           document.getElementById('confirmBtnText').textContent = `Assign to ${(jobworkerName || '').split(' ')[0]}`;
-          document.getElementById('confirmBtn').disabled = false;
-          document.getElementById('modalFooterHint').innerHTML = `Worker: <span>${esc(jobworkerName)}</span>`;
+          document.getElementById('confirmBtn').disabled        = false;
+          document.getElementById('modalFooterHint').innerHTML  = `Worker: <span>${esc(jobworkerName)}</span>`;
           document.getElementById('assignModal').classList.add('open');
-          // Render worker list with the just-saved worker pre-selected
           setTimeout(renderJwList, 80);
         }, 300);
-
       } else if (event.data && event.data.type === 'jwEntryClosed') {
-        _currentMarkCb = null; // cancelled, let closeEntryPopup handle uncheck
+        _currentMarkCb = null;
         closeEntryPopup();
       }
     });
 
     /* ── WORKER LIST ── */
     function renderJwList() {
-      const filter = (document.getElementById('jwSearch').value || '').toLowerCase();
-      const workers = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+      const filter    = (document.getElementById('jwSearch').value || '').toLowerCase();
+      const workers   = JSON.parse(localStorage.getItem('jobworkers') || '[]');
       const container = document.getElementById('jwList');
-      const filtered = workers.filter(jw => jw.name && jw.name.toLowerCase().includes(filter));
+      const filtered  = workers.filter(jw => jw.name && jw.name.toLowerCase().includes(filter));
 
       if (workers.length === 0) {
         container.innerHTML = `<div class="jw-empty">
-        <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">👷</div>
-        No job workers found.<br>
-        <span style="color:#b8c0d0;">Add workers in Settings first.</span>
-      </div>`; return;
+          <div style="font-size:28px;margin-bottom:8px;opacity:0.4;">👷</div>
+          No job workers found.<br>
+          <span style="color:#b8c0d0;">Add workers in Settings first.</span>
+        </div>`; return;
       }
       if (filtered.length === 0) {
         container.innerHTML = `<div class="jw-empty">No workers match "<strong>${esc(filter)}</strong>"</div>`; return;
@@ -2107,23 +2086,27 @@
       container.innerHTML = filtered.map(jw => {
         const sel = String(selectedJwId) === String(jw.id);
         return `<div class="jw-item ${sel ? 'selected' : ''}" onclick="selectJw('${jw.id}','${jw.name.replace(/'/g, "\\'")}')">
-        <div class="jw-radio"><div class="jw-radio-dot"></div></div>
-        <span class="jw-name">${esc(jw.name)}</span>
-        <span class="jw-sel-chip">Selected</span>
-      </div>`;
+          <div class="jw-radio"><div class="jw-radio-dot"></div></div>
+          <span class="jw-name">${esc(jw.name)}</span>
+          <span class="jw-sel-chip">Selected</span>
+        </div>`;
       }).join('');
     }
 
     function selectJw(id, name) {
-      selectedJwId = id;
+      selectedJwId   = id;
       selectedJwName = name;
-      document.getElementById('confirmBtn').disabled = false;
+      document.getElementById('confirmBtn').disabled        = false;
       document.getElementById('confirmBtnText').textContent = `Assign to ${name.split(' ')[0]}`;
-      document.getElementById('modalFooterHint').innerHTML = `Worker: <span>${esc(name)}</span>`;
+      document.getElementById('modalFooterHint').innerHTML  = `Worker: <span>${esc(name)}</span>`;
       renderJwList();
     }
 
     /* ── CONFIRM ASSIGN ── */
+    /* BUG FIX: confirmAssign() read item field values directly using hard-coded
+       indices (item.values[2], item.values[3], etc.) when saving to itemProcess.
+       These same indices are wrong for Order rows that have no leading type token.
+       Now uses the same hasTypePrefix / offset logic as loadPendingItems. */
     function confirmAssign() {
       if (!selectedJwId || !selectedJwName || isAssigning) return;
       const checkedCbs = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked');
@@ -2137,70 +2120,69 @@
 
       setTimeout(() => {
         try {
-          const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+          const orders     = JSON.parse(localStorage.getItem('orders') || '[]');
           const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
-          const now = new Date().toISOString();
+          const now   = new Date().toISOString();
           const count = checkedCbs.length;
 
           checkedCbs.forEach(cb => {
-            const oId = cb.dataset.orderId;
+            const oId  = cb.dataset.orderId;
             const iIdx = parseInt(cb.dataset.itemIdx, 10);
             const order = orders.find(o => String(o.id) === String(oId));
             if (!order || !order.items || !order.items[iIdx]) return;
+
             const item = order.items[iIdx];
             item.processAssigned = true;
-            item.assignedToId = selectedJwId;
-            item.assignedToName = selectedJwName;
-            item.assignedDate = now;
+            item.assignedToId    = selectedJwId;
+            item.assignedToName  = selectedJwName;
+            item.assignedDate    = now;
+
+            const fields = mapOrderItemValuesForPending(item, order);
+
             itemProcess.push({
-              id: Date.now() + '-' + Math.random().toString(36).substr(2, 5),
-              orderId: oId,
-              orderNo: order.orderNo || order.billNo || '—',
-              customerName: order.customer || order.customerName || '—',
+              id:               Date.now() + '-' + Math.random().toString(36).substr(2, 5),
+              orderId:          oId,
+              orderNo:          order.orderNo || order.billNo || '—',
+              customerName:     order.customer || order.customerName || '—',
               customerRelation: order.customerRelation || '—',
-              itemIdx: iIdx,
-              itemName: item.values[2] || '—',
-              stamp: (item.values[3] != null && String(item.values[3]).trim() !== '') ? String(item.values[3]).trim() : '—',
-              qty: parseFloat(item.values[7]) || 0,
-              estUnitWt: parseFloat(item.values[8]) || 0,
-              estTotalWt: parseFloat(item.values[9]) || 0,
-              sampleDetails: item.sample || order.sampleDetails || '—',
-              design: item.values[5] || '—',
-              size: item.values[6] || '—',
-              jobworkerId: selectedJwId,
-              jobworkerName: selectedJwName,
-              assignedDate: now,
-              orderDate: order.orderDate || '',
-              dueDate: order.dueDate || order.deliveryDate || '',
-              status: 'ASSIGNED',
-              receivedQty: 0,
-              receivedWt: 0
+              itemIdx:          iIdx,
+              itemName:         fields.itemName,
+              stamp:            fields.stamp,
+              qty:              fields.qty,
+              estUnitWt:        fields.estUnitWt,
+              estTotalWt:       fields.estTotalWt,
+              sampleDetails:    fields.sampleDetails,
+              design:           fields.design,
+              size:             fields.size,
+              jobworkerId:      selectedJwId,
+              jobworkerName:    selectedJwName,
+              assignedDate:     now,
+              orderDate:        order.orderDate || '',
+              dueDate:          order.dueDate || order.deliveryDate || '',
+              status:           'ASSIGNED',
+              receivedQty:      0,
+              receivedWt:       0
             });
           });
 
-          localStorage.setItem('orders', JSON.stringify(orders));
+          localStorage.setItem('orders',      JSON.stringify(orders));
           localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
 
-          // Capture worker name locally before we null it out closing the modal
           const workerName = selectedJwName;
           isAssigning = false;
           closeAssignModal();
           document.getElementById('selectAll').checked = false;
           btn.classList.remove('assigning');
-          btn.disabled = true;
+          btn.disabled  = true;
           btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="confirmBtnText">Confirm Assign</span>`;
           loadPendingItems();
           try { window.dispatchEvent(new Event('storage')); } catch (e) { }
           showToast(`✅ ${count} item${count > 1 ? 's' : ''} assigned to ${workerName}`, 'success');
           setTimeout(() => {
             if (confirm(`Open Item Process page for ${workerName}?`)) {
-              if (typeof loadPage === 'function') {
-                loadPage('pages/item-process.html');
-              } else if (typeof window.loadPage === 'function') {
-                window.loadPage('pages/item-process.html');
-    } else {
-                window.open('pages/item-process.html', '_blank');
-              }
+              if (typeof loadPage === 'function') loadPage('pages/item-process.html');
+              else if (typeof window.loadPage === 'function') window.loadPage('pages/item-process.html');
+              else window.open('pages/item-process.html', '_blank');
             }
           }, 400);
         } catch (err) {
@@ -2208,7 +2190,7 @@
           isAssigning = false;
           showToast('❌ Assignment failed. Please try again.', 'warn');
           btn.classList.remove('assigning');
-          btn.disabled = false;
+          btn.disabled  = false;
           btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="confirmBtnText">Confirm Assign</span>`;
         }
       }, 650);
@@ -2218,7 +2200,6 @@
     function confirmUnassign() {
       const checkedCbs = document.querySelectorAll('.row-cb[data-assigned="true"]:checked');
       if (checkedCbs.length === 0) return;
-
       if (!confirm(`Are you sure you want to unassign ${checkedCbs.length} item(s)?`)) return;
 
       try {
@@ -2227,10 +2208,8 @@
         let count = 0;
 
         checkedCbs.forEach(cb => {
-          const oId = cb.dataset.orderId;
+          const oId  = cb.dataset.orderId;
           const iIdx = parseInt(cb.dataset.itemIdx, 10);
-
-          // Revert in orders
           const order = orders.find(o => String(o.id) === String(oId));
           if (order && order.items && order.items[iIdx]) {
             order.items[iIdx].processAssigned = false;
@@ -2239,14 +2218,11 @@
             delete order.items[iIdx].assignedDate;
             count++;
           }
-
-          // Remove from itemProcess array
           itemProcess = itemProcess.filter(ip => !(String(ip.orderId) === String(oId) && parseInt(ip.itemIdx, 10) === iIdx));
         });
 
-        localStorage.setItem('orders', JSON.stringify(orders));
+        localStorage.setItem('orders',      JSON.stringify(orders));
         localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
-
         document.getElementById('selectAll').checked = false;
         loadPendingItems();
         try { window.dispatchEvent(new Event('storage')); } catch (e) { }
@@ -2258,8 +2234,7 @@
     }
 
     /* ── INIT ── */
-    // Close popup on every page load to ensure clean state
-    (function() {
+    (function () {
       var ov = document.getElementById('entryPopupOverlay');
       var fr = document.getElementById('entryFrame');
       if (ov) ov.classList.remove('open');
@@ -2268,7 +2243,9 @@
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50));
-    } else { setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50); }
+    } else {
+      setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50);
+    }
 
     window.addEventListener('storage', e => { if (e.key === 'orders') loadPendingItems(); });
     window.addEventListener('orderStatusChanged', loadPendingItems);
@@ -2281,7 +2258,7 @@
 
     (function setupPendingDueDateDropdown() {
       document.addEventListener('click', function (e) {
-        const wrap = document.getElementById('dueDateDropdownWrap');
+        const wrap  = document.getElementById('dueDateDropdownWrap');
         const panel = document.getElementById('dueDateDropdownPanel');
         if (!wrap || !panel || !panel.classList.contains('open')) return;
         if (wrap.contains(e.target)) return;
@@ -2298,44 +2275,40 @@
       });
     })();
 
-    /* Expose ALL functions to window so onclick attributes work
-       when this page is loaded inside the dashboard via loadPage()
-       (which wraps scripts in an IIFE, making them locally scoped). */
-    window.toggleDueDateDropdown = toggleDueDateDropdown;
-    window.closeDueDateDropdown = closeDueDateDropdown;
-      window.loadPendingItems = loadPendingItems;
-      window.filterTable = filterTable;
-    window.applyTableFilters = applyTableFilters;
-    window.toggleFilterBar = toggleFilterBar;
-    window.clearItemFilters = clearItemFilters;
-    window.setDueFilter = setDueFilter;
-    window.applyCustomDueRange = applyCustomDueRange;
-    window.applyNextNDays = applyNextNDays;
-    window.renderJwList = renderJwList;
-    window.openAssignModal = openAssignModal;
-    window.closeAssignModal = closeAssignModal;
-    window.confirmAssign = confirmAssign;
-    window.confirmUnassign = confirmUnassign;
-    window.selectJw = selectJw;
-    window.onCbChange = onCbChange;
-    window.toggleAll = toggleAll;
-    window.markEntry = markEntry;
-    window.closeEntryPopup = closeEntryPopup;
-    window.getEntryPageUrl = getEntryPageUrl;
-    window.onMarkCbChange = onMarkCbChange;
+    /* Expose all functions to window */
+    window.toggleDueDateDropdown  = toggleDueDateDropdown;
+    window.closeDueDateDropdown   = closeDueDateDropdown;
+    window.loadPendingItems       = loadPendingItems;
+    window.filterTable            = filterTable;
+    window.applyTableFilters      = applyTableFilters;
+    window.toggleFilterBar        = toggleFilterBar;
+    window.clearItemFilters       = clearItemFilters;
+    window.setDueFilter           = setDueFilter;
+    window.applyCustomDueRange    = applyCustomDueRange;
+    window.applyNextNDays         = applyNextNDays;
+    window.renderJwList           = renderJwList;
+    window.openAssignModal        = openAssignModal;
+    window.closeAssignModal       = closeAssignModal;
+    window.confirmAssign          = confirmAssign;
+    window.confirmUnassign        = confirmUnassign;
+    window.selectJw               = selectJw;
+    window.onCbChange             = onCbChange;
+    window.toggleAll              = toggleAll;
+    window.markEntry              = markEntry;
+    window.closeEntryPopup        = closeEntryPopup;
+    window.getEntryPageUrl        = getEntryPageUrl;
+    window.onMarkCbChange         = onMarkCbChange;
 
-    // When inside the dashboard, .wrap should fill the workspace container
-    // not use 100vh (which is the full page height, not the workspace height)
     (function () {
       const wrap = document.querySelector('.wrap');
       if (!wrap) return;
       const inDashboard = !!document.querySelector('.workspace');
       if (inDashboard) {
-        wrap.style.margin = '0';
+        wrap.style.margin       = '0';
         wrap.style.borderRadius = '0';
-        wrap.style.border = 'none';
-        wrap.style.boxShadow = 'none';
-        wrap.style.height = '100%';
+        wrap.style.border       = 'none';
+        wrap.style.boxShadow    = 'none';
+        wrap.style.height       = '100%';
       }
     })();
   </script>

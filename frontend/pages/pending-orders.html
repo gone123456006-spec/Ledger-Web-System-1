@@ -439,6 +439,7 @@
     </div>
   </div>
 
+  <script src="../script/order-processing.js"></script>
   <script>
     /* =========================
        GLOBAL STATE
@@ -876,6 +877,7 @@
         console.log("✓ Marking order as ready:", orderId);
 
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const itemProcess = JSON.parse(localStorage.getItem("itemProcess") || "[]");
         const orderIndex = orders.findIndex(o => {
           return o && (o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId));
         });
@@ -889,14 +891,27 @@
         const order = orders[orderIndex];
         console.log("📝 Order found:", order);
 
-        // Confirm action
         const orderLabel = order.orderNo || order.billNo || `#${orderId}`;
-        if (!confirm(`Mark order ${orderLabel} as READY?\n\nThis will move it from Pending to Ready Orders.`)) {
+        const OP = window.OrderProcessing;
+
+        if (OP && typeof OP.orderHasUnassignedPendingLines === "function" && OP.orderHasUnassignedPendingLines(order)) {
+          alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nSome items are still in Pending Items (not assigned to a job worker). Assign every line first.`);
+          return;
+        }
+        if (OP && typeof OP.orderHasNonTerminalProcessRows === "function" && OP.orderHasNonTerminalProcessRows(itemProcess, orderId)) {
+          alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nSome items are still In Process (Item Process). Complete all quantities there first.`);
+          return;
+        }
+        if (!OP || typeof OP.isOrderFullyReady !== "function" || !OP.isOrderFullyReady(orders, itemProcess, orderId)) {
+          alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nFull quantity must be completed for every item on this order (ready or finalized totals).`);
+          return;
+        }
+
+        if (!confirm(`Mark order ${orderLabel} as READY?\n\nThis will move it to Ready Orders (all items are complete, none pending or in process).`)) {
           console.log("❌ User cancelled");
           return;
         }
 
-        // Update status to READY (preserve all other data)
         order.status = "READY";
         order.readyDate = new Date().toISOString().split("T")[0];
 

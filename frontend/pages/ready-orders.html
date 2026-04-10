@@ -1013,12 +1013,23 @@
       }
     }
 
-    /** Ready / Extra row: 16 cells — Final (15) if set, else Est. Total (9). */
+    /**
+     * Ready/Extra row totals: getReadyOrderRowValues has 17 slots (0–16).
+     * Final bill line total is vals[16]; vals[15] is the "Other" add-on, not the total.
+     * Legacy 16-length saves stored the final amount only in vals[15].
+     */
     function readyExtraItemLineTotalFromValues(vals) {
       if (!vals || vals.length < 16) return 0;
-      const fin = parseFloat(vals[15] || 0) || 0;
+      let fin = 0;
+      if (vals.length >= 17) {
+        fin = parseFloat(vals[16] || 0) || 0;
+        if (fin !== 0) return fin;
+      } else {
+        fin = parseFloat(vals[15] || 0) || 0;
+        if (fin !== 0) return fin;
+      }
       const est = parseFloat(vals[9] || 0) || 0;
-      return fin !== 0 ? fin : est;
+      return est;
     }
 
     /** Ready / Extra row: Ready Weight column (12). */
@@ -1033,12 +1044,55 @@
       if (v.length >= 16) {
         return readyExtraItemLineTotalFromValues(v);
       }
-      if (v[12] !== undefined && v[12] !== "" && v[12] !== null) {
-        const n = parseFloat(v[12]);
+      const raw0 = String(v[0] || "").trim();
+      const isKnownTypeToken = ["Order", "Purchase", "Ready", "Extra", "Other", "Sale"].includes(raw0);
+      const o = isKnownTypeToken || raw0 === "" ? 0 : -1;
+      const get = (i) => (v[i + o] !== undefined ? v[i + o] : "");
+      const s12 = String(get(12)).trim();
+      if (s12 !== "" && s12 !== "null" && s12 !== "undefined") {
+        const n = parseFloat(s12);
         if (!isNaN(n)) return n;
       }
-      const n9 = parseFloat(v[9]);
+      const n9 = parseFloat(get(9));
       return isNaN(n9) ? 0 : n9;
+    }
+
+    /**
+     * One line's display fields: same value layout rules as pending-items (ready-extra 17-col vs new-order).
+     */
+    function readyOrderLineMetrics(item) {
+      const v = item.values || [];
+      const lineType =
+        (item.type && String(item.type).trim()) ||
+        String(v[0] || "").trim() ||
+        "Order";
+
+      if (v.length >= 16) {
+        const amount = readyExtraItemLineTotalFromValues(v);
+        const itemName = String(v[2] || "").trim();
+        if (lineType === "Purchase") {
+          return { lineType, itemName, displayWeight: 0, lineAmount: amount };
+        }
+        const weight = readyExtraItemReadyWeightGrams(v);
+        return { lineType, itemName, displayWeight: weight, lineAmount: amount };
+      }
+
+      const raw0 = String(v[0] || "").trim();
+      const isKnownTypeToken = ["Order", "Purchase", "Ready", "Extra", "Other", "Sale"].includes(raw0);
+      const o = isKnownTypeToken || raw0 === "" ? 0 : -1;
+      const get = (i) => (v[i + o] !== undefined ? v[i + o] : "");
+      const itemName = String(get(2) || "").trim();
+      if (lineType === "Purchase") {
+        return {
+          lineType,
+          itemName,
+          displayWeight: 0,
+          lineAmount: orderItemLineAmount(item)
+        };
+      }
+      const displayWeight = parseFloat(get(9)) || 0;
+      const lineAmount = parseFloat(get(12)) || 0;
+      return { lineType, itemName, displayWeight, lineAmount };
     }
 
     function sumStoredPurchaseSheetRows(rows) {
@@ -1183,33 +1237,13 @@
         order.items.forEach(item => {
           if (!item || !item.values) return;
 
-          const vals = item.values;
-          const type = item.type || vals[0] || "Order";
-
-          if (vals.length >= 16) {
-            const weight = readyExtraItemReadyWeightGrams(vals);
-            const amount = readyExtraItemLineTotalFromValues(vals);
-            if (type === "Purchase") {
-              purchaseTotal += amount;
-            } else {
-              displayWeight += weight;
-              orderSideTotal += amount;
-              const itemName = vals[2] || vals[1] || "";
-              if (itemName && itemName.trim()) itemNames.push(itemName.trim());
-            }
-            return;
-          }
-
-          const weight = parseFloat(vals[9] || vals[5] || vals[8] || 0);
-          const amount = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(vals[12] || vals[13] || 0) || 0);
-
-          if (type === "Purchase") {
-            purchaseTotal += amount;
+          const m = readyOrderLineMetrics(item);
+          if (m.lineType === "Purchase") {
+            purchaseTotal += m.lineAmount;
           } else {
-            displayWeight += weight;
-            orderSideTotal += amount;
-            const itemName = vals[2] || vals[1] || "";
-            if (itemName && itemName.trim()) itemNames.push(itemName.trim());
+            displayWeight += m.displayWeight;
+            orderSideTotal += m.lineAmount;
+            if (m.itemName) itemNames.push(m.itemName);
           }
         });
       } else {
