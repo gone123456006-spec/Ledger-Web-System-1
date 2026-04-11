@@ -877,11 +877,13 @@
               id: order.id,
               orderNo: fullBill.billNo,
               billNo: fullBill.billNo,
+              sgjBillNo: fullBill.sgjBillNo || "",
               customer: fullBill.customer,
               customerId: fullBill.customerId,
               orderDate: fullBill.date,
               dueDate: fullBill.dueDate || "",
-              items: fullBill.items || fullBill.rows
+              items: fullBill.items || fullBill.rows,
+              hideBillMidColumns: !!(fullBill.hideBillMidColumns || balanceEntry.hideBillMidColumns)
             };
             localStorage.setItem("editOrderPayload", JSON.stringify(payload));
           }
@@ -893,11 +895,13 @@
               id: tempId,
               orderNo: fullBill.billNo,
               billNo: fullBill.billNo,
+              sgjBillNo: fullBill.sgjBillNo || "",
               customer: fullBill.customer,
               customerId: fullBill.customerId,
               orderDate: fullBill.date,
               dueDate: fullBill.dueDate || "",
-              items: fullBill.items || fullBill.rows
+              items: fullBill.items || fullBill.rows,
+              hideBillMidColumns: !!(fullBill.hideBillMidColumns || balanceEntry.hideBillMidColumns)
             };
             localStorage.setItem("editOrderPayload", JSON.stringify(payload));
           }

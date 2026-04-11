@@ -284,6 +284,12 @@
       width: 112px;
     }
 
+    /* R. Metal through Total: light orange column band (cols 11–17; delete col excluded) */
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(n+11):nth-child(-n+17),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) {
+      background-color: #fff3e0;
+    }
+
     table input,
     table select {
       width: 100%;
@@ -353,6 +359,18 @@
       border: 1px solid #d1d9e0;
       outline: none;
       background: #fff;
+    }
+
+    /* R. Metal → Total cells: inputs/selects match light orange band (override #fff above) */
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) input,
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) select {
+      background-color: #ffe8d2;
+      border-color: #f0c9a8;
+    }
+
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) input.order-detail-readonly {
+      background-color: #ffdfc4;
+      border-color: #e8bc96;
     }
 
     .order-details-table-wrap #ready-order-item-table td:first-child select,
@@ -571,6 +589,12 @@
       color: #0a3622;
     }
 
+    .actions button.btn-bill:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
     /* Purchase uses .panel-open-purchase-sheet-btn for wiring; neutralize panel full-width styles in toolbar */
     .actions .panel-open-purchase-sheet-btn {
       width: auto;
@@ -587,6 +611,21 @@
 
     .actions .panel-open-purchase-sheet-btn:hover {
       background: #f5f5f7;
+    }
+
+    /* After Bill → Transfers: read-only except Close (.rex-post-transfer-allow). */
+    #orderApp.rex-post-transfer-locked .order-top,
+    #orderApp.rex-post-transfer-locked .order-details,
+    #orderApp.rex-post-transfer-locked .info-panel,
+    #orderApp.rex-post-transfer-locked .actions {
+      pointer-events: none;
+      user-select: none;
+    }
+
+    #orderApp.rex-post-transfer-locked .actions .rex-post-transfer-allow {
+      pointer-events: auto;
+      user-select: auto;
+      cursor: pointer;
     }
 
     /* Hide Ut. Wt. through Est. Total (columns 6–10); data remains in row for save/calc */
@@ -2216,13 +2255,13 @@
         data-purchase-new-order-ui="toolbar-add"
         title="Before Bill: Add to Advance (append). After Bill is on: Add to Paid purchase only — not Advance. Full lists: use Advance purchase minus / Paid Purchase minus in the panel."> Purchase</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
-      <button type="button" class="btn-bill" onclick="onBillButtonClick()"
+      <button type="button" id="rexBillModeBtn" class="btn-bill" onclick="onBillButtonClick()"
         title="Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."> Bill</button>
       <button type="button" id="rexHideUnhideColumnsBtn" class="btn-bill" onclick="onHideUnhideColumnsClick()"
         title="Hide or Unhide the same columns as Bill view — display only. Does not change Save destination (use Bill before Save for All Bill)."> Hide</button>
       <button type="button" onclick="saveOrder()" title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only."> Save</button>
       <button onclick="showInvoice()"> A4 Invoice</button>
-      <button onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
+      <button type="button" class="rex-post-transfer-allow" onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
     </div>
 
     <!-- PAYMENT, RATEBOOK & RECEIPT PANEL -->
@@ -2894,6 +2933,21 @@
         return getSearchRoot().querySelector("#ready-order-item-table");
       }
 
+      /** After successful Bill → Transfers save: lock all inputs/panels/buttons except .rex-post-transfer-allow (Close). */
+      function setPostTransferLocked(locked) {
+        var root = typeof getSearchRoot === "function" ? getSearchRoot() : null;
+        var app = orderApp || (root && root.querySelector("#orderApp"));
+        if (!app) return;
+        var on = !!locked;
+        app.classList.toggle("rex-post-transfer-locked", on);
+        try {
+          app.setAttribute("data-post-transfer-locked", on ? "1" : "0");
+        } catch (eA) { }
+        try {
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        } catch (eBillLock) { }
+      }
+
       function updateHideUnhideColumnsBtnLabel() {
         var root = getSearchRoot();
         var hideTgl = root.querySelector("#rexHideUnhideColumnsBtn");
@@ -2978,19 +3032,85 @@
           if (typeof syncAdvanceControlsBillLockUi === "function") syncAdvanceControlsBillLockUi();
         } catch (eLock) { }
         updateHideUnhideColumnsBtnLabel();
+        try {
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        } catch (eBillSt) { }
       }
 
       function onHideUnhideColumnsClick() {
         applyMidColumnsHiddenOnly(!midColumnsHiddenOnly);
       }
 
+      /** True if control is not required for Bill (hidden Purchase ready columns). */
+      function readyExtraBillSkipControl(el) {
+        if (!el) return true;
+        try {
+          if (el.style && el.style.visibility === "hidden") return true;
+          if (typeof getComputedStyle === "function" && getComputedStyle(el).visibility === "hidden") return true;
+        } catch (eSk) { }
+        return false;
+      }
+
+      function readyExtraCellFilledForBill(el) {
+        if (!el || (el.tagName !== "INPUT" && el.tagName !== "SELECT")) return false;
+        if (readyExtraBillSkipControl(el)) return true;
+        var v = el.value != null ? String(el.value).trim() : "";
+        return v !== "";
+      }
+
+      /** Every row: R. Metal → Total (cols 10–16), except Purchase rows where 10–14 are hidden (then 15–16 only). */
+      function readyExtraAllRowsReadyForBillView() {
+        if (!itemBody) return false;
+        var rows = itemBody.querySelectorAll("tr");
+        if (!rows.length) return false;
+        for (var r = 0; r < rows.length; r++) {
+          var tr = rows[r];
+          if (!tr.cells || tr.cells.length < 17) return false;
+          var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
+          var isPurchase = typeSel && typeSel.value === "Purchase";
+          var start = isPurchase ? 15 : 10;
+          for (var c = start; c <= 16; c++) {
+            var cell = tr.cells[c];
+            var el = cell && cell.children && cell.children[0];
+            if (!readyExtraCellFilledForBill(el)) return false;
+          }
+        }
+        return true;
+      }
+
+      function updateBillButtonState() {
+        var btn = typeof getSearchRoot === "function" ? getSearchRoot().querySelector("#rexBillModeBtn") : document.getElementById("rexBillModeBtn");
+        if (!btn) return;
+        var appEl = orderApp || (typeof getSearchRoot === "function" ? getSearchRoot().querySelector("#orderApp") : null);
+        if (appEl && appEl.getAttribute("data-post-transfer-locked") === "1") {
+          btn.disabled = true;
+          btn.title = "Bill was transferred — use Close to leave.";
+          return;
+        }
+        if (billMidColumnsHidden) {
+          btn.disabled = true;
+          btn.title = "Already in Bill invoice view.";
+          return;
+        }
+        var ok = readyExtraAllRowsReadyForBillView();
+        btn.disabled = !ok;
+        btn.title = ok
+          ? "Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."
+          : "Fill every row from R. Metal through Total (all columns in the orange section) before using Bill.";
+      }
+
       function onBillButtonClick() {
+        if (!readyExtraAllRowsReadyForBillView()) {
+          alert("Fill every row from R. Metal through Total before opening Bill view.");
+          return;
+        }
         // Freeze current totals so any NEW entries after Bill go into Paid rows only.
         try {
           if (typeof updatePaymentPanel === "function") updatePaymentPanel();
         } catch (eP) { }
         applyBillMidColumnsHidden(true);
         billButtonPendingAllBillSave = true;
+        updateBillButtonState();
       }
 
       /* INIT */
@@ -3067,7 +3187,9 @@
         const editFromAllBill = localStorage.getItem("editFromAllBill") === "true";
         if (editOrderId) {
           if (editFromAllBill) {
-            // Load from bills so totals and payment panel show saved data
+            // Load from bills so totals and payment panel show saved data.
+            // Keep editFromAllBill until after loadBill: initOrderPage can run twice; if we clear too early,
+            // the second pass uses loadOrderForEdit and overwrites the bill with payload (Order layout, stale UI).
             try {
               const balanceEntryJson = localStorage.getItem("editBalanceEntry");
               if (balanceEntryJson) {
@@ -3076,8 +3198,54 @@
                 const bills = JSON.parse(localStorage.getItem("bills") || "[]");
                 const billIndex = bills.findIndex(b => b && b.billNo === orderNo);
                 if (billIndex >= 0) {
-                  setTimeout(() => {
-                    loadBill(billIndex);
+                  if (!window.__rexAllBillEditLoadPending) {
+                    window.__rexAllBillEditLoadPending = true;
+                    setTimeout(() => {
+                      try {
+                        loadBill(billIndex);
+                      } finally {
+                        localStorage.removeItem("editFromAllBill");
+                        localStorage.removeItem("editBalanceEntry");
+                        localStorage.removeItem("editBalanceRows");
+                        window.__rexAllBillEditLoadPending = false;
+                      }
+                      setTimeout(() => {
+                        updateInfoPanel();
+                        calc();
+                      }, 100);
+                      setTimeout(() => {
+                        updateInfoPanel();
+                        updatePaymentPanel();
+                      }, 450);
+                    }, 200);
+                  }
+                } else {
+                  localStorage.removeItem("editFromAllBill");
+                  localStorage.removeItem("editBalanceEntry");
+                  localStorage.removeItem("editBalanceRows");
+                  setTimeout(() => loadOrderForEdit(editOrderId), 200);
+                }
+              } else {
+                localStorage.removeItem("editFromAllBill");
+                setTimeout(() => loadOrderForEdit(editOrderId), 200);
+              }
+            } catch (e) {
+              localStorage.removeItem("editFromAllBill");
+              setTimeout(() => loadOrderForEdit(editOrderId), 200);
+            }
+          } else {
+            // Wait a bit for DOM to be ready. If this bill exists in `bills`, load that (Bill UI + full rows), not payload-only.
+            setTimeout(() => {
+              const eid = localStorage.getItem("editOrderId");
+              if (!eid) return;
+              try {
+                const payload = JSON.parse(localStorage.getItem("editOrderPayload") || "null");
+                const on = payload && (payload.orderNo || payload.billNo);
+                if (on) {
+                  const billsArr = JSON.parse(localStorage.getItem("bills") || "[]");
+                  const bIdx = billsArr.findIndex(x => x && String(x.billNo || "").trim() === String(on).trim());
+                  if (bIdx >= 0) {
+                    loadBill(bIdx);
                     setTimeout(() => {
                       updateInfoPanel();
                       calc();
@@ -3085,24 +3253,12 @@
                     setTimeout(() => {
                       updateInfoPanel();
                       updatePaymentPanel();
-                    }, 450);
-                  }, 200);
-                  localStorage.removeItem("editFromAllBill");
-                  localStorage.removeItem("editBalanceEntry");
-                  localStorage.removeItem("editBalanceRows");
-                } else {
-                  setTimeout(() => loadOrderForEdit(editOrderId), 200);
+                    }, 400);
+                    return;
+                  }
                 }
-              } else {
-                setTimeout(() => loadOrderForEdit(editOrderId), 200);
-              }
-            } catch (e) {
-              setTimeout(() => loadOrderForEdit(editOrderId), 200);
-            }
-          } else {
-            // Wait a bit for DOM to be ready, then load order
-            setTimeout(() => {
-              loadOrderForEdit(editOrderId);
+              } catch (e2) { /* fall through */ }
+              loadOrderForEdit(eid);
             }, 200);
           }
         } else {
@@ -3144,10 +3300,34 @@
 
         // Initialize panel
         updateInfoPanel();
+        try {
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        } catch (eBillInit) { }
 
         // Global event listeners (attach once; initOrderPage can run multiple times)
         if (!window.__newOrderGlobalListenersAttached) {
           window.__newOrderGlobalListenersAttached = true;
+
+          document.addEventListener(
+            "input",
+            function (e) {
+              var t = e.target;
+              if (!t || typeof t.closest !== "function") return;
+              if (!t.closest("#ready-order-item-table tbody")) return;
+              if (typeof updateBillButtonState === "function") updateBillButtonState();
+            },
+            true
+          );
+          document.addEventListener(
+            "change",
+            function (e) {
+              var t = e.target;
+              if (!t || typeof t.closest !== "function") return;
+              if (!t.closest("#ready-order-item-table tbody")) return;
+              if (typeof updateBillButtonState === "function") updateBillButtonState();
+            },
+            true
+          );
 
           // Arrow-key navigation in Order Details table
           document.addEventListener('keydown', function (e) {
@@ -3533,7 +3713,7 @@
 <td class="making-col"><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)"></td>
 <td class="other-col"><input type="number" step="0.01" placeholder="0" oninput="calcReadyTotal(this)" onchange="calcReadyTotal(this)" title="Added to Total"></td>
 <td class="total total-col"><input type="number" step="0.01" readonly placeholder="0.00"></td>
-<td><button type="button" class="row-del-btn" onclick="this.closest('tr').remove()">X</button></td>
+<td><button type="button" class="row-del-btn" onclick="removeReadyExtraRow(this)">X</button></td>
 `;
         itemBody.appendChild(tr);
         var __typeSelNew = tr.cells[0] && tr.cells[0].querySelector("select");
@@ -3541,17 +3721,6 @@
         // Set Job No same as Order No (Bill No)
         if (billNo && tr.cells[1] && tr.cells[1].children[0]) {
           tr.cells[1].children[0].value = billNo.value || generateBillNo();
-        }
-
-        // Add event listener for row removal
-        const removeBtn = tr.querySelector('button');
-        if (removeBtn) {
-          removeBtn.addEventListener('click', function () {
-            // Update ratebook panel when row is removed
-            setTimeout(() => {
-              updateRatebookPanel();
-            }, 100);
-          });
         }
 
         // Apply global edit state if active (no Edit button = always treat as global editing on)
@@ -3579,7 +3748,20 @@
             calc(tr.cells[4].children[0]);
           }
           updateInfoPanel();
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 10);
+      }
+
+      function removeReadyExtraRow(btn) {
+        if (!btn || typeof btn.closest !== "function") return;
+        var tr = btn.closest("tr");
+        if (tr) tr.remove();
+        try {
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        } catch (eRmBill) { }
+        setTimeout(function () {
+          if (typeof updateRatebookPanel === "function") updateRatebookPanel();
+        }, 100);
       }
 
       var _optionalPlaceholders = [];
@@ -3831,6 +4013,9 @@
             }
           }
         });
+        try {
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        } catch (eTgeBill) { }
       }
 
       /* Purchase: Est. Total (col 9) is typed directly; copy to Final (col 15) */
@@ -3841,7 +4026,10 @@
         const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
         if (typeSelect && typeSelect.value === "Purchase") {
           syncSecondTotalFromRow(r);
-          setTimeout(function () { updateInfoPanel(); }, 50);
+          setTimeout(function () {
+            updateInfoPanel();
+            if (typeof updateBillButtonState === "function") updateBillButtonState();
+          }, 50);
         }
       }
 
@@ -3878,6 +4066,9 @@
         }
 
         updateInfoPanel();
+        try {
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        } catch (eHtcBill) { }
       }
 
       /* CALCULATE DELIVERY DATE FROM DAYS (same as new-order) */
@@ -3976,6 +4167,7 @@
           }
           setTimeout(function () {
             updateInfoPanel();
+            if (typeof updateBillButtonState === "function") updateBillButtonState();
           }, 100);
           return;
         }
@@ -3991,6 +4183,7 @@
           }
           setTimeout(function () {
             updateInfoPanel();
+            if (typeof updateBillButtonState === "function") updateBillButtonState();
           }, 100);
           return;
         }
@@ -4031,6 +4224,7 @@
         // Update panel after calculation
         setTimeout(() => {
           updateInfoPanel();
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 100);
       }
 
@@ -4047,7 +4241,10 @@
             readyWeightInput.value = (readyMetal - neg).toFixed(3);
           }
           syncSecondTotalFromRow(r);
-          setTimeout(() => updateInfoPanel(), 100);
+          setTimeout(function () {
+            updateInfoPanel();
+            if (typeof updateBillButtonState === "function") updateBillButtonState();
+          }, 100);
         } catch (e) {
           console.error("Error in syncReadyWeight:", e);
         }
@@ -4095,7 +4292,10 @@
         const r = el.closest("tr");
         if (!r || !r.cells) return;
         syncSecondTotalFromRow(r);
-        setTimeout(() => updateInfoPanel(), 100);
+        setTimeout(function () {
+          updateInfoPanel();
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
+        }, 100);
       }
 
       /**
@@ -4866,6 +5066,12 @@
         if (!custName.value) { alert("Select customer first"); return; }
         if (!billNo.value) { alert("Order number is required"); return; }
 
+        var appEl = orderApp || (typeof getSearchRoot === "function" ? getSearchRoot().querySelector("#orderApp") : null);
+        if (appEl && appEl.getAttribute("data-post-transfer-locked") === "1") {
+          alert("This bill was already transferred. Use Close to leave the screen.");
+          return;
+        }
+
         // Load customers into dropdown
         const transferCustName = document.getElementById("transferCustName");
         const list = JSON.parse(localStorage.getItem("customers") || "[]");
@@ -4932,7 +5138,7 @@
         const transNarration = document.getElementById("transferNarration").value;
 
         // Perform a full SAVE of the order, but target the transfer customer and suppress internal alerts
-        saveOrder(false, true, transferTarget, transDate, transNarration, { finalizeToAllBill: true });
+        saveOrder(false, true, transferTarget, transDate, transNarration, { finalizeToAllBill: true, lockAfterTransfer: true });
 
         // After save, close the popup and redirect like the normal save button would (if we want that)
         closeBillTransferPopup();
@@ -5103,6 +5309,7 @@
         opts = opts || {};
         let finalizeToAllBill = !!opts.finalizeToAllBill;
         const readyOnly = !!opts.readyOnly;
+        const lockAfterTransfer = !!(opts && opts.lockAfterTransfer);
 
         if (!custName || !billNo || !itemBody) {
           if (!initElements()) {
@@ -5157,6 +5364,17 @@
         /* Legacy: order was staged for All Bill from Ready Orders edit (billStagedForAllBill). */
         if (!finalizeToAllBill && !readyOnly && editOrderId && existingOrder && existingOrder.billStagedForAllBill) {
           finalizeToAllBill = true;
+        }
+        /* Re-save of a bill already posted to All Bill (e.g. opened via All Bill → Edit): the row is not in
+         * `orders`, so without this, Save wrongly takes the Ready Orders path and never updates `bills` / customerBalances. */
+        if (!finalizeToAllBill && !readyOnly && billNo && billNo.value) {
+          try {
+            const billsPeek = JSON.parse(localStorage.getItem("bills") || "[]");
+            const bn = String(billNo.value).trim();
+            if (billsPeek.some(function (b) { return b && String(b.billNo || "").trim() === bn; })) {
+              finalizeToAllBill = true;
+            }
+          } catch (ePeek) { /* ignore */ }
         }
 
         if (!finalizeToAllBill) {
@@ -5571,24 +5789,6 @@
           window.top.dispatchEvent(balanceEvent);
         }
 
-        // Clear edit flags and re-enable fields
-        if (editOrderId) {
-          localStorage.removeItem("editOrderId");
-          localStorage.removeItem("editCustomerReadOnly");
-
-          // Re-enable Customer Name and Bill No fields
-          if (custName) {
-            custName.disabled = false;
-            custName.style.backgroundColor = "";
-            custName.style.cursor = "";
-          }
-          if (billNo) {
-            billNo.readOnly = false;
-            billNo.style.backgroundColor = "";
-            billNo.style.cursor = "";
-          }
-        }
-
         // Dispatch event to refresh orders page
         const refreshEvent = new CustomEvent('orderSaved', {
           detail: { orderNo: billNo.value }
@@ -5617,6 +5817,25 @@
         if (typeof clearSessionSgjBillNo === "function") clearSessionSgjBillNo();
 
         billButtonPendingAllBillSave = false;
+
+        if (lockAfterTransfer) {
+          setPostTransferLocked(true);
+        } else {
+          /* Normal finalize: leave Bill mode and unlock header (Transfers skip this — screen stays read-only). */
+          if (typeof applyBillMidColumnsHidden === "function") {
+            applyBillMidColumnsHidden(false);
+          }
+          if (custName) {
+            custName.disabled = false;
+            custName.style.backgroundColor = "";
+            custName.style.cursor = "";
+          }
+          if (billNo) {
+            billNo.readOnly = false;
+            billNo.style.backgroundColor = "";
+            billNo.style.cursor = "";
+          }
+        }
 
         if (!silent) alert("Bill Save Successfully");
 
@@ -5692,6 +5911,8 @@
           }
         }
 
+        setPostTransferLocked(false);
+
         if (!skipConfirmation && !confirm("Reset current order? All unsaved data will be lost.")) {
           return;
         }
@@ -5752,6 +5973,7 @@
         setTimeout(() => {
           updateInfoPanel();
           calc(); // Recalculate to update totals
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 100);
 
         // Focus for fast new entry
@@ -5773,6 +5995,8 @@
             return;
           }
         }
+
+        setPostTransferLocked(false);
 
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
         let order = orders.find(o => o && (o.id == orderId || String(o.id) === String(orderId)));
@@ -5832,22 +6056,25 @@
           billNo.style.cursor = "not-allowed";
         }
         if (window.sgjBillNo) {
-          if (order.sgjBillNo) {
-            // Use the already-saved Bill No for this order
-            window.sgjBillNo.value = order.sgjBillNo;
+          var sgjFromOrder = order.sgjBillNo != null && String(order.sgjBillNo).trim() !== "" ? String(order.sgjBillNo).trim() : "";
+          if (sgjFromOrder) {
+            window.sgjBillNo.value = sgjFromOrder;
           } else {
-            // Generate a new Bill No. for orders that predate this feature
-            const newSgjBillNo = generateSgjBillNo();
-            window.sgjBillNo.value = newSgjBillNo;
-            // Persist it back so future edits show the same number
-            try {
-              const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-              const idx = orders.findIndex(o => o && String(o.id) === String(orderId));
-              if (idx >= 0) {
-                orders[idx].sgjBillNo = newSgjBillNo;
-                localStorage.setItem("orders", JSON.stringify(orders));
-              }
-            } catch (e) { console.error("Could not persist sgjBillNo:", e); }
+            var sgjFallback = (order.orderNo || order.billNo || (billNo && billNo.value) || "").trim();
+            if (sgjFallback) {
+              window.sgjBillNo.value = sgjFallback;
+            } else {
+              const newSgjBillNo = generateSgjBillNo();
+              window.sgjBillNo.value = newSgjBillNo;
+              try {
+                const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+                const idx = orders.findIndex(o => o && String(o.id) === String(orderId));
+                if (idx >= 0) {
+                  orders[idx].sgjBillNo = newSgjBillNo;
+                  localStorage.setItem("orders", JSON.stringify(orders));
+                }
+              } catch (e) { console.error("Could not persist sgjBillNo:", e); }
+            }
           }
         }
         if (gstRate) gstRate.value = order.gst || "";
@@ -5912,11 +6139,16 @@
           addRow();
         }
 
-        applyBillMidColumnsHidden(!!(order && order.hideBillMidColumns));
+        var useBillLayoutEdit = !!(order && order.hideBillMidColumns);
+        if (!useBillLayoutEdit && localStorage.getItem("editCustomerReadOnly") === "true") {
+          useBillLayoutEdit = true;
+        }
+        applyBillMidColumnsHidden(useBillLayoutEdit);
 
         // Update panel after loading order
         setTimeout(() => {
           updateInfoPanel();
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 200);
 
         // Keep editOrderId until order is saved (don't remove it here)
@@ -5930,6 +6162,8 @@
             return;
           }
         }
+
+        setPostTransferLocked(false);
 
         const bills = JSON.parse(localStorage.getItem("bills") || "[]");
         if (!bills[i]) {
@@ -5974,6 +6208,11 @@
           billNo.style.backgroundColor = "#f5f5f7";
           billNo.style.cursor = "not-allowed";
         }
+        /* Bill Information "Bill No." is #sgjBillNo — persist as b.sgjBillNo on save; restore here (fallback to order/bill no). */
+        if (window.sgjBillNo) {
+          var sgjSaved = b.sgjBillNo != null && String(b.sgjBillNo).trim() !== "" ? String(b.sgjBillNo).trim() : "";
+          window.sgjBillNo.value = sgjSaved || (b.billNo || (billNo && billNo.value) || "");
+        }
         if (itemBody) itemBody.innerHTML = "";
 
         const billRows = b.rows || b.items || [];
@@ -6006,17 +6245,23 @@
           }
         }, 15);
 
-        // Bill mode + baseline before deferred panel refreshes (avoids payment summary using pre-bill layout).
-        applyBillMidColumnsHidden(!!(b && b.hideBillMidColumns));
+        // Bill mode: use flag saved on the bill; if missing (older data), All Bill edit sets editCustomerReadOnly — use Bill layout.
+        var useBillLayout = !!(b && b.hideBillMidColumns);
+        if (!useBillLayout && localStorage.getItem("editCustomerReadOnly") === "true") {
+          useBillLayout = true;
+        }
+        applyBillMidColumnsHidden(useBillLayout);
 
         // Refresh totals and payment panel so they show saved data
         setTimeout(function () {
           if (typeof updateInfoPanel === "function") updateInfoPanel();
           if (typeof calc === "function") calc();
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 100);
         setTimeout(function () {
           if (typeof updateInfoPanel === "function") updateInfoPanel();
           if (typeof updatePaymentPanel === "function") updatePaymentPanel();
+          if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 400);
 
         if (localStorage.getItem("editCustomerReadOnly") === "true" && custName) {
@@ -7587,6 +7832,7 @@
                 updateInfoPanel();
                 applyPendingRatebook();
                 applyBillMidColumnsHidden(!!orderState.hideBillMidColumns);
+                if (typeof updateBillButtonState === "function") updateBillButtonState();
               }, 50);
 
               return;
@@ -7719,6 +7965,7 @@
             updateInfoPanel();
             applyPendingRatebook();
             applyBillMidColumnsHidden(!!orderState.hideBillMidColumns);
+            if (typeof updateBillButtonState === "function") updateBillButtonState();
           }, 100);
         } catch (e) {
           console.error("Error restoring order state:", e);
@@ -8599,6 +8846,9 @@
       ===================== */
       function closeDashboard() {
         try {
+          setPostTransferLocked(false);
+        } catch (eL) { }
+        try {
           localStorage.removeItem('readyExtraOrderState');
           localStorage.removeItem('readyExtraForceRestore');
           localStorage.removeItem('ratebookOpened');
@@ -8632,6 +8882,7 @@
         // Make all functions available globally
         window.loadCustomers = loadCustomers;
         window.addRow = addRow;
+        window.removeReadyExtraRow = removeReadyExtraRow;
         window.calc = calc;
         window.syncReadyWeight = syncReadyWeight;
         window.calcReadyTotal = calcReadyTotal;
@@ -8708,6 +8959,7 @@
         window.confirmBillTransfer = confirmBillTransfer;
         window.updateTransferCustDetails = updateTransferCustDetails;
         window.toggleGlobalEdit = toggleGlobalEdit;
+        window.setPostTransferLocked = setPostTransferLocked;
 
         window.closeDashboard = closeDashboard;
       }
@@ -8715,7 +8967,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'addRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();
