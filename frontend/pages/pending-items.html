@@ -56,40 +56,49 @@
       white-space: nowrap;
     }
 
-    .search-box {
-      position: relative;
+    .pending-field-filters {
       display: flex;
       align-items: center;
+      gap: 8px 14px;
+      flex-wrap: wrap;
     }
 
-    .search-box svg {
-      position: absolute;
-      left: 11px;
-      color: #9aa3b0;
-      pointer-events: none;
+    .pending-field-filters .pending-filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .search-box input {
+    .pending-field-filters label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      white-space: nowrap;
+    }
+
+    .pending-field-filters select {
       height: 36px;
-      padding: 0 12px 0 34px;
+      min-width: 120px;
+      max-width: 200px;
+      padding: 0 10px;
       border: 1px solid #dde3ec;
       border-radius: 8px;
       font-family: 'DM Sans', sans-serif;
       font-size: 13px;
       background: #fff;
       color: #1a1f2e;
-      min-width: 240px;
+      cursor: pointer;
       outline: none;
-      transition: border-color 0.15s, box-shadow 0.15s;
     }
 
-    .search-box input:focus {
+    .pending-field-filters select:focus {
       border-color: #4f7ef8;
       box-shadow: 0 0 0 3px rgba(79, 126, 248, 0.1);
     }
 
-    .search-box input::placeholder {
-      color: #9aa3b0;
+    .pending-field-filters select.pending-filter-select--item {
+      min-width: 140px;
+      max-width: min(280px, 36vw);
     }
 
     .btn {
@@ -1006,6 +1015,17 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    tr.ledger-row-focus-pulse {
+      outline: 3px solid #4f7ef8;
+      outline-offset: -2px;
+      animation: ledgerRowFocusPulse 2.2s ease-out forwards;
+    }
+
+    @keyframes ledgerRowFocusPulse {
+      0% { background-color: rgba(79, 126, 248, 0.22); }
+      100% { background-color: transparent; outline-color: transparent; }
+    }
+
     .modal-footer {
       display: flex;
       align-items: center;
@@ -1170,12 +1190,25 @@
     <div class="toolbar">
       <h2>⏳ Pending Items</h2>
       <span class="sel-pill" id="selPill">0 selected</span>
-      <div class="search-box">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-        <input type="text" id="searchBox" placeholder="Search item, order, customer…" oninput="applyTableFilters()">
+      <div class="pending-field-filters" id="pendingFieldFilters" aria-label="Filter by column">
+        <div class="pending-filter-group">
+          <label for="filterOrderNo">Order no.</label>
+          <select id="filterOrderNo" onchange="applyTableFilters()">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="pending-filter-group">
+          <label for="filterStamp">Stamp</label>
+          <select id="filterStamp" onchange="applyTableFilters()">
+            <option value="">All</option>
+          </select>
+        </div>
+        <div class="pending-filter-group">
+          <label for="filterItemName">Item name</label>
+          <select id="filterItemName" class="pending-filter-select--item" onchange="applyTableFilters()">
+            <option value="">All</option>
+          </select>
+        </div>
       </div>
       <button type="button" class="btn btn-filter-toggle" id="filterToggleBtn" onclick="toggleFilterBar()"
         aria-expanded="false" title="Filter by status and assignment">
@@ -1745,6 +1778,77 @@
       };
     }
 
+    function ledgerTryFocusPendingItemsFromNav() {
+      const raw = sessionStorage.getItem('ledgerFocusPendingItems');
+      if (!raw) return;
+      let payload;
+      try { payload = JSON.parse(raw); } catch (e) {
+        sessionStorage.removeItem('ledgerFocusPendingItems');
+        return;
+      }
+      if (!payload || payload.orderId == null || payload.itemIdx == null) {
+        sessionStorage.removeItem('ledgerFocusPendingItems');
+        return;
+      }
+      const tbody = document.getElementById('tableBody');
+      if (!tbody) return;
+      const rows = [...tbody.querySelectorAll('tr[data-order-id]')];
+      const tr = rows.find(r =>
+        String(r.dataset.orderId) === String(payload.orderId) &&
+        String(r.dataset.itemIdx) === String(payload.itemIdx));
+      sessionStorage.removeItem('ledgerFocusPendingItems');
+      if (!tr) return;
+      tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      tr.classList.add('ledger-row-focus-pulse');
+      setTimeout(() => tr.classList.remove('ledger-row-focus-pulse'), 2300);
+    }
+
+    /** Rebuild Order no. / Stamp / Item name dropdowns from loaded row data. */
+    function populatePendingFieldFilterDropdowns(rows) {
+      const orderSel = document.getElementById('filterOrderNo');
+      const stampSel = document.getElementById('filterStamp');
+      const itemSel = document.getElementById('filterItemName');
+      if (!orderSel || !stampSel || !itemSel) return;
+      const prevO = orderSel.value;
+      const prevS = stampSel.value;
+      const prevI = itemSel.value;
+      const uniqSorted = (key) => {
+        const seen = new Set();
+        const out = [];
+        (rows || []).forEach(r => {
+          const v = String(r[key] != null ? r[key] : '').trim();
+          if (!v || seen.has(v)) return;
+          seen.add(v);
+          out.push(v);
+        });
+        out.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+        return out;
+      };
+      function fillSelect(sel, values) {
+        sel.innerHTML = '';
+        const optAll = document.createElement('option');
+        optAll.value = '';
+        optAll.textContent = 'All';
+        sel.appendChild(optAll);
+        values.forEach(v => {
+          const o = document.createElement('option');
+          o.value = v;
+          o.textContent = v;
+          sel.appendChild(o);
+        });
+      }
+      fillSelect(orderSel, uniqSorted('orderNo'));
+      fillSelect(stampSel, uniqSorted('stamp'));
+      fillSelect(itemSel, uniqSorted('itemName'));
+      const tryRestore = (sel, prev) => {
+        if (prev == null || prev === '') return;
+        if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+      };
+      tryRestore(orderSel, prevO);
+      tryRestore(stampSel, prevS);
+      tryRestore(itemSel, prevI);
+    }
+
     function loadPendingItems() {
       const tbody = document.getElementById('tableBody');
       const ftText = document.getElementById('footerText');
@@ -1799,15 +1903,20 @@
             </div></td></tr>`;
           ftText.textContent = 'No pending items';
           ftStats.style.display = 'none';
+          populatePendingFieldFilterDropdowns([]);
         } else {
           const assignedCount = rows.filter(r => r.assigned).length;
           rows.forEach(r => {
             const tr = document.createElement('tr');
             if (r.assigned) tr.style.opacity = '0.62';
             tr.dataset.orderId  = r.orderId;
+            tr.dataset.itemIdx  = String(r.itemIdx);
             tr.dataset.assigned = r.assigned ? '1' : '0';
             tr.dataset.rowStatus = r.assigned ? 'assigned' : 'pending';
             tr.dataset.search   = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails].join(' ').toLowerCase();
+            tr.dataset.orderNoFilter = String(r.orderNo || '').trim().toLowerCase();
+            tr.dataset.stampFilter = String(r.stamp || '').trim().toLowerCase();
+            tr.dataset.itemNameFilter = String(r.itemName || '').trim().toLowerCase();
             const dueTs = parseDueDateForFilter(r.dueDate);
             if (dueTs != null) tr.dataset.dueTs = String(dueTs);
 
@@ -1855,14 +1964,17 @@
           ftStats.style.display = 'flex';
           document.getElementById('statPending').textContent  = `${rows.length - assignedCount} pending`;
           document.getElementById('statAssigned').textContent = `${assignedCount} assigned`;
+          populatePendingFieldFilterDropdowns(rows);
         }
 
         applyTableFilters();
         updateUI();
+        ledgerTryFocusPendingItemsFromNav();
       } catch (e) {
         console.error(e);
         tbody.innerHTML = `<tr><td colspan="16"><div class="empty-state"><div class="title">Error loading data</div></div></td></tr>`;
         ftText.textContent = 'Error';
+        populatePendingFieldFilterDropdowns([]);
       }
     }
 
@@ -1907,8 +2019,14 @@
     function clearItemFilters() {
       const st = document.getElementById('filterStatus');
       const as = document.getElementById('filterAssign');
+      const fo = document.getElementById('filterOrderNo');
+      const fst = document.getElementById('filterStamp');
+      const fn = document.getElementById('filterItemName');
       if (st) st.value = 'all';
       if (as) as.value = 'all';
+      if (fo) fo.value = '';
+      if (fst) fst.value = '';
+      if (fn) fn.value = '';
       dueDateFilter = null; dueFilterMode = 'none';
       const cw = document.getElementById('customDueWrap');
       if (cw) { cw.classList.remove('open'); cw.setAttribute('aria-hidden', 'true'); }
@@ -1916,17 +2034,22 @@
     }
 
     function applyTableFilters() {
-      const q   = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+      const fo = (document.getElementById('filterOrderNo')?.value || '').trim().toLowerCase();
+      const fst = (document.getElementById('filterStamp')?.value || '').trim().toLowerCase();
+      const fn = (document.getElementById('filterItemName')?.value || '').trim().toLowerCase();
       const st  = document.getElementById('filterStatus')?.value  || 'all';
       const as  = document.getElementById('filterAssign')?.value  || 'all';
       const dueActive = !!dueDateFilter;
 
       const dataRows = document.querySelectorAll('#tableBody tr[data-search]');
       let visibleCount = 0;
-      const filtersActive = !!(q || st !== 'all' || as !== 'all' || dueActive);
+      const filtersActive = !!(fo || fst || fn || st !== 'all' || as !== 'all' || dueActive);
 
       dataRows.forEach(tr => {
-        const searchOk = !q || (tr.dataset.search && tr.dataset.search.includes(q));
+        const orderNoOk = !fo || (tr.dataset.orderNoFilter && tr.dataset.orderNoFilter === fo);
+        const stampOk = !fst || (tr.dataset.stampFilter && tr.dataset.stampFilter === fst);
+        const itemNameOk = !fn || (tr.dataset.itemNameFilter && tr.dataset.itemNameFilter === fn);
+        const searchOk = orderNoOk && stampOk && itemNameOk;
         const assigned = tr.dataset.assigned === '1';
         const rowSt    = tr.dataset.rowStatus || 'pending';
 

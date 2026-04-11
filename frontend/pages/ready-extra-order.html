@@ -1121,6 +1121,28 @@
       outline-offset: 2px;
     }
 
+    /* Bill / invoice view: Advance purchase & Advance minus stay openable but read-only */
+    #panelPurchaseSaleDetailWrap[data-bill-mode="1"] .panel-open-purchase-sheet-btn--adv-purchase,
+    #panelPurchaseSaleDetailWrap[data-bill-mode="1"] .summary-item--advance-minus-open {
+      cursor: pointer;
+      border: 1px dashed rgba(100, 116, 139, 0.45);
+      border-radius: 8px;
+      background: rgba(248, 250, 252, 0.85);
+    }
+
+    #panelPurchaseSaleDetailWrap[data-bill-mode="1"] .panel-open-purchase-sheet-btn--adv-purchase:hover,
+    #panelPurchaseSaleDetailWrap[data-bill-mode="1"] .summary-item--advance-minus-open:hover {
+      background: rgba(226, 232, 240, 0.95);
+    }
+
+    .advanced-payments-table.advanced-payments-table--bill-readonly thead th {
+      font-size: 11px;
+    }
+
+    .advanced-payments-table.advanced-payments-table--bill-readonly tbody tr:nth-child(even) {
+      background: rgba(248, 250, 252, 0.6);
+    }
+
     /* =====================
    PAYMENT POPUP STYLES
 ===================== */
@@ -2186,12 +2208,13 @@
 
     <!-- ACTIONS -->
     <div class="actions">
-      <button onclick="addRow()"> Add Row</button>
+      <button type="button" id="rexToolbarAddRowBtn" onclick="addRow()"> Add Row</button>
 
       <button onclick="openPayment()"> Payment</button>
-      <button type="button" class="panel-open-purchase-sheet-btn" data-purchase-sheet-source="ready-extra"
-        data-purchase-ready-extra-ui="quick"
-        title="Quick entry: blank form only; Save adds lines to Paid purchase. Full saved list — use Paid Purchase minus in the panel."> Purchase</button>
+      <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--adv-purchase"
+        data-purchase-sheet-source="new-order"
+        data-purchase-new-order-ui="toolbar-add"
+        title="Before Bill: Add to Advance (append). After Bill is on: Add to Paid purchase only — not Advance. Full lists: use Advance purchase minus / Paid Purchase minus in the panel."> Purchase</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button type="button" class="btn-bill" onclick="onBillButtonClick()"
         title="Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."> Bill</button>
@@ -2234,7 +2257,8 @@
               <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
                 <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--adv-purchase"
                   data-purchase-sheet-source="new-order"
-                  title="New Order purchase sheet for this bill (newOrderPurchaseSheets). Add rows, Save — same as Ready/Extra popup.">
+                  data-purchase-new-order-ui="full"
+                  title="Full Advance (New Order) purchase list for this bill. Save replaces the list shown here (same storage as toolbar Purchase appends to).">
                   <span class="summary-label">Advance purchase minus:</span>
                   <span class="summary-value" id="panelAdvancePurchaseMinus">₹ 0.00</span>
                 </button>
@@ -2264,7 +2288,7 @@
                 <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--paid-purchase"
                   data-purchase-sheet-source="ready-extra"
                   data-purchase-ready-extra-ui="full"
-                  title="Opens full Paid purchase list for this bill (edit all rows). Toolbar Purchase is quick-add only.">
+                  title="Full Paid purchase list for this bill. Toolbar Purchase adds to Advance only (append); not Paid.">
                   <span class="summary-label">Paid Purchase minus:</span>
                   <span class="summary-value" id="panelPaidPurchaseMinus">₹ 0.00</span>
                 </button>
@@ -2589,12 +2613,11 @@
       </div>
       <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
         <div class="rex-purchase-edit-only" style="display:flex; flex-wrap:wrap; gap:8px;">
-          <button type="button" class="primary" onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
+          <button type="button" class="primary" data-rex-purchase-add-row>+
             Add Row</button>
-          <button type="button" class="primary"
-            onclick="typeof savePurchaseSheet==='function'&&savePurchaseSheet()">Save</button>
+          <button type="button" class="primary" data-rex-purchase-save>Save</button>
         </div>
-        <button type="button" onclick="typeof closePurchaseSheetPopup==='function'&&closePurchaseSheetPopup()">Close</button>
+        <button type="button" data-rex-purchase-close>Close</button>
       </div>
     </div>
   </div>
@@ -2937,9 +2960,23 @@
           paidBillRows.setAttribute("aria-hidden", billMidColumnsHidden ? "false" : "true");
         }
 
+        var addRowToolbar = root.querySelector("#rexToolbarAddRowBtn");
+        if (addRowToolbar) {
+          addRowToolbar.style.display = billMidColumnsHidden ? "none" : "";
+          addRowToolbar.setAttribute("aria-hidden", billMidColumnsHidden ? "true" : "false");
+        }
+        var hideUnhideBtn = root.querySelector("#rexHideUnhideColumnsBtn");
+        if (hideUnhideBtn) {
+          hideUnhideBtn.style.display = billMidColumnsHidden ? "none" : "";
+          hideUnhideBtn.setAttribute("aria-hidden", billMidColumnsHidden ? "true" : "false");
+        }
+
         try {
           if (typeof updatePaymentPanel === "function") updatePaymentPanel();
         } catch (ePanel) { }
+        try {
+          if (typeof syncAdvanceControlsBillLockUi === "function") syncAdvanceControlsBillLockUi();
+        } catch (eLock) { }
         updateHideUnhideColumnsBtnLabel();
       }
 
@@ -3099,6 +3136,7 @@
         // Ensure functions are globally accessible
         ensureFunctionsGlobal();
         wirePurchaseSheetOpenButton();
+        wirePurchaseSheetPopupButtons();
 
         // NOTE: Return-from-Ratebook/Receipt restoration is handled by `restoreOrderState()`.
         // Do not clear `ratebookOpened` / `receiptOpened` here; we clear them AFTER restoring
@@ -4089,6 +4127,12 @@
        * Paid Purchase minus = load full saved list + replace on Save.
        */
       var purchaseSheetReadyExtraUiMode = "fullList";
+      /**
+       * Advance (new-order) storage opened two ways:
+       * "toolbarAdd" = toolbar Purchase: blank rows only; Save appends to Advance list (see Advance purchase minus).
+       * "full" = Advance purchase minus panel: full saved list; Save replaces that list.
+       */
+      var purchaseSheetNewOrderUiMode = "full";
       /** Reserved; both purchase popups are editable from this page (each writes its own storage key). */
       var advancePurchasePopupReadOnly = false;
 
@@ -4262,10 +4306,25 @@
         return findPurchaseSheetRecordInKeyedLocalMap(readPurchaseSheetsMap(), billNoVal);
       }
 
+      /** Ignore stale embedded order.save purchaseSheet (empty object or rows: []) so standalone `newOrderPurchaseSheets` wins. */
+      function embeddedNewOrderPurchaseSheetUsable(ps) {
+        if (!ps || typeof ps !== "object") return false;
+        if (Array.isArray(ps.rows) && ps.rows.length > 0) return true;
+        if (ps.total != null && String(ps.total).trim() !== "") {
+          var tn = parseFloat(String(ps.total).replace(/[^0-9.-]/g, ""));
+          if (!isNaN(tn) && tn !== 0) return true;
+        }
+        return false;
+      }
+
       function getNewOrderPurchaseSheetRecord(billNoVal) {
         var map = readNewOrderPurchaseSheetsMap();
         var hit = findPurchaseSheetRecordInKeyedLocalMap(map, billNoVal);
-        if (hit) return hit;
+        if (hit) {
+          var hr = hit.rows;
+          if (!Array.isArray(hr)) hr = [];
+          return { rows: hr, total: hit.total, savedAt: hit.savedAt };
+        }
 
         var k1 = billNoVal ? String(billNoVal).trim() : "";
         var k2 = window.sgjBillNo && window.sgjBillNo.value ? String(window.sgjBillNo.value).trim() : "";
@@ -4288,11 +4347,15 @@
           }
           var orders = JSON.parse(localStorage.getItem("orders") || "[]");
           for (var oi = 0; oi < orders.length; oi++) {
-            if (matchOrderKey(orders[oi]) && orders[oi].purchaseSheet) return orders[oi].purchaseSheet;
+            if (!matchOrderKey(orders[oi])) continue;
+            var psOrd = orders[oi].purchaseSheet;
+            if (embeddedNewOrderPurchaseSheetUsable(psOrd)) return psOrd;
           }
           var bills = JSON.parse(localStorage.getItem("bills") || "[]");
           for (var bi = 0; bi < bills.length; bi++) {
-            if (matchOrderKey(bills[bi]) && bills[bi].purchaseSheet) return bills[bi].purchaseSheet;
+            if (!matchOrderKey(bills[bi])) continue;
+            var psBill = bills[bi].purchaseSheet;
+            if (embeddedNewOrderPurchaseSheetUsable(psBill)) return psBill;
           }
         } catch (e3) { }
         return null;
@@ -4422,6 +4485,14 @@
         var adv = getAdvancedPaymentRecordsForBill(billVal);
         var sum = adv.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
         if (totalEl) totalEl.textContent = "Total: " + formatCurrency(sum);
+        var billViewReadOnly = !!billMidColumnsHidden;
+        var titleEl = popup.querySelector(".advanced-payments-popup-title");
+        if (titleEl) {
+          titleEl.textContent = billViewReadOnly
+            ? "Advance payments (Bill view — read-only)"
+            : "Advance payments";
+        }
+        popup.setAttribute("data-bill-readonly", billViewReadOnly ? "1" : "0");
         var escCell = function (s) {
           return String(s == null ? "" : s)
             .replace(/&/g, "&amp;")
@@ -4430,6 +4501,23 @@
         };
         if (adv.length === 0) {
           listEl.innerHTML = '<div class="empty-state" style="padding:16px;">No advance payments for this bill.</div>';
+        } else if (billViewReadOnly) {
+          var htmlRo = '<table class="advanced-payments-table advanced-payments-table--bill-readonly"><colgroup>' +
+            '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
+            '<col class="advanced-payments-col--amt"><col class="advanced-payments-col--narr"></colgroup>' +
+            "<thead><tr><th>Date</th><th>Payment Mode</th><th>Amount</th><th>Narration</th></tr></thead><tbody>";
+          adv.slice().reverse().forEach(function (p) {
+            var dateStr = p.date ? new Date(p.date).toLocaleDateString() : "—";
+            var modeStr = p.mode ? String(p.mode) : "Cash";
+            var narrRaw = p.narration != null && String(p.narration).trim() !== ""
+              ? String(p.narration).trim()
+              : "—";
+            htmlRo += "<tr><td>" + escCell(dateStr) + "</td><td>" + escCell(modeStr) + "</td>" +
+              '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + "</td>" +
+              '<td class="advanced-payments-table__narr">' + escCell(narrRaw) + "</td></tr>";
+          });
+          htmlRo += "</tbody></table>";
+          listEl.innerHTML = htmlRo;
         } else {
           var html = '<table class="advanced-payments-table"><colgroup>' +
             '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
@@ -4475,7 +4563,12 @@
 
       function closeAdvancedPaymentsPopup() {
         var popup = getSearchRoot().querySelector("#ready-order-advanced-payments-popup") || document.getElementById("ready-order-advanced-payments-popup");
-        if (popup) popup.style.display = "none";
+        if (popup) {
+          popup.style.display = "none";
+          popup.removeAttribute("data-bill-readonly");
+          var tEl = popup.querySelector(".advanced-payments-popup-title");
+          if (tEl) tEl.textContent = "Advance payments";
+        }
       }
 
       function openPaidPaymentsPopup() {
@@ -4552,6 +4645,11 @@
       function openPaymentDetailTableEdit(btnEl) {
         var tr = btnEl && btnEl.closest("tr");
         if (!tr || tr.classList.contains("advanced-payments-row--editing")) return;
+        var advPopup = tr.closest("#ready-order-advanced-payments-popup");
+        if (advPopup && billMidColumnsHidden) {
+          alert("Advance payments cannot be edited while Bill / invoice view is on. Use the toolbar to leave Bill view, then edit.");
+          return;
+        }
         var payKey = tr.getAttribute("data-payment-key") || "";
         var timestamp = tr.getAttribute("data-payment-timestamp") || "";
         var billNoVal = tr.getAttribute("data-bill-no") || "";
@@ -4590,6 +4688,11 @@
       function deletePaymentDetailTableRow(btnEl) {
         var tr = btnEl && btnEl.closest("tr");
         if (!tr || tr.classList.contains("advanced-payments-row--editing")) return;
+        var advPopup = tr.closest("#ready-order-advanced-payments-popup");
+        if (advPopup && billMidColumnsHidden) {
+          alert("Advance payments cannot be deleted while Bill / invoice view is on.");
+          return;
+        }
         if (!confirm("Delete this payment line? This cannot be undone.")) return;
         var payKey = tr.getAttribute("data-payment-key") || "";
         var timestamp = tr.getAttribute("data-payment-timestamp") || "";
@@ -6709,6 +6812,11 @@
       }
 
       function getPurchaseSheetTbody() {
+        var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        if (popup) {
+          var tbIn = popup.querySelector("#ready-extra-purchase-sheet-tbody");
+          if (tbIn) return tbIn;
+        }
         return getSearchRoot().querySelector("#ready-extra-purchase-sheet-tbody")
           || document.getElementById("ready-extra-purchase-sheet-tbody");
       }
@@ -6741,7 +6849,10 @@
 
       function updatePurchaseSheetTotalDisplay() {
         var tb = getPurchaseSheetTbody();
-        var span = getSearchRoot().querySelector("#ready-extra-purchase-sheet-total-amt")
+        var span = null;
+        var popupTot = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        if (popupTot) span = popupTot.querySelector("#ready-extra-purchase-sheet-total-amt");
+        if (!span) span = getSearchRoot().querySelector("#ready-extra-purchase-sheet-total-amt")
           || document.getElementById("ready-extra-purchase-sheet-total-amt");
         if (!tb || !span) return;
         var sum = 0;
@@ -6790,6 +6901,11 @@
       }
 
       function savePurchaseSheet() {
+        var pGuard = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        if (pGuard && pGuard.classList.contains("purchase-sheet-popup--readonly")) {
+          showError("Advance purchase is read-only in Bill / invoice view. Exit Bill to save changes.");
+          return;
+        }
         if (!billNo || !String(billNo.value || "").trim()) {
           showError("Order number is required. Save the order first.");
           return;
@@ -6797,12 +6913,24 @@
         var bn = String(billNo.value).trim();
         var domRows = collectPurchaseSheetRowsFromDom();
 
-        if (activePurchaseSheetSource === "ready-extra") {
+        var pSave = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        var domSrc = pSave && pSave.getAttribute("data-purchase-active-source");
+        var effectiveSource =
+          domSrc === "new-order" || domSrc === "ready-extra" ? domSrc : activePurchaseSheetSource;
+        var reUiQuick =
+          pSave && pSave.getAttribute("data-purchase-re-ui") === "quick";
+        var toolbarAdvanceAddAttr = pSave && pSave.getAttribute("data-purchase-new-order-ui") === "toolbar-add";
+        if (billMidColumnsHidden && toolbarAdvanceAddAttr) {
+          effectiveSource = "ready-extra";
+          reUiQuick = true;
+        }
+
+        if (effectiveSource === "ready-extra") {
           var tbRe = getPurchaseSheetTbody();
-          if (purchaseSheetReadyExtraUiMode === "quickEntry") {
+          if (reUiQuick) {
             var toAdd = filterNonEmptyPurchaseSheetRows(domRows);
             if (toAdd.length === 0) {
-              showError("Add at least one purchase line before Save.");
+              showError("Add at least one purchase line before Add to Paid purchase.");
               return;
             }
             var existingRe = getPurchaseSheetRecord(bn);
@@ -6848,21 +6976,105 @@
             }
           }
         } else {
+          var appendAdvanceToolbar = pSave && pSave.getAttribute("data-purchase-new-order-ui") === "toolbar-add";
           var rows = filterNonEmptyPurchaseSheetRows(domRows);
-          var total = sumPurchaseSheetRowsAmount(rows);
-          writeNewOrderPurchaseSheetForBill(bn, rows, total);
+          if (domRows.length > 0 && rows.length === 0) {
+            showError("Nothing saved — add Item, Stamp, Gross (or Net and Rate / Amount) on each line.");
+            return;
+          }
+          if (appendAdvanceToolbar && rows.length === 0) {
+            showError("Add at least one purchase line before Add to Advance.");
+            return;
+          }
+          var existingNo = appendAdvanceToolbar ? getNewOrderPurchaseSheetRecord(bn) : null;
+          var prevNo = (appendAdvanceToolbar && existingNo && existingNo.rows && existingNo.rows.length)
+            ? existingNo.rows.map(function (r) {
+              try {
+                return JSON.parse(JSON.stringify(r));
+              } catch (e) {
+                return Object.assign({}, r);
+              }
+            })
+            : [];
+          var combined = appendAdvanceToolbar ? prevNo.concat(rows) : rows;
+          var total = sumPurchaseSheetRowsAmount(combined);
+          writeNewOrderPurchaseSheetForBill(bn, combined, total);
+          var tbNo = getPurchaseSheetTbody();
+          if (tbNo) {
+            tbNo.innerHTML = "";
+            if (appendAdvanceToolbar) {
+              addPurchaseSheetRow();
+            } else {
+              var mapPost = readNewOrderPurchaseSheetsMap();
+              var recPost = (mapPost && mapPost[bn]) || findPurchaseSheetRecordInKeyedLocalMap(mapPost, bn);
+              var listNo =
+                recPost && Array.isArray(recPost.rows) && recPost.rows.length
+                  ? recPost.rows
+                  : (combined && combined.length ? combined : []);
+              if (listNo && listNo.length) {
+                listNo.forEach(function (r) {
+                  try {
+                    addPurchaseSheetRow(JSON.parse(JSON.stringify(r)));
+                  } catch (e) {
+                    addPurchaseSheetRow(Object.assign({}, r));
+                  }
+                });
+              } else {
+                addPurchaseSheetRow();
+              }
+            }
+          }
         }
 
         updatePurchaseSheetTotalDisplay();
         updateInfoPanel();
       }
 
-      function renderPurchaseSheetTableForBill(billNoVal) {
+      function wirePurchaseSheetPopupButtons() {
+        var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
+        if (!popup || popup.getAttribute("data-rex-purchase-actions-wired") === "1") return;
+        popup.setAttribute("data-rex-purchase-actions-wired", "1");
+        var addBtn = popup.querySelector("[data-rex-purchase-add-row]");
+        var saveBtn = popup.querySelector("[data-rex-purchase-save]");
+        var closeBtn = popup.querySelector("[data-rex-purchase-close]");
+        if (addBtn) {
+          addBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            addPurchaseSheetRow();
+          });
+        }
+        if (saveBtn) {
+          saveBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            savePurchaseSheet();
+          });
+        }
+        if (closeBtn) {
+          closeBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePurchaseSheetPopup();
+          });
+        }
+      }
+
+      /**
+       * @param {string} billNoVal
+       * @param {"new-order"|"ready-extra"} [sheetSource] defaults to activePurchaseSheetSource
+       * @param {"quickEntry"|"fullList"} [reUiMode] defaults to purchaseSheetReadyExtraUiMode
+       * @param {"full"|"toolbarAdd"} [newOrderUiMode] defaults to purchaseSheetNewOrderUiMode
+       */
+      function renderPurchaseSheetTableForBill(billNoVal, sheetSource, reUiMode, newOrderUiMode) {
+        var src = sheetSource != null ? sheetSource : activePurchaseSheetSource;
+        var reUi = reUiMode != null ? reUiMode : purchaseSheetReadyExtraUiMode;
+        var noUi = newOrderUiMode != null ? newOrderUiMode : purchaseSheetNewOrderUiMode;
         var tb = getPurchaseSheetTbody();
         if (!tb) return;
         tb.innerHTML = "";
-        if (activePurchaseSheetSource === "ready-extra") {
-          if (purchaseSheetReadyExtraUiMode === "quickEntry") {
+        if (src === "ready-extra") {
+          if (reUi === "quickEntry") {
             addPurchaseSheetRow();
           } else {
             var reRecOnly = getPurchaseSheetRecord(billNoVal);
@@ -6874,6 +7086,8 @@
               addPurchaseSheetRow();
             }
           }
+        } else if (noUi === "toolbarAdd") {
+          addPurchaseSheetRow();
         } else {
           var noRecOnly = getNewOrderPurchaseSheetRecord(billNoVal);
           if (noRecOnly && noRecOnly.rows && noRecOnly.rows.length) {
@@ -6976,22 +7190,49 @@
             btn.addEventListener("click", function (e) {
               e.preventDefault();
               e.stopPropagation();
+              var newOrderUi = btn.getAttribute("data-purchase-new-order-ui");
+              // Bill / invoice preview: toolbar Purchase must stay quick Paid entry (same class as panel — check FIRST).
+              if (billMidColumnsHidden && newOrderUi === "toolbar-add") {
+                openPurchaseSheet("ready-extra", "quick");
+                return;
+              }
+              // Panel "Advance purchase minus" only (data-purchase-new-order-ui="full"), not toolbar Purchase.
+              if (billMidColumnsHidden && btn.classList.contains("panel-open-purchase-sheet-btn--adv-purchase") && newOrderUi === "full") {
+                openPurchaseSheet("new-order", "full", "full", { readonlyBillView: true });
+                return;
+              }
               var srcAttr = btn.getAttribute("data-purchase-sheet-source");
               var src = srcAttr === "new-order" ? "new-order" : "ready-extra";
               var reUiAttr = btn.getAttribute("data-purchase-ready-extra-ui");
               var reUi = src === "ready-extra" && reUiAttr === "quick" ? "quick" : "full";
-              openPurchaseSheet(src, reUi);
+              if (src === "new-order" && (!newOrderUi || String(newOrderUi).trim() === "")) {
+                newOrderUi = "full";
+              }
+              openPurchaseSheet(src, reUi, newOrderUi);
             });
           });
         } catch (err) { /* ignore */ }
       }
 
-      function openPurchaseSheet(source, readyExtraUi) {
+      function openPurchaseSheet(source, readyExtraUi, newOrderUi, opts) {
+        opts = opts || {};
+        /* Bill mode: any full Advance (New Order) purchase sheet must be read-only — not only panel clicks. */
+        var noUiStr = String(newOrderUi == null ? "" : newOrderUi).trim();
+        if (billMidColumnsHidden && source === "new-order" && noUiStr !== "toolbar-add") {
+          opts.readonlyBillView = true;
+        }
+        var readonlyBillView = !!opts.readonlyBillView;
         activePurchaseSheetSource = source === "new-order" ? "new-order" : "ready-extra";
         purchaseSheetReadyExtraUiMode = (activePurchaseSheetSource === "ready-extra" && readyExtraUi === "quick")
           ? "quickEntry"
           : "fullList";
-        advancePurchasePopupReadOnly = false;
+        var nom = newOrderUi;
+        if (activePurchaseSheetSource === "new-order") {
+          purchaseSheetNewOrderUiMode = nom === "toolbar-add" ? "toolbarAdd" : "full";
+        } else {
+          purchaseSheetNewOrderUiMode = "full";
+        }
+        advancePurchasePopupReadOnly = readonlyBillView;
         if (!custName || !billNo) {
           if (!initElements()) {
             alert("Form not initialized. Please refresh the page.");
@@ -7008,21 +7249,37 @@
         }
         var popup = getPopupEl("ready-extra-order-purchase-sheet-popup");
         if (!popup) return;
-        popup.classList.remove("purchase-sheet-popup--readonly");
+        if (readonlyBillView) {
+          popup.classList.add("purchase-sheet-popup--readonly");
+        } else {
+          popup.classList.remove("purchase-sheet-popup--readonly");
+        }
         var hintEl = popup.querySelector("#rex-purchase-popup-readonly-hint");
         if (hintEl) {
           hintEl.style.display = "block";
-          if (activePurchaseSheetSource === "new-order") {
-            hintEl.innerHTML = "Full list for <strong>Advance purchase minus</strong> (New Order sheet). <strong>Save</strong> replaces those lines only — it does not change <strong>Paid purchase minus</strong> (Ready / Extra sheet).";
+          if (readonlyBillView) {
+            hintEl.innerHTML = "Bill / invoice view — <strong>Advance purchase</strong> is <strong>read-only</strong> (frozen snapshot). Leave Bill view to add, remove, or save lines.";
+          } else if (activePurchaseSheetSource === "new-order" && purchaseSheetNewOrderUiMode === "toolbarAdd") {
+            hintEl.innerHTML = "<strong>Toolbar Purchase</strong> — add new lines only (saved list is <strong>not</strong> shown here). Use <strong>Add to Advance</strong> to append to the same sheet as <strong>Advance purchase minus</strong>. Open <strong>Advance purchase minus</strong> in the panel to view or edit the full list.";
+          } else if (activePurchaseSheetSource === "new-order") {
+            hintEl.innerHTML = "Full list for <strong>Advance purchase minus</strong> (New Order sheet). <strong>Save</strong> replaces those lines only — it does not change <strong>Paid purchase minus</strong> (Ready / Extra sheet). Lines added from the toolbar <strong>Purchase</strong> button are included here.";
           } else if (purchaseSheetReadyExtraUiMode === "quickEntry") {
-            hintEl.innerHTML = "Quick entry — <strong>no saved list</strong> here. Add rows and <strong>Save</strong> to <strong>append</strong> to Paid purchase. View or edit the full list under <strong>Paid Purchase minus</strong> in Payment Summary.";
+            if (billMidColumnsHidden) {
+              hintEl.innerHTML = "After <strong>Bill</strong> — toolbar <strong>Purchase</strong> only appends to <strong>Paid purchase minus</strong>. These lines do <strong>not</strong> update Advance purchase minus. Use <strong>Add to Paid purchase</strong>. Full Paid list: <strong>Paid Purchase minus</strong> in the panel.";
+            } else {
+              hintEl.innerHTML = "Quick entry — <strong>no saved list</strong> here. Add rows and <strong>Add to Paid purchase</strong> to <strong>append</strong> to Paid purchase. View or edit the full list under <strong>Paid Purchase minus</strong> in Payment Summary.";
+            }
           } else {
-            hintEl.innerHTML = "Full <strong>Paid purchase</strong> list for this bill. <strong>Save</strong> replaces all lines. (Toolbar <strong>Purchase</strong> is quick-add only, without the list.)";
+            hintEl.innerHTML = "Full <strong>Paid purchase</strong> list for this bill. <strong>Save</strong> replaces all lines. Before Bill, toolbar <strong>Purchase</strong> adds to <strong>Advance</strong> only; after Bill, it adds to <strong>Paid</strong> only.";
           }
         }
         var titleEl = popup.querySelector("#rex-purchase-popup-title");
         if (titleEl) {
-          if (activePurchaseSheetSource === "new-order") {
+          if (readonlyBillView) {
+            titleEl.textContent = "Advance purchase (Bill view — read-only)";
+          } else if (activePurchaseSheetSource === "new-order" && purchaseSheetNewOrderUiMode === "toolbarAdd") {
+            titleEl.textContent = "Purchase (add to Advance)";
+          } else if (activePurchaseSheetSource === "new-order") {
             titleEl.textContent = "Purchase (New Order)";
           } else if (purchaseSheetReadyExtraUiMode === "quickEntry") {
             titleEl.textContent = "Purchase — quick add (Paid)";
@@ -7030,15 +7287,39 @@
             titleEl.textContent = "Purchase (Ready / Extra)";
           }
         }
+        popup.setAttribute(
+          "data-purchase-active-source",
+          activePurchaseSheetSource === "new-order" ? "new-order" : "ready-extra"
+        );
+        popup.setAttribute(
+          "data-purchase-re-ui",
+          activePurchaseSheetSource === "ready-extra" && purchaseSheetReadyExtraUiMode === "quickEntry"
+            ? "quick"
+            : "full"
+        );
+        popup.setAttribute(
+          "data-purchase-new-order-ui",
+          activePurchaseSheetSource === "new-order"
+            ? (purchaseSheetNewOrderUiMode === "toolbarAdd" ? "toolbar-add" : "full")
+            : "full"
+        );
         var bn = String(billNo.value).trim();
-        if (bn) renderPurchaseSheetTableForBill(bn);
-        else {
+        if (bn) {
+          renderPurchaseSheetTableForBill(bn, activePurchaseSheetSource, purchaseSheetReadyExtraUiMode, purchaseSheetNewOrderUiMode);
+        } else {
           var tb = getPurchaseSheetTbody();
           if (tb && !tb.querySelector("tr")) addPurchaseSheetRow();
         }
         popup.style.display = "flex";
         popup.style.alignItems = "center";
         popup.style.justifyContent = "center";
+        var saveBtnLbl = popup.querySelector("[data-rex-purchase-save]");
+        if (saveBtnLbl) {
+          saveBtnLbl.textContent =
+            activePurchaseSheetSource === "new-order" && purchaseSheetNewOrderUiMode === "toolbarAdd"
+              ? "Add to Advance"
+              : (purchaseSheetReadyExtraUiMode === "quickEntry" ? "Add to Paid purchase" : "Save");
+        }
         updatePurchaseSheetTotalDisplay();
       }
 
@@ -7050,8 +7331,14 @@
         }
         var hintEl = popup && popup.querySelector("#rex-purchase-popup-readonly-hint");
         if (hintEl) hintEl.style.display = "none";
+        if (popup) {
+          popup.removeAttribute("data-purchase-active-source");
+          popup.removeAttribute("data-purchase-re-ui");
+          popup.removeAttribute("data-purchase-new-order-ui");
+        }
         activePurchaseSheetSource = "ready-extra";
         purchaseSheetReadyExtraUiMode = "fullList";
+        purchaseSheetNewOrderUiMode = "full";
         advancePurchasePopupReadOnly = false;
       }
 
@@ -7607,6 +7894,41 @@
         return 0;
       }
 
+      /** Bill mode: mark panel + tooltips so Advance purchase / Advance minus are clearly view-only. */
+      function syncAdvanceControlsBillLockUi() {
+        var root = typeof getSearchRoot === "function" ? getSearchRoot() : document;
+        var wrap = root.querySelector("#panelPurchaseSaleDetailWrap");
+        var advPur = wrap ? wrap.querySelector(".panel-open-purchase-sheet-btn--adv-purchase") : null;
+        var advMin = wrap ? wrap.querySelector(".summary-item--advance-minus-open") : null;
+        var lockTip = "Bill view — read-only; leave Bill to edit.";
+        var purBase = "Full Advance (New Order) purchase list for this bill. Save replaces the list shown here (same storage as toolbar Purchase appends to).";
+        var minBase = "Tap to view advance payment lines for this bill";
+        if (wrap) wrap.setAttribute("data-bill-mode", billMidColumnsHidden ? "1" : "0");
+        var advPurLines = 0;
+        try {
+          if (billNo && billNo.value && typeof getNewOrderPurchaseSheetRecord === "function") {
+            var rec = getNewOrderPurchaseSheetRecord(String(billNo.value).trim());
+            if (rec && rec.rows && rec.rows.length) advPurLines = rec.rows.length;
+          }
+        } catch (eN) { /* ignore */ }
+        var advPayCount = 0;
+        try {
+          if (billNo && billNo.value && typeof getAdvancedPaymentRecordsForBill === "function") {
+            advPayCount = getAdvancedPaymentRecordsForBill(String(billNo.value).trim()).length;
+          }
+        } catch (eA) { /* ignore */ }
+        if (advPur) {
+          advPur.title = billMidColumnsHidden
+            ? (purBase + " " + lockTip)
+            : (purBase + (advPurLines ? " (" + advPurLines + " saved line(s))." : ""));
+        }
+        if (advMin) {
+          advMin.title = billMidColumnsHidden
+            ? (minBase + " " + lockTip)
+            : (minBase + (advPayCount ? " (" + advPayCount + " line(s))." : ""));
+        }
+      }
+
       function updatePaymentPanel() {
         if (!billNo || !billNo.value) return;
 
@@ -7775,6 +8097,10 @@
         }
 
         wirePurchaseSheetOpenButton();
+        wirePurchaseSheetPopupButtons();
+        try {
+          if (typeof syncAdvanceControlsBillLockUi === "function") syncAdvanceControlsBillLockUi();
+        } catch (eSync) { /* ignore */ }
       }
 
       function updateRatebookPanel() {

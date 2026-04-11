@@ -79,6 +79,52 @@
             flex: 1;
         }
 
+        /* Same column filters as Pending Items: Order no., Stamp, Item name */
+        .ip-field-filters {
+            display: flex;
+            align-items: center;
+            gap: 8px 14px;
+            flex-wrap: wrap;
+        }
+
+        .ip-field-filters .ip-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ip-field-filters label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .ip-field-filters select {
+            height: 40px;
+            min-width: 120px;
+            max-width: 200px;
+            padding: 0 10px;
+            border: 1px solid #d1d6de;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fff;
+            color: #1d1d1f;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .ip-field-filters select:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+        }
+
+        .ip-field-filters select.ip-filter-select--item {
+            min-width: 140px;
+            max-width: min(280px, 36vw);
+        }
+
         .sel-pill {
             background: #eaf0ff;
             color: #3a68e8;
@@ -148,27 +194,6 @@
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
-        }
-
-        input[type="text"] {
-            height: 40px;
-            padding: 8px 14px;
-            border: 1px solid #d1d6de;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #fff;
-            transition: all 0.2s;
-            min-width: 200px;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #007aff;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
-        }
-
-        input[type="text"]::placeholder {
-            color: #8e8e93;
         }
 
         select {
@@ -321,6 +346,17 @@
 
         tbody tr.row-selected {
             background: #eef4ff !important;
+        }
+
+        tr.ledger-row-focus-pulse {
+            outline: 3px solid #2563eb;
+            outline-offset: -2px;
+            animation: ledgerRowFocusPulse 2.2s ease-out forwards;
+        }
+
+        @keyframes ledgerRowFocusPulse {
+            0% { background-color: rgba(37, 99, 235, 0.2); }
+            100% { background-color: transparent; outline-color: transparent; }
         }
 
         .center {
@@ -803,6 +839,15 @@
             font-weight: 500;
         }
 
+        .jw-bal-table tbody tr.jw-bal-total-row {
+            background: #f1f5f9;
+            border-top: 2px solid #cbd5e1;
+        }
+
+        .jw-bal-table tbody tr.jw-bal-total-row td {
+            color: #0f172a;
+        }
+
         .jw-modal-section-title {
             padding: 12px 22px 6px;
             font-size: 11px;
@@ -872,13 +917,32 @@
             <h2>⚙️ Item Process</h2>
             <span class="sel-pill" id="ipSelPill">0 selected</span>
 
+            <div class="ip-field-filters" id="ipFieldFilters" aria-label="Filter by column">
+                <div class="ip-filter-group">
+                    <label for="ipFilterOrderNo">Order no.</label>
+                    <select id="ipFilterOrderNo" onchange="ipFilterTable()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="ip-filter-group">
+                    <label for="ipFilterStamp">Stamp</label>
+                    <select id="ipFilterStamp" onchange="ipFilterTable()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="ip-filter-group">
+                    <label for="ipFilterItemName">Item name</label>
+                    <select id="ipFilterItemName" class="ip-filter-select--item" onchange="ipFilterTable()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+            </div>
+
             <button type="button" class="filter-btn active" id="fBtnProcess" onclick="setIpFilter('PROCESS')">In
                 Process</button>
             <button type="button" class="filter-btn" id="fBtnReady" onclick="setIpFilter('READY')">Ready</button>
             <button type="button" class="filter-btn" id="fBtnAll" onclick="setIpFilter('ALL')">All</button>
 
-            <input type="text" id="searchBox" placeholder="🔍 Search by item, job worker, order..."
-                onkeyup="ipFilterTable()">
             <select id="jwFilter" onchange="ipFilterTable()">
                 <option value="">👤 All Job Workers</option>
             </select>
@@ -1048,6 +1112,7 @@
     </div>
 
     <script src="../script/order-processing.js"></script>
+    <script src="../script/jw-modal-balance.js"></script>
     <script>
         let tbody = null;
         let footer = null;
@@ -1227,6 +1292,52 @@
                 .replace(/\s+/g, ' ');
         }
 
+        /** Rebuild Order no. / Stamp / Item name dropdowns (same pattern as Pending Items). */
+        function populateIpFieldFilterDropdowns(rows) {
+            const orderSel = document.getElementById('ipFilterOrderNo');
+            const stampSel = document.getElementById('ipFilterStamp');
+            const itemSel = document.getElementById('ipFilterItemName');
+            if (!orderSel || !stampSel || !itemSel) return;
+            const prevO = orderSel.value;
+            const prevS = stampSel.value;
+            const prevI = itemSel.value;
+            const uniqSorted = (key) => {
+                const seen = new Set();
+                const out = [];
+                (rows || []).forEach(r => {
+                    const v = String(r[key] != null ? r[key] : '').trim();
+                    if (!v || seen.has(v)) return;
+                    seen.add(v);
+                    out.push(v);
+                });
+                out.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+                return out;
+            };
+            function fillSelect(sel, values) {
+                sel.innerHTML = '';
+                const optAll = document.createElement('option');
+                optAll.value = '';
+                optAll.textContent = 'All';
+                sel.appendChild(optAll);
+                values.forEach(v => {
+                    const o = document.createElement('option');
+                    o.value = v;
+                    o.textContent = v;
+                    sel.appendChild(o);
+                });
+            }
+            fillSelect(orderSel, uniqSorted('orderNo'));
+            fillSelect(stampSel, uniqSorted('stamp'));
+            fillSelect(itemSel, uniqSorted('itemName'));
+            const tryRestore = (sel, prev) => {
+                if (prev == null || prev === '') return;
+                if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+            };
+            tryRestore(orderSel, prevO);
+            tryRestore(stampSel, prevS);
+            tryRestore(itemSel, prevI);
+        }
+
         function updateIpJwFilterOptions() {
             const jwFilter = document.getElementById('jwFilter');
             if (!jwFilter) return;
@@ -1269,6 +1380,31 @@
             else jwFilter.value = currentVal;
         }
 
+        function ledgerTryFocusItemProcessFromNav() {
+            const raw = sessionStorage.getItem('ledgerFocusItemProcess');
+            if (!raw) return;
+            let payload;
+            try { payload = JSON.parse(raw); } catch (e) {
+                sessionStorage.removeItem('ledgerFocusItemProcess');
+                return;
+            }
+            if (!payload || payload.orderId == null || payload.itemIdx == null) {
+                sessionStorage.removeItem('ledgerFocusItemProcess');
+                return;
+            }
+            if (!tbody) return;
+            const rows = [...tbody.querySelectorAll('tr[data-order-id]')];
+            const tr = rows.find(r =>
+                String(r.dataset.orderId) === String(payload.orderId) &&
+                String(r.dataset.itemIdx) === String(payload.itemIdx));
+            sessionStorage.removeItem('ledgerFocusItemProcess');
+            if (!tr) return;
+            tr.style.display = '';
+            tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            tr.classList.add('ledger-row-focus-pulse');
+            setTimeout(() => tr.classList.remove('ledger-row-focus-pulse'), 2300);
+        }
+
         function loadProcessItems() {
             if (!tbody && !initElements()) {
                 setTimeout(loadProcessItems, 100);
@@ -1300,18 +1436,24 @@
                           </td>
                         </tr>`;
                     if (footer) footer.textContent = 'No items in process';
+                    populateIpFieldFilterDropdowns([]);
                     ipUpdateUI();
+                    ledgerTryFocusItemProcessFromNav();
                     return;
                 }
 
                 items.forEach((r, idx) => {
                     const isReady = r.status === 'READY';
                     const tr = document.createElement('tr');
-                    tr.dataset.search = [r.itemName, r.stamp || '', r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
+                    tr.dataset.search = '1';
+                    tr.dataset.orderNoFilter = String(r.orderNo || '').trim().toLowerCase();
+                    tr.dataset.stampFilter = String(r.stamp != null ? r.stamp : '').trim().toLowerCase();
+                    tr.dataset.itemNameFilter = String(r.itemName || '').trim().toLowerCase();
                     tr.dataset.jobworker = (r.jobworkerName || '').trim();
                     tr.dataset.jobworkerKey = ipNormJwName(r.jobworkerName || '');
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
+                    tr.dataset.itemIdx = String(r.itemIdx != null ? r.itemIdx : '');
 
                     const rowQty = Math.max(0, parseFloat(r.qty) || 0);
                     tr.innerHTML = `
@@ -1359,13 +1501,16 @@
                     .map(([key, label]) => ({ key, label }))
                     .sort((a, b) => String(a.label).localeCompare(String(b.label), undefined, { sensitivity: 'base' }));
                 updateIpJwFilterOptions();
+                populateIpFieldFilterDropdowns(items);
 
                 ipFilterTable();
                 ipUpdateUI();
+                ledgerTryFocusItemProcessFromNav();
             } catch (e) {
                 console.error('Error loading process items:', e);
                 tbody.innerHTML = `<tr><td colspan="15" class="empty-state">Error loading data.</td></tr>`;
                 if (footer) footer.textContent = 'Error';
+                populateIpFieldFilterDropdowns([]);
             }
         }
 
@@ -1377,9 +1522,15 @@
             if (btnR) btnR.classList.toggle('active', f === 'READY');
             const btnA = document.getElementById('fBtnAll');
             if (btnA) btnA.classList.toggle('active', f === 'ALL');
-            // Reset JW filter selection when switching status view
+            // Reset JW and column filters when switching status view
             const jwFilter = document.getElementById('jwFilter');
             if (jwFilter) jwFilter.value = '';
+            const fo = document.getElementById('ipFilterOrderNo');
+            const fst = document.getElementById('ipFilterStamp');
+            const fn = document.getElementById('ipFilterItemName');
+            if (fo) fo.value = '';
+            if (fst) fst.value = '';
+            if (fn) fn.value = '';
             updateIpJwFilterOptions();
             ipFilterTable();
         }
@@ -1395,14 +1546,18 @@
 
         function ipFilterTable() {
             if (!tbody || !tbody.querySelector('tr[data-search]')) return;
-            const searchEl = document.getElementById('searchBox');
             const jwFilter = document.getElementById('jwFilter');
-            const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
             const jwQuery = (jwFilter ? jwFilter.value : '').trim();
+            const fo = (document.getElementById('ipFilterOrderNo')?.value || '').trim().toLowerCase();
+            const fst = (document.getElementById('ipFilterStamp')?.value || '').trim().toLowerCase();
+            const fn = (document.getElementById('ipFilterItemName')?.value || '').trim().toLowerCase();
 
             tbody.querySelectorAll('tr[data-search]').forEach(tr => {
-                const matchesSearch = !query || tr.dataset.search.includes(query);
                 const matchesJw = !jwQuery || (tr.dataset.jobworkerKey || '') === jwQuery;
+                const orderNoOk = !fo || (tr.dataset.orderNoFilter && tr.dataset.orderNoFilter === fo);
+                const stampOk = !fst || (tr.dataset.stampFilter && tr.dataset.stampFilter === fst);
+                const itemNameOk = !fn || (tr.dataset.itemNameFilter && tr.dataset.itemNameFilter === fn);
+                const matchesFields = orderNoOk && stampOk && itemNameOk;
 
                 const cb = tr.querySelector('.ip-row-cb');
                 const st = cb ? cb.dataset.status : '';
@@ -1411,7 +1566,7 @@
                 if (activeIpFilter === 'PROCESS') matchesType = st !== 'READY';
                 else if (activeIpFilter === 'READY') matchesType = st === 'READY';
 
-                tr.style.display = (matchesSearch && matchesJw && matchesType) ? '' : 'none';
+                tr.style.display = (matchesJw && matchesFields && matchesType) ? '' : 'none';
             });
             ipUpdateUI();
             ipUpdateFooterVisibleCount();
@@ -1729,10 +1884,12 @@
             if (nameEl) nameEl.textContent = displayName || 'Job Worker';
             if (avatarEl) avatarEl.textContent = (displayName || 'J').charAt(0).toUpperCase();
 
-            // Balance table row
+            // Balance table: all matching jobworkerBalances rows + totals; else opening + ledger entries
             const tbodyEl = document.getElementById('jwModalTableBody');
             if (tbodyEl) {
-                if (!jw) {
+                if (window.JwModalBalance && typeof window.JwModalBalance.renderBalanceTbodyHtml === 'function') {
+                    tbodyEl.innerHTML = window.JwModalBalance.renderBalanceTbodyHtml(jw, jwId, jwName, escapeHtml);
+                } else if (!jw) {
                     tbodyEl.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:#94a3b8;">No balance record found for "${escapeHtml(jwName)}"</td></tr>`;
                 } else {
                     const balances = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');

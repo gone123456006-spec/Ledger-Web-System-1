@@ -105,6 +105,66 @@
         return sawLine;
     }
 
+    /** Sum qty on itemProcess rows for this line where status is not READY / READY_ORDER. */
+    function sumQtyForLineNonTerminal(itemProcess, orderId, itemIdx) {
+        var oid = String(orderId);
+        var ix = parseInt(itemIdx, 10);
+        return (itemProcess || []).reduce(function (sum, e) {
+            if (!e || String(e.orderId) !== oid || parseInt(e.itemIdx, 10) !== ix) return sum;
+            if (isTerminalProcessStatus(e.status)) return sum;
+            return sum + (parseFloat(e.qty) || 0);
+        }, 0);
+    }
+
+    /**
+     * Display name for an Order line (same grid rules as new-order vs ready-extra 17-value rows).
+     */
+    function orderLineItemDisplayName(order, itemIdx) {
+        var item = order.items && order.items[itemIdx];
+        if (!item || !item.values) return 'Item';
+        var v = item.values;
+        if (v.length >= 16) {
+            return String(v[2] || '').trim() || 'Item';
+        }
+        var raw0 = String(v[0] || '').trim();
+        var isKnownTypeToken = ['Order', 'Purchase', 'Ready', 'Extra', 'Other', 'Sale'].indexOf(raw0) !== -1;
+        var o = (isKnownTypeToken || raw0 === '') ? 0 : -1;
+        var get = function (i) { return v[i + o] !== undefined ? v[i + o] : ''; };
+        return String(get(2) || '').trim() || 'Item';
+    }
+
+    /**
+     * Buckets for UI when an order cannot move to Ready Orders:
+     * pending (unassigned lines), in-process (non-terminal qty or assigned with no rows yet),
+     * ready (terminal-only qty on line, for partial / completed-at-workshop context).
+     */
+    function getOrderMoveReadyBreakdown(order, itemProcess, orderId) {
+        var pending = [];
+        var inProcess = [];
+        var ready = [];
+        if (!order || !order.items) return { pending: pending, inProcess: inProcess, ready: ready };
+        var oid = String(orderId);
+        for (var idx = 0; idx < order.items.length; idx++) {
+            if (!isOrderLineItem(order.items[idx])) continue;
+            var need = orderLineQty(order, idx);
+            if (need <= 0) continue;
+            var name = orderLineItemDisplayName(order, idx);
+            var assigned = order.items[idx].processAssigned === true;
+            var nonTerm = sumQtyForLineNonTerminal(itemProcess, oid, idx);
+            var readySum = sumQtyForLineWithStatuses(itemProcess, oid, idx, readyStatusesUpper());
+            if (!assigned) {
+                pending.push({ itemIdx: idx, name: name, qty: need });
+            } else if (nonTerm > 0) {
+                inProcess.push({ itemIdx: idx, name: name, qty: nonTerm });
+            } else if (readySum > 0) {
+                ready.push({ itemIdx: idx, name: name, qty: readySum });
+            } else {
+                inProcess.push({ itemIdx: idx, name: name, qty: need });
+            }
+        }
+        return { pending: pending, inProcess: inProcess, ready: ready };
+    }
+
     /**
      * True iff Rules 1–3 pass: the only case the order may appear in Ready Orders.
      * Equivalent to: every item ready at 100% and no blocking pending / in process rows.
@@ -153,6 +213,9 @@
         isOrderFullyReady: isOrderFullyReady,
         /** Alias — same as isOrderFullyReady (Rules 1–3). */
         orderMeetsReadyOrdersPolicy: isOrderFullyReady,
-        syncOrdersReadyFromProcess: syncOrdersReadyFromProcess
+        syncOrdersReadyFromProcess: syncOrdersReadyFromProcess,
+        sumQtyForLineNonTerminal: sumQtyForLineNonTerminal,
+        orderLineItemDisplayName: orderLineItemDisplayName,
+        getOrderMoveReadyBreakdown: getOrderMoveReadyBreakdown
     };
 })(typeof window !== 'undefined' ? window : this);

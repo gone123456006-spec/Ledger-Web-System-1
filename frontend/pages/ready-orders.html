@@ -662,6 +662,15 @@
       font-weight: 500;
     }
 
+    .jw-bal-table tbody tr.jw-bal-total-row {
+      background: #f1f5f9;
+      border-top: 2px solid #cbd5e1;
+    }
+
+    .jw-bal-table tbody tr.jw-bal-total-row td {
+      color: #0f172a;
+    }
+
     .jw-modal-section-title {
       padding: 12px 22px 6px;
       font-size: 11px;
@@ -848,6 +857,7 @@
     </div>
   </div>
 
+  <script src="../script/jw-modal-balance.js"></script>
   <script>
     /* =========================
        GLOBAL STATE
@@ -1702,10 +1712,12 @@
       if (nameEl) nameEl.textContent = displayName || 'Job Worker';
       if (avatarEl) avatarEl.textContent = (displayName || 'J').charAt(0).toUpperCase();
 
-      // Balance table
+      // Balance table: all matching jobworkerBalances rows + totals; else opening + ledger entries
       const tbodyEl = document.getElementById('roJwModalTableBody');
       if (tbodyEl) {
-        if (!jw) {
+        if (window.JwModalBalance && typeof window.JwModalBalance.renderBalanceTbodyHtml === 'function') {
+          tbodyEl.innerHTML = window.JwModalBalance.renderBalanceTbodyHtml(jw, jwId, jwName, roEscapeHtml);
+        } else if (!jw) {
           tbodyEl.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:#94a3b8;">No balance record found for "${roEscapeHtml(jwName)}"</td></tr>`;
         } else {
           const balances = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');

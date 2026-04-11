@@ -774,6 +774,15 @@
             font-weight: 500;
         }
 
+        .jw-bal-table tbody tr.jw-bal-total-row {
+            background: #f1f5f9;
+            border-top: 2px solid #cbd5e1;
+        }
+
+        .jw-bal-table tbody tr.jw-bal-total-row td {
+            color: #0f172a;
+        }
+
         .jw-modal-section-title {
             padding: 12px 22px 6px;
             font-size: 11px;
@@ -832,6 +841,173 @@
             background: #cbd5e1;
             border-radius: 4px;
         }
+
+        /* Hover tooltip: Move to Ready Orders — light, minimal (system popover style) */
+        .ip-move-ready-hover-tip {
+            position: fixed;
+            z-index: 100000;
+            max-width: min(360px, calc(100vw - 24px));
+            padding: 14px 16px 15px;
+            border-radius: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 400;
+            line-height: 1.47;
+            letter-spacing: -0.01em;
+            color: #1d1d1f;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(60, 60, 67, 0.12);
+            box-shadow:
+                0 0 0 0.5px rgba(0, 0, 0, 0.04),
+                0 8px 28px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+            -webkit-backdrop-filter: saturate(1.8) blur(16px);
+            backdrop-filter: saturate(1.8) blur(16px);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.18s ease, visibility 0.18s ease;
+            white-space: pre-line;
+        }
+
+        .ip-move-ready-hover-tip.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .ip-move-ready-hover-tip.ip-move-ready-hover-tip--warn {
+            border-color: rgba(255, 149, 0, 0.42);
+            background: linear-gradient(165deg, rgba(255, 251, 245, 0.98) 0%, rgba(255, 255, 255, 0.96) 42%, rgba(255, 255, 255, 0.94) 100%);
+            box-shadow:
+                0 0 0 0.5px rgba(255, 149, 0, 0.12),
+                0 10px 32px rgba(0, 0, 0, 0.09),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .ip-move-ready-hover-tip.ip-move-ready-hover-tip--ok {
+            border-color: rgba(52, 199, 89, 0.4);
+            background: linear-gradient(165deg, rgba(246, 255, 249, 0.98) 0%, rgba(255, 255, 255, 0.96) 45%, rgba(255, 255, 255, 0.94) 100%);
+            box-shadow:
+                0 0 0 0.5px rgba(52, 199, 89, 0.1),
+                0 10px 32px rgba(0, 0, 0, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .ip-move-ready-hover-tip.ip-move-ready-hover-tip--interactive {
+            pointer-events: auto;
+            white-space: normal;
+        }
+
+        .ip-mr-block + .ip-mr-block {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(60, 60, 67, 0.08);
+        }
+
+        .ip-mr-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 10px;
+            color: #1d1d1f;
+            line-height: 1.35;
+        }
+
+        .ip-mr-sec {
+            margin-top: 10px;
+            padding: 8px 0 8px 11px;
+            border-left: 3px solid rgba(60, 60, 67, 0.12);
+            border-radius: 0 8px 8px 0;
+            background: rgba(60, 60, 67, 0.03);
+        }
+
+        .ip-mr-sec--pending {
+            border-left-color: rgba(215, 69, 69, 0.55);
+            background: rgba(215, 69, 69, 0.04);
+        }
+
+        .ip-mr-sec--process {
+            border-left-color: rgba(201, 152, 0, 0.65);
+            background: rgba(201, 152, 0, 0.06);
+        }
+
+        .ip-mr-sec--ready {
+            border-left-color: rgba(52, 160, 95, 0.55);
+            background: rgba(52, 160, 95, 0.05);
+        }
+
+        .ip-mr-sec-h {
+            font-weight: 600;
+            font-size: 11px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: #636366;
+        }
+
+        .ip-mr-sec--pending .ip-mr-sec-h {
+            color: #8b4040;
+        }
+
+        .ip-mr-sec--process .ip-mr-sec-h {
+            color: #7d6220;
+        }
+
+        .ip-mr-sec--ready .ip-mr-sec-h {
+            color: #2f6b4c;
+        }
+
+        .ip-mr-ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .ip-mr-li {
+            margin: 0;
+            padding: 3px 0;
+        }
+
+        .ip-mr-li + .ip-mr-li {
+            border-top: 1px solid rgba(60, 60, 67, 0.06);
+        }
+
+        .ip-mr-link {
+            margin: 0;
+            padding: 4px 2px;
+            border: none;
+            background: none;
+            font: inherit;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: left;
+            color: #0066cc;
+            text-decoration: none;
+            border-radius: 6px;
+            width: 100%;
+            display: block;
+            transition: color 0.12s ease, background 0.12s ease;
+        }
+
+        .ip-mr-link:hover {
+            color: #004499;
+            background: rgba(0, 102, 204, 0.06);
+        }
+
+        .ip-mr-link:active {
+            color: #003d80;
+            background: rgba(0, 102, 204, 0.1);
+        }
+
+        .ip-mr-foot {
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(60, 60, 67, 0.08);
+            font-size: 12px;
+            font-weight: 400;
+            color: #636366;
+            line-height: 1.45;
+        }
     </style>
 </head>
 
@@ -849,7 +1025,7 @@
                 <option value="">👤 All Job Workers</option>
             </select>
             <button class="btn" onclick="loadProcessItems()">🔄 Refresh</button>
-            <button class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled
+            <button type="button" class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled
                 title=""
                 style="background:#0f5132;color:#fff;border-color:#0f5132;">
                 📦 Move to Ready Orders
@@ -1016,6 +1192,7 @@
     </div>
 
     <script src="../script/order-processing.js"></script>
+    <script src="../script/jw-modal-balance.js"></script>
     <script>
         let tbody = null;
         let footer = null;
@@ -1137,14 +1314,32 @@
          * Move to Ready Orders is allowed only when every selected row's order passes
          * OrderProcessing.isOrderFullyReady (no Pending Items / no In Process / 100% qty ready).
          */
+        const IP_MOVE_READY_BLOCK_MSG = 'Some items are still pending or in process. Please complete all items before moving to Ready Orders.';
+
+        function ipFormatMoveReadyBlockMessage(orderNo) {
+            const o = orderNo != null && String(orderNo).trim() !== '' ? String(orderNo).trim() : 'this order';
+            return `Order ${o}: ${IP_MOVE_READY_BLOCK_MSG}`;
+        }
+
+        function ipFmtBreakdownQty(q) {
+            const n = parseFloat(q) || 0;
+            if (Math.abs(n - Math.round(n)) < 1e-6) return String(Math.round(n));
+            return String(n);
+        }
+
+        /**
+         * Validates each distinct order among selected rows (OrderProcessing Rules 1–3).
+         * On block, `failures` holds per-order breakdown for the structured hover tooltip.
+         */
         function ipEvaluateMoveToReadyOrdersForSelection() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:not(:disabled):checked')];
+            const root = ipGetRoot();
+            const checked = [...root.querySelectorAll('.ip-row-cb:not(:disabled):checked')];
             if (checked.length === 0) {
-                return { allowed: false, message: 'Select at least one ready item.' };
+                return { allowed: false, message: 'Select at least one ready item.', code: 'none', failures: [] };
             }
             const OP = window.OrderProcessing;
             if (!OP || typeof OP.isOrderFullyReady !== 'function') {
-                return { allowed: false, message: 'Order rules not loaded. Refresh the page.' };
+                return { allowed: false, message: 'Order rules not loaded. Refresh the page.', code: 'norules', failures: [] };
             }
             let orders = [];
             let itemProcess = [];
@@ -1152,30 +1347,226 @@
                 orders = JSON.parse(localStorage.getItem('orders') || '[]');
                 itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
             } catch (e) {
-                return { allowed: false, message: 'Could not read order data.' };
+                return { allowed: false, message: 'Could not read order data.', code: 'read', failures: [] };
             }
             const orderIds = [...new Set(checked.map(cb => String(cb.dataset.orderId || '')).filter(Boolean))];
+            const failures = [];
             for (const oid of orderIds) {
                 const order = orders.find(o => o && String(o.id) === String(oid));
                 const orderNo = order ? (order.orderNo || order.billNo || oid) : oid;
                 if (!OP.isOrderFullyReady(orders, itemProcess, oid)) {
-                    let msg = `Order ${orderNo}: finish every item on this order first (no Pending / In Process, 100% quantities ready).`;
-                    try {
-                        if (order && OP.orderHasUnassignedPendingLines(order)) {
-                            msg = `Order ${orderNo}: some lines are still Pending on Pending Items — assign and complete all items.`;
-                        } else if (OP.orderHasNonTerminalProcessRows(itemProcess, oid)) {
-                            msg = `Order ${orderNo}: some lines are still In Process — complete them before moving this order.`;
-                        } else if (order && !OP.orderEveryLineReadyAtFullQuantity(order, itemProcess, oid)) {
-                            msg = `Order ${orderNo}: not every line is at 100% ready quantity yet.`;
-                        }
-                    } catch (e) { }
-                    return { allowed: false, message: msg };
+                    let breakdown = { pending: [], inProcess: [], ready: [] };
+                    if (order && typeof OP.getOrderMoveReadyBreakdown === 'function') {
+                        breakdown = OP.getOrderMoveReadyBreakdown(order, itemProcess, oid) || breakdown;
+                    }
+                    failures.push({ orderId: oid, orderNo, breakdown });
                 }
             }
-            return { allowed: true, message: '' };
+            if (failures.length) {
+                const message = failures.length === 1
+                    ? `Order ${failures[0].orderNo} cannot move to Ready Orders. ${IP_MOVE_READY_BLOCK_MSG}`
+                    : `${failures.length} orders cannot move to Ready Orders. ${IP_MOVE_READY_BLOCK_MSG}`;
+                return { allowed: false, message, code: 'blocked', failures };
+            }
+            return { allowed: true, message: '', code: 'ok', failures: [] };
+        }
+
+        function ipBuildMoveReadyHoverHtml(n, gate) {
+            if (n === 0 || gate.allowed || !gate.failures || gate.failures.length === 0) return '';
+            const foot = '<div class="ip-mr-foot">Please complete all pending and in-process items.</div>';
+            return gate.failures.map(f => {
+                const title = escapeHtml(`Order ${f.orderNo} cannot move to Ready Orders`);
+                const b = f.breakdown || { pending: [], inProcess: [], ready: [] };
+                const parts = [`<div class="ip-mr-block"><div class="ip-mr-title">${title}</div>`];
+                if (b.pending && b.pending.length) {
+                    parts.push('<div class="ip-mr-sec ip-mr-sec--pending"><div class="ip-mr-sec-h">🔴 Pending Items:</div><ul class="ip-mr-ul">');
+                    b.pending.forEach(line => {
+                        const oid = escapeHtml(String(f.orderId));
+                        const iix = escapeHtml(String(line.itemIdx));
+                        const nm = escapeHtml(line.name || 'Item');
+                        const q = ipFmtBreakdownQty(line.qty);
+                        parts.push(`<li class="ip-mr-li"><button type="button" class="ip-mr-link" data-ip-target="pending" data-order-id="${oid}" data-item-idx="${iix}">${nm} (Qty: ${escapeHtml(q)})</button></li>`);
+                    });
+                    parts.push('</ul></div>');
+                }
+                if (b.inProcess && b.inProcess.length) {
+                    parts.push('<div class="ip-mr-sec ip-mr-sec--process"><div class="ip-mr-sec-h">🟡 In Process:</div><ul class="ip-mr-ul">');
+                    b.inProcess.forEach(line => {
+                        const oid = escapeHtml(String(f.orderId));
+                        const iix = escapeHtml(String(line.itemIdx));
+                        const nm = escapeHtml(line.name || 'Item');
+                        const q = ipFmtBreakdownQty(line.qty);
+                        parts.push(`<li class="ip-mr-li"><button type="button" class="ip-mr-link" data-ip-target="process" data-order-id="${oid}" data-item-idx="${iix}">${nm} (Qty: ${escapeHtml(q)})</button></li>`);
+                    });
+                    parts.push('</ul></div>');
+                }
+                if (b.ready && b.ready.length) {
+                    parts.push('<div class="ip-mr-sec ip-mr-sec--ready"><div class="ip-mr-sec-h">🟢 Ready Items:</div><ul class="ip-mr-ul">');
+                    b.ready.forEach(line => {
+                        const oid = escapeHtml(String(f.orderId));
+                        const iix = escapeHtml(String(line.itemIdx));
+                        const nm = escapeHtml(line.name || 'Item');
+                        const q = ipFmtBreakdownQty(line.qty);
+                        parts.push(`<li class="ip-mr-li"><button type="button" class="ip-mr-link" data-ip-target="process" data-order-id="${oid}" data-item-idx="${iix}">${nm} (Qty: ${escapeHtml(q)})</button></li>`);
+                    });
+                    parts.push('</ul></div>');
+                }
+                parts.push(foot);
+                parts.push('</div>');
+                return parts.join('');
+            }).join('');
+        }
+
+        function ipLedgerNavigateToOrderLine(target, orderId, itemIdx) {
+            const payload = JSON.stringify({ orderId: String(orderId), itemIdx: String(itemIdx) });
+            const url = target === 'pending' ? 'pages/pending-items.html' : 'pages/item-process.html';
+            if (target === 'pending') {
+                sessionStorage.setItem('ledgerFocusPendingItems', payload);
+            } else {
+                sessionStorage.setItem('ledgerFocusItemProcess', payload);
+            }
+            if (typeof loadPage === 'function') {
+                loadPage(url);
+            } else if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
+                window.parent.loadPage(url);
+            } else if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
+                window.top.loadPage(url);
+            } else {
+                window.location.href = url.replace(/^pages\//, '');
+            }
         }
 
         /* ── UI STATE ── */
+        function ipEnsureMoveReadyHoverTipEl() {
+            let tip = document.getElementById('ipMoveReadyHoverTip');
+            if (tip) return tip;
+            tip = document.createElement('div');
+            tip.id = 'ipMoveReadyHoverTip';
+            tip.className = 'ip-move-ready-hover-tip';
+            tip.setAttribute('role', 'tooltip');
+            tip.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(tip);
+            return tip;
+        }
+
+        function ipPositionMoveReadyHoverTip(btn, tip) {
+            if (!btn || !tip) return;
+            const r = btn.getBoundingClientRect();
+            const pad = 8;
+            const maxW = Math.min(380, window.innerWidth - pad * 2);
+            tip.style.maxWidth = maxW + 'px';
+            let left = r.left;
+            if (left + maxW > window.innerWidth - pad) left = window.innerWidth - pad - maxW;
+            if (left < pad) left = pad;
+            tip.style.left = left + 'px';
+            const below = r.bottom + 8;
+            const th = tip.offsetHeight || 80;
+            if (below + th > window.innerHeight - pad) {
+                tip.style.top = Math.max(pad, r.top - th - 8) + 'px';
+            } else {
+                tip.style.top = below + 'px';
+            }
+        }
+
+        function ipInitMoveReadyHoverTip() {
+            const btn = document.getElementById('markReadyBtn');
+            if (!btn || btn.dataset.ipMoveReadyTipWired === '1') return;
+            btn.dataset.ipMoveReadyTipWired = '1';
+            const tip = ipEnsureMoveReadyHoverTipEl();
+
+            function hideTip() {
+                if (window.__ipMoveReadyTipHideTimer) {
+                    clearTimeout(window.__ipMoveReadyTipHideTimer);
+                    window.__ipMoveReadyTipHideTimer = null;
+                }
+                tip.classList.remove('visible', 'ip-move-ready-hover-tip--warn', 'ip-move-ready-hover-tip--ok', 'ip-move-ready-hover-tip--interactive');
+                tip.setAttribute('aria-hidden', 'true');
+                tip.innerHTML = '';
+            }
+
+            function showTip() {
+                if (window.__ipMoveReadyTipHideTimer) {
+                    clearTimeout(window.__ipMoveReadyTipHideTimer);
+                    window.__ipMoveReadyTipHideTimer = null;
+                }
+                const n = ipGetRoot().querySelectorAll('.ip-row-cb:not(:disabled):checked').length;
+                const gate = ipEvaluateMoveToReadyOrdersForSelection();
+                tip.classList.remove('ip-move-ready-hover-tip--warn', 'ip-move-ready-hover-tip--ok', 'ip-move-ready-hover-tip--interactive');
+                const html = ipBuildMoveReadyHoverHtml(n, gate);
+                if (html) {
+                    tip.innerHTML = html;
+                    tip.classList.add('ip-move-ready-hover-tip--interactive');
+                } else {
+                    tip.innerHTML = '';
+                    let text;
+                    if (n === 0) {
+                        text = 'Select at least one item, then hover here to validate. Movement requires 100% completion of every line on the order (no Pending Items, no In Process, full quantities ready).';
+                    } else if (!gate.allowed) {
+                        text = gate.message || ipFormatMoveReadyBlockMessage('this order');
+                    } else {
+                        text = 'All items on each selected order are complete — you can move to Ready Orders.';
+                    }
+                    tip.textContent = text;
+                }
+                if (n > 0 && !gate.allowed) {
+                    tip.classList.add('ip-move-ready-hover-tip--warn');
+                } else if (n > 0 && gate.allowed) {
+                    tip.classList.add('ip-move-ready-hover-tip--ok');
+                }
+                tip.setAttribute('aria-hidden', 'false');
+                tip.classList.add('visible');
+                requestAnimationFrame(() => ipPositionMoveReadyHoverTip(btn, tip));
+            }
+
+            btn.addEventListener('mouseenter', showTip);
+            btn.addEventListener('focus', showTip);
+            btn.addEventListener('mouseleave', function () {
+                window.__ipMoveReadyTipHideTimer = setTimeout(hideTip, 220);
+            });
+            btn.addEventListener('blur', hideTip);
+
+            if (!tip.dataset.ipMoveReadyTipInteractions) {
+                tip.dataset.ipMoveReadyTipInteractions = '1';
+                tip.addEventListener('mouseenter', function () {
+                    if (window.__ipMoveReadyTipHideTimer) {
+                        clearTimeout(window.__ipMoveReadyTipHideTimer);
+                        window.__ipMoveReadyTipHideTimer = null;
+                    }
+                });
+                tip.addEventListener('mouseleave', hideTip);
+                tip.addEventListener('click', function (e) {
+                    const el = e.target.closest('.ip-mr-link');
+                    if (!el || !tip.classList.contains('visible')) return;
+                    const target = el.getAttribute('data-ip-target');
+                    const orderId = el.getAttribute('data-order-id');
+                    const itemIdx = el.getAttribute('data-item-idx');
+                    if (!target || orderId == null || itemIdx == null) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    ipLedgerNavigateToOrderLine(target, orderId, itemIdx);
+                    hideTip();
+                });
+            }
+
+            if (!window.__ipMoveReadyTipGlobalBound) {
+                window.__ipMoveReadyTipGlobalBound = true;
+                const onScrollOrResize = function () {
+                    if (window.__ipMoveReadyTipHideTimer) {
+                        clearTimeout(window.__ipMoveReadyTipHideTimer);
+                        window.__ipMoveReadyTipHideTimer = null;
+                    }
+                    const t = document.getElementById('ipMoveReadyHoverTip');
+                    if (t && t.classList.contains('visible')) {
+                        t.classList.remove('visible', 'ip-move-ready-hover-tip--warn', 'ip-move-ready-hover-tip--ok', 'ip-move-ready-hover-tip--interactive');
+                        t.setAttribute('aria-hidden', 'true');
+                        t.innerHTML = '';
+                    }
+                };
+                window.addEventListener('scroll', onScrollOrResize, true);
+                window.addEventListener('resize', onScrollOrResize);
+            }
+        }
+
         function ipUpdateUI() {
             const checked = document.querySelectorAll('.ip-row-cb:checked');
             const n = checked.length;
@@ -1184,9 +1575,7 @@
             const readyBtn = document.getElementById('markReadyBtn');
             if (readyBtn) {
                 readyBtn.disabled = n === 0 || !moveGate.allowed;
-                readyBtn.title = n === 0 ? 'Select ready items to move.' : (moveGate.allowed
-                    ? 'All items on each selected order are complete — move to Ready Orders.'
-                    : moveGate.message);
+                readyBtn.title = '';
             }
 
             const unReadyBtn = document.getElementById('markUnReadyBtn');
@@ -1323,6 +1712,7 @@
                     tr.dataset.jobworkerKey = ipNormJwName(r.jobworkerName || '');
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
+                    tr.dataset.itemIdx = String(r.itemIdx != null ? r.itemIdx : '');
                     const rowQty = Math.max(0, parseFloat(r.qty) || 0);
 
                     tr.innerHTML = `
@@ -1330,6 +1720,7 @@
                             <input type="checkbox" class="ip-row-cb"
                                 data-process-id="${escapeHtml(r.id)}"
                                 data-order-id="${escapeHtml(r.orderId)}"
+                                data-item-idx="${escapeHtml(String(r.itemIdx != null ? r.itemIdx : ''))}"
                                 data-status="${escapeHtml(r.status || '')}"
                                 onchange="ipOnCbChange(this)">
                         </td>
@@ -1656,8 +2047,12 @@
 
         /* ── INIT ── */
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => setTimeout(loadProcessItems, 50));
+            document.addEventListener('DOMContentLoaded', () => {
+                ipInitMoveReadyHoverTip();
+                setTimeout(loadProcessItems, 50);
+            });
         } else {
+            ipInitMoveReadyHoverTip();
             setTimeout(loadProcessItems, 50);
         }
 
@@ -1690,10 +2085,12 @@
             if (nameEl) nameEl.textContent = displayName || 'Job Worker';
             if (avatarEl) avatarEl.textContent = (displayName || 'J').charAt(0).toUpperCase();
 
-            // Balance table row
+            // Balance table: all matching jobworkerBalances rows + totals; else opening + ledger entries
             const tbodyEl = document.getElementById('jwModalTableBody');
             if (tbodyEl) {
-                if (!jw) {
+                if (window.JwModalBalance && typeof window.JwModalBalance.renderBalanceTbodyHtml === 'function') {
+                    tbodyEl.innerHTML = window.JwModalBalance.renderBalanceTbodyHtml(jw, jwId, jwName, escapeHtml);
+                } else if (!jw) {
                     tbodyEl.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:#94a3b8;">No balance record found for "${escapeHtml(jwName)}"</td></tr>`;
                 } else {
                     const balances = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
@@ -1808,6 +2205,7 @@
         window.closeMarkReadyModal = closeMarkReadyModal;
         window.confirmMarkReady = confirmMarkReady;
         window.ipEvaluateMoveToReadyOrdersForSelection = ipEvaluateMoveToReadyOrdersForSelection;
+        window.ipInitMoveReadyHoverTip = ipInitMoveReadyHoverTip;
         window.openMarkUnReadyModal = openMarkUnReadyModal;
         window.closeMarkUnReadyModal = closeMarkUnReadyModal;
         window.confirmMarkUnReady = confirmMarkUnReady;
