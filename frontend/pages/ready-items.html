@@ -190,6 +190,51 @@
             box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
         }
 
+        /* ── FIELD FILTERS ── */
+        .ri-field-filters {
+            display: flex;
+            align-items: center;
+            gap: 8px 14px;
+            flex-wrap: wrap;
+        }
+
+        .ri-field-filters .ri-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ri-field-filters label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .ri-field-filters select {
+            height: 36px;
+            min-width: 120px;
+            max-width: 200px;
+            padding: 0 10px;
+            border: 1px solid #dde3ec;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #fff;
+            color: #1a1f2e;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .ri-field-filters select:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0,122,255,.1);
+        }
+
+        .ri-field-filters select.ri-filter-item {
+            min-width: 140px;
+            max-width: min(250px, 36vw);
+        }
+
         .filter-btn {
             padding: 8px 14px;
             border: 1.5px solid #d1d6de;
@@ -1019,8 +1064,28 @@
             <h2>📦 Ready Items</h2>
             <span class="sel-pill" id="ipSelPill">0 selected</span>
 
-            <input type="text" id="searchBox" placeholder="🔍 Search by item, job worker, order..."
-                onkeyup="ipFilterTable()" style="margin-left: auto;">
+            <!-- Field Filters -->
+            <div class="ri-field-filters" id="riFieldFilters" aria-label="Filter by column">
+                <div class="ri-filter-group">
+                    <label for="riFilterOrderNo">Order no.</label>
+                    <select id="riFilterOrderNo" onchange="ipFilterTable()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="ri-filter-group">
+                    <label for="riFilterStamp">Stamp</label>
+                    <select id="riFilterStamp" onchange="ipFilterTable()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+                <div class="ri-filter-group">
+                    <label for="riFilterItemName">Item name</label>
+                    <select id="riFilterItemName" class="ri-filter-item" onchange="ipFilterTable()">
+                        <option value="">All</option>
+                    </select>
+                </div>
+            </div>
+
             <select id="jwFilter" onchange="ipFilterTable()">
                 <option value="">👤 All Job Workers</option>
             </select>
@@ -1619,6 +1684,50 @@
             });
         }
 
+        /** Populate Order no. / Stamp / Item name dropdowns from currently loaded items. */
+        function riPopulateFieldFilters(rows) {
+            const orderSel = document.getElementById('riFilterOrderNo');
+            const stampSel = document.getElementById('riFilterStamp');
+            const itemSel  = document.getElementById('riFilterItemName');
+            if (!orderSel || !stampSel || !itemSel) return;
+            const prevO = orderSel.value;
+            const prevS = stampSel.value;
+            const prevI = itemSel.value;
+            const uniqSorted = (key) => {
+                const seen = new Set();
+                const out = [];
+                (rows || []).forEach(r => {
+                    const v = String(r[key] != null ? r[key] : '').trim();
+                    if (!v || v === '—' || seen.has(v)) return;
+                    seen.add(v);
+                    out.push(v);
+                });
+                out.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+                return out;
+            };
+            const fill = (sel, values) => {
+                sel.innerHTML = '';
+                const all = document.createElement('option');
+                all.value = ''; all.textContent = 'All';
+                sel.appendChild(all);
+                values.forEach(v => {
+                    const o = document.createElement('option');
+                    o.value = v; o.textContent = v;
+                    sel.appendChild(o);
+                });
+            };
+            fill(orderSel, uniqSorted('orderNo'));
+            fill(stampSel,  uniqSorted('stamp'));
+            fill(itemSel,   uniqSorted('itemName'));
+            const tryRestore = (sel, prev) => {
+                if (!prev) return;
+                if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+            };
+            tryRestore(orderSel, prevO);
+            tryRestore(stampSel,  prevS);
+            tryRestore(itemSel,   prevI);
+        }
+
         var activeIpFilter = 'READY'; // Only Ready items belong here
 
         /* ── LOAD TABLE ── */
@@ -1718,6 +1827,9 @@
                     tr.dataset.processId = r.id;
                     tr.dataset.orderId = r.orderId;
                     tr.dataset.itemIdx = String(r.itemIdx != null ? r.itemIdx : '');
+                    tr.dataset.orderNo = String(r.orderNo || '').trim();
+                    tr.dataset.stampFilter = String(r.stamp || '').trim().toLowerCase();
+                    tr.dataset.itemNameFilter = String(r.itemName || '').trim().toLowerCase();
                     const rowQty = Math.max(0, parseFloat(r.qty) || 0);
 
                     tr.innerHTML = `
@@ -1750,6 +1862,9 @@
                 });
 
                 if (footer) footer.textContent = `${items.length} item(s) ready`;
+
+                // Populate field filter dropdowns
+                riPopulateFieldFilters(items);
 
                 // Cache JW names and update dropdown according to active filter
                 // Build JW dropdown options (stable key comparison; keeps original label for display)
@@ -1801,12 +1916,21 @@
             if (!tbody || !tbody.querySelector('tr[data-search]')) return;
             const searchEl = document.getElementById('searchBox');
             const jwFilter = document.getElementById('jwFilter');
+            const foEl = document.getElementById('riFilterOrderNo');
+            const fstEl = document.getElementById('riFilterStamp');
+            const fnEl = document.getElementById('riFilterItemName');
             const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
             const jwQuery = (jwFilter ? jwFilter.value : '').trim();
+            const fo = (foEl ? foEl.value : '').trim().toLowerCase();
+            const fst = (fstEl ? fstEl.value : '').trim().toLowerCase();
+            const fn = (fnEl ? fnEl.value : '').trim().toLowerCase();
 
             tbody.querySelectorAll('tr[data-search]').forEach(tr => {
                 const matchesSearch = !query || tr.dataset.search.includes(query);
                 const matchesJw = !jwQuery || (tr.dataset.jobworkerKey || '') === jwQuery;
+                const matchesOrderNo = !fo || (tr.dataset.orderNo || '').trim().toLowerCase() === fo;
+                const matchesStamp = !fst || (tr.dataset.stampFilter || '').trim().toLowerCase() === fst;
+                const matchesItemName = !fn || (tr.dataset.itemNameFilter || '').trim().toLowerCase() === fn;
 
                 const cb = tr.querySelector('.ip-row-cb');
                 const st = cb ? cb.dataset.status : '';
@@ -1815,7 +1939,7 @@
                 if (activeIpFilter === 'PROCESS') matchesType = st !== 'READY';
                 else if (activeIpFilter === 'READY') matchesType = st === 'READY';
 
-                tr.style.display = (matchesSearch && matchesJw && matchesType) ? '' : 'none';
+                tr.style.display = (matchesSearch && matchesJw && matchesOrderNo && matchesStamp && matchesItemName && matchesType) ? '' : 'none';
             });
             ipUpdateUI();
             ipUpdateFooterVisibleCount();
