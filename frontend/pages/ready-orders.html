@@ -840,6 +840,7 @@
               <th>Item Name</th>
               <th>Stamp</th>
               <th>Sample Details</th>
+              <th>Remarks</th>
               <th>Design</th>
               <th style="text-align:right">Est. Unit Wt</th>
               <th style="text-align:right">Est. Total Wt</th>
@@ -1759,7 +1760,7 @@
         if (filterEl) filterEl.value = 'ALL';
 
         if (items.length === 0) {
-          itemsBodyEl.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
+          itemsBodyEl.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:#94a3b8;">No items currently assigned to this worker</td></tr>`;
         } else {
           itemsBodyEl.innerHTML = items.map(r => {
             const isReady = r.status === 'READY';
@@ -1772,6 +1773,7 @@
               <td style="max-width:160px;white-space:normal;word-break:break-word;">${roEscapeHtml(r.itemName)}</td>
               <td style="font-size:12px;">${roEscapeHtml(r.stamp != null && String(r.stamp).trim() !== '' ? String(r.stamp) : '—')}</td>
               <td style="max-width:160px;white-space:normal;word-break:break-word;">${roEscapeHtml(r.sampleDetails)}</td>
+              <td style="max-width:160px;white-space:normal;word-break:break-word;">${roEscapeHtml(r.remarks)}</td>
               <td>${roEscapeHtml(r.design)}</td>
               <td class="num num-neutral">${(r.estUnitWt || 0).toFixed(3)}</td>
               <td class="num num-neutral">${(r.estTotalWt || 0).toFixed(3)}</td>

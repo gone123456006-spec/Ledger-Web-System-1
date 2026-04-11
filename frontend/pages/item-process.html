@@ -968,6 +968,7 @@
                         <th>Item Name</th>
                         <th>Stamp</th>
                         <th>Sample Details</th>
+                        <th>Remarks</th>
                         <th>Design</th>
                         <th>Size</th>
                         <th class="right">Est. Unit Wt</th>
@@ -1088,6 +1089,7 @@
                             <th>Item Name</th>
                             <th>Stamp</th>
                             <th>Sample Details</th>
+                            <th>Remarks</th>
                             <th>Design</th>
                             <th>Size</th>
                             <th style="text-align:right">Est. Unit Wt</th>
@@ -1176,6 +1178,7 @@
                     estUnitWt: parseFloat(v[5]) || 0,
                     estTotalWt: parseFloat(v[6]) || 0,
                     sampleDetails: item.sample || item.sampleDetails || ord.sampleDetails || '—',
+                    remarks: '—',
                     design: '—',
                     size: '—'
                 };
@@ -1190,7 +1193,8 @@
                 qty: parseFloat(get(7)) || 0,
                 estUnitWt: parseFloat(get(8)) || 0,
                 estTotalWt: parseFloat(get(9)) || 0,
-                sampleDetails: item.sample || item.sampleDetails || ord.sampleDetails || String(get(4) || '').trim() || '—',
+                sampleDetails: item.sample || item.sampleDetails || ord.sampleDetails || '—',
+                remarks: String(get(4) || '').trim() || '—',
                 design: String(get(5) || '').trim() || '—',
                 size: String(get(6) || '').trim() || '—'
             };
@@ -1221,6 +1225,7 @@
                 row.itemName = f.itemName;
                 row.stamp = f.stamp;
                 row.sampleDetails = f.sampleDetails;
+                row.remarks = f.remarks;
                 row.design = f.design;
                 row.size = f.size;
                 row.estUnitWt = f.estUnitWt;
@@ -1475,6 +1480,7 @@
                         <td class="col-item-name">${escapeHtml(r.itemName)}</td>
                         <td>${escapeHtml(r.stamp != null && String(r.stamp).trim() !== '' ? String(r.stamp) : '—')}</td>
                         <td class="col-sample">${escapeHtml(r.sampleDetails)}</td>
+                        <td class="col-sample">${escapeHtml(r.remarks)}</td>
                         <td>${escapeHtml(r.design)}</td>
                         <td>${escapeHtml(r.size)}</td>
                         <td class="right">${(parseFloat(r.estUnitWt) || 0).toFixed(3)}</td>
@@ -1955,6 +1961,7 @@
                             <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(disp.itemName)}</td>
                             <td style="font-size:12px;">${escapeHtml(disp.stamp != null && String(disp.stamp).trim() !== '' ? String(disp.stamp) : '—')}</td>
                             <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(disp.sampleDetails)}</td>
+                            <td style="max-width:160px;white-space:normal;word-break:break-word;">${escapeHtml(disp.remarks)}</td>
                             <td>${escapeHtml(disp.design)}</td>
                             <td>${escapeHtml(disp.size)}</td>
                             <td class="num num-neutral">${(parseFloat(disp.estUnitWt) || 0).toFixed(3)}</td>
