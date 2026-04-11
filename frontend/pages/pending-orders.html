@@ -427,7 +427,6 @@
             <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
             <th class="right" title="Non-Paid payments + purchase line totals">Advance (Rs)</th>
             <th class="right" title="Net bill after purchases − all payments (same as Orders list Balance)">Balance</th>
-            <th class="center">Action</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -740,13 +739,9 @@
         <td class="right">₹${totalPurchaseDisplay.toFixed(2)}</td>
         <td class="right">₹${displayAdvance.toFixed(2)}</td>
         <td class="right">₹${displayBalance.toFixed(2)}</td>
-        <td class="center">
-          <button class="action-btn" onclick="markReady(${order.id}); event.stopPropagation();">✓ Mark Ready</button>
-        </td>
       `;
 
       tr.onclick = function (e) {
-        if (e.target.closest("button")) return;
         editOrder(order.id);
       };
 
@@ -786,7 +781,7 @@
     function showEmptyState() {
       tbody.innerHTML = `
         <tr>
-          <td colspan="12" style="border:none;">
+          <td colspan="11" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⏳</div>
               <div class="empty-state-text">No Pending Orders</div>
@@ -803,7 +798,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="12" style="border:none;">
+          <td colspan="11" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⚠️</div>
               <div class="empty-state-text">Error Loading Orders</div>
