@@ -56,14 +56,17 @@
 ========================= */
     .ready-toolbar {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 14px;
-      padding: 18px 20px;
+      gap: 12px;
+      padding: 14px 16px;
       border-bottom: 2px solid #d1d6de;
       background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
       flex-shrink: 0;
       box-sizing: border-box;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
     }
 
     .workspace .ready-orders-wrap .ready-toolbar {
@@ -72,10 +75,75 @@
 
     .ready-toolbar h2 {
       margin: 0;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
       color: #1d1d1f !important;
-      flex: 1;
+      flex: 0 0 auto;
+      white-space: nowrap;
+    }
+
+    .ready-toolbar>.btn {
+      flex: 0 0 auto;
+    }
+
+    .ready-order-filters {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 10px;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .ready-order-filters .ro-filter-field {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      flex: 0 0 auto;
+    }
+
+    .ready-order-filters input.ro-filter-input,
+    .ready-order-filters select.ro-filter-select {
+      min-width: 0;
+      width: 158px;
+      max-width: 200px;
+      height: 40px;
+      box-sizing: border-box;
+    }
+
+    .ready-order-filters select.ro-filter-select {
+      padding: 8px 10px;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      background: #fff;
+      cursor: pointer;
+      color: #1d1d1f;
+    }
+
+    .ready-order-filters select.ro-filter-select:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+    }
+
+    .ready-order-filters .ro-filter-field.ro-filter-search-wrap {
+      flex: 1 1 140px;
+      min-width: 120px;
+      max-width: 320px;
+    }
+
+    .ready-order-filters .ro-search-bar {
+      width: 100%;
+      min-width: 0;
+      max-width: none;
+    }
+
+    .ready-order-filters .ro-search-bar:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
     }
 
     .btn {
@@ -123,96 +191,6 @@
 
     input::placeholder {
       color: #8e8e93;
-    }
-
-    /* =========================
-       DUE DATE FILTER DROPDOWN
-    ========================= */
-    .due-filter {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-    }
-
-    .due-filter .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .due-filter-panel {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      width: 270px;
-      background: #fff;
-      border: 1px solid #d1d6de;
-      border-radius: 12px;
-      box-shadow: 0 10px 26px rgba(0, 0, 0, .12);
-      padding: 12px;
-      z-index: 50;
-      display: none;
-    }
-
-    .due-filter-panel.is-open {
-      display: block;
-    }
-
-    .due-filter-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: #374151;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin: 4px 0 10px;
-    }
-
-    .due-filter-btn {
-      width: 100%;
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid #d1d6de;
-      background: #fff;
-      cursor: pointer;
-      font-weight: 600;
-      margin: 6px 0;
-    }
-
-    .due-filter-btn:hover {
-      border-color: #007aff;
-      color: #007aff;
-      background: #f0f7ff;
-    }
-
-    .due-filter-row {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .due-filter-sub {
-      font-size: 12px;
-      font-weight: 700;
-      color: #374151;
-      margin-bottom: 8px;
-    }
-
-    .due-filter-next {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .due-filter-next input {
-      min-width: 0;
-      width: 100%;
-      height: 40px;
-    }
-
-    .due-filter-apply {
-      margin-top: 8px;
     }
 
     /* =========================
@@ -737,28 +715,25 @@
     <!-- TOOLBAR -->
     <div class="ready-toolbar">
       <h2>📦 Ready Orders</h2>
-      <div class="due-filter" id="dueFilterWrap">
-        <button type="button" class="btn" id="dueFilterBtn" onclick="toggleDueFilterPanel(event)">Date Filter</button>
-        <div class="due-filter-panel" id="dueFilterPanel" aria-hidden="true">
-          <div class="due-filter-title">Date Filter</div>
-
-          <button type="button" class="due-filter-btn" onclick="clearDueFilter()">Clear</button>
-          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('TODAY')">Today</button>
-          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('WEEK')">Week</button>
-          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('MONTH')">Month</button>
-          <button type="button" class="due-filter-btn" onclick="setDueFilterPreset('YEAR')">Year</button>
-
-          <div class="due-filter-row">
-            <div class="due-filter-sub">Custom</div>
-            <div class="due-filter-next">
-              <input type="number" id="dueFilterNextDays" min="0" value="7" />
-              <div style="font-size:12px;color:#6b7280;padding-left:2px;">days</div>
-              <button type="button" class="due-filter-btn due-filter-apply" onclick="applyDueFilterNextDays()">Apply</button>
-            </div>
-          </div>
+      <div class="ready-order-filters">
+        <div class="ro-filter-field">
+          <select id="filterOrderNo" class="ro-filter-select" onchange="searchOrders()"
+            aria-label="Order number filter">
+            <option value="">All order numbers</option>
+          </select>
+        </div>
+        <div class="ro-filter-field">
+          <select id="filterCustomerName" class="ro-filter-select" onchange="searchOrders()"
+            aria-label="Customer name filter">
+            <option value="">All customers</option>
+          </select>
+        </div>
+        <div class="ro-filter-field ro-filter-search-wrap">
+          <input type="text" id="readyOrdersSearchBar" class="ro-filter-input ro-search-bar"
+            placeholder="Search order, customer, items, amounts…" oninput="searchOrders()" autocomplete="off"
+            aria-label="Search ready orders">
         </div>
       </div>
-      <input type="text" id="searchBox" placeholder="🔍 Search ready orders..." onkeyup="searchOrders()">
       <button class="btn" onclick="loadReadyOrders()">🔄 Refresh</button>
     </div>
 
@@ -865,14 +840,9 @@
     ========================= */
     let tbody = null;
     let footer = null;
-    let searchBox = null;
-    let dueFilterPanel = null;
-    let dueFilterBtn = null;
-    let dueFilterNextDays = null;
-
-    // Due date filter state
-    let dueFilterMode = ''; // '', TODAY, WEEK, MONTH, YEAR, NEXT
-    let dueFilterNextDaysCount = 7;
+    let filterOrderNoEl = null;
+    let filterCustomerNameEl = null;
+    let readyOrdersSearchEl = null;
 
     /* =========================
        INITIALIZE ELEMENTS
@@ -885,24 +855,21 @@
       if (workspace) {
         tbody = workspace.querySelector("#tableBody");
         footer = workspace.querySelector("#footerText");
-        searchBox = workspace.querySelector("#searchBox");
-        dueFilterPanel = workspace.querySelector("#dueFilterPanel");
-        dueFilterBtn = workspace.querySelector("#dueFilterBtn");
-        dueFilterNextDays = workspace.querySelector("#dueFilterNextDays");
+        filterOrderNoEl = workspace.querySelector("#filterOrderNo");
+        filterCustomerNameEl = workspace.querySelector("#filterCustomerName");
+        readyOrdersSearchEl = workspace.querySelector("#readyOrdersSearchBar");
 
         if (!tbody) tbody = document.getElementById("tableBody");
         if (!footer) footer = document.getElementById("footerText");
-        if (!searchBox) searchBox = document.getElementById("searchBox");
-        if (!dueFilterPanel) dueFilterPanel = document.getElementById("dueFilterPanel");
-        if (!dueFilterBtn) dueFilterBtn = document.getElementById("dueFilterBtn");
-        if (!dueFilterNextDays) dueFilterNextDays = document.getElementById("dueFilterNextDays");
+        if (!filterOrderNoEl) filterOrderNoEl = document.getElementById("filterOrderNo");
+        if (!filterCustomerNameEl) filterCustomerNameEl = document.getElementById("filterCustomerName");
+        if (!readyOrdersSearchEl) readyOrdersSearchEl = document.getElementById("readyOrdersSearchBar");
       } else {
         tbody = document.getElementById("tableBody");
         footer = document.getElementById("footerText");
-        searchBox = document.getElementById("searchBox");
-        dueFilterPanel = document.getElementById("dueFilterPanel");
-        dueFilterBtn = document.getElementById("dueFilterBtn");
-        dueFilterNextDays = document.getElementById("dueFilterNextDays");
+        filterOrderNoEl = document.getElementById("filterOrderNo");
+        filterCustomerNameEl = document.getElementById("filterCustomerName");
+        readyOrdersSearchEl = document.getElementById("readyOrdersSearchBar");
       }
 
       if (!tbody || !footer) {
@@ -911,88 +878,6 @@
       }
 
       console.log("✅ Elements initialized");
-      return true;
-    }
-
-    /* =========================
-       DUE DATE FILTER
-    ========================= */
-    function toggleDueFilterPanel(e) {
-      try { if (e) e.stopPropagation(); } catch (err) { }
-      if (!dueFilterPanel) return;
-      const isOpen = dueFilterPanel.classList.contains('is-open');
-      if (isOpen) {
-        dueFilterPanel.classList.remove('is-open');
-        dueFilterPanel.setAttribute('aria-hidden', 'true');
-      } else {
-        dueFilterPanel.classList.add('is-open');
-        dueFilterPanel.setAttribute('aria-hidden', 'false');
-        if (dueFilterNextDays) dueFilterNextDays.value = String(dueFilterNextDaysCount || 7);
-      }
-    }
-
-    function closeDueFilterPanel() {
-      if (!dueFilterPanel) return;
-      dueFilterPanel.classList.remove('is-open');
-      dueFilterPanel.setAttribute('aria-hidden', 'true');
-    }
-
-    function clearDueFilter() {
-      dueFilterMode = '';
-      closeDueFilterPanel();
-      searchOrders();
-    }
-
-    function setDueFilterPreset(mode) {
-      dueFilterMode = String(mode || '').toUpperCase();
-      closeDueFilterPanel();
-      searchOrders();
-    }
-
-    function applyDueFilterNextDays() {
-      const n = dueFilterNextDays ? Number(dueFilterNextDays.value) : NaN;
-      dueFilterNextDaysCount = Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 7;
-      dueFilterMode = 'NEXT';
-      closeDueFilterPanel();
-      searchOrders();
-    }
-
-    function parseDueDateValue(v) {
-      if (!v) return null;
-      const d = new Date(v);
-      if (isNaN(d.getTime())) return null;
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-
-    function isDueDateInActiveFilter(dueDateStr) {
-      if (!dueFilterMode) return true;
-      const d = parseDueDateValue(dueDateStr);
-      if (!d) return false;
-
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-
-      const end = new Date(now);
-      if (dueFilterMode === 'TODAY') {
-        return d.getTime() === now.getTime();
-      }
-      if (dueFilterMode === 'WEEK') {
-        end.setDate(end.getDate() + 7);
-        return d >= now && d <= end;
-      }
-      if (dueFilterMode === 'MONTH') {
-        end.setMonth(end.getMonth() + 1);
-        return d >= now && d <= end;
-      }
-      if (dueFilterMode === 'YEAR') {
-        end.setFullYear(end.getFullYear() + 1);
-        return d >= now && d <= end;
-      }
-      if (dueFilterMode === 'NEXT') {
-        end.setDate(end.getDate() + (Number(dueFilterNextDaysCount) || 0));
-        return d >= now && d <= end;
-      }
       return true;
     }
 
@@ -1346,7 +1231,9 @@
         if (tbody && !document.contains(tbody)) {
           tbody = null;
           footer = null;
-          searchBox = null;
+          filterOrderNoEl = null;
+          filterCustomerNameEl = null;
+          readyOrdersSearchEl = null;
           if (!initElements()) {
             setTimeout(loadReadyOrders, 100);
             return;
@@ -1366,7 +1253,8 @@
 
         if (readyOrders.length === 0) {
           showEmptyState();
-          updateFooter(0);
+          populateReadyOrderFilterDropdowns([]);
+          searchOrders();
           lastReadyOrderCount = 0;
           lastReadyOrdersSnapshot = readyOrdersContentSnapshot(orders);
           return;
@@ -1387,7 +1275,8 @@
           }
         });
 
-        updateFooter(sortedReadyOrders.length);
+        populateReadyOrderFilterDropdowns(sortedReadyOrders);
+        searchOrders();
         lastReadyOrderCount = sortedReadyOrders.length;
         lastReadyOrdersSnapshot = readyOrdersContentSnapshot(orders);
         console.log("✅ Ready orders loaded successfully");
@@ -1589,12 +1478,86 @@
     }
 
     /* =========================
+       FILTER DROPDOWNS (from READY list)
+    ========================= */
+    function populateReadyOrderFilterDropdowns(readyOrders) {
+      let orderSel = filterOrderNoEl || document.getElementById("filterOrderNo");
+      let custSel = filterCustomerNameEl || document.getElementById("filterCustomerName");
+      if (!orderSel || !custSel) return;
+
+      const prevOrder = orderSel.value;
+      const prevCust = custSel.value;
+
+      const orderSeen = new Set();
+      const orderNos = [];
+      const custSeen = new Set();
+      const custNames = [];
+
+      (readyOrders || []).forEach(function (o) {
+        if (!o) return;
+        const ono = String(o.orderNo != null ? o.orderNo : o.billNo != null ? o.billNo : "").trim();
+        if (ono) {
+          const k = ono.toLowerCase();
+          if (!orderSeen.has(k)) {
+            orderSeen.add(k);
+            orderNos.push(ono);
+          }
+        }
+        const cn = String(o.customer || o.customerName || "").trim();
+        if (cn && cn !== "\u2014") {
+          const ck = cn.toLowerCase();
+          if (!custSeen.has(ck)) {
+            custSeen.add(ck);
+            custNames.push(cn);
+          }
+        }
+      });
+
+      orderNos.sort(function (a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+      });
+      custNames.sort(function (a, b) {
+        return a.localeCompare(b, undefined, { sensitivity: "base" });
+      });
+
+      function rebuildSelect(sel, items, allLabel) {
+        sel.innerHTML = "";
+        const opt0 = document.createElement("option");
+        opt0.value = "";
+        opt0.textContent = allLabel;
+        sel.appendChild(opt0);
+        items.forEach(function (n) {
+          const opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = n;
+          sel.appendChild(opt);
+        });
+      }
+
+      rebuildSelect(orderSel, orderNos, "All order numbers");
+      rebuildSelect(custSel, custNames, "All customers");
+
+      if (prevOrder && orderNos.some(function (x) { return x === prevOrder; })) {
+        orderSel.value = prevOrder;
+      }
+      if (prevCust && custNames.some(function (x) { return x === prevCust; })) {
+        custSel.value = prevCust;
+      }
+    }
+
+    /* =========================
        SEARCH ORDERS
     ========================= */
     function searchOrders() {
-      if (!tbody || !searchBox) return;
+      if (!tbody) return;
+      if (!filterOrderNoEl) filterOrderNoEl = document.getElementById("filterOrderNo");
+      if (!filterCustomerNameEl) filterCustomerNameEl = document.getElementById("filterCustomerName");
+      if (!readyOrdersSearchEl) readyOrdersSearchEl = document.getElementById("readyOrdersSearchBar");
 
-      const searchValue = searchBox.value.toLowerCase().trim();
+      const selOrder = (filterOrderNoEl && filterOrderNoEl.value) ? filterOrderNoEl.value.trim() : "";
+      const selCust = (filterCustomerNameEl && filterCustomerNameEl.value) ? filterCustomerNameEl.value.trim() : "";
+      const qSearch = (readyOrdersSearchEl && readyOrdersSearchEl.value) ? readyOrdersSearchEl.value.toLowerCase().trim() : "";
+
       const rows = tbody.querySelectorAll("tr");
 
       let visibleCount = 0;
@@ -1605,20 +1568,23 @@
           return;
         }
 
-        const orderNo = (row.dataset.orderNo || "").toLowerCase();
-        const customer = (row.dataset.customer || "").toLowerCase();
-        const items = (row.dataset.items || "").toLowerCase();
-        const rowText = row.innerText.toLowerCase();
+        const rowOrder = (row.dataset.orderNo || "").trim();
+        const rowCust = (row.dataset.customer || "").trim();
 
-        const matches = !searchValue ||
-          orderNo.includes(searchValue) ||
-          customer.includes(searchValue) ||
-          items.includes(searchValue) ||
-          rowText.includes(searchValue);
+        const orderOk = !selOrder || rowOrder.toLowerCase() === selOrder.toLowerCase();
+        const custOk = !selCust || rowCust.toLowerCase() === selCust.toLowerCase();
 
-        const dueOk = isDueDateInActiveFilter(row.dataset.dueDate || "");
+        const orderNoLc = rowOrder.toLowerCase();
+        const customerLc = rowCust.toLowerCase();
+        const itemsLc = (row.dataset.items || "").toLowerCase();
+        const rowTextLc = row.innerText.toLowerCase();
+        const searchOk = !qSearch ||
+          orderNoLc.includes(qSearch) ||
+          customerLc.includes(qSearch) ||
+          itemsLc.includes(qSearch) ||
+          rowTextLc.includes(qSearch);
 
-        const show = matches && dueOk;
+        const show = orderOk && custOk && searchOk;
         row.style.display = show ? "" : "none";
         if (show) visibleCount++;
       });
@@ -1782,7 +1748,9 @@
         console.log("📡 Page refresh event received");
         tbody = null;
         footer = null;
-        searchBox = null;
+        filterOrderNoEl = null;
+        filterCustomerNameEl = null;
+        readyOrdersSearchEl = null;
         setTimeout(initReadyOrdersPage, 150);
       });
       ledgerNavListen(window, 'orderStatusChanged', function (e) {
@@ -1804,7 +1772,9 @@
         console.log("📡 Page refresh event received");
         tbody = null;
         footer = null;
-        searchBox = null;
+        filterOrderNoEl = null;
+        filterCustomerNameEl = null;
+        readyOrdersSearchEl = null;
         setTimeout(initReadyOrdersPage, 150);
       });
       window.addEventListener('orderStatusChanged', function (e) {
@@ -1822,22 +1792,6 @@
         }
       });
     }
-
-    (function roBindDueFilterOutsideClick() {
-      function onDocClick(e) {
-        try {
-          if (!dueFilterPanel || !dueFilterPanel.classList.contains('is-open')) return;
-          const wrap = document.getElementById('dueFilterWrap');
-          if (wrap && wrap.contains(e.target)) return;
-          closeDueFilterPanel();
-        } catch (err) { }
-      }
-      if (typeof ledgerNavListen === 'function') {
-        ledgerNavListen(document, 'click', onDocClick);
-      } else {
-        document.addEventListener('click', onDocClick);
-      }
-    })();
 
     // Poll for changes (same-window updates). Count alone misses Ready Extra edits (same # of READY rows).
     var readyOrdersPollId = setInterval(function () {
@@ -1875,10 +1829,6 @@
         editOrder,
         navigateToReadyExtraOrder,
         searchOrders,
-        toggleDueFilterPanel,
-        clearDueFilter,
-        setDueFilterPreset,
-        applyDueFilterNextDays,
         updateFooter,
         initReadyOrdersPage,
         initElements,

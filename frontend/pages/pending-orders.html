@@ -125,6 +125,27 @@
       color: #8e8e93;
     }
 
+    .pending-toolbar select.pending-order-filter-select {
+      height: 40px;
+      min-width: 160px;
+      max-width: 240px;
+      padding: 8px 10px;
+      border: 1px solid #d1d6de;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      background: #fff;
+      cursor: pointer;
+      color: #1d1d1f;
+      box-sizing: border-box;
+    }
+
+    .pending-toolbar select.pending-order-filter-select:focus {
+      outline: none;
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+    }
+
     /* =========================
    TABLE
 ========================= */
@@ -217,7 +238,7 @@
     tbody tr {
       transition: background 0.2s;
       background: #fff !important;
-      cursor: pointer;
+      cursor: default;
     }
 
     tbody tr:nth-child(even) {
@@ -407,6 +428,10 @@
     <!-- TOOLBAR -->
     <div class="pending-toolbar">
       <h2>⏳ Pending Orders</h2>
+      <select id="filterPendingOrderNo" class="pending-order-filter-select" onchange="searchOrders()"
+        aria-label="Filter by order number">
+        <option value="">All order numbers</option>
+      </select>
       <input type="text" id="searchBox" placeholder="🔍 Search pending orders..." onkeyup="searchOrders()">
       <button class="btn" onclick="loadPendingOrders()">🔄 Refresh</button>
     </div>
@@ -446,6 +471,7 @@
     let tbody = null;
     let footer = null;
     let searchBox = null;
+    let filterPendingOrderNoEl = null;
 
     /* =========================
        INITIALIZE ELEMENTS
@@ -459,14 +485,17 @@
         tbody = workspace.querySelector("#tableBody");
         footer = workspace.querySelector("#footerText");
         searchBox = workspace.querySelector("#searchBox");
+        filterPendingOrderNoEl = workspace.querySelector("#filterPendingOrderNo");
 
         if (!tbody) tbody = document.getElementById("tableBody");
         if (!footer) footer = document.getElementById("footerText");
         if (!searchBox) searchBox = document.getElementById("searchBox");
+        if (!filterPendingOrderNoEl) filterPendingOrderNoEl = document.getElementById("filterPendingOrderNo");
       } else {
         tbody = document.getElementById("tableBody");
         footer = document.getElementById("footerText");
         searchBox = document.getElementById("searchBox");
+        filterPendingOrderNoEl = document.getElementById("filterPendingOrderNo");
       }
 
       if (!tbody || !footer) {
@@ -609,7 +638,8 @@
 
         if (pending.length === 0) {
           showEmptyState();
-          updateFooter(0);
+          populatePendingOrderNoDropdown([]);
+          searchOrders();
           return;
         }
 
@@ -628,7 +658,8 @@
           }
         });
 
-        updateFooter(sortedPending.length);
+        populatePendingOrderNoDropdown(sortedPending);
+        searchOrders();
         console.log("✅ Pending orders loaded successfully");
 
       } catch (e) {
@@ -719,13 +750,11 @@
       // Get customer name
       const customerName = order.customer || order.customerName || "—";
 
-      // Create row (clickable to open in ready-extra-order)
+      // Row is view-only here (does not open Ready Extra Order)
       const tr = document.createElement("tr");
       tr.dataset.orderId = order.id;
       tr.dataset.orderNo = order.orderNo || order.billNo || "";
       tr.dataset.customer = customerName;
-      tr.style.cursor = "pointer";
-      tr.title = "Click to open order";
 
       tr.innerHTML = `
         <td><span class="badge pending">⏳ PENDING</span></td>
@@ -740,10 +769,6 @@
         <td class="right">₹${displayAdvance.toFixed(2)}</td>
         <td class="right">₹${displayBalance.toFixed(2)}</td>
       `;
-
-      tr.onclick = function (e) {
-        editOrder(order.id);
-      };
 
       tbody.appendChild(tr);
     }
@@ -810,12 +835,53 @@
     }
 
     /* =========================
+       ORDER NO. DROPDOWN (PENDING list)
+    ========================= */
+    function populatePendingOrderNoDropdown(pendingOrders) {
+      let sel = filterPendingOrderNoEl || document.getElementById("filterPendingOrderNo");
+      if (!sel) return;
+      const prev = sel.value;
+      const seen = new Set();
+      const orderNos = [];
+      (pendingOrders || []).forEach(function (o) {
+        if (!o) return;
+        const ono = String(o.orderNo != null ? o.orderNo : o.billNo != null ? o.billNo : "").trim();
+        if (!ono) return;
+        const k = ono.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        orderNos.push(ono);
+      });
+      orderNos.sort(function (a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+      });
+      sel.innerHTML = "";
+      const opt0 = document.createElement("option");
+      opt0.value = "";
+      opt0.textContent = "All order numbers";
+      sel.appendChild(opt0);
+      orderNos.forEach(function (n) {
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = n;
+        sel.appendChild(opt);
+      });
+      if (prev && orderNos.some(function (x) { return x === prev; })) {
+        sel.value = prev;
+      }
+    }
+
+    /* =========================
        SEARCH ORDERS
     ========================= */
     function searchOrders() {
-      if (!tbody || !searchBox) return;
+      if (!tbody) return;
+      if (!searchBox) searchBox = document.getElementById("searchBox");
+      if (!filterPendingOrderNoEl) filterPendingOrderNoEl = document.getElementById("filterPendingOrderNo");
 
-      const searchValue = searchBox.value.toLowerCase().trim();
+      const searchValue = (searchBox && searchBox.value) ? searchBox.value.toLowerCase().trim() : "";
+      const selOrder = (filterPendingOrderNoEl && filterPendingOrderNoEl.value) ? filterPendingOrderNoEl.value.trim() : "";
+
       const rows = tbody.querySelectorAll("tr");
 
       let visibleCount = 0;
@@ -826,14 +892,19 @@
           return;
         }
 
-        const orderNo = (row.dataset.orderNo || "").toLowerCase();
+        const orderNoLc = (row.dataset.orderNo || "").toLowerCase();
         const customer = (row.dataset.customer || "").toLowerCase();
         const rowText = row.innerText.toLowerCase();
 
-        const matches = !searchValue ||
-          orderNo.includes(searchValue) ||
+        const textOk = !searchValue ||
+          orderNoLc.includes(searchValue) ||
           customer.includes(searchValue) ||
           rowText.includes(searchValue);
+
+        const rowOrder = (row.dataset.orderNo || "").trim();
+        const orderDropdownOk = !selOrder || rowOrder.toLowerCase() === selOrder.toLowerCase();
+
+        const matches = textOk && orderDropdownOk;
 
         row.style.display = matches ? "" : "none";
         if (matches) visibleCount++;
@@ -897,8 +968,8 @@
           alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nSome items are still In Process (Item Process). Complete all quantities there first.`);
           return;
         }
-        if (!OP || typeof OP.isOrderFullyReady !== "function" || !OP.isOrderFullyReady(orders, itemProcess, orderId)) {
-          alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nFull quantity must be completed for every item on this order (ready or finalized totals).`);
+        if (!OP || typeof OP.isOrderReadyForReadyOrdersList !== "function" || !OP.isOrderReadyForReadyOrdersList(orders, itemProcess, orderId)) {
+          alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nEvery line must be workshop-complete, then finalized in Ready Items using “Move to Ready Orders” (full quantity in finalized state).`);
           return;
         }
 

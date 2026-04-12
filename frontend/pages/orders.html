@@ -470,6 +470,11 @@
       <button class="btn" onclick="newOrder()">➕ New Order</button>
 
       <div class="orders-filter-group" aria-label="Filter orders">
+        <label for="filterOrderNo">Order No.</label>
+        <select id="filterOrderNo" title="Filter by order number" onchange="filterTable()">
+          <option value="">All order numbers</option>
+        </select>
+
         <label for="filterStation">Station</label>
         <select id="filterStation" title="Filter by customer station" onchange="filterTable()">
           <option value="">All stations</option>
@@ -482,12 +487,12 @@
               Clear filters
             </button>
             <button type="button" class="orders-filter-menu-item"
-              title="Mark every order currently shown in the list (respects station filter)"
+              title="Mark every order currently shown in the list (respects order and station filters)"
               onclick="closeOrdersFilterMenu(); setMarkAllVisible(true);">
               Mark all
             </button>
             <button type="button" class="orders-filter-menu-item"
-              title="Clear mark on every order currently shown in the list (respects station filter)"
+              title="Clear mark on every order currently shown in the list (respects order and station filters)"
               onclick="closeOrdersFilterMenu(); setMarkAllVisible(false);">
               Unmark all
             </button>
@@ -597,6 +602,63 @@
       return parseFloat(vals[12] || 0) || 0;
     }
 
+    /** Gr.Wt for Orders list: Ready Extra rows store Est. Total Wt at vals[9] (see getReadyOrderRowValues / setReadyOrderRowValues). vals[12] is ready/workshop weight and is often 0 — do not use it here. */
+    function ordersListReadyExtraLineGrossGrams(vals) {
+      if (!vals || vals.length < 16) return 0;
+      const n = (s) => {
+        const x = parseFloat(String(s != null ? s : "").replace(/,/g, ""));
+        return isNaN(x) ? 0 : x;
+      };
+      let w = n(vals[9]);
+      if (w > 0) return w;
+      const pc = n(vals[7]);
+      const ut = n(vals[8]);
+      if (pc > 0 && ut > 0) return pc * ut;
+      w = n(vals[6]);
+      if (w > 0) return w;
+      w = readyExtraItemReadyWeightGrams(vals);
+      return w > 0 ? w : 0;
+    }
+
+    /**
+     * One line’s gross weight (grams) for the main Orders list.
+     * Handles Ready Extra 17-col grid, type-prefixed new-order rows, and legacy shifted Order rows.
+     */
+    function ordersListLineGrossWeightGrams(item) {
+      const vals = item.values || [];
+      if (!vals.length) return 0;
+      const type = item.type || vals[0] || "Order";
+      if (String(type).trim() === "Purchase") return 0;
+      if (vals.length >= 16) {
+        return ordersListReadyExtraLineGrossGrams(vals);
+      }
+      const raw0 = String(vals[0] || "").trim();
+      const isKnownType = ["Order", "Purchase", "Ready", "Extra", "Other", "Sale"].includes(raw0);
+      const num = (s) => {
+        const x = parseFloat(String(s != null ? s : "").replace(/,/g, ""));
+        return isNaN(x) ? 0 : x;
+      };
+      /* new-order.html rows: values[0]=type, [1]=hidden bill (not weight), [7]=Pc, [8]=Ut.Wt, [9]=Est.Total Wt */
+      if (isKnownType && vals.length >= 10) {
+        let w = num(vals[9]);
+        if (w > 0) return w;
+        const pc = num(vals[7]);
+        const ut = num(vals[8]);
+        if (pc > 0 && ut > 0) return pc * ut;
+      } else if (isKnownType && vals.length < 10) {
+        const w = num(vals[1]);
+        if (w > 0) return w;
+      }
+      const tryIdx = [9, 8, 5];
+      for (let i = 0; i < tryIdx.length; i++) {
+        const w = num(vals[tryIdx[i]]);
+        if (w > 0) return w;
+      }
+      const w1 = num(vals[1]);
+      if (w1 > 0) return w1;
+      return 0;
+    }
+
     /* BUG FIX: For standard items, fallback from vals[12] (line total) should be
        vals[10] (net amount), not vals[9] (estimated amount — wrong field for a monetary total). */
     function orderItemLineAmount(item) {
@@ -694,6 +756,7 @@
 
       if (listOrders.length === 0) {
         populateStationFilter();
+        populateOrderNoFilter([]);
         filterTable();
         try {
           lastOrdersPollSnap = computeOrdersListPollSnap(allOrders);
@@ -723,7 +786,7 @@
               const type = item.type || vals[0] || "Order";
 
               if (vals.length >= 16) {
-                const grWt = readyExtraItemReadyWeightGrams(vals);
+                const grWt = ordersListLineGrossWeightGrams(item);
                 const net = readyExtraItemLineTotalFromValues(vals);
                 if (type === "Purchase") {
                   purchaseTotal += net;
@@ -734,9 +797,7 @@
                 return;
               }
 
-              /* BUG FIX: For standard items, gross weight is at vals[1], not vals[9].
-                 vals[9] is the estimated amount — using it as weight produced wrong Gr.Wt totals. */
-              const grWt = parseFloat(vals[1] || 0) || 0;
+              const grWt = ordersListLineGrossWeightGrams(item);
               const net = type === "Purchase" ? orderItemLineAmount(item) : (parseFloat(vals[12] || 0) || 0);
 
               if (type === "Purchase") {
@@ -777,6 +838,7 @@
           const isMarked = order.marked === true;
           const stationForRow = getStationForOrder(order);
           row.dataset.station = stationForRow;
+          row.dataset.orderNo = String(order.orderNo != null ? order.orderNo : order.billNo != null ? order.billNo : "").trim();
 
           /* BUG FIX: escapeHtml was called with order.customer which can be undefined.
              Now explicitly falls back to order.customerName before calling escapeHtml,
@@ -820,6 +882,7 @@
       });
 
       populateStationFilter();
+      populateOrderNoFilter(sortedOrders);
       filterTable();
       try {
         lastOrdersPollSnap = computeOrdersListPollSnap(allOrders);
@@ -935,6 +998,39 @@
         sel.appendChild(opt);
       });
       if (prev && stations.indexOf(prev) !== -1) sel.value = prev;
+    }
+
+    /** Dropdown of order numbers for rows currently shown on the Orders list (non-READY). */
+    function populateOrderNoFilter(ordersForList) {
+      const workspace = document.querySelector(".workspace");
+      let sel = workspace ? workspace.querySelector("#filterOrderNo") : null;
+      if (!sel) sel = document.querySelector("#filterOrderNo") || document.getElementById("filterOrderNo");
+      if (!sel) return;
+      const prev = sel.value;
+      const seen = new Set();
+      const orderNos = [];
+      (ordersForList || []).forEach(function (o) {
+        if (!o) return;
+        const ono = String(o.orderNo != null ? o.orderNo : o.billNo != null ? o.billNo : "").trim();
+        if (!ono) return;
+        const k = ono.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        orderNos.push(ono);
+      });
+      orderNos.sort(function (a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+      });
+      sel.innerHTML = '<option value="">All order numbers</option>';
+      orderNos.forEach(function (n) {
+        const opt = document.createElement("option");
+        opt.value = n;
+        opt.textContent = n;
+        sel.appendChild(opt);
+      });
+      if (prev && orderNos.some(function (x) { return x === prev; })) {
+        sel.value = prev;
+      }
     }
 
     function getCustomerData(customerName) {
@@ -1180,7 +1276,7 @@
     }
 
     /* =========================
-       TABLE FILTER (station)
+       TABLE FILTER (order no. + station)
     ========================= */
     /* BUG FIX: row.dataset.station could be undefined (not set yet) when filterTable
        is called before loadOrders finishes populating rows, causing every row to
@@ -1194,7 +1290,11 @@
       let stationEl = workspace ? workspace.querySelector("#filterStation") : null;
       if (!stationEl) stationEl = document.querySelector("#filterStation") || document.getElementById("filterStation");
 
+      let orderNoEl = workspace ? workspace.querySelector("#filterOrderNo") : null;
+      if (!orderNoEl) orderNoEl = document.querySelector("#filterOrderNo") || document.getElementById("filterOrderNo");
+
       const stationFilter = stationEl ? normalizeStationValue(stationEl.value) : "";
+      const orderNoFilter = orderNoEl ? String(orderNoEl.value || "").trim() : "";
 
       const rows = tbody.querySelectorAll("tr");
       rows.forEach(row => {
@@ -1204,7 +1304,12 @@
           const rowSt = normalizeStationValue(row.dataset.station || "");
           showByStation = rowSt.toLowerCase() === stationFilter.toLowerCase();
         }
-        row.style.display = showByStation ? "" : "none";
+        let showByOrderNo = true;
+        if (orderNoFilter) {
+          const rowOno = String(row.dataset.orderNo || "").trim();
+          showByOrderNo = rowOno.toLowerCase() === orderNoFilter.toLowerCase();
+        }
+        row.style.display = showByStation && showByOrderNo ? "" : "none";
       });
 
       updateFooter();
@@ -1215,6 +1320,9 @@
       let stationEl = workspace ? workspace.querySelector("#filterStation") : null;
       if (!stationEl) stationEl = document.querySelector("#filterStation") || document.getElementById("filterStation");
       if (stationEl) stationEl.value = "";
+      let orderNoEl = workspace ? workspace.querySelector("#filterOrderNo") : null;
+      if (!orderNoEl) orderNoEl = document.querySelector("#filterOrderNo") || document.getElementById("filterOrderNo");
+      if (orderNoEl) orderNoEl.value = "";
       filterTable();
     }
 
@@ -1374,6 +1482,7 @@
       window.selectRow = selectRow;
       window.toggleOrderStatus = toggleOrderStatus;
       window.filterTable = filterTable;
+      window.populateOrderNoFilter = populateOrderNoFilter;
       window.clearDateFilter = clearDateFilter;
       window.closeOrdersFilterMenu = closeOrdersFilterMenu;
       window.setMarkAllVisible = setMarkAllVisible;

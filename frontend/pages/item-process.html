@@ -174,28 +174,6 @@
             box-shadow: none;
         }
 
-        .btn-unready {
-            background: #ff3b30;
-            border-color: #ff3b30;
-            color: #fff !important;
-            font-weight: 600;
-        }
-
-        .btn-unready:hover:not(:disabled) {
-            background: #d32f2f;
-            border-color: #d32f2f;
-            color: #fff !important;
-        }
-
-        .btn-unready:disabled {
-            background: #ffb3b0;
-            border-color: #ffb3b0;
-            color: #fff !important;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
         select {
             height: 40px;
             padding: 8px 14px;
@@ -940,8 +918,6 @@
 
             <button type="button" class="filter-btn active" id="fBtnProcess" onclick="setIpFilter('PROCESS')">In
                 Process</button>
-            <button type="button" class="filter-btn" id="fBtnReady" onclick="setIpFilter('READY')">Ready</button>
-            <button type="button" class="filter-btn" id="fBtnAll" onclick="setIpFilter('ALL')">All</button>
 
             <select id="jwFilter" onchange="ipFilterTable()">
                 <option value="">👤 All Job Workers</option>
@@ -950,10 +926,7 @@
             <button type="button" class="btn" id="ipToggleSelectAllBtn" onclick="ipToggleSelectAllClick()" disabled
                 title="Select every visible row, or clear all selections">Select all</button>
             <button class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled>
-                ✅ Mark Ready
-            </button>
-            <button class="btn btn-unready" id="markUnReadyBtn" onclick="openMarkUnReadyModal()" disabled>
-                ❌ Mark UnReady
+                ✅ Mark Ready Item
             </button>
         </div>
 
@@ -994,7 +967,7 @@
         <div class="modal">
             <div class="modal-header">
                 <div class="modal-header-text">
-                    <h3>✅ Mark as Ready</h3>
+                    <h3>✅ Mark Ready Item</h3>
                     <p id="modalSubtitle">Choose how many units to mark ready for each selected row. Partial quantities stay in
                         Item Processing.</p>
                 </div>
@@ -1007,34 +980,7 @@
             <div class="modal-footer">
                 <button class="btn-cancel-modal" onclick="closeMarkReadyModal()">Cancel</button>
                 <button class="btn-confirm-ready" id="confirmReadyBtn" onclick="confirmMarkReady()">
-                    ✅ Confirm — Mark Ready
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MARK UNREADY CONFIRMATION MODAL -->
-    <div class="modal-overlay" id="markUnReadyModal">
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-header-text">
-                    <h3 style="color:#ff3b30;">❌ Mark as UnReady</h3>
-                    <p id="unReadyModalSubtitle">The selected items will be moved back to In Process.</p>
-                </div>
-                <button class="modal-close-btn" onclick="closeMarkUnReadyModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-body-info" id="unReadyModalInfo"
-                    style="background:#fff5f5; border-color:#feb2b2; color:#c53030;">
-                    These items will be marked as "In Process" again.
-                </div>
-                <div class="modal-item-list" id="unReadyModalItemList"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancel-modal" onclick="closeMarkUnReadyModal()">Cancel</button>
-                <button class="btn-confirm-ready" id="confirmUnReadyBtn" onclick="confirmMarkUnReady()"
-                    style="background:#ff3b30;">
-                    ❌ Confirm — Mark UnReady
+                    ✅ Confirm — Mark Ready Item
                 </button>
             </div>
         </div>
@@ -1244,7 +1190,6 @@
             const n = checked.length;
 
             const hasInProcess = [...checked].some(cb => cb.dataset.status !== 'READY');
-            const hasReady = [...checked].some(cb => cb.dataset.status === 'READY');
 
             const pill = document.getElementById('ipSelPill');
             if (pill) {
@@ -1254,9 +1199,6 @@
 
             const readyBtn = document.getElementById('markReadyBtn');
             if (readyBtn) readyBtn.disabled = !hasInProcess;
-
-            const unReadyBtn = document.getElementById('markUnReadyBtn');
-            if (unReadyBtn) unReadyBtn.disabled = !hasReady;
 
             ipSyncToggleSelectAllButton();
         }
@@ -1302,8 +1244,6 @@
             if (tr) tr.classList.toggle('row-selected', cb.checked);
             ipUpdateUI();
         }
-
-        var activeIpFilter = 'PROCESS'; // Default to In Process
 
         /* ── LOAD TABLE ── */
         let ipAllJobWorkerOptions = []; // { key, label }
@@ -1364,15 +1304,6 @@
         function updateIpJwFilterOptions() {
             const jwFilter = document.getElementById('jwFilter');
             if (!jwFilter) return;
-
-            // Requirement: Job Worker filter is ONLY available in "In Process".
-            // For Ready/All: keep only "All Job Workers" and disable the dropdown.
-            if (activeIpFilter !== 'PROCESS') {
-                jwFilter.innerHTML = '<option value="">👤 All Job Workers</option>';
-                jwFilter.value = '';
-                jwFilter.disabled = true;
-                return;
-            }
 
             // Always rebuild options from storage to avoid stale/empty lists.
             try {
@@ -1539,13 +1470,9 @@
         }
 
         function setIpFilter(f) {
-            activeIpFilter = f;
+            // List is always In Process rows only (Ready / All toolbar controls removed).
             const btnP = document.getElementById('fBtnProcess');
-            if (btnP) btnP.classList.toggle('active', f === 'PROCESS');
-            const btnR = document.getElementById('fBtnReady');
-            if (btnR) btnR.classList.toggle('active', f === 'READY');
-            const btnA = document.getElementById('fBtnAll');
-            if (btnA) btnA.classList.toggle('active', f === 'ALL');
+            if (btnP) btnP.classList.add('active');
             // Reset JW and column filters when switching status view
             const jwFilter = document.getElementById('jwFilter');
             if (jwFilter) jwFilter.value = '';
@@ -1563,9 +1490,7 @@
             if (!footer || !tbody) return;
             const rows = Array.from(tbody.querySelectorAll('tr[data-search]'));
             const visible = rows.filter(r => r.style.display !== 'none').length;
-            if (activeIpFilter === 'READY') footer.textContent = `${visible} item(s) ready`;
-            else if (activeIpFilter === 'ALL') footer.textContent = `${visible} item(s)`;
-            else footer.textContent = `${visible} item(s) in process`;
+            footer.textContent = `${visible} item(s) in process`;
         }
 
         function ipFilterTable() {
@@ -1586,9 +1511,7 @@
                 const cb = tr.querySelector('.ip-row-cb');
                 const st = cb ? cb.dataset.status : '';
 
-                let matchesType = true;
-                if (activeIpFilter === 'PROCESS') matchesType = st !== 'READY';
-                else if (activeIpFilter === 'READY') matchesType = st === 'READY';
+                const matchesType = st !== 'READY';
 
                 tr.style.display = (matchesJw && matchesFields && matchesType) ? '' : 'none';
             });
@@ -1750,7 +1673,7 @@
                     closeMarkReadyModal();
 
                     btn.disabled = false;
-                    btn.textContent = '✅ Confirm — Mark Ready';
+                    btn.textContent = '✅ Confirm — Mark Ready Item';
 
                     let msg = `✅ Marked ${movedUnits} unit${movedUnits !== 1 ? 's' : ''} ready`;
                     if (splitRows) msg += ` (${splitRows} row${splitRows !== 1 ? 's' : ''} split)`;
@@ -1771,103 +1694,7 @@
                     console.error('Mark Ready error:', err);
                     showIpToast('❌ Failed to mark ready. Please try again.');
                     btn.disabled = false;
-                    btn.textContent = '✅ Confirm — Mark Ready';
-                }
-            }, 400);
-        }
-
-        /* ── MARK UNREADY MODAL ── */
-        function openMarkUnReadyModal() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status === 'READY');
-            if (checked.length === 0) {
-                showIpToast('⚠️ Please select at least one READY item first');
-                return;
-            }
-
-            const orderMap = {};
-            checked.forEach(cb => {
-                const oid = cb.dataset.orderId;
-                const tr = cb.closest('tr');
-                if (!orderMap[oid]) {
-                    const tds = tr.querySelectorAll('td');
-                    orderMap[oid] = {
-                        orderId: oid,
-                        orderNo: tds[12] ? tds[12].textContent.trim() : oid,
-                        customer: tds[13] ? tds[13].textContent.trim() : '—',
-                        items: []
-                    };
-                }
-                const tds = tr.querySelectorAll('td');
-                orderMap[oid].items.push(tds[3] ? tds[3].textContent.trim() : '—');
-            });
-
-            const orders = Object.values(orderMap);
-            const itemCount = checked.length;
-            const orderCount = orders.length;
-
-            document.getElementById('unReadyModalSubtitle').textContent =
-                `${itemCount} item${itemCount > 1 ? 's' : ''} from ${orderCount} order${orderCount > 1 ? 's' : ''} will be marked as In Process.`;
-
-            const list = document.getElementById('unReadyModalItemList');
-            list.innerHTML = orders.map(o => `
-                <div class="modal-item-row">
-                    <span class="modal-item-order" style="color:#ff3b30;">${escapeHtml(o.orderNo)}</span>
-                    <span style="color:#6b7a95;">| ${escapeHtml(o.customer)}</span>
-                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#374151;">${escapeHtml(o.items.join(', '))}</span>
-                </div>`).join('');
-
-            document.getElementById('markUnReadyModal').classList.add('open');
-        }
-
-        function closeMarkUnReadyModal() {
-            document.getElementById('markUnReadyModal').classList.remove('open');
-        }
-
-        function confirmMarkUnReady() {
-            const checked = [...document.querySelectorAll('.ip-row-cb:checked')].filter(cb => cb.dataset.status === 'READY');
-            if (checked.length === 0) { closeMarkUnReadyModal(); return; }
-
-            const btn = document.getElementById('confirmUnReadyBtn');
-            btn.disabled = true;
-            btn.textContent = 'Saving…';
-
-            setTimeout(() => {
-                try {
-                    const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-                    const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
-
-                    checked.forEach(cb => {
-                        const pid = String(cb.dataset.processId);
-                        const entry = itemProcess.find(e => String(e.id) === pid);
-                        if (entry) {
-                            entry.status = 'IN PROCESS';
-                            delete entry.readyDate;
-                        }
-                    });
-
-                    const OP = window.OrderProcessing;
-                    if (OP && typeof OP.syncOrdersReadyFromProcess === 'function') {
-                        OP.syncOrdersReadyFromProcess(orders, itemProcess);
-                    }
-
-                    localStorage.setItem('orders', JSON.stringify(orders));
-                    localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
-
-                    closeMarkUnReadyModal();
-
-                    const count = checked.length;
-                    showIpToast(`✅ ${count} item${count > 1 ? 's' : ''} moved back to In Process`);
-
-                    tbody = null;
-                    loadProcessItems();
-
-                    try { window.dispatchEvent(new Event('storage')); } catch (e) { }
-
-                } catch (err) {
-                    console.error('Mark UnReady error:', err);
-                    showIpToast('❌ Failed to mark unready.');
-                    btn.disabled = false;
-                    btn.textContent = '❌ Confirm — Mark UnReady';
+                    btn.textContent = '✅ Confirm — Mark Ready Item';
                 }
             }, 400);
         }
@@ -1898,9 +1725,6 @@
         // Close modals on overlay click
         document.getElementById('markReadyModal').addEventListener('click', function (e) {
             if (e.target === this) closeMarkReadyModal();
-        });
-        document.getElementById('markUnReadyModal').addEventListener('click', function (e) {
-            if (e.target === this) closeMarkUnReadyModal();
         });
 
         /* ── JW INFO MODAL ── */
@@ -2041,9 +1865,6 @@
         window.openMarkReadyModal = openMarkReadyModal;
         window.closeMarkReadyModal = closeMarkReadyModal;
         window.confirmMarkReady = confirmMarkReady;
-        window.openMarkUnReadyModal = openMarkUnReadyModal;
-        window.closeMarkUnReadyModal = closeMarkUnReadyModal;
-        window.confirmMarkUnReady = confirmMarkUnReady;
         window.openJwModal = openJwModal;
         window.closeJwModal = closeJwModal;
     </script>

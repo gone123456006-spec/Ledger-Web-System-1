@@ -668,6 +668,51 @@
     let form = null;
     let fields = {};
 
+    /** Each word: first letter capital, rest lowercase; spaces unchanged (Add Customer — Name). */
+    function formatCustomerNameTitleCase(value) {
+      if (value == null) return "";
+      return String(value).replace(/[^\s]+/g, function (word) {
+        if (!word) return word;
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      });
+    }
+
+    function onCustomerNameFieldTitleCaseInput(e) {
+      const el = e.target;
+      if (!el || el.id !== "name" || el.readOnly || el.disabled) return;
+      const start = el.selectionStart;
+      const end = el.selectionEnd;
+      const raw = el.value;
+      const next = formatCustomerNameTitleCase(raw);
+      if (next === raw) return;
+      el.value = next;
+      const lenDiff = next.length - raw.length;
+      if (typeof start === "number" && typeof end === "number") {
+        try {
+          el.setSelectionRange(
+            Math.max(0, Math.min(next.length, start + lenDiff)),
+            Math.max(0, Math.min(next.length, end + lenDiff))
+          );
+        } catch (err) { /* ignore */ }
+      }
+    }
+
+    function onCustomerNameFieldTitleCaseBlur(e) {
+      const el = e.target;
+      if (!el || el.id !== "name") return;
+      const next = formatCustomerNameTitleCase(el.value);
+      if (next !== el.value) el.value = next;
+    }
+
+    function wireCustomerNameTitleCase() {
+      const el = $("name");
+      if (!el) return;
+      el.removeEventListener("input", onCustomerNameFieldTitleCaseInput);
+      el.removeEventListener("blur", onCustomerNameFieldTitleCaseBlur);
+      el.addEventListener("input", onCustomerNameFieldTitleCaseInput);
+      el.addEventListener("blur", onCustomerNameFieldTitleCaseBlur);
+    }
+
     function openStationPopup() {
       $("stationPopupOverlay").style.display = "flex";
       resetStationPopup();
@@ -836,6 +881,7 @@
         }
       });
 
+      wireCustomerNameTitleCase();
     }
 
     if (document.readyState === 'loading') {

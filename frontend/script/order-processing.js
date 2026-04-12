@@ -13,16 +13,20 @@
  * Earring is still In Process → the order MUST NOT move to Ready Orders. Partial line
  * completion does not promote the order.
  *
- * Rule 3 — Completion (100% every item)
- * Move to Ready Orders ONLY when:
- *   • no items pending (all quantity-bearing Order lines assigned), AND
- *   • no items still In Process, AND
- *   • every such line’s full ordered quantity is accounted for in READY or READY_ORDER
- *     (workshop “ready” or finalized from Ready Items = 100% processed for that line).
+ * Rule 3 — Workshop completion (100% every item, workshop / Ready Items queue)
+ * All quantity-bearing lines have their full ordered qty in READY or READY_ORDER
+ * (workshop “ready” or already finalized). No pending lines; no In Process / ASSIGNED qty.
+ * Used by Ready Items “Move to Ready Orders” gating and Pending Orders checks.
  *
- * Simple form: move ONLY IF every item is ready at 100% quantity; otherwise → do NOT move.
+ * Rule 4 — Ready Orders list (`order.status === 'READY'`)
+ * The Ready Orders screen and `syncOrdersReadyFromProcess` promote an order ONLY when:
+ *   • Rules 1–2 pass (nothing pending, nothing still In Process / ASSIGNED with qty > 0), AND
+ *   • every quantity-bearing line’s full ordered qty is in **READY_ORDER** only
+ *     (finalized via Ready Items → “Move to Ready Orders”).
+ * Workshop-only READY (Item Process / Skip Assign) is NOT enough — avoids orders
+ * appearing in Ready Orders right after assign or as soon as lines hit Ready Items.
  *
- * Used by Item Processing, Ready Items, sync, and Pending Orders “Mark Ready”.
+ * Used by Item Processing / Ready Items sync, new-order save, and Pending Orders “Mark Ready”.
  */
 (function (global) {
     /** Same line-type rules as Pending Items (item.type + optional type token in values[0]). */
@@ -141,6 +145,48 @@
         return sawLine;
     }
 
+    /**
+     * Rule 4: any itemProcess row for this order with qty > 0 that is not READY_ORDER
+     * blocks listing the order under Ready Orders (e.g. ASSIGNED after assign, or READY before “Move to Ready Orders”).
+     */
+    function orderHasQtyInNonFinalizedStatus(itemProcess, orderId) {
+        var oid = String(orderId);
+        return (itemProcess || []).some(function (e) {
+            if (!e || String(e.orderId) !== oid) return false;
+            var q = parseFloat(e.qty) || 0;
+            if (q <= 0) return false;
+            var st = String(e.status || '').toUpperCase();
+            return st !== 'READY_ORDER';
+        });
+    }
+
+    /** Rule 4: every quantity-bearing line has full ordered qty in READY_ORDER only. */
+    function orderEveryLineFinalizedAtFullQuantity(order, itemProcess, orderId) {
+        if (!order || !order.items) return false;
+        var sawLine = false;
+        for (var idx = 0; idx < order.items.length; idx++) {
+            if (!isOrderLineItem(order.items[idx])) continue;
+            var need = orderLineQty(order, idx);
+            if (need <= 0) continue;
+            sawLine = true;
+            var have = sumQtyForLineWithStatuses(itemProcess, orderId, idx, ['READY_ORDER']);
+            if (have + 1e-6 < need) return false;
+        }
+        return sawLine;
+    }
+
+    /**
+     * True iff Rules 1 + 4 pass: order may appear in Ready Orders / get `status === 'READY'` from sync.
+     * Stricter than isOrderFullyReady (workshop READY alone does not qualify).
+     */
+    function isOrderReadyForReadyOrdersList(orders, itemProcess, orderId) {
+        var order = orders.filter(function (o) { return o && String(o.id) === String(orderId); })[0];
+        if (!order || !order.items) return false;
+        if (orderHasUnassignedPendingLines(order, itemProcess, orderId)) return false;
+        if (orderHasQtyInNonFinalizedStatus(itemProcess, orderId)) return false;
+        return orderEveryLineFinalizedAtFullQuantity(order, itemProcess, orderId);
+    }
+
     /** Sum qty on itemProcess rows for this line where status is not READY / READY_ORDER. */
     function sumQtyForLineNonTerminal(itemProcess, orderId, itemIdx) {
         var oid = String(orderId);
@@ -222,7 +268,7 @@
     }
 
     /**
-     * Sets order.status to READY only when isOrderFullyReady (Rules 1–3).
+     * Sets order.status to READY only when isOrderReadyForReadyOrdersList (Rules 1 + 4: finalized in Ready Items).
      * Demotes READY orders when that is no longer true.
      */
     function syncOrdersReadyFromProcess(orders, itemProcess) {
@@ -230,7 +276,7 @@
         orders.forEach(function (order) {
             if (!order || order.id == null) return;
             var oid = String(order.id);
-            if (isOrderFullyReady(orders, itemProcess, oid)) {
+            if (isOrderReadyForReadyOrdersList(orders, itemProcess, oid)) {
                 order.status = 'READY';
                 order.readyDate = order.readyDate || new Date().toISOString();
             } else if (order.status === 'READY') {
@@ -303,8 +349,12 @@
         orderHasUnassignedPendingLines: orderHasUnassignedPendingLines,
         orderEveryLineReadyAtFullQuantity: orderEveryLineReadyAtFullQuantity,
         isOrderFullyReady: isOrderFullyReady,
-        /** Alias — same as isOrderFullyReady (Rules 1–3). */
-        orderMeetsReadyOrdersPolicy: isOrderFullyReady,
+        /** Ready Orders list / sync: finalized READY_ORDER only (Rules 1 + 4). */
+        isOrderReadyForReadyOrdersList: isOrderReadyForReadyOrdersList,
+        orderHasQtyInNonFinalizedStatus: orderHasQtyInNonFinalizedStatus,
+        orderEveryLineFinalizedAtFullQuantity: orderEveryLineFinalizedAtFullQuantity,
+        /** Alias — same as isOrderReadyForReadyOrdersList (strict Ready Orders policy). */
+        orderMeetsReadyOrdersPolicy: isOrderReadyForReadyOrdersList,
         syncOrdersReadyFromProcess: syncOrdersReadyFromProcess,
         pruneItemProcessForOrder: pruneItemProcessForOrder,
         syncOrderLineAssignmentFromItemProcess: syncOrderLineAssignmentFromItemProcess,

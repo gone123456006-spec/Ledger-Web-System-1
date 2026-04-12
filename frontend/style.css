@@ -189,7 +189,7 @@ ul, li{
     color:#000 !important;
 }
 
-/* Gold Order Book: hover to show submenu (New Order, Orders, Pending Orders, Ready Orders, etc.) */
+/* Gold Order Book: hover to show submenu (New Order → Orders → Pending Orders → Pending Items → Item Process → Ready Items → Ready Orders) */
 .sidebar-gold-order{
     position:relative;
     margin-bottom:8px;
