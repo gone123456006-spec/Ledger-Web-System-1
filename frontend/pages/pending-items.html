@@ -1272,6 +1272,8 @@
         </svg>
         Refresh
       </button>
+      <button type="button" class="btn" id="pendingToggleSelectAllBtn" onclick="pendingToggleSelectAllClick()" disabled
+        title="Select every visible row, or clear all selections">Select all</button>
       <button class="btn btn-unassign" id="unassignBtn" onclick="confirmUnassign()" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round">
@@ -1316,9 +1318,7 @@
       <table id="pendingTable">
         <thead>
           <tr>
-            <th class="center cb-cell" style="width:46px;">
-              <input type="checkbox" id="selectAll" data-persist="ignore" onchange="toggleAll(this)">
-            </th>
+            <th class="center cb-cell" style="width:46px;" aria-label="Row select"></th>
             <th class="center" style="width:68px;">Mark</th>
             <th class="center">Status</th>
             <th class="right">Qty</th>
@@ -1668,12 +1668,42 @@
         if (unassignCount) { unassignCount.style.display = checkedAssigned > 0 ? 'inline-block' : 'none'; unassignCount.textContent = checkedAssigned; }
       }
 
-      const all = [...document.querySelectorAll('.row-cb')].filter(c => c.closest('tr') && c.closest('tr').style.display !== 'none');
-      const sa = document.getElementById('selectAll');
-      if (sa) {
-        sa.checked = all.length > 0 && all.every(c => c.checked);
-        sa.indeterminate = !sa.checked && all.some(c => c.checked);
+      pendingSyncToggleSelectAllButton();
+    }
+
+    function pendingGetVisibleRowCheckboxes() {
+      return [...document.querySelectorAll('.row-cb:not(:disabled)')].filter(cb => {
+        const tr = cb.closest('tr');
+        return tr && tr.style.display !== 'none';
+      });
+    }
+
+    function pendingSyncToggleSelectAllButton() {
+      const btn = document.getElementById('pendingToggleSelectAllBtn');
+      if (!btn) return;
+      const visible = pendingGetVisibleRowCheckboxes();
+      if (!visible.length) {
+        btn.disabled = true;
+        btn.textContent = 'Select all';
+        return;
       }
+      btn.disabled = false;
+      const allChecked = visible.every(cb => cb.checked);
+      btn.textContent = allChecked ? 'Clear selection' : 'Select all';
+    }
+
+    function pendingToggleSelectAllClick() {
+      const visible = pendingGetVisibleRowCheckboxes();
+      if (!visible.length) return;
+      const allChecked = visible.every(cb => cb.checked);
+      const nextChecked = !allChecked;
+      visible.forEach(cb => {
+        if (cb.checked !== nextChecked) {
+          cb.checked = nextChecked;
+          onCbChange(cb);
+        }
+      });
+      pendingSyncToggleSelectAllButton();
     }
 
     /* ══════════════════════════════════════════════════════════════
@@ -2055,15 +2085,6 @@
       applyTableFilters();
     }
 
-    function toggleAll(src) {
-      document.querySelectorAll('.row-cb').forEach(cb => {
-        const tr = cb.closest('tr');
-        if (!tr || tr.style.display === 'none') return;
-        cb.checked = src.checked;
-        onCbChange(cb);
-      });
-    }
-
     function toggleFilterBar() {
       const bar = document.getElementById('filterBar');
       const btn = document.getElementById('filterToggleBtn');
@@ -2353,7 +2374,6 @@
           const workerName = selectedJwName;
           isAssigning = false;
           closeAssignModal();
-          document.getElementById('selectAll').checked = false;
           btn.classList.remove('assigning');
           btn.disabled  = true;
           btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="confirmBtnText">Confirm Assign</span>`;
@@ -2405,7 +2425,6 @@
 
         localStorage.setItem('orders',      JSON.stringify(orders));
         localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
-        document.getElementById('selectAll').checked = false;
         loadPendingItems();
         try { window.dispatchEvent(new Event('storage')); } catch (e) { }
         showToast(`✅ ${count} item${count > 1 ? 's' : ''} unassigned successfully`, 'success');
@@ -2477,7 +2496,7 @@
     window.confirmUnassign        = confirmUnassign;
     window.selectJw               = selectJw;
     window.onCbChange             = onCbChange;
-    window.toggleAll              = toggleAll;
+    window.pendingToggleSelectAllClick = pendingToggleSelectAllClick;
     window.markEntry              = markEntry;
     window.closeEntryPopup        = closeEntryPopup;
     window.getEntryPageUrl        = getEntryPageUrl;

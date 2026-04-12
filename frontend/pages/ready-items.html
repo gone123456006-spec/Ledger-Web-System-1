@@ -1090,6 +1090,8 @@
                 <option value="">👤 All Job Workers</option>
             </select>
             <button class="btn" onclick="loadProcessItems()">🔄 Refresh</button>
+            <button type="button" class="btn" id="ipToggleSelectAllBtn" onclick="ipToggleSelectAllClick()" disabled
+                title="Select every visible row, or clear all selections">Select all</button>
             <button type="button" class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled
                 title=""
                 style="background:#0f5132;color:#fff;border-color:#0f5132;">
@@ -1105,9 +1107,7 @@
             <table id="processItemsTable">
                 <thead>
                     <tr>
-                        <th class="center cb-cell" style="width:46px;">
-                            <input type="checkbox" id="ipSelectAll" onchange="ipToggleAll(this)">
-                        </th>
+                        <th class="center cb-cell" style="width:46px;" aria-label="Row select"></th>
                         <th class="center">Status</th>
                         <th class="right">Qty</th>
                         <th>Item Name</th>
@@ -1657,31 +1657,49 @@
                 pill.textContent = n + ' selected';
             }
 
-            // Update select-all checkbox state
-            const all = [...document.querySelectorAll('.ip-row-cb')].filter(c => {
-                const tr = c.closest('tr');
+            ipSyncToggleSelectAllButton();
+        }
+
+        function ipGetVisibleRowCheckboxes() {
+            const root = ipGetRoot();
+            return [...root.querySelectorAll('.ip-row-cb:not(:disabled)')].filter(cb => {
+                const tr = cb.closest('tr');
                 return tr && tr.style.display !== 'none';
             });
-            const sa = document.getElementById('ipSelectAll');
-            if (sa) {
-                sa.checked = all.length > 0 && all.every(c => c.checked);
-                sa.indeterminate = !sa.checked && all.some(c => c.checked);
+        }
+
+        function ipSyncToggleSelectAllButton() {
+            const btn = document.getElementById('ipToggleSelectAllBtn');
+            if (!btn) return;
+            const visible = ipGetVisibleRowCheckboxes();
+            if (!visible.length) {
+                btn.disabled = true;
+                btn.textContent = 'Select all';
+                return;
             }
+            btn.disabled = false;
+            const allChecked = visible.every(cb => cb.checked);
+            btn.textContent = allChecked ? 'Clear selection' : 'Select all';
+        }
+
+        function ipToggleSelectAllClick() {
+            const visible = ipGetVisibleRowCheckboxes();
+            if (!visible.length) return;
+            const allChecked = visible.every(cb => cb.checked);
+            const nextChecked = !allChecked;
+            visible.forEach(cb => {
+                if (cb.checked !== nextChecked) {
+                    cb.checked = nextChecked;
+                    ipOnCbChange(cb);
+                }
+            });
+            ipSyncToggleSelectAllButton();
         }
 
         function ipOnCbChange(cb) {
             const tr = cb.closest('tr');
             if (tr) tr.classList.toggle('row-selected', cb.checked);
             ipUpdateUI();
-        }
-
-        function ipToggleAll(src) {
-            document.querySelectorAll('.ip-row-cb').forEach(cb => {
-                const tr = cb.closest('tr');
-                if (!tr || tr.style.display === 'none') return;
-                cb.checked = src.checked;
-                ipOnCbChange(cb);
-            });
         }
 
         /** Populate Order no. / Stamp / Item name dropdowns from currently loaded items. */
@@ -2330,7 +2348,7 @@
         window.loadProcessItems = loadProcessItems;
         window.ipFilterTable = ipFilterTable;
         window.setIpFilter = setIpFilter;
-        window.ipToggleAll = ipToggleAll;
+        window.ipToggleSelectAllClick = ipToggleSelectAllClick;
         window.ipOnCbChange = ipOnCbChange;
         window.openMarkReadyModal = openMarkReadyModal;
         window.closeMarkReadyModal = closeMarkReadyModal;
