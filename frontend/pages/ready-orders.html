@@ -749,11 +749,11 @@
             <th>Ready Date</th>
             <th>Customer</th>
             <th>Relation Name</th>
-            <th class="right">Weight (g)</th>
-            <th class="right" title="Same as Orders list Order Total (gross non-Purchase lines)">Net (Rs)</th>
-            <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
-            <th class="right" title="Non-Paid payments + purchase line totals">Advance</th>
-            <th class="right" title="Net bill after purchases − all payments (same as Orders list Balance)">Balance</th>
+            <th class="right">Ready Weight (g)</th>
+            <th class="right" title="Same as Orders list Order Total (gross non-Purchase lines), in Indian Rupees (₹)">Ready Net (₹)</th>
+            <th class="right" title="Purchase lines + Purchase sheet total, in Indian Rupees (₹)">Advanced Purchase (₹)</th>
+            <th class="right" title="Non-Paid payments + purchase line totals, in Indian Rupees (₹)">Ready Advance (₹)</th>
+            <th class="right" title="Net bill after purchases − all payments (same as Orders list Balance), in Indian Rupees (₹)">Balance (₹)</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -1406,11 +1406,11 @@
     <td>${customerName}</td>
     <td>${relationName}</td>
     <td class="right">${displayWeight.toFixed(3)}</td>
-    <td class="right"><strong>\u20b9${displayNetAmount.toFixed(2)}</strong></td>
-    <td class="right">\u20b9${totalPurchaseDisplay.toFixed(2)}</td>
-    <td class="right">\u20b9${totalAdvance.toFixed(2)}</td>
+    <td class="right"><strong>\u20b9\u00a0${displayNetAmount.toFixed(2)}</strong></td>
+    <td class="right">\u20b9\u00a0${totalPurchaseDisplay.toFixed(2)}</td>
+    <td class="right">\u20b9\u00a0${totalAdvance.toFixed(2)}</td>
     <td class="right" style="font-weight:700; color:${displayBalance > 0 ? '#d32f2f' : '#2e7d32'};">
-      \u20b9${displayBalance.toFixed(2)}
+      \u20b9\u00a0${displayBalance.toFixed(2)}
     </td>
     <td class="center">
       <button class="action-btn" onclick="editOrder(${order.id}); event.stopPropagation();">✏️ Edit</button>

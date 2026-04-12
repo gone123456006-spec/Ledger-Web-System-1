@@ -286,6 +286,98 @@
             color: #ef4444;
             font-weight: 600;
         }
+
+        /* Order-level narration (same data as New Order → orderNarration on orders[]) */
+        .order-narration-rb-wrap {
+            padding: 12px 24px 16px;
+            flex-shrink: 0;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .order-narration-rb-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .order-narration-rb-head {
+            background: #fff;
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .order-narration-rb-head h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .order-narration-rb-bill {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 55%;
+        }
+
+        .order-narration-rb-body {
+            padding: 12px 16px 16px;
+        }
+
+        .order-narration-rb-hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin: 0 0 8px;
+            line-height: 1.45;
+        }
+
+        .order-narration-rb-textarea {
+            width: 100%;
+            min-height: 110px;
+            max-height: 220px;
+            resize: vertical;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            font-size: 13px;
+            line-height: 1.45;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #fff;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .order-narration-rb-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-soft);
+        }
+
+        .order-narration-rb-textarea:disabled {
+            background: #f1f5f9;
+            color: var(--muted);
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
 </head>
 
@@ -355,6 +447,22 @@
                 </table>
             </div>
 
+            <!-- Below rate book table: same order-level field as New Order (orderNarration on orders[]) -->
+            <div class="order-narration-rb-wrap">
+                <div class="order-narration-rb-card">
+                    <div class="order-narration-rb-head">
+                        <h3>Narration / description</h3>
+                        <span class="order-narration-rb-bill" id="orderNarrationBillTag"></span>
+                    </div>
+                    <div class="order-narration-rb-body">
+                        <p class="order-narration-rb-hint" id="orderNarrationRbHint">Loading…</p>
+                        <label for="orderNarrationRb" class="visually-hidden">Order narration or description</label>
+                        <textarea id="orderNarrationRb" class="order-narration-rb-textarea" maxlength="8000"
+                            placeholder="Write narration, description, or any message for this order…"></textarea>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <div class="footer">
@@ -370,6 +478,125 @@
         function safeNumber(val, fallback = 0) {
             const n = Number(val);
             return Number.isFinite(n) ? n : fallback;
+        }
+
+        function findOrderByBillNo(billNo) {
+            if (!billNo) return null;
+            const b = String(billNo).trim();
+            try {
+                const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+                return orders.find(o => o && (String(o.orderNo) === b || String(o.billNo) === b)) || null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function findOrderByEditId() {
+            let id = "";
+            try {
+                id = (localStorage.getItem("editOrderId") || "").trim();
+            } catch (e) { }
+            if (!id) return null;
+            try {
+                const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+                return orders.find(o => o && (String(o.id) === id || o.id == id)) || null;
+            } catch (e2) {
+                return null;
+            }
+        }
+
+        /** Bill / order no. used to attach narration to orders[] (same as New Order). */
+        function resolveBillNoForOrderNarration() {
+            let b = "";
+            try {
+                b = (localStorage.getItem("ratebookBillNo") || "").trim();
+            } catch (e) { }
+            if (b) return b;
+            try {
+                const params = new URLSearchParams(window.location.search);
+                b = (params.get("bill") || params.get("billNo") || params.get("orderNo") || "").trim();
+            } catch (e2) { }
+            if (b) return b;
+            try {
+                const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
+                const bills = [...new Set(rates.map(r => (r && r.billNo ? String(r.billNo).trim() : "")).filter(Boolean))];
+                if (bills.length === 1) return bills[0];
+                const sorted = [...rates].sort((a, b) =>
+                    new Date(b.timestamp || b.date || 0) - new Date(a.timestamp || a.date || 0));
+                const hit = sorted.find(r => r && r.billNo);
+                if (hit) return String(hit.billNo).trim();
+            } catch (e3) { }
+            return "";
+        }
+
+        function loadOrderNarrationPanel() {
+            const ta = document.getElementById("orderNarrationRb");
+            const tag = document.getElementById("orderNarrationBillTag");
+            const hint = document.getElementById("orderNarrationRbHint");
+            if (!ta) return;
+            let bill = resolveBillNoForOrderNarration();
+            let order = findOrderByBillNo(bill);
+            if (!order) {
+                order = findOrderByEditId();
+                if (order && !bill) {
+                    bill = String(order.orderNo || order.billNo || order.id || "").trim();
+                }
+            }
+            if (tag) tag.textContent = bill ? ("Order: " + bill) : (order ? ("Order id: " + String(order.id)) : "");
+            if (order) {
+                const raw = order.orderNarration != null && order.orderNarration !== ""
+                    ? order.orderNarration
+                    : (order.narration != null ? order.narration : "");
+                ta.value = raw != null ? String(raw) : "";
+                ta.disabled = false;
+                if (hint) {
+                    hint.textContent = "Optional message or notes for this order — same field as New Order. Saved on the order when you click Save below.";
+                }
+            } else {
+                ta.value = "";
+                ta.disabled = !bill;
+                if (hint) {
+                    hint.textContent = bill
+                        ? ("No order found in Orders for \"" + bill + "\". Narration will save once that order exists, or open this page with a linked bill.")
+                        : "Optional message for an order. Open from an order (bill in context) or add ?billNo= to the URL to load and save narration on that order.";
+                }
+            }
+        }
+
+        function persistOrderNarrationWithRates() {
+            const ta = document.getElementById("orderNarrationRb");
+            if (!ta) return true;
+
+            let bill = resolveBillNoForOrderNarration();
+            let order = findOrderByBillNo(bill);
+            if (!order) {
+                order = findOrderByEditId();
+            }
+            if (!order) {
+                console.warn("[Rate Book History] orderNarration: no order to update (bill / edit context)");
+                return false;
+            }
+
+            let orders;
+            try {
+                orders = JSON.parse(localStorage.getItem("orders") || "[]");
+            } catch (e) {
+                return false;
+            }
+            const idx = orders.findIndex(o => o && String(o.id) === String(order.id));
+            if (idx < 0) {
+                console.warn("[Rate Book History] orderNarration: order id not in orders[]", order.id);
+                return false;
+            }
+            orders[idx].orderNarration = String(ta.value || "");
+            try {
+                localStorage.setItem("orders", JSON.stringify(orders));
+                window.dispatchEvent(new CustomEvent("ordersUpdated", { detail: { billNo: b } }));
+            } catch (e2) {
+                console.error(e2);
+                return false;
+            }
+            return true;
         }
 
         /* LOAD RATE BOOK HISTORY (FILLABLE) */
@@ -391,6 +618,7 @@
                             </td>
                         </tr>
                     `;
+                    loadOrderNarrationPanel();
                     return;
                 }
 
@@ -488,6 +716,7 @@
                     `;
                     tbody.appendChild(tr);
                 });
+                loadOrderNarrationPanel();
             } catch (e) {
                 console.error("Error loading history:", e);
             }
@@ -739,6 +968,11 @@
             const rows = tbody.querySelectorAll("tr[data-id]");
             if (rows.length === 0) {
                 localStorage.setItem("rateBook", "[]");
+                try {
+                    persistOrderNarrationWithRates();
+                } catch (eNar0) {
+                    console.warn(eNar0);
+                }
                 showSaveFeedback("Saved");
                 return;
             }
@@ -792,6 +1026,11 @@
                 }
                 showSaveFeedback("Saved");
                 try {
+                    persistOrderNarrationWithRates();
+                } catch (eNar) {
+                    console.warn(eNar);
+                }
+                try {
                     window.dispatchEvent(new CustomEvent("ratebookUpdated"));
                     if (window.opener) window.opener.dispatchEvent(new CustomEvent("ratebookUpdated"));
                 } catch (e) {}
@@ -844,13 +1083,23 @@
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
             loadRateBookHistory();
+            loadOrderNarrationPanel();
         });
 
         // Listen for updates from other windows
         window.addEventListener('storage', (e) => {
             if (e.key === 'rateBook') {
                 loadRateBookHistory();
+                loadOrderNarrationPanel();
             }
+            if (e.key === 'orders') {
+                loadOrderNarrationPanel();
+            }
+        });
+
+        window.addEventListener('ratebookUpdated', () => {
+            loadRateBookHistory();
+            loadOrderNarrationPanel();
         });
     </script>
 

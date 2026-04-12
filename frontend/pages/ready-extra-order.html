@@ -1313,6 +1313,59 @@
       gap: 20px;
     }
 
+    .panel-stack-rex {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .panel-section--rex-order-narration .panel-content {
+      max-height: none;
+      padding-top: 10px;
+    }
+
+    .rex-order-narration-hint {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 0 0 8px;
+      line-height: 1.45;
+    }
+
+    .rex-order-narration-textarea {
+      width: 100%;
+      min-height: 110px;
+      max-height: 220px;
+      resize: vertical;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .rex-order-narration-textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--primary-soft);
+    }
+
+    .visually-hidden-rex {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .panel-section {
       background: #f8f9fa;
       border-radius: 12px;
@@ -2273,14 +2326,29 @@
     <!-- PAYMENT, RATEBOOK & RECEIPT PANEL -->
     <div class="info-panel">
       <div class="panel-grid">
-        <!-- RATEBOOK SECTION -->
-        <div class="panel-section">
-          <div class="panel-section-header">
-            <h3>Ratebook</h3>
+        <div class="panel-stack-rex">
+          <!-- RATEBOOK SECTION -->
+          <div class="panel-section">
+            <div class="panel-section-header">
+              <h3>Ratebook</h3>
+            </div>
+            <div class="panel-content" id="ratebookPanelContent">
+              <div class="panel-list" id="ratebookList">
+                <div class="empty-state">No rates available</div>
+              </div>
+            </div>
           </div>
-          <div class="panel-content" id="ratebookPanelContent">
-            <div class="panel-list" id="ratebookList">
-              <div class="empty-state">No rates available</div>
+
+          <!-- Order narration (same field as New Order → orders[].orderNarration) -->
+          <div class="panel-section panel-section--rex-order-narration">
+            <div class="panel-section-header">
+              <h3>Narration / description</h3>
+            </div>
+            <div class="panel-content">
+              <p class="rex-order-narration-hint">Optional message or notes for this order. Saved when you save the order.</p>
+              <label for="rexOrderNarration" class="visually-hidden-rex">Order narration or description</label>
+              <textarea id="rexOrderNarration" class="rex-order-narration-textarea" maxlength="8000"
+                placeholder="Write narration, description, or any message for this order…"></textarea>
             </div>
           </div>
         </div>
@@ -5460,6 +5528,8 @@
           orderDataR.readyExtraSavedAt = orderTimestampR;
           orderDataR.hideBillMidColumns = billMidColumnsHidden;
           orderDataR.billStagedForAllBill = false;
+          var rexNarR = document.getElementById("rexOrderNarration");
+          orderDataR.orderNarration = rexNarR ? String(rexNarR.value || "") : "";
 
           const ordersReady = orders.filter(o => o && o.orderNo !== billNo.value);
           ordersReady.push(orderDataR);
@@ -5626,7 +5696,11 @@
           ratebookOrderedWeight: orderedNetWt.toFixed(3),
           ratebookDeliveredWeight: rbSafeNum(existingOrder && existingOrder.ratebookDeliveredWeight, 0).toFixed(3),
           timestamp: orderTimestamp,
-          hideBillMidColumns: billMidColumnsHidden
+          hideBillMidColumns: billMidColumnsHidden,
+          orderNarration: (function () {
+            var el = document.getElementById("rexOrderNarration");
+            return el ? String(el.value || "") : "";
+          })()
         };
 
         // Preserve any additional properties from existing order
@@ -5665,7 +5739,11 @@
           rateBookDiffSummary: rateBookDiffSummaryStored,
           pc: totalPc,
           grWt: totalGrWt.toFixed(3),
-          hideBillMidColumns: billMidColumnsHidden
+          hideBillMidColumns: billMidColumnsHidden,
+          orderNarration: (function () {
+            var el = document.getElementById("rexOrderNarration");
+            return el ? String(el.value || "") : "";
+          })()
         };
 
         if (billIndex >= 0) {
@@ -5964,6 +6042,8 @@
         if (dueDate) dueDate.value = "";
         if (billDate) billDate.value = "";
         if (gstRate) gstRate.value = "";
+        var rexNarReset = document.getElementById("rexOrderNarration");
+        if (rexNarReset) rexNarReset.value = "";
 
         // Clear table rows
         if (itemBody) itemBody.innerHTML = "";
@@ -6105,6 +6185,11 @@
         }
         if (gstRate) gstRate.value = order.gst || "";
 
+        var rexNarEd = document.getElementById("rexOrderNarration");
+        if (rexNarEd) {
+          var rn = order.orderNarration != null && order.orderNarration !== "" ? order.orderNarration : (order.narration != null ? order.narration : "");
+          rexNarEd.value = rn != null ? String(rn) : "";
+        }
 
         // Customer name read-only when opened from All Bill (editCustomerReadOnly)
         if (custName) {
@@ -6277,6 +6362,21 @@
           useBillLayout = true;
         }
         applyBillMidColumnsHidden(useBillLayout);
+
+        var rexNarBill = document.getElementById("rexOrderNarration");
+        if (rexNarBill) {
+          var narB = (b.orderNarration != null && b.orderNarration !== "") ? b.orderNarration : "";
+          if (!narB && billNo && billNo.value) {
+            try {
+              var ordList = JSON.parse(localStorage.getItem("orders") || "[]");
+              var oMatch = ordList.find(function (x) {
+                return x && String(x.orderNo || "").trim() === String(billNo.value).trim();
+              });
+              if (oMatch) narB = (oMatch.orderNarration != null ? oMatch.orderNarration : oMatch.narration) || "";
+            } catch (eb) { /* ignore */ }
+          }
+          rexNarBill.value = narB != null ? String(narB) : "";
+        }
 
         // Refresh totals and payment panel so they show saved data
         setTimeout(function () {
@@ -7736,6 +7836,10 @@
             billDate: billDate ? billDate.value : "",
             gstRate: gstRate ? gstRate.value : "",
             hideBillMidColumns: billMidColumnsHidden,
+            orderNarration: (function () {
+              var el = document.getElementById("rexOrderNarration");
+              return el ? String(el.value || "") : "";
+            })(),
             rows: []
           };
 
@@ -7809,6 +7913,8 @@
               if (orderState.dueDate && dueDate) dueDate.value = orderState.dueDate;
               if (orderState.billDate && billDate) billDate.value = orderState.billDate;
               if (orderState.gstRate && gstRate) gstRate.value = orderState.gstRate;
+              var rexNarSt = document.getElementById("rexOrderNarration");
+              if (rexNarSt && orderState.orderNarration != null) rexNarSt.value = String(orderState.orderNarration);
 
               // Restore rows (overwrite): clear and rebuild exactly
               if (itemBody) itemBody.innerHTML = "";
@@ -7892,6 +7998,10 @@
               if (orderState.dueDate && dueDate && !dueDate.value) dueDate.value = orderState.dueDate;
               if (orderState.billDate && billDate && !billDate.value) billDate.value = orderState.billDate;
               if (orderState.gstRate && gstRate && !gstRate.value) gstRate.value = orderState.gstRate;
+              var rexNarSt2 = document.getElementById("rexOrderNarration");
+              if (rexNarSt2 && orderState.orderNarration != null && !String(rexNarSt2.value || "").trim()) {
+                rexNarSt2.value = String(orderState.orderNarration);
+              }
 
               // Restore rows - MERGE with existing instead of replacing
               if (orderState.rows && orderState.rows.length > 0 && itemBody) {

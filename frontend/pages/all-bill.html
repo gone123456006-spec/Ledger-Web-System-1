@@ -307,11 +307,11 @@
             <th>Order No.</th>
             <th>Customer</th>
             <th>Bill Date</th>
-            <th class="right" title="Amount due after purchase, advances, paid, and rate diff — same as Balance">Net Total Amount (₹)</th>
-            <th class="right" title="Payment advances (non-Paid) + purchase line totals — same as Orders / Ready Extra">Advance (₹)</th>
-            <th class="right">Paid (₹)</th>
+            <th class="right" title="Ready Order Total — sum of Order + Sale + Other line finals (Ready Extra payment panel)">Net Total Amount (₹)</th>
+            <th class="right" title="Advance minus + Advance purchase minus — advance payments + New Order purchase sheet + Purchase-type grid lines">Advance (₹)</th>
+            <th class="right" title="Paid rupees + Paid purchase — Paid-type payments + Ready/Extra purchase sheet">Paid (₹)</th>
             <th class="right">Weight (g)</th>
-            <th class="right" title="Same value as Net Total Amount — amount due on this bill">Balance (₹)</th>
+            <th class="right" title="Pending balance net total amount — Ready Order Total minus purchases, sheets, payments, and |rate diff|">Balance (₹)</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -369,18 +369,27 @@
       return 0;
     }
 
-    function getSavedPurchaseSheetTotal(billNoVal) {
-      if (!billNoVal) return 0;
+    /** New Order sheet rupees vs Ready/Extra sheet rupees (same split as Ready Extra payment panel). */
+    function getPurchaseSheetTotalsBySource(billNoVal) {
+      if (!billNoVal) return { newOrder: 0, readyExtra: 0 };
       try {
         const key = String(billNoVal).trim();
         const mapNew = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}") || {};
         const mapReady = JSON.parse(localStorage.getItem("readyExtraOrderPurchaseSheets") || "{}") || {};
         const rec1 = mapNew[key] || mapNew[billNoVal];
         const rec2 = mapReady[key] || mapReady[billNoVal];
-        return purchaseSheetRecordTotalAllBill(rec1) + purchaseSheetRecordTotalAllBill(rec2);
+        return {
+          newOrder: purchaseSheetRecordTotalAllBill(rec1),
+          readyExtra: purchaseSheetRecordTotalAllBill(rec2)
+        };
       } catch (e) {
-        return 0;
+        return { newOrder: 0, readyExtra: 0 };
       }
+    }
+
+    function getSavedPurchaseSheetTotal(billNoVal) {
+      const t = getPurchaseSheetTotalsBySource(billNoVal);
+      return t.newOrder + t.readyExtra;
     }
 
     /**
@@ -591,7 +600,8 @@
           }
 
           const billNoVal = balance.orderNo || balance.billNo || "";
-          const purchaseSheetTotal = getSavedPurchaseSheetTotal(billNoVal);
+          const sheetBySource = getPurchaseSheetTotalsBySource(billNoVal);
+          const purchaseSheetTotal = sheetBySource.newOrder + sheetBySource.readyExtra;
           const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
           const paidAmt = getPaidAmount(billNoVal, 'Paid');
 
@@ -620,12 +630,27 @@
             billNetBeforePayments = parseFloat(balance.netAmount || balance.amount || (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) || 0) || 0;
           }
 
-          // Net Total Amount / Balance — matches ready-extra calculateBillTotal + payments + |rate diff|
+          // Pending balance (Ready Extra panel "Pending balance Net Total Amount")
           const balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           balance.computedBalAmt = balAmt;
 
-          // Advances + table purchase + purchase sheet (same buckets as Ready Extra purchase total)
-          const advanceDisplay = advanceAmt + purchaseTotal + purchaseSheetTotal;
+          // Ready Order Total (panel order add); legacy rows with no line items use stored bill amount
+          let readyOrderTotalAmt = netOrderSale;
+          if ((!linkedItems || linkedItems.length === 0) && readyOrderTotalAmt === 0) {
+            readyOrderTotalAmt =
+              parseFloat(
+                (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) ||
+                  balance.netAmount ||
+                  balance.amount ||
+                  0
+              ) || 0;
+          }
+
+          // Advance = Advance minus + Advance purchase minus (panel: advanced + newOrder sheet + Purchase grid)
+          const advancePurchaseMinus = sheetBySource.newOrder + purchaseTotal;
+          const advanceColumnDisplay = advanceAmt + advancePurchaseMinus;
+          // Paid = Paid rupees + Paid purchase (panel: paid + Ready/Extra sheet)
+          const paidColumnDisplay = paidAmt + sheetBySource.readyExtra;
 
           row.innerHTML = `
         <td class="center">${statusLabel}</td>
@@ -633,9 +658,9 @@
         <td>${balance.orderNo || '—'}</td>
         <td>${balance.customer || '—'}</td>
         <td>${balance.date || '—'}</td>
-        <td class="right">${balAmt.toFixed(2)}</td>
-        <td class="right">${advanceDisplay.toFixed(2)}</td>
-        <td class="right">${paidAmt.toFixed(2)}</td>
+        <td class="right">${readyOrderTotalAmt.toFixed(2)}</td>
+        <td class="right">${advanceColumnDisplay.toFixed(2)}</td>
+        <td class="right">${paidColumnDisplay.toFixed(2)}</td>
         <td class="right">${grWt.toFixed(3)}</td>
         <td class="right" style="font-weight:600;">${balAmt.toFixed(2)}</td>
         <td class="center">
