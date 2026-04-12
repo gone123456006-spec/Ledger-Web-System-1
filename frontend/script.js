@@ -397,6 +397,30 @@ function loadPage(pageUrl) {
             return res.text();
         })
         .then(html => {
+            // Absolute URL of the loaded page file — used to resolve <script src="../..."> correctly.
+            // Without this, relative URLs resolve against index.html and ../script/*.js often 404s,
+            // so modules like order-processing.js never run (e.g. Ready Items "Order rules not loaded").
+            const pageFileAbsUrl = new URL(pageUrl, window.location.href).href;
+
+            function resolvePageScriptSrc(rawSrc) {
+                const s = (rawSrc && String(rawSrc).trim()) || "";
+                if (!s) return "";
+                try {
+                    return new URL(s, pageFileAbsUrl).href;
+                } catch (e) {
+                    return s;
+                }
+            }
+
+            function findLoadedScriptByCanonicalUrl(canonicalHref) {
+                if (!canonicalHref) return null;
+                const nodes = document.querySelectorAll("script[data-ledger-src]");
+                for (let i = 0; i < nodes.length; i++) {
+                    if (nodes[i].getAttribute("data-ledger-src") === canonicalHref) return nodes[i];
+                }
+                return null;
+            }
+
             // Parse HTML to extract and remove scripts before inserting
             const temp = document.createElement('div');
             temp.innerHTML = html;
@@ -484,17 +508,21 @@ function loadPage(pageUrl) {
                         const script = document.createElement('script');
 
                         if (oldScript.src) {
-                            // External script: check if already loaded to avoid duplicates
-                            const existingScript = document.querySelector(`script[src="${oldScript.src}"]`);
+                            const rawAttr = (oldScript.getAttribute("src") || "").trim();
+                            const resolvedSrc = resolvePageScriptSrc(rawAttr) || oldScript.src;
+                            // Match by canonical URL (avoids duplicate loads vs different string forms of the same file)
+                            const existingScript = findLoadedScriptByCanonicalUrl(resolvedSrc) ||
+                                document.querySelector(`script[src="${resolvedSrc}"]`);
                             if (!existingScript) {
-                                script.src = oldScript.src;
+                                script.src = resolvedSrc;
+                                script.setAttribute("data-ledger-src", resolvedSrc);
                                 script.async = false;
                                 script.onload = () => {
                                     scriptIndex++;
                                     executeNextScript();
                                 };
                                 script.onerror = () => {
-                                    console.warn(`Failed to load external script: ${oldScript.src}`);
+                                    console.warn(`Failed to load external script: ${resolvedSrc}`);
                                     scriptIndex++;
                                     executeNextScript();
                                 };

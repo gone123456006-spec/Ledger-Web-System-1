@@ -1975,6 +1975,7 @@
     </div>
   </div>
 
+  <script src="../script/order-processing.js"></script>
   <script>
     (function () {
       // =====================================================
@@ -3669,6 +3670,41 @@
       }
 
       /**
+       * When editing an order, each table row carries data-original-item-idx from load.
+       * Removing or reordering lines must drop matching workshop rows and renumber itemIdx
+       * so Pending Items, Item Process, and Ready Items stay aligned with the saved order.
+       */
+      function syncItemProcessForEditedOrderLines(itemProcess, orderIdStr, itemBodyEl) {
+        var oid = String(orderIdStr);
+        var oldToNew = {};
+        if (!itemBodyEl) return itemProcess || [];
+        itemBodyEl.querySelectorAll('tr').forEach(function (tr, newIdx) {
+          var raw = tr.dataset && tr.dataset.originalItemIdx;
+          if (raw === undefined || raw === '') return;
+          var oldIdx = parseInt(raw, 10);
+          if (!isNaN(oldIdx)) oldToNew[oldIdx] = newIdx;
+        });
+        return (itemProcess || []).filter(function (e) {
+          if (!e || String(e.orderId) !== oid) return true;
+          var ix = parseInt(e.itemIdx, 10);
+          return oldToNew[ix] !== undefined;
+        }).map(function (e) {
+          if (!e || String(e.orderId) !== oid) return e;
+          var ix = parseInt(e.itemIdx, 10);
+          var ni = oldToNew[ix];
+          if (ni !== undefined && ni !== ix) {
+            var copy = {};
+            for (var k in e) {
+              if (Object.prototype.hasOwnProperty.call(e, k)) copy[k] = e[k];
+            }
+            copy.itemIdx = ni;
+            return copy;
+          }
+          return e;
+        });
+      }
+
+      /**
        * Save order to localStorage (bills + orders), then optionally return to Dashboard
        * or open a fresh New Order. Uses a lock to prevent duplicate submissions.
        * options.redirectMode: 'dashboard' | 'newOrder' | null — default 'dashboard'
@@ -3734,6 +3770,21 @@
             });
           });
 
+          const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+          let itemProcessArr = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+          if (AppState.editMode && AppState.editOrderId != null) {
+            const prevOrdForLineSync = orders.find(function (o) {
+              return o && (o.id == AppState.editOrderId || String(o.id) === String(AppState.editOrderId));
+            });
+            if (prevOrdForLineSync) {
+              itemProcessArr = syncItemProcessForEditedOrderLines(
+                itemProcessArr,
+                String(AppState.editOrderId),
+                AppState.elements.itemBody
+              );
+            }
+          }
+
           const bnSave = AppState.elements.billNo.value;
           const psMapSave = readPurchaseSheetsMap();
           const psRecSave = psMapSave[bnSave];
@@ -3774,7 +3825,6 @@
             }
           });
 
-          const orders = JSON.parse(localStorage.getItem('orders') || '[]');
           const orderData = {
             id: AppState.editOrderId || Date.now(),
             orderNo: AppState.elements.billNo.value,
@@ -3800,6 +3850,15 @@
             timestamp: new Date().toISOString()
           };
 
+          if (window.OrderProcessing) {
+            if (typeof OrderProcessing.pruneItemProcessForOrder === 'function') {
+              itemProcessArr = OrderProcessing.pruneItemProcessForOrder(orderData, itemProcessArr);
+            }
+            if (typeof OrderProcessing.syncOrderLineAssignmentFromItemProcess === 'function') {
+              OrderProcessing.syncOrderLineAssignmentFromItemProcess(orderData, itemProcessArr);
+            }
+          }
+
           const orderIndex = orders.findIndex(o =>
             o && (o.id == orderData.id || String(o.id) === String(orderData.id))
           );
@@ -3808,7 +3867,25 @@
           } else {
             orders.push(orderData);
           }
+
+          if (AppState.editMode && AppState.editOrderId != null &&
+              window.OrderProcessing && typeof OrderProcessing.syncOrdersReadyFromProcess === 'function') {
+            try {
+              OrderProcessing.syncOrdersReadyFromProcess(orders, itemProcessArr);
+            } catch (e) {
+              console.error(e);
+            }
+          }
+          localStorage.setItem('itemProcess', JSON.stringify(itemProcessArr));
           localStorage.setItem('orders', JSON.stringify(orders));
+          try {
+            if (typeof StorageEvent === 'function') {
+              window.dispatchEvent(new StorageEvent('storage', {
+                key: 'itemProcess',
+                url: window.location.href || ''
+              }));
+            }
+          } catch (eSt) { /* ignore */ }
 
           localStorage.removeItem('editOrderId');
           localStorage.removeItem('editOrderPayload');
@@ -4090,6 +4167,7 @@
             addRow(true);
             const tr = AppState.elements.itemBody.lastElementChild;
             if (!tr) continue;
+            tr.dataset.originalItemIdx = String(idx);
 
             const values = item.values || [];
             var typeVal = item.type || 'Order';

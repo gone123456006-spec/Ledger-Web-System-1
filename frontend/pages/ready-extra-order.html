@@ -1408,12 +1408,12 @@
       padding-top: 0;
     }
 
-    .panel-content#paymentPanelContent > .payment-summary-columns,
-    .panel-content#paymentPanelContent > .panel-list {
+    .panel-content#paymentPanelContent>.payment-summary-columns,
+    .panel-content#paymentPanelContent>.panel-list {
       flex-shrink: 0;
     }
 
-    .panel-content#paymentPanelContent > .panel-list {
+    .panel-content#paymentPanelContent>.panel-list {
       flex: 0 0 auto;
       min-height: 72px;
       max-height: none;
@@ -1506,19 +1506,19 @@
       border-bottom: none;
     }
 
-    #panelPurchaseSaleDetailWrap .summary-item > .summary-label,
-    #panelPurchaseSaleDetailWrap .summary-item > .summary-value {
+    #panelPurchaseSaleDetailWrap .summary-item>.summary-label,
+    #panelPurchaseSaleDetailWrap .summary-item>.summary-value {
       padding: 10px 12px;
       display: flex;
       align-items: center;
     }
 
-    #panelPurchaseSaleDetailWrap .summary-item > .summary-label {
+    #panelPurchaseSaleDetailWrap .summary-item>.summary-label {
       border-right: 1px solid #d1d6de;
       color: var(--muted);
     }
 
-    #panelPurchaseSaleDetailWrap .summary-item > .summary-value {
+    #panelPurchaseSaleDetailWrap .summary-item>.summary-value {
       justify-content: flex-end;
       text-align: right;
       font-variant-numeric: tabular-nums;
@@ -1596,7 +1596,7 @@
     }
 
     /* Full-width tap row: outer grid has 2 cols but only one child — span so label/value align like other rows */
-    #panelPurchaseSaleDetailWrap .summary-item.purchase-minus > .panel-open-purchase-sheet-btn {
+    #panelPurchaseSaleDetailWrap .summary-item.purchase-minus>.panel-open-purchase-sheet-btn {
       grid-column: 1 / -1;
       width: 100%;
       max-width: 100%;
@@ -1618,7 +1618,7 @@
     }
 
     /* Rupee column: same inset “cell” look for all Total rows */
-    #panelPurchaseSaleDetailWrap .summary-item > .summary-value,
+    #panelPurchaseSaleDetailWrap .summary-item>.summary-value,
     #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-value {
       background: #f0f2f5;
       font-weight: 600;
@@ -1627,15 +1627,15 @@
       justify-content: flex-end;
     }
 
-    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-line--add > .summary-value {
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-line--add>.summary-value {
       background: #f7f9fc;
     }
 
-    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-net-balance > .summary-value {
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-net-balance>.summary-value {
       background: #eef0f3;
     }
 
-    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-est-total > .summary-value {
+    #panelPurchaseSaleDetailWrap .summary-item.billing-detail-est-total>.summary-value {
       background: #e8eaee;
     }
 
@@ -2053,6 +2053,7 @@
     }
 
     @media (max-width: 600px) {
+
       #ready-order-advanced-payments-popup .advanced-payments-popup-box,
       #ready-order-paid-payments-popup .advanced-payments-popup-box {
         width: calc(100vw - 16px);
@@ -2251,17 +2252,22 @@
 
       <button onclick="openPayment()"> Payment</button>
       <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--adv-purchase"
-        data-purchase-sheet-source="new-order"
-        data-purchase-new-order-ui="toolbar-add"
-        title="Before Bill: Add to Advance (append). After Bill is on: Add to Paid purchase only — not Advance. Full lists: use Advance purchase minus / Paid Purchase minus in the panel."> Purchase</button>
+        data-purchase-sheet-source="new-order" data-purchase-new-order-ui="toolbar-add"
+        title="Before Bill: Add to Advance (append). After Bill is on: Add to Paid purchase only — not Advance. Full lists: use Advance purchase minus / Paid Purchase minus in the panel.">
+        Purchase</button>
       <button class="btn-transfer" onclick="openBillTransferPopup()"> Transfers</button>
       <button type="button" id="rexBillModeBtn" class="btn-bill" onclick="onBillButtonClick()"
-        title="Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."> Bill</button>
+        title="Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders).">
+        Bill</button>
       <button type="button" id="rexHideUnhideColumnsBtn" class="btn-bill" onclick="onHideUnhideColumnsClick()"
-        title="Hide or Unhide the same columns as Bill view — display only. Does not change Save destination (use Bill before Save for All Bill)."> Hide</button>
-      <button type="button" onclick="saveOrder()" title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only."> Save</button>
+        title="Hide or Unhide the same columns as Bill view — display only. Does not change Save destination (use Bill before Save for All Bill).">
+        Hide</button>
+      <button type="button" onclick="saveOrder()"
+        title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only.">
+        Save</button>
       <button onclick="showInvoice()"> A4 Invoice</button>
-      <button type="button" class="rex-post-transfer-allow" onclick="closeDashboard()" style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
+      <button type="button" class="rex-post-transfer-allow" onclick="closeDashboard()"
+        style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
     </div>
 
     <!-- PAYMENT, RATEBOOK & RECEIPT PANEL -->
@@ -2286,69 +2292,70 @@
           </div>
           <div class="panel-content" id="paymentPanelContent">
             <div class="payment-summary-columns">
-            <div class="payment-section-block payment-section--est">
-              <h4 class="payment-section-heading">Total</h4>
-            <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
-              <div class="summary-item billing-detail-line--add">
-                <span class="summary-label">Ready Order Total:</span>
-                <span class="summary-value" id="panelOrderAdd">₹ 0.00</span>
-              </div>
-              <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
-                <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--adv-purchase"
-                  data-purchase-sheet-source="new-order"
-                  data-purchase-new-order-ui="full"
-                  title="Full Advance (New Order) purchase list for this bill. Save replaces the list shown here (same storage as toolbar Purchase appends to).">
-                  <span class="summary-label">Advance purchase minus:</span>
-                  <span class="summary-value" id="panelAdvancePurchaseMinus">₹ 0.00</span>
-                </button>
-              </div>
-              <button type="button" class="summary-item purchase-minus summary-item--advance-minus-open"
-                title="Tap to view advance payment lines for this bill"
-                onclick="typeof openAdvancedPaymentsPopup==='function'&&openAdvancedPaymentsPopup()">
-                <span class="summary-label">Advance minus:</span>
-                <span class="summary-value" id="panelAdvancedMinus">₹ 0.00</span>
-              </button>
-              <div class="summary-item purchase-minus">
-                <span class="summary-label">Rate difference:</span>
-                <span class="summary-value" id="panelRateDiffAmount">₹ 0.00</span>
-              </div>
-              <div class="summary-item billing-detail-net-balance">
-                <span class="summary-label">Net Balance:</span>
-                <span class="summary-value" id="panelNetBalanceMid">₹ 0.00</span>
-              </div>
-              <div id="paymentSummaryPaidBillRows" class="payment-summary-bill-only" aria-hidden="true">
-              <button type="button" class="summary-item purchase-minus summary-item--paid-minus-open"
-                title="Tap to view Paid payment lines for this bill"
-                onclick="typeof openPaidPaymentsPopup==='function'&&openPaidPaymentsPopup()">
-                <span class="summary-label">Paid minus:</span>
-                <span class="summary-value" id="panelPaidMinus">₹ 0.00</span>
-              </button>
-              <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
-                <button type="button" class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--paid-purchase"
-                  data-purchase-sheet-source="ready-extra"
-                  data-purchase-ready-extra-ui="full"
-                  title="Full Paid purchase list for this bill. Toolbar Purchase adds to Advance only (append); not Paid.">
-                  <span class="summary-label">Paid Purchase minus:</span>
-                  <span class="summary-value" id="panelPaidPurchaseMinus">₹ 0.00</span>
-                </button>
-              </div>
-              </div>
-              <div class="summary-item billing-detail-est-total">
-                <span class="summary-label">Pending balance Net Total Amount:</span>
-                <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
-              </div>
-            </div>
+              <div class="payment-section-block payment-section--est">
+                <h4 class="payment-section-heading">Total</h4>
+                <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
+                  <div class="summary-item billing-detail-line--add">
+                    <span class="summary-label">Ready Order Total:</span>
+                    <span class="summary-value" id="panelOrderAdd">₹ 0.00</span>
+                  </div>
+                  <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
+                    <button type="button"
+                      class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--adv-purchase"
+                      data-purchase-sheet-source="new-order" data-purchase-new-order-ui="full"
+                      title="Full Advance (New Order) purchase list for this bill. Save replaces the list shown here (same storage as toolbar Purchase appends to).">
+                      <span class="summary-label">Advance purchase minus:</span>
+                      <span class="summary-value" id="panelAdvancePurchaseMinus">₹ 0.00</span>
+                    </button>
+                  </div>
+                  <button type="button" class="summary-item purchase-minus summary-item--advance-minus-open"
+                    title="Tap to view advance payment lines for this bill"
+                    onclick="typeof openAdvancedPaymentsPopup==='function'&&openAdvancedPaymentsPopup()">
+                    <span class="summary-label">Advance minus:</span>
+                    <span class="summary-value" id="panelAdvancedMinus">₹ 0.00</span>
+                  </button>
+                  <div class="summary-item purchase-minus">
+                    <span class="summary-label">Rate difference:</span>
+                    <span class="summary-value" id="panelRateDiffAmount">₹ 0.00</span>
+                  </div>
+                  <div class="summary-item billing-detail-net-balance">
+                    <span class="summary-label">Net Balance:</span>
+                    <span class="summary-value" id="panelNetBalanceMid">₹ 0.00</span>
+                  </div>
+                  <div id="paymentSummaryPaidBillRows" class="payment-summary-bill-only" aria-hidden="true">
+                    <button type="button" class="summary-item purchase-minus summary-item--paid-minus-open"
+                      title="Tap to view Paid payment lines for this bill"
+                      onclick="typeof openPaidPaymentsPopup==='function'&&openPaidPaymentsPopup()">
+                      <span class="summary-label">Paid minus:</span>
+                      <span class="summary-value" id="panelPaidMinus">₹ 0.00</span>
+                    </button>
+                    <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
+                      <button type="button"
+                        class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--paid-purchase"
+                        data-purchase-sheet-source="ready-extra" data-purchase-ready-extra-ui="full"
+                        title="Full Paid purchase list for this bill. Toolbar Purchase adds to Advance only (append); not Paid.">
+                        <span class="summary-label">Paid Purchase minus:</span>
+                        <span class="summary-value" id="panelPaidPurchaseMinus">₹ 0.00</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="summary-item billing-detail-est-total">
+                    <span class="summary-label">Pending balance Net Total Amount:</span>
+                    <span class="summary-value" id="panelNetDetail">₹ 0.00</span>
+                  </div>
+                </div>
 
-            <div class="summary-item" id="panelRateDiffWrap"
-              style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
-              <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
-            </div>
-            <div class="summary-item" id="panelAmountMinusRateDiffWrap"
-              style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
-              <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
-              <span class="summary-value" id="panelAmountMinusRateDiff" style="color:#28a745; font-weight:bold;"></span>
-            </div>
-            </div>
+                <div class="summary-item" id="panelRateDiffWrap"
+                  style="font-size:11px; color:#0d6efd; border-top:1px dashed #ccc; padding-top:4px; margin-top:4px; display:none;">
+                  <span class="summary-value" id="panelRateDiffSummary" style="word-break:break-word;"></span>
+                </div>
+                <div class="summary-item" id="panelAmountMinusRateDiffWrap"
+                  style="display:none; padding-top:4px; margin-top:2px; font-size:11px; font-weight:bold;">
+                  <span class="summary-label" style="font-weight:bold;">Amount − Rate Diff:</span>
+                  <span class="summary-value" id="panelAmountMinusRateDiff"
+                    style="color:#28a745; font-weight:bold;"></span>
+                </div>
+              </div>
             </div>
             <div class="panel-list" id="paymentList">
               <div class="empty-state">No payments yet</div>
@@ -2379,7 +2386,8 @@
       <div class="invoice-header-left">
         <p style="margin:5px 0;"><strong>Customer:</strong> <span id="iCustomer"></span></p>
         <p style="margin:5px 0;"><strong id="iOrderDateLabel">Order Date:</strong> <span id="iOrderDate"></span></p>
-        <p id="iBillDateInvoiceRow" style="display: none; margin: 5px 0;"><strong>Bill Date:</strong> <span id="iBillDate"></span></p>
+        <p id="iBillDateInvoiceRow" style="display: none; margin: 5px 0;"><strong>Bill Date:</strong> <span
+            id="iBillDate"></span></p>
         <p style="margin:5px 0;"><strong>Order No:</strong> <span id="iBillNo"></span></p>
         <p style="margin:5px 0;"><strong>Bill No:</strong> <span id="iSgjBillNo"></span></p>
       </div>
@@ -2592,14 +2600,16 @@
   <!-- Advance payments detail (opened from Total → Advance minus) -->
   <div id="ready-order-advanced-payments-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closeAdvancedPaymentsPopup()">
-    <div class="popup-box advanced-payments-popup-box" data-payment-detail-source="advance" onclick="event.stopPropagation()">
+    <div class="popup-box advanced-payments-popup-box" data-payment-detail-source="advance"
+      onclick="event.stopPropagation()">
       <h3 class="advanced-payments-popup-title">Advance payments</h3>
       <div class="advanced-payments-popup-body">
         <div id="advancedPaymentsPopupList" class="advanced-payments-popup-list"></div>
         <div id="advancedPaymentsPopupTotal" class="advanced-payments-popup-total">Total: ₹ 0.00</div>
       </div>
       <div class="popup-actions advanced-payments-popup-actions">
-        <button type="button" class="advanced-payments-popup-close-btn" onclick="closeAdvancedPaymentsPopup()">Close</button>
+        <button type="button" class="advanced-payments-popup-close-btn"
+          onclick="closeAdvancedPaymentsPopup()">Close</button>
       </div>
     </div>
   </div>
@@ -2607,14 +2617,16 @@
   <!-- Paid payments detail (opened from Total → Paid minus) -->
   <div id="ready-order-paid-payments-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closePaidPaymentsPopup()">
-    <div class="popup-box advanced-payments-popup-box" data-payment-detail-source="paid" onclick="event.stopPropagation()">
+    <div class="popup-box advanced-payments-popup-box" data-payment-detail-source="paid"
+      onclick="event.stopPropagation()">
       <h3 class="advanced-payments-popup-title">Paid payments</h3>
       <div class="advanced-payments-popup-body">
         <div id="paidPaymentsPopupList" class="advanced-payments-popup-list"></div>
         <div id="paidPaymentsPopupTotal" class="advanced-payments-popup-total">Total: ₹ 0.00</div>
       </div>
       <div class="popup-actions advanced-payments-popup-actions">
-        <button type="button" class="advanced-payments-popup-close-btn" onclick="closePaidPaymentsPopup()">Close</button>
+        <button type="button" class="advanced-payments-popup-close-btn"
+          onclick="closePaidPaymentsPopup()">Close</button>
       </div>
     </div>
   </div>
@@ -2624,7 +2636,8 @@
     onclick="if(event.target===this) closePurchaseSheetPopup()">
     <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
       <h3 id="rex-purchase-popup-title">Purchase</h3>
-      <p id="rex-purchase-popup-readonly-hint" class="rex-purchase-readonly-hint" style="display:none; margin:0 0 10px; font-size:13px; color:#666;"></p>
+      <p id="rex-purchase-popup-readonly-hint" class="rex-purchase-readonly-hint"
+        style="display:none; margin:0 0 10px; font-size:13px; color:#666;"></p>
       <div class="purchase-sheet-wrap">
         <table class="purchase-sheet-table">
           <thead>
@@ -4162,8 +4175,8 @@
               }
             }
             syncSecondTotalFromRow(r);
-        } catch (e) {
-          console.error("Error in calc (Purchase):", e);
+          } catch (e) {
+            console.error("Error in calc (Purchase):", e);
           }
           setTimeout(function () {
             updateInfoPanel();

@@ -25,14 +25,48 @@
  * Used by Item Processing, Ready Items, sync, and Pending Orders “Mark Ready”.
  */
 (function (global) {
+    /** Same line-type rules as Pending Items (item.type + optional type token in values[0]). */
     function isOrderLineItem(item) {
-        return item && item.values && (item.values[0] || 'Order') === 'Order';
+        if (!item || !item.values || !Array.isArray(item.values)) return false;
+        var v = item.values;
+        var t = item.type && String(item.type).trim();
+        if (!t) {
+            var raw0 = String(v[0] || '').trim();
+            if (['Order', 'Purchase', 'Ready', 'Extra', 'Other', 'Sale'].indexOf(raw0) !== -1) t = raw0;
+            else t = 'Order';
+        }
+        return ['Order', 'Other', 'Sale'].indexOf(t) !== -1;
     }
 
     function orderLineQty(order, itemIdx) {
-        const item = order.items && order.items[itemIdx];
+        var item = order.items && order.items[itemIdx];
         if (!isOrderLineItem(item)) return 0;
-        return Math.max(0, parseFloat(item.values[7]) || 0);
+        var v = item.values || [];
+        if (v.length >= 16) {
+            return Math.max(0, parseFloat(v[4]) || 0);
+        }
+        var raw0 = String(v[0] || '').trim();
+        var isKnownTypeToken = ['Order', 'Purchase', 'Ready', 'Extra', 'Other', 'Sale'].indexOf(raw0) !== -1;
+        var o = (isKnownTypeToken || raw0 === '') ? 0 : -1;
+        var get = function (i) { return v[i + o] !== undefined ? v[i + o] : ''; };
+        return Math.max(0, parseFloat(get(7)) || 0);
+    }
+
+    function orderLineHasItemProcessRows(itemProcess, orderId, itemIdx) {
+        var oid = String(orderId);
+        var ix = parseInt(itemIdx, 10);
+        if (isNaN(ix)) return false;
+        return (itemProcess || []).some(function (e) {
+            return e && String(e.orderId) === oid && parseInt(e.itemIdx, 10) === ix;
+        });
+    }
+
+    /** Assigned to workshop if order line says so OR any itemProcess row exists for that line. */
+    function orderLineIsWorkshopAssigned(order, itemIdx, itemProcess, orderId) {
+        var item = order.items && order.items[itemIdx];
+        if (!item) return false;
+        if (item.processAssigned === true || item.processAssigned === 'true' || item.processAssigned === 1) return true;
+        return orderLineHasItemProcessRows(itemProcess, orderId, itemIdx);
     }
 
     function sumQtyForLineWithStatuses(itemProcess, orderId, itemIdx, statusList) {
@@ -75,14 +109,16 @@
     /**
      * Rule 1 (Pending Items branch): any quantity-bearing Order line not yet assigned
      * still counts as “in Pending Items” and blocks Ready Orders.
+     * Uses itemProcess as well as order.items.processAssigned so rules match the Pending Items UI.
      */
-    function orderHasUnassignedPendingLines(order) {
+    function orderHasUnassignedPendingLines(order, itemProcess, orderId) {
         if (!order || !order.items) return false;
+        var oid = orderId != null && String(orderId) !== '' ? String(orderId) : String(order.id);
         for (var idx = 0; idx < order.items.length; idx++) {
             if (!isOrderLineItem(order.items[idx])) continue;
             var need = orderLineQty(order, idx);
             if (need <= 0) continue;
-            if (order.items[idx].processAssigned !== true) return true;
+            if (!orderLineIsWorkshopAssigned(order, idx, itemProcess, oid)) return true;
         }
         return false;
     }
@@ -149,15 +185,18 @@
             var need = orderLineQty(order, idx);
             if (need <= 0) continue;
             var name = orderLineItemDisplayName(order, idx);
-            var assigned = order.items[idx].processAssigned === true;
+            var assigned = orderLineIsWorkshopAssigned(order, idx, itemProcess, oid);
             var nonTerm = sumQtyForLineNonTerminal(itemProcess, oid, idx);
             var readySum = sumQtyForLineWithStatuses(itemProcess, oid, idx, readyStatusesUpper());
+            var fullyReady = assigned && nonTerm <= 1e-9 && readySum + 1e-9 >= need;
             if (!assigned) {
                 pending.push({ itemIdx: idx, name: name, qty: need });
-            } else if (nonTerm > 0) {
+            } else if (nonTerm > 1e-9) {
                 inProcess.push({ itemIdx: idx, name: name, qty: nonTerm });
-            } else if (readySum > 0) {
+            } else if (fullyReady) {
                 ready.push({ itemIdx: idx, name: name, qty: readySum });
+            } else if (readySum > 0) {
+                inProcess.push({ itemIdx: idx, name: name, qty: Math.max(0, need - readySum) });
             } else {
                 inProcess.push({ itemIdx: idx, name: name, qty: need });
             }
@@ -172,7 +211,7 @@
     function isOrderFullyReady(orders, itemProcess, orderId) {
         var order = orders.filter(function (o) { return o && String(o.id) === String(orderId); })[0];
         if (!order || !order.items) return false;
-        if (orderHasUnassignedPendingLines(order)) return false;
+        if (orderHasUnassignedPendingLines(order, itemProcess, orderId)) return false;
         if (orderHasNonTerminalProcessRows(itemProcess, orderId)) return false;
         return orderEveryLineReadyAtFullQuantity(order, itemProcess, orderId);
     }
@@ -201,6 +240,59 @@
         });
     }
 
+    /**
+     * Drops workshop rows whose itemIdx is no longer a valid index on this order
+     * (e.g. after lines were removed in New Order edit). Prevents the next line from
+     * inheriting another line's process row via stale indices.
+     */
+    function pruneItemProcessForOrder(order, itemProcess) {
+        if (!order || order.id == null) return itemProcess;
+        var oid = String(order.id);
+        var n = (order.items && order.items.length) || 0;
+        return (itemProcess || []).filter(function (e) {
+            if (!e || String(e.orderId) !== oid) return true;
+            var ix = parseInt(e.itemIdx, 10);
+            if (isNaN(ix)) return true;
+            return ix >= 0 && ix < n;
+        });
+    }
+
+    /**
+     * Single source of truth: each order line's assignment flags match actual itemProcess
+     * rows for (order.id, line index). Call after itemProcess is remapped / pruned on save.
+     */
+    function syncOrderLineAssignmentFromItemProcess(order, itemProcess) {
+        if (!order || !Array.isArray(order.items)) return;
+        var oid = String(order.id);
+        var ip = itemProcess || [];
+        order.items.forEach(function (item, idx) {
+            if (!item) return;
+            var rowsForLine = ip.filter(function (e) {
+                return e && String(e.orderId) === oid && parseInt(e.itemIdx, 10) === idx;
+            });
+            if (!rowsForLine.length) {
+                item.processAssigned = false;
+                delete item.assignedToId;
+                delete item.assignedToName;
+                delete item.assignedDate;
+                return;
+            }
+            item.processAssigned = true;
+            var pick = rowsForLine[0];
+            for (var r = 0; r < rowsForLine.length; r++) {
+                if ((parseFloat(rowsForLine[r].qty) || 0) > 0) {
+                    pick = rowsForLine[r];
+                    break;
+                }
+            }
+            if (pick.jobworkerId != null && pick.jobworkerId !== '') item.assignedToId = pick.jobworkerId;
+            if (pick.jobworkerName != null && String(pick.jobworkerName).trim() !== '') {
+                item.assignedToName = pick.jobworkerName;
+            }
+            if (pick.assignedDate) item.assignedDate = pick.assignedDate;
+        });
+    }
+
     global.OrderProcessing = {
         isOrderLineItem: isOrderLineItem,
         orderLineQty: orderLineQty,
@@ -214,6 +306,8 @@
         /** Alias — same as isOrderFullyReady (Rules 1–3). */
         orderMeetsReadyOrdersPolicy: isOrderFullyReady,
         syncOrdersReadyFromProcess: syncOrdersReadyFromProcess,
+        pruneItemProcessForOrder: pruneItemProcessForOrder,
+        syncOrderLineAssignmentFromItemProcess: syncOrderLineAssignmentFromItemProcess,
         sumQtyForLineNonTerminal: sumQtyForLineNonTerminal,
         orderLineItemDisplayName: orderLineItemDisplayName,
         getOrderMoveReadyBreakdown: getOrderMoveReadyBreakdown

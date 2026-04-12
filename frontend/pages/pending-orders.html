@@ -889,7 +889,7 @@
         const orderLabel = order.orderNo || order.billNo || `#${orderId}`;
         const OP = window.OrderProcessing;
 
-        if (OP && typeof OP.orderHasUnassignedPendingLines === "function" && OP.orderHasUnassignedPendingLines(order)) {
+        if (OP && typeof OP.orderHasUnassignedPendingLines === "function" && OP.orderHasUnassignedPendingLines(order, itemProcess, orderId)) {
           alert(`Cannot move order ${orderLabel} to Ready Orders.\n\nSome items are still in Pending Items (not assigned to a job worker). Assign every line first.`);
           return;
         }

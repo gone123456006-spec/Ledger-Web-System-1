@@ -1134,6 +1134,9 @@
     ::-webkit-scrollbar-thumb:hover { background: #9aa3b0; }
 
     /* ── MARK CHECKBOX ── */
+    /* loaded before inline script: LedgerJobworkerSync for entry/order cleanup */
+    /* (see ../script/jobworker-balance-sync.js) */
+
     .mark-cb-wrap {
       display: inline-flex;
       align-items: center;
@@ -1292,7 +1295,7 @@
         <label for="filterStatus">Status</label>
         <select id="filterStatus" onchange="applyTableFilters()">
           <option value="all">All statuses</option>
-          <option value="pending">Pending</option>
+          <option value="pending">Not assigned</option>
           <option value="selected">Selected</option>
           <option value="assigned">Assigned</option>
         </select>
@@ -1781,6 +1784,39 @@
       };
     }
 
+    /** Workshop queue is source of truth when order.items.processAssigned lags after assign/save. */
+    function pendingLineHasItemProcessRow(itemProcessList, orderId, itemIdx) {
+      const oid = String(orderId);
+      const ix = parseInt(itemIdx, 10);
+      if (isNaN(ix)) return false;
+      return (itemProcessList || []).some(function (e) {
+        return e && String(e.orderId) === oid && parseInt(e.itemIdx, 10) === ix;
+      });
+    }
+
+    function pendingLineJobworkerFromItemProcess(itemProcessList, orderId, itemIdx) {
+      const oid = String(orderId);
+      const ix = parseInt(itemIdx, 10);
+      if (isNaN(ix)) return '';
+      const hit = (itemProcessList || []).find(function (e) {
+        return e && String(e.orderId) === oid && parseInt(e.itemIdx, 10) === ix;
+      });
+      return hit ? String(hit.jobworkerName || '').trim() : '';
+    }
+
+    function pendingLineIsAssigned(item, itemProcessList, orderId, itemIdx) {
+      if (!item) return false;
+      if (item.processAssigned === true || item.processAssigned === 'true' || item.processAssigned === 1) return true;
+      return pendingLineHasItemProcessRow(itemProcessList, orderId, itemIdx);
+    }
+
+    /** Pending Items lists all open workshop orders, not only status===PENDING (ASSIGNED / missing status still have lines to show). */
+    function orderEligibleForPendingItemsList(o) {
+      if (!o || o.id == null) return false;
+      const s = String(o.status == null ? '' : o.status).trim().toUpperCase();
+      return s !== 'READY';
+    }
+
     function ledgerTryFocusPendingItemsFromNav() {
       const raw = sessionStorage.getItem('ledgerFocusPendingItems');
       if (!raw) return;
@@ -1859,9 +1895,15 @@
       tbody.innerHTML = '';
       try {
         const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        let itemProcessList = [];
+        try {
+          itemProcessList = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+        } catch (eIp) {
+          itemProcessList = [];
+        }
         const rows = [];
 
-        orders.filter(o => o && o.status === 'PENDING').forEach(order => {
+        orders.filter(o => orderEligibleForPendingItemsList(o)).forEach(order => {
           const orderNo   = order.orderNo || order.billNo || '—';
           /* BUG FIX: customer name — prefer order.customer, fall back to
              order.customerName. The original code only used order.customer
@@ -1869,8 +1911,8 @@
           const customer  = order.customer || order.customerName || '—';
 
           (order.items || []).forEach((item, idx) => {
-            if (!item || !item.values) return;
-            const v = item.values;
+            if (!item) return;
+            const v = Array.isArray(item.values) ? item.values : [];
             const lineType = getPendingLineType(item, v);
             if (!['Order', 'Other', 'Sale'].includes(lineType)) return;
 
@@ -1892,8 +1934,10 @@
               customerRelation: order.customerRelation || '—',
               orderDate:        order.orderDate || '',
               dueDate:          order.dueDate || order.deliveryDate || '',
-              assigned:         item.processAssigned === true,
-              assignedTo:       item.assignedToName || ''
+              assigned:         pendingLineIsAssigned(item, itemProcessList, order.id, idx),
+              assignedTo:       (item.assignedToName && String(item.assignedToName).trim())
+                || pendingLineJobworkerFromItemProcess(itemProcessList, order.id, idx)
+                || ''
             });
           });
         });
@@ -1903,7 +1947,7 @@
             <div class="empty-state">
               <div class="icon">⏳</div>
               <div class="title">No Pending Items</div>
-              <div class="sub">Items from PENDING orders will appear here</div>
+              <div class="sub">Items from open orders (not in Ready Orders) will appear here</div>
             </div></td></tr>`;
           ftText.textContent = 'No pending items';
           ftStats.style.display = 'none';
@@ -1915,6 +1959,7 @@
             if (r.assigned) tr.style.opacity = '0.62';
             tr.dataset.orderId  = r.orderId;
             tr.dataset.itemIdx  = String(r.itemIdx);
+            if (r.assigned && r.assignedTo) tr.dataset.workerName = String(r.assignedTo);
             tr.dataset.assigned = r.assigned ? '1' : '0';
             tr.dataset.rowStatus = r.assigned ? 'assigned' : 'pending';
             tr.dataset.search   = [r.itemName, r.orderNo, r.customer, r.design, r.sampleDetails, r.remarks].join(' ').toLowerCase();
@@ -1990,14 +2035,22 @@
       const iIdx = cb.dataset.itemIdx;
       const b = document.getElementById(`badge-${oId}-${iIdx}`);
       const isAssignedRow = cb.getAttribute('data-assigned') === 'true';
+      const assignedBadge = isAssignedRow ? tr.querySelector('.badge.badge-assigned') : null;
       if (cb.checked) {
         tr.classList.add('row-sel');
         if (b) { b.className = 'badge badge-selected'; b.innerHTML = '✔ Selected'; }
+        else if (assignedBadge) { assignedBadge.className = 'badge badge-selected'; assignedBadge.textContent = '✔ Selected'; }
         if (!isAssignedRow) tr.dataset.rowStatus = 'selected';
       } else {
         tr.classList.remove('row-sel');
         if (b) { b.className = 'badge badge-pending'; b.textContent = 'Pending'; }
+        else if (assignedBadge) {
+          assignedBadge.className = 'badge badge-assigned';
+          const wn = (tr.dataset.workerName || '').trim();
+          assignedBadge.innerHTML = wn ? ('&#10004; ' + esc(wn)) : '&#10004; Assigned';
+        }
         if (!isAssignedRow) tr.dataset.rowStatus = 'pending';
+        else tr.dataset.rowStatus = 'assigned';
       }
       applyTableFilters();
     }
@@ -2059,7 +2112,8 @@
         const rowSt    = tr.dataset.rowStatus || 'pending';
 
         let statusOk = true;
-        if (st === 'pending')  statusOk = rowSt === 'pending';
+        /* "Pending" = not yet assigned to a job worker (matches workshop); not rowStatus which breaks after selecting rows */
+        if (st === 'pending') statusOk = !assigned;
         else if (st === 'selected') statusOk = rowSt === 'selected';
         else if (st === 'assigned') statusOk = rowSt === 'assigned';
 
@@ -2375,7 +2429,9 @@
       setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50);
     }
 
-    window.addEventListener('storage', e => { if (e.key === 'orders') loadPendingItems(); });
+    window.addEventListener('storage', e => {
+      if (e.key === 'orders' || e.key === 'itemProcess') loadPendingItems();
+    });
     window.addEventListener('orderStatusChanged', loadPendingItems);
     window.addEventListener('orderSaved', loadPendingItems);
     window.addEventListener('pageRefresh', () => setTimeout(loadPendingItems, 150));
