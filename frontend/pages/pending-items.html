@@ -165,6 +165,26 @@
       cursor: not-allowed;
     }
 
+    .btn-skip-assign {
+      background: #0d9488;
+      border-color: #0d9488;
+      color: #fff;
+      transition: all 0.2s;
+    }
+
+    .btn-skip-assign:hover:not(:disabled) {
+      background: #0f766e;
+      border-color: #0f766e;
+      color: #fff;
+    }
+
+    .btn-skip-assign:disabled {
+      background: #99f6e4;
+      border-color: #99f6e4;
+      color: #fff;
+      cursor: not-allowed;
+    }
+
     .btn-count {
       background: rgba(255, 255, 255, 0.25);
       border-radius: 6px;
@@ -1290,6 +1310,11 @@
         Assign Selected
         <span class="btn-count" id="btnCount">0</span>
       </button>
+      <button type="button" class="btn btn-skip-assign" id="skipAssignBtn" onclick="confirmSkipAssignToReady()" disabled
+        title="Skip job worker assignment and add selected lines to Ready Items as Ready team (same as marking ready in Item Process).">
+        Skip Assign → Ready
+        <span class="btn-count" id="btnSkipAssignCount">0</span>
+      </button>
     </div>
 
     <div class="filter-bar" id="filterBar" aria-hidden="true">
@@ -1660,6 +1685,16 @@
       if (assignBtn) {
         assignBtn.disabled = checkedPending === 0;
         if (assignCount) { assignCount.style.display = checkedPending > 0 ? 'inline-block' : 'none'; assignCount.textContent = checkedPending; }
+      }
+
+      const skipAssignBtn = document.getElementById('skipAssignBtn');
+      const skipAssignCount = document.getElementById('btnSkipAssignCount');
+      if (skipAssignBtn) {
+        skipAssignBtn.disabled = checkedPending === 0;
+        if (skipAssignCount) {
+          skipAssignCount.style.display = checkedPending > 0 ? 'inline-block' : 'none';
+          skipAssignCount.textContent = checkedPending;
+        }
       }
 
       const unassignBtn = document.getElementById('unassignBtn');
@@ -2403,6 +2438,100 @@
       }, 650);
     }
 
+    /** Display name for workshop rows created via “Skip Assign” (Ready Items / Item Process Ready queue). */
+    var PENDING_SKIP_ASSIGN_JW_NAME = 'Ready team';
+    var PENDING_SKIP_ASSIGN_JW_ID = '';
+
+    /**
+     * Skip Assign: for selected **unassigned** lines only, push one `itemProcess` row per line with status READY
+     * (same net effect as Assign → Item Process → Mark Ready for full qty). Does not change normal Assign / Unassign.
+     */
+    function confirmSkipAssignToReady() {
+      const checkedCbs = document.querySelectorAll('.row-cb:not([data-assigned="true"]):checked');
+      if (checkedCbs.length === 0) return;
+      if (!confirm('Send ' + checkedCbs.length + ' item(s) directly to Ready Items under “' + PENDING_SKIP_ASSIGN_JW_NAME + '”, skipping job worker assignment?')) return;
+
+      try {
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+        const now = new Date().toISOString();
+        let applied = 0;
+
+        checkedCbs.forEach(function (cb) {
+          const oId = cb.dataset.orderId;
+          const iIdx = parseInt(cb.dataset.itemIdx, 10);
+          if (isNaN(iIdx)) return;
+          const order = orders.find(function (o) { return o && String(o.id) === String(oId); });
+          if (!order || !order.items || !order.items[iIdx]) return;
+          if (pendingLineHasItemProcessRow(itemProcess, oId, iIdx)) return;
+
+          const item = order.items[iIdx];
+          const fields = mapOrderItemValuesForPending(item, order);
+          const maxQ = Math.max(0, parseFloat(fields.qty) || 0);
+          if (maxQ <= 0) return;
+
+          const unitWt = parseFloat(fields.estUnitWt) || 0;
+          const lineEstTotalWt = parseFloat(fields.estTotalWt) || 0;
+          const estTotalWtRow = lineEstTotalWt > 0 ? lineEstTotalWt : (unitWt * maxQ);
+
+          item.processAssigned = true;
+          item.assignedToId = PENDING_SKIP_ASSIGN_JW_ID;
+          item.assignedToName = PENDING_SKIP_ASSIGN_JW_NAME;
+          item.assignedDate = now;
+
+          itemProcess.push({
+            id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+            orderId: oId,
+            orderNo: order.orderNo || order.billNo || '—',
+            customerName: order.customer || order.customerName || '—',
+            customerRelation: order.customerRelation || '—',
+            itemIdx: iIdx,
+            itemName: fields.itemName,
+            stamp: fields.stamp,
+            qty: fields.qty,
+            estUnitWt: fields.estUnitWt,
+            estTotalWt: estTotalWtRow,
+            sampleDetails: fields.sampleDetails,
+            design: fields.design,
+            size: fields.size,
+            jobworkerId: PENDING_SKIP_ASSIGN_JW_ID,
+            jobworkerName: PENDING_SKIP_ASSIGN_JW_NAME,
+            assignedDate: now,
+            orderDate: order.orderDate || '',
+            dueDate: order.dueDate || order.deliveryDate || '',
+            status: 'READY',
+            readyDate: now,
+            receivedQty: 0,
+            receivedWt: 0
+          });
+          applied++;
+        });
+
+        const OP = window.OrderProcessing;
+        if (OP && typeof OP.syncOrdersReadyFromProcess === 'function') {
+          OP.syncOrdersReadyFromProcess(orders, itemProcess);
+        }
+
+        localStorage.setItem('orders', JSON.stringify(orders));
+        localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
+
+        loadPendingItems();
+        try { window.dispatchEvent(new Event('storage')); } catch (eSt) { /* ignore */ }
+        try {
+          window.dispatchEvent(new CustomEvent('orderStatusChanged', { detail: { status: 'READY', source: 'pending-skip-assign' } }));
+        } catch (eOc) { /* ignore */ }
+
+        if (applied === 0) {
+          showToast('No items could be sent (check quantity or assignment state).', 'warn');
+        } else {
+          showToast('✅ ' + applied + ' item(s) sent to Ready team (Ready Items)', 'success');
+        }
+      } catch (err) {
+        console.error(err);
+        showToast('❌ Skip assign failed. Please try again.', 'warn');
+      }
+    }
+
     /* ── UNASSIGN ── */
     function confirmUnassign() {
       const checkedCbs = document.querySelectorAll('.row-cb[data-assigned="true"]:checked');
@@ -2523,9 +2652,10 @@
     window.applyCustomDueRange    = applyCustomDueRange;
     window.applyNextNDays         = applyNextNDays;
     window.renderJwList           = renderJwList;
-    window.openAssignModal        = openAssignModal;
-    window.closeAssignModal       = closeAssignModal;
-    window.confirmAssign          = confirmAssign;
+      window.openAssignModal        = openAssignModal;
+      window.closeAssignModal       = closeAssignModal;
+      window.confirmAssign          = confirmAssign;
+      window.confirmSkipAssignToReady = confirmSkipAssignToReady;
     window.confirmUnassign        = confirmUnassign;
     window.selectJw               = selectJw;
     window.onCbChange             = onCbChange;
