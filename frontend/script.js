@@ -301,6 +301,29 @@ function ensureElementReady(selector, maxRetries = 10, delay = 50) {
 }
 
 /* ======================================================
+   WORKSPACE NAVIGATION (race-safe, listener cleanup)
+   - __ledgerLoadPageSeq: stale fetch / delayed script callbacks bail out
+   - __ledgerLoadPageFetchAbort: cancel in-flight module fetch when navigating again
+   - __ledgerPageNavAbort: AbortSignal for window/document listeners on the active page
+====================================================== */
+var __ledgerLoadPageSeq = 0;
+var __ledgerLoadPageFetchAbort = null;
+
+/**
+ * Register a listener removed automatically when the user opens another workspace module.
+ * Requires window.__ledgerPageNavAbort (set in loadPage).
+ */
+function ledgerNavListen(target, type, listener, options) {
+    if (!target || typeof target.addEventListener !== "function") return;
+    var ctl = window.__ledgerPageNavAbort;
+    var sig = ctl && ctl.signal;
+    if (sig && sig.aborted) return;
+    var opts = sig ? Object.assign({}, options || {}, { signal: sig }) : options;
+    target.addEventListener(type, listener, opts);
+}
+window.ledgerNavListen = ledgerNavListen;
+
+/* ======================================================
    PAGE LOADER (THIS MAKES IT OPEN INSIDE DASHBOARD)
 ====================================================== */
 function loadPage(pageUrl) {
@@ -336,6 +359,38 @@ function loadPage(pageUrl) {
         pageUrl = pageUrl.replace(/^(\.\.\/)+public\//i, "");
     } catch (e) { }
 
+    // When leaving Add Jobworker or Jobworker Entry, set flag (read before workspace is cleared)
+    const currentPage = workspace.getAttribute('data-page') || '';
+    if (currentPage === 'add-jobworker' || currentPage === 'jobworker-entry') {
+        try {
+            sessionStorage.setItem('jobworkerFormClear', '1');
+            if (currentPage === 'add-jobworker') {
+                localStorage.removeItem('editJobworkerId');
+                localStorage.removeItem('editJobworkerPayload');
+            }
+        } catch (e) { }
+    }
+
+    __ledgerLoadPageSeq++;
+    const loadSeq = __ledgerLoadPageSeq;
+
+    try {
+        if (__ledgerLoadPageFetchAbort) __ledgerLoadPageFetchAbort.abort();
+    } catch (e) { }
+    __ledgerLoadPageFetchAbort = new AbortController();
+
+    try {
+        if (window.__ledgerPageNavAbort && typeof window.__ledgerPageNavAbort.abort === 'function') {
+            window.__ledgerPageNavAbort.abort();
+        }
+    } catch (e) { }
+    window.__ledgerPageNavAbort = new AbortController();
+
+    if (typeof window.__currentPageCleanup === 'function') {
+        try { window.__currentPageCleanup(); } catch (e) { }
+        window.__currentPageCleanup = null;
+    }
+
     // Dashboard home: no fetch, show simple home view
     const isDashboard = /dashboard\.html$/i.test(String(pageUrl).trim());
     if (isDashboard) {
@@ -362,24 +417,6 @@ function loadPage(pageUrl) {
         }
     }
 
-    // When leaving Add Jobworker or Jobworker Entry, set flag so form auto-resets on next visit
-    const currentPage = workspace.getAttribute('data-page') || '';
-    if (currentPage === 'add-jobworker' || currentPage === 'jobworker-entry') {
-        try {
-            sessionStorage.setItem('jobworkerFormClear', '1');
-            if (currentPage === 'add-jobworker') {
-                localStorage.removeItem('editJobworkerId');
-                localStorage.removeItem('editJobworkerPayload');
-            }
-        } catch (e) { }
-    }
-
-    // Clean up previous page: remove its globals and event listeners so no state overlaps
-    if (typeof window.__currentPageCleanup === 'function') {
-        try { window.__currentPageCleanup(); } catch (e) { }
-        window.__currentPageCleanup = null;
-    }
-
     // Loading screen
     workspace.innerHTML = `
         <div style="
@@ -391,12 +428,18 @@ function loadPage(pageUrl) {
         </div>
     `;
 
-    fetch(fetchUrl)
+    fetch(fetchUrl, { signal: __ledgerLoadPageFetchAbort.signal })
         .then(res => {
+            if (loadSeq !== __ledgerLoadPageSeq) {
+                const stale = new Error("Stale navigation");
+                stale.name = "AbortError";
+                return Promise.reject(stale);
+            }
             if (!res.ok) throw new Error("Page not found");
             return res.text();
         })
         .then(html => {
+            if (loadSeq !== __ledgerLoadPageSeq) return;
             // Absolute URL of the loaded page file — used to resolve <script src="../..."> correctly.
             // Without this, relative URLs resolve against index.html and ../script/*.js often 404s,
             // so modules like order-processing.js never run (e.g. Ready Items "Order rules not loaded").
@@ -465,10 +508,17 @@ function loadPage(pageUrl) {
                     const persistence = window.FormPersistence.getInstance();
                     // Use the page URL as the unique context key
                     persistence.setContext(pageUrl);
-                    // Restore immediately after HTML injection so users see data
-                    // even before scripts might fully run (though scripts often need to run to populate dropdowns first)
-                    // We'll also call it again after scripts run just in case dropdowns were empty
-                    persistence.restore();
+                    // Do not restore draft form over "edit from Orders" — loadOrderForEdit fills the form;
+                    // restore() would re-apply stale persisted empty customer / rows and glitch the UI.
+                    var skipPersistRestore =
+                        /pages\/new-order\.html$/i.test(String(pageUrl || "")) &&
+                        !!localStorage.getItem("editOrderId");
+                    if (!skipPersistRestore) {
+                        // Restore immediately after HTML injection so users see data
+                        // even before scripts might fully run (though scripts often need to run to populate dropdowns first)
+                        // We'll also call it again after scripts run just in case dropdowns were empty
+                        persistence.restore();
+                    }
                 } catch (e) {
                     console.error("[FormPersistence] Error restoring data:", e);
                 }
@@ -488,17 +538,27 @@ function loadPage(pageUrl) {
             // This ensures getElementById can find elements
             // Use a longer delay to ensure DOM is fully ready
             setTimeout(() => {
+                if (loadSeq !== __ledgerLoadPageSeq) return;
                 try {
                     let scriptIndex = 0;
                     const executeNextScript = () => {
+                        if (loadSeq !== __ledgerLoadPageSeq) return;
                         if (scriptIndex >= scripts.length) {
                             // All scripts executed, now refresh
                             setTimeout(() => {
-                                refreshPageData(workspace);
+                                if (loadSeq !== __ledgerLoadPageSeq) return;
+                                refreshPageData(workspace, loadSeq);
 
                                 // [PERSISTENCE] Second pass restoration to catch dynamically populated fields
                                 if (window.FormPersistence) {
-                                    try { window.FormPersistence.getInstance().restore(); } catch (e) { }
+                                    try {
+                                        var skipPersistRestore2 =
+                                            /pages\/new-order\.html$/i.test(String(pageUrl || "")) &&
+                                            !!localStorage.getItem("editOrderId");
+                                        if (!skipPersistRestore2) {
+                                            window.FormPersistence.getInstance().restore();
+                                        }
+                                    } catch (e) { }
                                 }
                             }, 200);
                             return;
@@ -555,6 +615,7 @@ function loadPage(pageUrl) {
 
                                 // Remove after execution and move to next script
                                 setTimeout(() => {
+                                    if (loadSeq !== __ledgerLoadPageSeq) return;
                                     if (script.parentNode) {
                                         document.body.removeChild(script);
                                     }
@@ -576,12 +637,15 @@ function loadPage(pageUrl) {
                     console.error('Error executing scripts from loaded page', e);
                     // Still try to refresh even if script execution had errors
                     setTimeout(() => {
-                        refreshPageData(workspace);
+                        if (loadSeq !== __ledgerLoadPageSeq) return;
+                        refreshPageData(workspace, loadSeq);
                     }, 300);
                 }
             }, 100); // Delay to ensure DOM is ready
         })
         .catch(err => {
+            if (loadSeq !== __ledgerLoadPageSeq) return;
+            if (err && err.name === "AbortError") return;
             const isFile = (window.location && window.location.protocol === "file:");
             workspace.innerHTML = `
                 <div style="
@@ -637,11 +701,12 @@ function showInfo(message) {
 /* ======================================================
    AUTO REFRESH PAGE DATA
 ====================================================== */
-function refreshPageData(workspace) {
+function refreshPageData(workspace, loadSeq) {
     if (!workspace) return;
 
     // Wait a bit for DOM to be fully inserted and scripts executed
     setTimeout(() => {
+        if (loadSeq != null && loadSeq !== __ledgerLoadPageSeq) return;
         // First, try to re-initialize any const declarations that might have failed
         // Some pages declare const elements at the top level which fail if elements don't exist
         try {
@@ -673,12 +738,25 @@ function refreshPageData(workspace) {
             'reloadData'
         ];
 
+        function ledgerSkipRefreshLoadCustomersForNewOrderEdit(ws) {
+            try {
+                return !!(ws && ws.getAttribute && ws.getAttribute('data-page') === 'new-order' &&
+                    localStorage.getItem('editOrderId'));
+            } catch (e) {
+                return false;
+            }
+        }
+
         // Try to call refresh functions if they exist
         refreshFunctions.forEach(funcName => {
             try {
+                if (funcName === 'loadCustomers' && ledgerSkipRefreshLoadCustomersForNewOrderEdit(workspace)) {
+                    return;
+                }
                 if (typeof window[funcName] === 'function') {
                     // Add a small delay between function calls to avoid conflicts
                     setTimeout(() => {
+                        if (loadSeq != null && loadSeq !== __ledgerLoadPageSeq) return;
                         try {
                             window[funcName]();
                         } catch (e) {
@@ -705,6 +783,7 @@ function refreshPageData(workspace) {
             const initFunctions = ['initNewOrder', 'initPage', 'initialize'];
             initFunctions.forEach((funcName, index) => {
                 setTimeout(() => {
+                    if (loadSeq != null && loadSeq !== __ledgerLoadPageSeq) return;
                     try {
                         if (typeof window[funcName] === 'function') {
                             window[funcName]();
@@ -724,21 +803,32 @@ function refreshPageData(workspace) {
             // Check workspace for elements that indicate what needs to be initialized
             const custNameEl = workspace.querySelector('#custName') || document.getElementById('custName');
             if (custNameEl && typeof window.loadCustomers === 'function') {
-                setTimeout(() => window.loadCustomers(), 100);
+                if (!ledgerSkipRefreshLoadCustomersForNewOrderEdit(workspace)) {
+                    setTimeout(() => {
+                        if (loadSeq != null && loadSeq !== __ledgerLoadPageSeq) return;
+                        window.loadCustomers();
+                    }, 100);
+                }
             }
 
             const rowsEl = workspace.querySelector('#rows') || document.getElementById('rows');
             if (rowsEl && typeof window.addRow === 'function') {
                 // Check if rows are empty, if so add a row
                 if (!rowsEl.querySelector('tr')) {
-                    setTimeout(() => window.addRow(), 150);
+                    setTimeout(() => {
+                        if (loadSeq != null && loadSeq !== __ledgerLoadPageSeq) return;
+                        window.addRow();
+                    }, 150);
                 }
             }
 
             const itemTableEl = workspace.querySelector('#itemTable tbody') || document.querySelector('#itemTable tbody');
             if (itemTableEl && typeof window.addRow === 'function') {
                 if (!itemTableEl.querySelector('tr')) {
-                    setTimeout(() => window.addRow(), 150);
+                    setTimeout(() => {
+                        if (loadSeq != null && loadSeq !== __ledgerLoadPageSeq) return;
+                        window.addRow();
+                    }, 150);
                 }
             }
 

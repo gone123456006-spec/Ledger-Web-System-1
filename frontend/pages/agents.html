@@ -193,9 +193,20 @@
       else resetForm();
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAgentPage);
-    else setTimeout(initAgentPage, 50);
-    window.addEventListener('pageRefresh', () => setTimeout(initAgentPage, 100));
+    if (document.readyState === 'loading') {
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'DOMContentLoaded', initAgentPage);
+      } else {
+        document.addEventListener('DOMContentLoaded', initAgentPage);
+      }
+    } else {
+      setTimeout(initAgentPage, 50);
+    }
+    if (typeof ledgerNavListen === 'function') {
+      ledgerNavListen(window, 'pageRefresh', () => setTimeout(initAgentPage, 100));
+    } else {
+      window.addEventListener('pageRefresh', () => setTimeout(initAgentPage, 100));
+    }
 
     function validateForm() {
       if (!fields.agentName.value.trim()) { alert("Agent name is required"); fields.agentName.focus(); return false; }

@@ -838,9 +838,20 @@
 
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCustomerPage);
-    else setTimeout(initCustomerPage, 50);
-    window.addEventListener('pageRefresh', () => setTimeout(initCustomerPage, 100));
+    if (document.readyState === 'loading') {
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'DOMContentLoaded', initCustomerPage);
+      } else {
+        document.addEventListener('DOMContentLoaded', initCustomerPage);
+      }
+    } else {
+      setTimeout(initCustomerPage, 50);
+    }
+    if (typeof ledgerNavListen === 'function') {
+      ledgerNavListen(window, 'pageRefresh', () => setTimeout(initCustomerPage, 100));
+    } else {
+      window.addEventListener('pageRefresh', () => setTimeout(initCustomerPage, 100));
+    }
 
     function loadStations() {
       const sel = $("station");

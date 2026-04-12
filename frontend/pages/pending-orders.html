@@ -1015,42 +1015,65 @@
     ========================= */
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        setTimeout(initPendingOrdersPage, isInWorkspace() ? 200 : 0);
-      });
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'DOMContentLoaded', function () {
+          setTimeout(initPendingOrdersPage, isInWorkspace() ? 200 : 0);
+        });
+      } else {
+        document.addEventListener('DOMContentLoaded', function () {
+          setTimeout(initPendingOrdersPage, isInWorkspace() ? 200 : 0);
+        });
+      }
     } else {
       setTimeout(initPendingOrdersPage, isInWorkspace() ? 200 : 50);
     }
 
-    // Listen for page refresh event from dashboard
-    window.addEventListener('pageRefresh', function () {
-      console.log("📡 Page refresh event received");
-      setTimeout(initPendingOrdersPage, 150);
-    });
-
-    // Listen for order status changes
-    window.addEventListener('orderStatusChanged', function (e) {
-      console.log("📡 Order status changed:", e.detail);
-      loadPendingOrders();
-    });
-
-    // Listen for order saved event
-    window.addEventListener('orderSaved', function () {
-      console.log("📡 Order saved event received");
-      loadPendingOrders();
-    });
-
-    // Listen for storage changes (cross-tab updates)
-    window.addEventListener('storage', function (e) {
-      if (e.key === 'orders') {
-        console.log("📡 Storage changed: orders");
-        loadPendingOrders();
+    function wirePendingOrdersWindowListeners() {
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(window, 'pageRefresh', function () {
+          console.log("📡 Page refresh event received");
+          setTimeout(initPendingOrdersPage, 150);
+        });
+        ledgerNavListen(window, 'orderStatusChanged', function (e) {
+          console.log("📡 Order status changed:", e.detail);
+          loadPendingOrders();
+        });
+        ledgerNavListen(window, 'orderSaved', function () {
+          console.log("📡 Order saved event received");
+          loadPendingOrders();
+        });
+        ledgerNavListen(window, 'storage', function (e) {
+          if (e.key === 'orders') {
+            console.log("📡 Storage changed: orders");
+            loadPendingOrders();
+          }
+        });
+      } else {
+        window.addEventListener('pageRefresh', function () {
+          console.log("📡 Page refresh event received");
+          setTimeout(initPendingOrdersPage, 150);
+        });
+        window.addEventListener('orderStatusChanged', function (e) {
+          console.log("📡 Order status changed:", e.detail);
+          loadPendingOrders();
+        });
+        window.addEventListener('orderSaved', function () {
+          console.log("📡 Order saved event received");
+          loadPendingOrders();
+        });
+        window.addEventListener('storage', function (e) {
+          if (e.key === 'orders') {
+            console.log("📡 Storage changed: orders");
+            loadPendingOrders();
+          }
+        });
       }
-    });
+    }
+    wirePendingOrdersWindowListeners();
 
     // Poll for changes (same-window updates)
     let lastPendingOrderCount = 0;
-    setInterval(function () {
+    var pendingOrdersPollId = setInterval(function () {
       if (!tbody && !initElements()) return;
 
       try {
@@ -1066,6 +1089,13 @@
         console.error("❌ Error in polling:", e);
       }
     }, 2000);
+
+    window.__currentPageCleanup = function () {
+      try {
+        if (pendingOrdersPollId) clearInterval(pendingOrdersPollId);
+      } catch (e) { }
+      pendingOrdersPollId = null;
+    };
 
     /* =========================
        ENSURE GLOBAL FUNCTIONS

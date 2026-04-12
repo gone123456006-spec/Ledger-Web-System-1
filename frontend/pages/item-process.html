@@ -1874,15 +1874,26 @@
 
         /* ── INIT ── */
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => setTimeout(loadProcessItems, 50));
+            if (typeof ledgerNavListen === 'function') {
+                ledgerNavListen(document, 'DOMContentLoaded', () => setTimeout(loadProcessItems, 50));
+            } else {
+                document.addEventListener('DOMContentLoaded', () => setTimeout(loadProcessItems, 50));
+            }
         } else {
             setTimeout(loadProcessItems, 50);
         }
 
-        window.addEventListener('storage', e => {
-            if (e.key === 'itemProcess' || e.key === 'orders') { tbody = null; loadProcessItems(); }
-        });
-        window.addEventListener('pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
+        if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(window, 'storage', e => {
+                if (e.key === 'itemProcess' || e.key === 'orders') { tbody = null; loadProcessItems(); }
+            });
+            ledgerNavListen(window, 'pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
+        } else {
+            window.addEventListener('storage', e => {
+                if (e.key === 'itemProcess' || e.key === 'orders') { tbody = null; loadProcessItems(); }
+            });
+            window.addEventListener('pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
+        }
 
         // Close modals on overlay click
         document.getElementById('markReadyModal').addEventListener('click', function (e) {

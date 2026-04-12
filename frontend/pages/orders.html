@@ -1000,14 +1000,17 @@
         };
         console.log("=== CUSTOMER INFO FOR EDIT ===", customerInfo);
 
+        // Spread stored order first, then override with resolved customer + edit flags.
+        // (...order last used to wipe customerName / customer with empty values from storage — root glitch.)
         const orderSnapshot = {
+          ...order,
           isEditMode: true,
           id: order.id,
           orderNo: order.orderNo || order.billNo || "",
           billNo: order.billNo || order.orderNo || "",
           customerId: customerInfo.id || order.customerId || "",
-          customer: customerInfo.name,
-          customerName: customerInfo.name,
+          customer: customerInfo.name || (order.customer || order.customerName || "").toString().trim(),
+          customerName: customerInfo.name || (order.customerName || order.customer || "").toString().trim(),
           currentBal: customerInfo.currentBal,
           customerOpeningBalance: customerInfo.openingBalance ?? customerInfo.currentBal ?? "",
           relation: customerInfo.relation,
@@ -1028,8 +1031,7 @@
           pc: order.pc || 0,
           grWt: order.grWt || 0,
           status: order.status || "",
-          timestamp: order.timestamp || new Date().toISOString(),
-          ...order
+          timestamp: order.timestamp || new Date().toISOString()
         };
 
         console.log("=== ORDER SNAPSHOT CREATED ===");
@@ -1037,6 +1039,10 @@
         localStorage.setItem("editOrderId", String(orderId));
         localStorage.setItem("editOrderPayload", JSON.stringify(orderSnapshot));
         localStorage.setItem("returnToOrders", "true");
+        // Avoid new-order init treating a stale lastOrderPage=ready-extra as "leave ready extra" and clearing edit keys.
+        try {
+          localStorage.setItem("lastOrderPage", "new-order");
+        } catch (e) { }
 
         console.log("=== NAVIGATING TO NEW ORDER PAGE ===");
         navigateToNewOrder();
@@ -1241,13 +1247,23 @@
     }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        if (isInWorkspace()) {
-          setTimeout(initOrdersPage, 200);
-        } else {
-          initOrdersPage();
-        }
-      });
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'DOMContentLoaded', function () {
+          if (isInWorkspace()) {
+            setTimeout(initOrdersPage, 200);
+          } else {
+            initOrdersPage();
+          }
+        });
+      } else {
+        document.addEventListener('DOMContentLoaded', function () {
+          if (isInWorkspace()) {
+            setTimeout(initOrdersPage, 200);
+          } else {
+            initOrdersPage();
+          }
+        });
+      }
     } else {
       if (isInWorkspace()) {
         setTimeout(initOrdersPage, 200);
@@ -1256,33 +1272,43 @@
       }
     }
 
-    window.addEventListener('pageRefresh', function () {
-      setTimeout(initOrdersPage, 150);
-    });
-
-    const workspace = document.querySelector(".workspace");
-    if (workspace) {
-      workspace.addEventListener('pageRefresh', function () {
+    if (typeof ledgerNavListen === 'function') {
+      ledgerNavListen(window, 'pageRefresh', function () {
         setTimeout(initOrdersPage, 150);
       });
-    }
-
-    window.addEventListener('orderSaved', function () {
-      loadOrders();
-      filterTable();
-    });
-
-    window.addEventListener('orderStatusChanged', function () {
-      loadOrders();
-      filterTable();
-    });
-
-    window.addEventListener('storage', function (e) {
-      if (e.key === 'orders') {
+      ledgerNavListen(window, 'orderSaved', function () {
         loadOrders();
         filterTable();
-      }
-    });
+      });
+      ledgerNavListen(window, 'orderStatusChanged', function () {
+        loadOrders();
+        filterTable();
+      });
+      ledgerNavListen(window, 'storage', function (e) {
+        if (e.key === 'orders') {
+          loadOrders();
+          filterTable();
+        }
+      });
+    } else {
+      window.addEventListener('pageRefresh', function () {
+        setTimeout(initOrdersPage, 150);
+      });
+      window.addEventListener('orderSaved', function () {
+        loadOrders();
+        filterTable();
+      });
+      window.addEventListener('orderStatusChanged', function () {
+        loadOrders();
+        filterTable();
+      });
+      window.addEventListener('storage', function (e) {
+        if (e.key === 'orders') {
+          loadOrders();
+          filterTable();
+        }
+      });
+    }
 
     /* BUG FIX: The poll previously only compared orders.length, so mark/unmark
        changes (which don't change count) were never detected and the UI stayed stale.
@@ -1295,7 +1321,7 @@
       return orders.map(o => (o ? (String(o.id) + (o.marked ? "1" : "0")) : "")).join(",");
     }
 
-    setInterval(function () {
+    var ordersPollId = setInterval(function () {
       if (!tbody) {
         if (!initElements()) return;
       }
@@ -1308,6 +1334,13 @@
         filterTable();
       }
     }, 1000);
+
+    window.__currentPageCleanup = function () {
+      try {
+        if (ordersPollId) clearInterval(ordersPollId);
+      } catch (e) { }
+      ordersPollId = null;
+    };
 
     /* =========================
        ENSURE FUNCTIONS ARE GLOBALLY ACCESSIBLE

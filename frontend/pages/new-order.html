@@ -2159,6 +2159,28 @@
         }
 
         select.onchange = handleCustomerChange;
+
+        // loadCustomers() replaces all <option>s. After dashboard refresh or "customers" storage,
+        // the edit form can lose its selection (e.g. legacy_* value). Re-run full edit load so the
+        // form is never left blank while editOrderId is still set.
+        var editOrderIdForResync = null;
+        try {
+          editOrderIdForResync = localStorage.getItem('editOrderId');
+        } catch (e) { }
+        if (editOrderIdForResync) {
+          var stillSelected = prevValue && Array.from(select.options).some(function (o) {
+            return String(o.value) === String(prevValue);
+          });
+          if (prevValue && !stillSelected) {
+            setTimeout(function () {
+              try {
+                loadOrderForEdit();
+              } catch (e2) {
+                console.warn('[New Order] Re-apply edit after customer list refresh failed:', e2);
+              }
+            }, 0);
+          }
+        }
       }
 
       function handleCustomerChange() {
@@ -4033,14 +4055,17 @@
           if (!editOrderId) return false;
 
           const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-          let order = orders.find(o => o && (o.id == editOrderId || String(o.id) === String(editOrderId)));
+          // Prefer editOrderPayload when present — Orders list builds an enriched snapshot (customer name, etc.);
+          // the live orders[] row can have empty / legacy customer fields and would otherwise win and glitch the UI.
+          let order = null;
+          try {
+            const payload = JSON.parse(localStorage.getItem('editOrderPayload') || 'null');
+            if (payload && (payload.id == editOrderId || String(payload.id) === String(editOrderId))) {
+              order = payload;
+            }
+          } catch (e) { }
           if (!order) {
-            try {
-              const payload = JSON.parse(localStorage.getItem('editOrderPayload') || 'null');
-              if (payload && (payload.id == editOrderId || String(payload.id) === String(editOrderId))) {
-                order = payload;
-              }
-            } catch (e) { }
+            order = orders.find(o => o && (o.id == editOrderId || String(o.id) === String(editOrderId)));
           }
 
           if (!order) {
@@ -4413,6 +4438,7 @@
 
         var _storageHandler = null;
         var _visibilityHandler = null;
+        var _focusHandler = null;
 
         function attachInitListeners() {
           _storageHandler = function (e) {
@@ -4423,20 +4449,33 @@
               setTimeout(function () { restoreOrderState(); }, 200);
             }
           };
-          window.addEventListener('storage', _storageHandler);
+          if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(window, 'storage', _storageHandler);
+          } else {
+            window.addEventListener('storage', _storageHandler);
+          }
 
           _visibilityHandler = function () {
             if (!document.hidden && localStorage.getItem('ratebookOpened') === 'true') {
               setTimeout(function () { restoreOrderState(); updateRatebookPanel(); }, 200);
             }
           };
-          document.addEventListener('visibilitychange', _visibilityHandler);
+          if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(document, 'visibilitychange', _visibilityHandler);
+          } else {
+            document.addEventListener('visibilitychange', _visibilityHandler);
+          }
 
-          window.addEventListener('focus', function () {
+          _focusHandler = function () {
             if (localStorage.getItem('ratebookOpened') === 'true') {
               setTimeout(() => { restoreOrderState(); updateRatebookPanel(); }, 100);
             }
-          });
+          };
+          if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(window, 'focus', _focusHandler);
+          } else {
+            window.addEventListener('focus', _focusHandler);
+          }
         }
 
         const pendingEditOrderId = localStorage.getItem('editOrderId');
@@ -4456,7 +4495,8 @@
         }
 
         const cameFromReadyExtraPage = localStorage.getItem('lastOrderPage') === 'ready-extra';
-        if (cameFromReadyExtraPage) {
+        // Never clear an active Orders-list edit: lastOrderPage can be stale; wiping editOrderId yields a blank form.
+        if (cameFromReadyExtraPage && !pendingEditOrderId) {
           localStorage.removeItem('orderAutoSave');
           localStorage.removeItem('newOrderState');
           localStorage.removeItem('editOrderId');
@@ -4573,6 +4613,18 @@
         window.restoreOrderState = restoreOrderState;
 
         window.__currentPageCleanup = function () {
+          try {
+            if (_storageHandler) window.removeEventListener('storage', _storageHandler);
+          } catch (e) { }
+          try {
+            if (_visibilityHandler) document.removeEventListener('visibilitychange', _visibilityHandler);
+          } catch (e) { }
+          try {
+            if (_focusHandler) window.removeEventListener('focus', _focusHandler);
+          } catch (e) { }
+          _storageHandler = null;
+          _visibilityHandler = null;
+          _focusHandler = null;
           var globals = [
             'addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange',
             'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup',
@@ -4594,7 +4646,11 @@
       }
 
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initApp);
+        if (typeof ledgerNavListen === 'function') {
+          ledgerNavListen(document, 'DOMContentLoaded', initApp);
+        } else {
+          document.addEventListener('DOMContentLoaded', initApp);
+        }
       } else {
         setTimeout(initApp, 50);
       }

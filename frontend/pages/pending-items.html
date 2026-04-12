@@ -2243,7 +2243,7 @@
       if (_currentMarkCb) { _currentMarkCb.checked = false; _currentMarkCb = null; }
     }
 
-    window.addEventListener('message', function (event) {
+    function onPendingItemsMessage(event) {
       if (event.data && event.data.type === 'jwEntrySaved') {
         const { jobworkerId, jobworkerName } = event.data;
         selectedJwId   = jobworkerId;
@@ -2266,7 +2266,12 @@
         _currentMarkCb = null;
         closeEntryPopup();
       }
-    });
+    }
+    if (typeof ledgerNavListen === 'function') {
+      ledgerNavListen(window, 'message', onPendingItemsMessage);
+    } else {
+      window.addEventListener('message', onPendingItemsMessage);
+    }
 
     /* ── WORKER LIST ── */
     function renderJwList() {
@@ -2443,39 +2448,67 @@
     })();
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50));
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'DOMContentLoaded', () => setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50));
+      } else {
+        document.addEventListener('DOMContentLoaded', () => setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50));
+      }
     } else {
       setTimeout(() => { loadPendingItems(); _pageReady = true; }, 50);
     }
 
-    window.addEventListener('storage', e => {
-      if (e.key === 'orders' || e.key === 'itemProcess') loadPendingItems();
-    });
-    window.addEventListener('orderStatusChanged', loadPendingItems);
-    window.addEventListener('orderSaved', loadPendingItems);
-    window.addEventListener('pageRefresh', () => setTimeout(loadPendingItems, 150));
+    if (typeof ledgerNavListen === 'function') {
+      ledgerNavListen(window, 'storage', e => {
+        if (e.key === 'orders' || e.key === 'itemProcess') loadPendingItems();
+      });
+      ledgerNavListen(window, 'orderStatusChanged', loadPendingItems);
+      ledgerNavListen(window, 'orderSaved', loadPendingItems);
+      ledgerNavListen(window, 'pageRefresh', () => setTimeout(loadPendingItems, 150));
+    } else {
+      window.addEventListener('storage', e => {
+        if (e.key === 'orders' || e.key === 'itemProcess') loadPendingItems();
+      });
+      window.addEventListener('orderStatusChanged', loadPendingItems);
+      window.addEventListener('orderSaved', loadPendingItems);
+      window.addEventListener('pageRefresh', () => setTimeout(loadPendingItems, 150));
+    }
 
     document.getElementById('assignModal').addEventListener('click', function (e) {
       if (e.target === this) closeAssignModal();
     });
 
     (function setupPendingDueDateDropdown() {
-      document.addEventListener('click', function (e) {
+      function onDueDocClick(e) {
         const wrap  = document.getElementById('dueDateDropdownWrap');
         const panel = document.getElementById('dueDateDropdownPanel');
         if (!wrap || !panel || !panel.classList.contains('open')) return;
         if (wrap.contains(e.target)) return;
         closeDueDateDropdown();
-      });
-      document.addEventListener('keydown', function (e) {
+      }
+      function onDueDocKeydown(e) {
         if (e.key !== 'Escape') return;
         const panel = document.getElementById('dueDateDropdownPanel');
         if (panel && panel.classList.contains('open')) closeDueDateDropdown();
-      });
+      }
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'click', onDueDocClick);
+        ledgerNavListen(document, 'keydown', onDueDocKeydown);
+      } else {
+        document.addEventListener('click', onDueDocClick);
+        document.addEventListener('keydown', onDueDocKeydown);
+      }
       const nEl = document.getElementById('dueNextNDays');
-      if (nEl) nEl.addEventListener('input', function () {
-        if (dueFilterMode === 'nextn') updateDueDateDropdownLabel();
-      });
+      if (nEl) {
+        if (typeof ledgerNavListen === 'function') {
+          ledgerNavListen(nEl, 'input', function () {
+            if (dueFilterMode === 'nextn') updateDueDateDropdownLabel();
+          });
+        } else {
+          nEl.addEventListener('input', function () {
+            if (dueFilterMode === 'nextn') updateDueDateDropdownLabel();
+          });
+        }
+      }
     })();
 
     /* Expose all functions to window */

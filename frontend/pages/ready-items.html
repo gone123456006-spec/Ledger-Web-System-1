@@ -1618,20 +1618,22 @@
                 });
             }
 
-            if (!window.__ipMoveReadyTipGlobalBound) {
-                window.__ipMoveReadyTipGlobalBound = true;
-                const onScrollOrResize = function () {
-                    if (window.__ipMoveReadyTipHideTimer) {
-                        clearTimeout(window.__ipMoveReadyTipHideTimer);
-                        window.__ipMoveReadyTipHideTimer = null;
-                    }
-                    const t = document.getElementById('ipMoveReadyHoverTip');
-                    if (t && t.classList.contains('visible')) {
-                        t.classList.remove('visible', 'ip-move-ready-hover-tip--warn', 'ip-move-ready-hover-tip--ok', 'ip-move-ready-hover-tip--interactive');
-                        t.setAttribute('aria-hidden', 'true');
-                        t.innerHTML = '';
-                    }
-                };
+            const onScrollOrResize = function () {
+                if (window.__ipMoveReadyTipHideTimer) {
+                    clearTimeout(window.__ipMoveReadyTipHideTimer);
+                    window.__ipMoveReadyTipHideTimer = null;
+                }
+                const t = document.getElementById('ipMoveReadyHoverTip');
+                if (t && t.classList.contains('visible')) {
+                    t.classList.remove('visible', 'ip-move-ready-hover-tip--warn', 'ip-move-ready-hover-tip--ok', 'ip-move-ready-hover-tip--interactive');
+                    t.setAttribute('aria-hidden', 'true');
+                    t.innerHTML = '';
+                }
+            };
+            if (typeof ledgerNavListen === 'function') {
+                ledgerNavListen(window, 'scroll', onScrollOrResize, true);
+                ledgerNavListen(window, 'resize', onScrollOrResize);
+            } else {
                 window.addEventListener('scroll', onScrollOrResize, true);
                 window.addEventListener('resize', onScrollOrResize);
             }
@@ -2195,19 +2197,46 @@
 
         /* ── INIT ── */
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                ipInitMoveReadyHoverTip();
-                setTimeout(loadProcessItems, 50);
-            });
+            if (typeof ledgerNavListen === 'function') {
+                ledgerNavListen(document, 'DOMContentLoaded', () => {
+                    ipInitMoveReadyHoverTip();
+                    setTimeout(loadProcessItems, 50);
+                });
+            } else {
+                document.addEventListener('DOMContentLoaded', () => {
+                    ipInitMoveReadyHoverTip();
+                    setTimeout(loadProcessItems, 50);
+                });
+            }
         } else {
             ipInitMoveReadyHoverTip();
             setTimeout(loadProcessItems, 50);
         }
 
-        window.addEventListener('storage', e => {
-            if (e.key === 'itemProcess' || e.key === 'orders') { tbody = null; loadProcessItems(); }
-        });
-        window.addEventListener('pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
+        if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(window, 'storage', e => {
+                if (e.key === 'itemProcess' || e.key === 'orders') { tbody = null; loadProcessItems(); }
+            });
+            ledgerNavListen(window, 'pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
+        } else {
+            window.addEventListener('storage', e => {
+                if (e.key === 'itemProcess' || e.key === 'orders') { tbody = null; loadProcessItems(); }
+            });
+            window.addEventListener('pageRefresh', () => { tbody = null; setTimeout(loadProcessItems, 150); });
+        }
+
+        window.__currentPageCleanup = function () {
+            try {
+                if (window.__ipMoveReadyTipHideTimer) {
+                    clearTimeout(window.__ipMoveReadyTipHideTimer);
+                    window.__ipMoveReadyTipHideTimer = null;
+                }
+            } catch (e) { }
+            try {
+                const tip = document.getElementById('ipMoveReadyHoverTip');
+                if (tip && tip.parentNode) tip.parentNode.removeChild(tip);
+            } catch (e) { }
+        };
 
         // Close modals on overlay click
         document.getElementById('markReadyModal').addEventListener('click', function (e) {
