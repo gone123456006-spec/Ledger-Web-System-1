@@ -1009,17 +1009,147 @@
       }
     }
 
-    /** Same as orders.html: advances = payments where type is not Paid. */
+    /** Same rule as ready-extra-order `isPaidTypePayment` (case-insensitive). */
+    function roIsPaidTypePayment(p) {
+      return !!(p && String(p.type || "").trim().toLowerCase() === "paid");
+    }
+
+    /** Non‑Paid payments (Advance + legacy untyped), same as ready-extra `getPaidAmount(bill, 'Advanced')`. */
     function getAdvancePaymentsForBill(billNo) {
       if (!billNo) return 0;
       try {
         const payments = JSON.parse(localStorage.getItem("payments") || "[]");
         const key = String(billNo).trim();
         return payments
-          .filter(p => p && String(p.billNo || "").trim() === key && p.type !== "Paid")
+          .filter(p => p && String(p.billNo || "").trim() === key && !roIsPaidTypePayment(p))
           .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
       } catch (e) {
         return 0;
+      }
+    }
+
+    function roGetPaidPaymentsSum(billNo) {
+      if (!billNo) return 0;
+      try {
+        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        const key = String(billNo).trim();
+        return payments
+          .filter(p => p && String(p.billNo || "").trim() === key && roIsPaidTypePayment(p))
+          .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function roParseRateDiffFromStored(stored) {
+      if (!stored) return 0;
+      const match = String(stored).match(/=\s*([-\u2212]?\s*[\d.]+)/);
+      if (match) {
+        const numStr = match[1].replace(/\u2212/g, "-").replace(/\s/g, "");
+        return parseFloat(numStr) || 0;
+      }
+      return 0;
+    }
+
+    function roGetNewOrderPurchaseSheetTotal(billNo) {
+      if (!billNo) return 0;
+      try {
+        const key = String(billNo).trim();
+        const map = JSON.parse(localStorage.getItem("newOrderPurchaseSheets") || "{}");
+        const rec = map[key] || map[billNo];
+        return purchaseSheetRecordTotalFromMaps(rec);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    function roGetReadyExtraPurchaseSheetTotal(billNo) {
+      if (!billNo) return 0;
+      try {
+        const key = String(billNo).trim();
+        const map = JSON.parse(localStorage.getItem("readyExtraOrderPurchaseSheets") || "{}");
+        const rec = map[key] || map[billNo];
+        return purchaseSheetRecordTotalFromMaps(rec);
+      } catch (e) {
+        return 0;
+      }
+    }
+
+    /** Final column only (Payment Summary row buckets), same as ready-extra `getReadyOrderRowFinalCol15` on saved `items[].values`. */
+    function roItemPanelFinalFromValues(vals) {
+      if (!vals || vals.length < 16) return 0;
+      if (vals.length >= 17) return parseFloat(vals[16] || 0) || 0;
+      return parseFloat(vals[15] || 0) || 0;
+    }
+
+    function roLineTypeFromItem(item) {
+      const v = item && item.values ? item.values : [];
+      return (
+        (item && item.type && String(item.type).trim()) ||
+        String(v[0] || "").trim() ||
+        "Order"
+      );
+    }
+
+    /**
+     * Mirrors ready-extra-order `updatePaymentPanel` (non–Bill view): Ready Order Total, Advance purchase minus, Pending balance Net Total.
+     */
+    function computeReadyOrdersListPaymentSummary(order, billNoKey) {
+      const out = { readyOrderTotal: 0, advancePurchaseMinus: 0, pendingNetTotal: 0 };
+      if (!order || !billNoKey) return out;
+      const items = order.items;
+      if (!items || !Array.isArray(items) || items.length === 0) return out;
+
+      let finalOrderTotal = 0;
+      let finalSaleTotal = 0;
+      let finalOtherTotal = 0;
+      let finalPurchaseTotal = 0;
+
+      items.forEach(item => {
+        if (!item || !item.values) return;
+        const type = roLineTypeFromItem(item);
+        const fin = roItemPanelFinalFromValues(item.values);
+        if (type === "Purchase") finalPurchaseTotal += fin;
+        else if (type === "Sale") finalSaleTotal += fin;
+        else if (type === "Other") finalOtherTotal += fin;
+        else finalOrderTotal += fin;
+      });
+
+      const orderAddTotal = finalOrderTotal + finalSaleTotal + finalOtherTotal;
+      const newOrderPurchaseRupees = roGetNewOrderPurchaseSheetTotal(billNoKey);
+      const readyExtraPurchaseRupees = roGetReadyExtraPurchaseSheetTotal(billNoKey);
+      const combinedPurchaseSheets = newOrderPurchaseRupees + readyExtraPurchaseRupees;
+
+      const rateDiffStored = (typeof localStorage !== "undefined" && billNoKey)
+        ? (localStorage.getItem("rateBookDiffSummary_" + String(billNoKey).trim()) || "")
+        : "";
+      const rateDiffAbs = Math.abs(roParseRateDiffFromStored(rateDiffStored));
+
+      const advanced = getAdvancePaymentsForBill(billNoKey);
+      const paid = roGetPaidPaymentsSum(billNoKey);
+
+      const netBalanceMid = orderAddTotal - combinedPurchaseSheets - advanced - rateDiffAbs;
+      const netTotalAmount = netBalanceMid - paid - finalPurchaseTotal;
+      const advancePurchaseMinusDisplay = newOrderPurchaseRupees + finalPurchaseTotal;
+
+      out.readyOrderTotal = orderAddTotal;
+      out.advancePurchaseMinus = advancePurchaseMinusDisplay;
+      out.pendingNetTotal = netTotalAmount;
+      return out;
+    }
+
+    function roPaymentSideFingerprint(billNoKey) {
+      if (!billNoKey) return "";
+      try {
+        const key = String(billNoKey).trim();
+        const adv = getAdvancePaymentsForBill(key);
+        const paid = roGetPaidPaymentsSum(key);
+        const n = roGetNewOrderPurchaseSheetTotal(key);
+        const r = roGetReadyExtraPurchaseSheetTotal(key);
+        const rd = localStorage.getItem("rateBookDiffSummary_" + key) || "";
+        return [adv, paid, n, r, rd.length].join(",");
+      } catch (eFp) {
+        return "";
       }
     }
 
@@ -1158,6 +1288,41 @@
       return getSavedPurchaseSheetTotalForBill(billNo);
     }
 
+    /** Detects any change to READY orders (counts, totals, or line items) so the list refreshes after Ready Extra save. */
+    var lastReadyOrdersSnapshot = "[]";
+    var lastReadyOrderCount = 0;
+    function readyOrdersContentSnapshot(allOrders) {
+      try {
+        var ready = (allOrders || []).filter(function (o) { return o && o.status === "READY"; });
+        return JSON.stringify(ready.map(function (o) {
+          var sig = "";
+          var items = o.items;
+          if (items && Array.isArray(items)) {
+            sig = items.map(function (it) {
+              var v = it && it.values;
+              var L = Array.isArray(v) ? v.length : 0;
+              var rw = L >= 16 ? String(v[12] != null ? v[12] : "") : "";
+              var tot = L >= 17 ? String(v[16] != null ? v[16] : "") : (L === 16 ? String(v[15] != null ? v[15] : "") : "");
+              return String(L) + ":" + String(it && it.type || "") + ":" + rw + ":" + tot;
+            }).join("~");
+          }
+          var bno = o.orderNo || o.billNo;
+          return [
+            o.id,
+            bno,
+            String(o.netAmount != null ? o.netAmount : ""),
+            String(o.balance != null ? o.balance : ""),
+            String(o.grWt != null ? o.grWt : ""),
+            o.readyExtraSavedAt || "",
+            sig,
+            roPaymentSideFingerprint(bno)
+          ].join("|");
+        }));
+      } catch (eSnap) {
+        return String(Date.now());
+      }
+    }
+
     /* =========================
        LOAD READY ORDERS
     ========================= */
@@ -1202,6 +1367,8 @@
         if (readyOrders.length === 0) {
           showEmptyState();
           updateFooter(0);
+          lastReadyOrderCount = 0;
+          lastReadyOrdersSnapshot = readyOrdersContentSnapshot(orders);
           return;
         }
 
@@ -1221,6 +1388,8 @@
         });
 
         updateFooter(sortedReadyOrders.length);
+        lastReadyOrderCount = sortedReadyOrders.length;
+        lastReadyOrdersSnapshot = readyOrdersContentSnapshot(orders);
         console.log("✅ Ready orders loaded successfully");
 
       } catch (e) {
@@ -1292,16 +1461,24 @@
       let totalPaymentsForBalance = getPaidAmountForBill(billNo);
       if (!totalPaymentsForBalance) totalPaymentsForBalance = parseFloat(order.advance || 0) || 0;
 
-      // In Ready Orders, show exactly what ready-extra-order saves:
-      // - Net (Rs) = netAmount (Net Total Amount)
-      // - Balance = balance (Pending balance)
-      const storedNet = Number(order.netAmount);
-      const storedBal = Number(order.balance);
-      const displayNetAmount = Number.isFinite(storedNet) ? storedNet : netBill;
-      const displayBalance = Number.isFinite(storedBal) ? storedBal : (netBill - totalPaymentsForBalance);
+      // With saved line items: match ready-extra Payment Summary (non–Bill view) — Ready Order Total, Advance purchase minus, Pending balance Net Total.
+      let displayNetAmount;
+      let displayBalance;
+      let totalPurchaseDisplay;
+      if (hasItems) {
+        const paySumm = computeReadyOrdersListPaymentSummary(order, billNo);
+        displayNetAmount = paySumm.readyOrderTotal;
+        totalPurchaseDisplay = paySumm.advancePurchaseMinus;
+        displayBalance = paySumm.pendingNetTotal;
+      } else {
+        const storedNet = Number(order.netAmount);
+        const storedBal = Number(order.balance);
+        displayNetAmount = Number.isFinite(storedNet) ? storedNet : netBill;
+        displayBalance = Number.isFinite(storedBal) ? storedBal : (netBill - totalPaymentsForBalance);
+        totalPurchaseDisplay = fullPurchase;
+      }
 
       const totalAdvance = advanceOnly + purchaseTotal;
-      const totalPurchaseDisplay = fullPurchase;
 
       // Create row
       const tr = document.createElement("tr");
@@ -1662,18 +1839,19 @@
       }
     })();
 
-    // Poll for changes (same-window updates)
-    let lastReadyOrderCount = 0;
+    // Poll for changes (same-window updates). Count alone misses Ready Extra edits (same # of READY rows).
     var readyOrdersPollId = setInterval(function () {
       if (!tbody && !initElements()) return;
 
       try {
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
         const readyOrders = orders.filter(o => o && o.status === "READY");
+        const snap = readyOrdersContentSnapshot(orders);
 
-        if (readyOrders.length !== lastReadyOrderCount) {
-          console.log(`🔄 Ready orders count changed: ${lastReadyOrderCount} → ${readyOrders.length}`);
+        if (readyOrders.length !== lastReadyOrderCount || snap !== lastReadyOrdersSnapshot) {
+          console.log(`🔄 Ready orders list changed (count or content)`);
           lastReadyOrderCount = readyOrders.length;
+          lastReadyOrdersSnapshot = snap;
           loadReadyOrders();
         }
       } catch (e) {

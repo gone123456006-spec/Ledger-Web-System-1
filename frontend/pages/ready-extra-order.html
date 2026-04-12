@@ -3071,22 +3071,32 @@
         return v !== "";
       }
 
-      /** Every row: R. Metal → Total (cols 10–16), except Purchase rows where 10–14 are hidden (then 15–16 only). */
+      /** R. Wt must be a positive number (not empty / not 0) before Bill is allowed. */
+      function readyExtraRwFilledForBill(el) {
+        if (!el || el.tagName !== "INPUT") return false;
+        if (readyExtraBillSkipControl(el)) return true;
+        var v = el.value != null ? String(el.value).trim() : "";
+        if (v === "") return false;
+        var n = parseFloat(v.replace(/,/g, ""));
+        return Number.isFinite(n) && n > 0;
+      }
+
+      /** Bill: only R. Wt must be filled per row (col 13 in table = cells[12]). Purchase rows hide R.Metal–Making — skip R.Wt gate for those. */
+      var READY_EXTRA_RW_COL = 12;
+
       function readyExtraAllRowsReadyForBillView() {
         if (!itemBody) return false;
         var rows = itemBody.querySelectorAll("tr");
         if (!rows.length) return false;
         for (var r = 0; r < rows.length; r++) {
           var tr = rows[r];
-          if (!tr.cells || tr.cells.length < 17) return false;
+          if (!tr.cells || tr.cells.length <= READY_EXTRA_RW_COL) return false;
           var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
           var isPurchase = typeSel && typeSel.value === "Purchase";
-          var start = isPurchase ? 15 : 10;
-          for (var c = start; c <= 16; c++) {
-            var cell = tr.cells[c];
-            var el = cell && cell.children && cell.children[0];
-            if (!readyExtraCellFilledForBill(el)) return false;
-          }
+          if (isPurchase) continue;
+          var cell = tr.cells[READY_EXTRA_RW_COL];
+          var el = cell && cell.children && cell.children[0];
+          if (!readyExtraRwFilledForBill(el)) return false;
         }
         return true;
       }
@@ -3109,12 +3119,12 @@
         btn.disabled = !ok;
         btn.title = ok
           ? "Bill view only — hides order columns/sections. Does not save. Click Save after this to post to All Bill + Customer Balance (not Ready Orders)."
-          : "Fill every row from R. Metal through Total (all columns in the orange section) before using Bill.";
+          : "Enter R. Wt (Received Wt.) greater than 0 on each Order / Sale / Other row before using Bill.";
       }
 
       function onBillButtonClick() {
         if (!readyExtraAllRowsReadyForBillView()) {
-          alert("Fill every row from R. Metal through Total before opening Bill view.");
+          alert("Enter R. Wt (Received Wt.) greater than 0 on each Order / Sale / Other line before Bill. Purchase rows are excluded.");
           return;
         }
         // Freeze current totals so any NEW entries after Bill go into Paid rows only.
@@ -5315,8 +5325,9 @@
 
       /* SAVE ORDER
        * Save (normal): writes `orders` with status READY (Ready Orders). No `bills` or customerBalances.
-       * After Bill (UI) + Save: finalizeToAllBill — bills + customerBalances, remove from `orders` (not written to Ready in that save).
-       * Transfer / explicit finalize: same All Bill path.
+       * After Bill (UI) + Save: billButtonPendingAllBillSave → finalizeToAllBill — bills + customerBalances, remove from `orders`.
+       * Transfer / explicit opts.finalizeToAllBill: same All Bill path.
+       * Opening an existing All Bill row (no READY copy in `orders`): still finalize on Save so `bills` / balances update.
        */
       function saveOrder(resetAfterSave = false, silent = false, targetCustOverride = null, dateOverride = null, narrationOverride = null, opts) {
         opts = opts || {};
@@ -5370,21 +5381,21 @@
           existingOrder = orders[existingOrderIndex];
         }
 
-        /* Bill button is UI-only; when user then clicks Save, finalize to All Bill and do not write Ready Orders. */
+        /* Bill → Save: only this user action (or explicit opts / transfer) posts to All Bill — not a stale flag on the order. */
         if (!finalizeToAllBill && billButtonPendingAllBillSave) {
           finalizeToAllBill = true;
         }
-        /* Legacy: order was staged for All Bill from Ready Orders edit (billStagedForAllBill). */
-        if (!finalizeToAllBill && !readyOnly && editOrderId && existingOrder && existingOrder.billStagedForAllBill) {
-          finalizeToAllBill = true;
-        }
-        /* Re-save of a bill already posted to All Bill (e.g. opened via All Bill → Edit): the row is not in
-         * `orders`, so without this, Save wrongly takes the Ready Orders path and never updates `bills` / customerBalances. */
+        /* Re-save when this bill exists in All Bill but there is no READY row for the same number (e.g. All Bill → Edit).
+         * If a READY order still exists, Save must stay on the Ready path until the user uses Bill → Save. */
         if (!finalizeToAllBill && !readyOnly && billNo && billNo.value) {
           try {
             const billsPeek = JSON.parse(localStorage.getItem("bills") || "[]");
             const bn = String(billNo.value).trim();
-            if (billsPeek.some(function (b) { return b && String(b.billNo || "").trim() === bn; })) {
+            const billExists = billsPeek.some(function (b) { return b && String(b.billNo || "").trim() === bn; });
+            const readyRowStillExists = orders.some(function (o) {
+              return o && o.status === "READY" && String(o.orderNo || "").trim() === bn;
+            });
+            if (billExists && !readyRowStillExists) {
               finalizeToAllBill = true;
             }
           } catch (ePeek) { /* ignore */ }
@@ -5445,8 +5456,10 @@
           orderDataR.ratebookOrderedWeight = orderedNetWtR.toFixed(3);
           orderDataR.ratebookDeliveredWeight = rbSafeNum(existingOrder && existingOrder.ratebookDeliveredWeight, 0).toFixed(3);
           orderDataR.timestamp = orderTimestampR;
+          /* Ready Orders list uses order.items for display; this marks post–Ready Extra save so UIs can prefer saved lines over workshop-only snapshots. */
+          orderDataR.readyExtraSavedAt = orderTimestampR;
           orderDataR.hideBillMidColumns = billMidColumnsHidden;
-          orderDataR.billStagedForAllBill = billMidColumnsHidden ? true : !!(existingOrder && existingOrder.billStagedForAllBill);
+          orderDataR.billStagedForAllBill = false;
 
           const ordersReady = orders.filter(o => o && o.orderNo !== billNo.value);
           ordersReady.push(orderDataR);

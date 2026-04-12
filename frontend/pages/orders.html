@@ -670,6 +670,11 @@
       return getSavedPurchaseSheetTotalForBill(billNo);
     }
 
+    /** Main Orders list = workshop / pending style only; READY lives on Ready Orders (saved from ready-extra-order). */
+    function ordersListVisibleFilter(o) {
+      return o && String(o.status || "").trim().toUpperCase() !== "READY";
+    }
+
     /* =========================
        LOAD ORDERS
     ========================= */
@@ -682,17 +687,22 @@
         }
       }
 
-      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+      const allOrders = JSON.parse(localStorage.getItem("orders") || "[]");
       tbody.innerHTML = "";
 
-      if (orders.length === 0) {
+      const listOrders = allOrders.filter(ordersListVisibleFilter);
+
+      if (listOrders.length === 0) {
         populateStationFilter();
         filterTable();
+        try {
+          lastOrdersPollSnap = computeOrdersListPollSnap(allOrders);
+        } catch (eSnap) { }
         return;
       }
 
       // Sort by date and time: newest order at top (descending by timestamp, then orderDate)
-      const sortedOrders = [...orders].sort((a, b) => {
+      const sortedOrders = [...listOrders].sort((a, b) => {
         const timeA = new Date(a.timestamp || a.orderDate || 0).getTime();
         const timeB = new Date(b.timestamp || b.orderDate || 0).getTime();
         return timeB - timeA;
@@ -811,6 +821,9 @@
 
       populateStationFilter();
       filterTable();
+      try {
+        lastOrdersPollSnap = computeOrdersListPollSnap(allOrders);
+      } catch (eSnap2) { }
     }
 
     /* =========================
@@ -1310,28 +1323,37 @@
       });
     }
 
-    /* BUG FIX: The poll previously only compared orders.length, so mark/unmark
-       changes (which don't change count) were never detected and the UI stayed stale.
-       Now also compares a lightweight hash of all marked states so any mark change
-       triggers a reload even when the order count is unchanged. */
-    let lastOrderCount = 0;
-    let lastMarkedHash = "";
+    /* Poll: visible (non-READY) rows + marks + light content hash — detects mark toggles and PENDING→READY without relying on total orders.length. */
+    let lastOrdersPollSnap = "";
 
-    function computeMarkedHash(orders) {
-      return orders.map(o => (o ? (String(o.id) + (o.marked ? "1" : "0")) : "")).join(",");
+    function computeOrdersListPollSnap(orders) {
+      const vis = (orders || []).filter(ordersListVisibleFilter);
+      const mark = vis.map(function (o) { return String(o.id) + (o.marked ? "1" : "0"); }).join(",");
+      const body = vis.map(function (o) {
+        return [
+          o.id,
+          o.status || "",
+          o.timestamp || "",
+          o.netAmount != null ? o.netAmount : "",
+          o.balance != null ? o.balance : "",
+          o.items && o.items.length ? o.items.length : 0
+        ].join(":");
+      }).join("|");
+      return vis.length + "~" + mark + "~" + body;
     }
 
     var ordersPollId = setInterval(function () {
       if (!tbody) {
         if (!initElements()) return;
       }
-      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-      const markedHash = computeMarkedHash(orders);
-      if (orders.length !== lastOrderCount || markedHash !== lastMarkedHash) {
-        lastOrderCount = orders.length;
-        lastMarkedHash = markedHash;
-        loadOrders();
-        filterTable();
+      try {
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const snap = computeOrdersListPollSnap(orders);
+        if (snap !== lastOrdersPollSnap) {
+          loadOrders();
+        }
+      } catch (ePoll) {
+        console.error("Orders poll error:", ePoll);
       }
     }, 1000);
 
