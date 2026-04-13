@@ -442,6 +442,47 @@
       }
     }
 
+    function syncBalancesFromBills() {
+      let balances = [];
+      let bills = [];
+      try { balances = JSON.parse(localStorage.getItem(BALANCES_KEY) || "[]"); } catch (e) { balances = []; }
+      try { bills = JSON.parse(localStorage.getItem("bills") || "[]"); } catch (e) { bills = []; }
+      if (!balances.length || !bills.length) return;
+
+      const billMap = new Map();
+      bills.forEach(b => {
+        const key = String((b && (b.billNo || b.orderNo)) || "").trim();
+        if (key) billMap.set(key, b);
+      });
+
+      let changed = false;
+      const nextBalances = balances.map(row => {
+        if (!row) return row;
+        const key = String(row.orderNo || row.billNo || "").trim();
+        if (!key) return row;
+        const bill = billMap.get(key);
+        if (!bill) return row;
+
+        const next = { ...row };
+        const billAmountNum = parseFloat(bill.amount != null ? bill.amount : bill.totalAmount);
+        const billAmount = Number.isFinite(billAmountNum) ? billAmountNum.toFixed(2) : "";
+        const billCustomerId = bill.customerId != null ? String(bill.customerId).trim() : "";
+        const billCustomer = String(bill.customer || "").trim();
+        const billDate = String(bill.date || bill.billDate || "").trim();
+
+        if (billAmount && String(next.amount || "").trim() !== billAmount) { next.amount = billAmount; changed = true; }
+        if (billAmount && String(next.netAmount || "").trim() !== billAmount) { next.netAmount = billAmount; changed = true; }
+        if (billCustomerId && String(next.customerId || "").trim() !== billCustomerId) { next.customerId = billCustomerId; changed = true; }
+        if (billCustomer && String(next.customer || "").trim() !== billCustomer) { next.customer = billCustomer; changed = true; }
+        if (billDate && String(next.date || "").trim() !== billDate) { next.date = billDate; changed = true; }
+        if (String(next.billNo || "").trim() !== key) { next.billNo = key; changed = true; }
+        if (String(next.orderNo || "").trim() !== key) { next.orderNo = key; changed = true; }
+        return next;
+      });
+
+      if (changed) localStorage.setItem(BALANCES_KEY, JSON.stringify(nextBalances));
+    }
+
     function saveCustomers(customers) {
       localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(customers));
       window.dispatchEvent(new CustomEvent("customersUpdated"));
@@ -485,6 +526,7 @@
         setTimeout(loadTable, 100);
         return;
       }
+      syncBalancesFromBills();
       const balances = getCustomerBalances();
       const customers = getCustomers();
       const norm = (s) => (s || "").trim().toLowerCase();
@@ -492,11 +534,18 @@
       // One row per customer from Add Customer list — data saves and shows here
       const rows = customers.map((c) => {
         const name = (c.name || "").trim();
-        // Match by name (primary) or by cid (fallback for name mismatches)
-        const customerEntries = balances.filter((b) =>
-          norm(b.customer) === norm(name) ||
-          (c.cid && b.cid && norm(b.cid) === norm(c.cid))
-        );
+        // Match by strong id first, then cid, then name.
+        const customerEntries = balances.filter((b) => {
+          const byCustomerId =
+            c.id != null &&
+            b.customerId != null &&
+            String(c.id).trim() !== "" &&
+            String(b.customerId).trim() !== "" &&
+            String(c.id) === String(b.customerId);
+          const byCid = c.cid && b.cid && norm(b.cid) === norm(c.cid);
+          const byName = norm(b.customer) === norm(name);
+          return byCustomerId || byCid || byName;
+        });
 
         // Customer Balance table must match All Bill "Balance (₹)" totals (sum of per-bill balances).
         // Opening Balance is shown/used in Customer Statement, not added here (prevents "random" extra amounts).

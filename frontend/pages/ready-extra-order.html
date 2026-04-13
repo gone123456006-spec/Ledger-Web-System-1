@@ -2204,9 +2204,8 @@
         </div>
 
         <div class="row">
-          <button onclick="openCustomer()" class="no-print">
-            + Add / Edit Customer
-          </button>
+          <label>LF No.</label>
+          <input id="lfNo" readonly>
         </div>
       </div>
 
@@ -2921,6 +2920,7 @@
       var currentBal = null;
       var relation = null;
       var station = null;
+      var lfNo = null;
       var orderDate = null;
       var dueDate = null;
       var billDate = null;
@@ -2979,6 +2979,7 @@
         currentBal = searchRoot.querySelector("#currentBal");
         relation = searchRoot.querySelector("#relation");
         station = searchRoot.querySelector("#station");
+        lfNo = searchRoot.querySelector("#lfNo");
         orderDate = searchRoot.querySelector("#orderDate");
         dueDate = searchRoot.querySelector("#dueDate");
         billDate = searchRoot.querySelector("#billDate");
@@ -3688,6 +3689,7 @@
           if (currentBal) currentBal.value = c.openingBalance || 0;
           if (relation) relation.value = (c.relation || "") + " " + (c.relationName || "");
           if (station) station.value = c.station || "";
+          if (lfNo) lfNo.value = c.lfNo || "";
           // Keep panels in sync with customer selection
           updateInfoPanel();
         };

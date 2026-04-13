@@ -1643,6 +1643,11 @@
         </div>
 
         <div class="row">
+          <label>LF No.</label>
+          <input id="lfNo" readonly>
+        </div>
+
+        <div class="row">
           <button onclick="openCustomer()" class="no-print">
             + Add / Edit Customer
           </button>
@@ -2166,6 +2171,7 @@
         els.currentBal = searchRoot.querySelector('#currentBal');
         els.relation = searchRoot.querySelector('#relation');
         els.station = searchRoot.querySelector('#station');
+        els.lfNo = searchRoot.querySelector('#lfNo');
 
         els.billNo = searchRoot.querySelector('#billNo');
         els.orderDate = searchRoot.querySelector('#orderDate');
@@ -2269,6 +2275,7 @@
                   AppState.elements.relation.value = rel && relName ? `${rel} ${relName}` : (rel || relName);
                 }
                 if (AppState.elements.station) AppState.elements.station.value = c.station || '';
+                if (AppState.elements.lfNo) AppState.elements.lfNo.value = c.lfNo || '';
                 updateInfoPanel();
               }
             } catch (e) { }
@@ -2295,6 +2302,10 @@
             AppState.elements.station.value = customer.station || '';
           }
 
+          if (AppState.elements.lfNo) {
+            AppState.elements.lfNo.value = customer.lfNo || '';
+          }
+
           updateInfoPanel();
         } catch (e) {
           console.error('Error parsing customer data:', e);
@@ -2306,6 +2317,7 @@
         if (AppState.elements.currentBal) AppState.elements.currentBal.value = '';
         if (AppState.elements.relation) AppState.elements.relation.value = '';
         if (AppState.elements.station) AppState.elements.station.value = '';
+        if (AppState.elements.lfNo) AppState.elements.lfNo.value = '';
       }
 
       function setCustomerEditLock(locked) {
