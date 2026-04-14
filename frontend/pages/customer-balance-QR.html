@@ -1890,7 +1890,12 @@
                 const nameNorm = norm(customerData.name);
                 const cidNorm = customerData.cid ? norm(customerData.cid) : "";
                 return balances
-                    .filter(b => b && (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm)))
+                    .filter(b => {
+                        if (!b) return false;
+                        const sameCustomer = (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm));
+                        const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
+                        return sameCustomer && hasBillRef;
+                    })
                     .reduce((sum, b) => {
                         if (b.computedBalAmt != null && b.computedBalAmt !== "") return sum + (parseFloat(b.computedBalAmt) || 0);
                         const amt = parseFloat(b.amount || b.netAmount || 0);
@@ -1910,7 +1915,12 @@
                 const norm = (s) => (s || "").trim().toLowerCase();
                 const nameNorm = norm(customerData.name);
                 const cidNorm = customerData.cid ? norm(customerData.cid) : "";
-                const rows = balances.filter(b => b && (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm)));
+                const rows = balances.filter(b => {
+                    if (!b) return false;
+                    const sameCustomer = (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm));
+                    const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
+                    return sameCustomer && hasBillRef;
+                });
                 const seen = new Set();
                 const nums = [];
                 for (const b of rows) {
@@ -1952,8 +1962,8 @@
             const billsSum = getCustomerBillsSumFromBalances();
             const hasBillTx = statementIncludesSyncedBillRows(sorted);
             const showBillsSummaryRow = !hasBillTx && Math.abs(billsSum) > 0.000001;
-            const showOpeningRow = (Math.abs(opSigned) > 0.000001 || !!customerData.openingDate)
-                && (sorted.length > 0 || showBillsSummaryRow);
+            const showOpeningRow = (Math.abs(opSigned) > 0.000001)
+                && (sorted.length === 0 && !showBillsSummaryRow);
 
             /** Non-editable rows so Opening / bills show in Credit or Debit (not only hidden inside Balance). */
             function appendStaticStatementRow(idxTxt, dateStr, narText, crHtml, drHtml, balSigned) {
@@ -1984,8 +1994,19 @@
             let balance = 0;
             let anyStatic = false;
             if (showOpeningRow) {
-                // Keep opening balance in running calculations, but don't render a duplicate row in statement table.
                 balance = opSigned;
+                const opAbs = Math.abs(opSigned);
+                const opCr = opSigned < 0 && opAbs > 0.000001 ? fmt(opAbs) : '';
+                const opDr = opSigned > 0 && opAbs > 0.000001 ? fmt(opAbs) : '';
+                appendStaticStatementRow(
+                    '—',
+                    fmtDate(customerData.openingDate) || fmtDate(todayStr()),
+                    'Opening Balance',
+                    opCr,
+                    opDr,
+                    balance
+                );
+                anyStatic = true;
             }
             if (showBillsSummaryRow) {
                 let bCr = '';

@@ -544,7 +544,9 @@
             String(c.id) === String(b.customerId);
           const byCid = c.cid && b.cid && norm(b.cid) === norm(c.cid);
           const byName = norm(b.customer) === norm(name);
-          return byCustomerId || byCid || byName;
+          // Sum only bill-linked rows in Customer Balance table (prevents opening/current-only records from being counted).
+          const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
+          return (byCustomerId || byCid || byName) && hasBillRef;
         });
 
         // Customer Balance table must match All Bill "Balance (₹)" totals (sum of per-bill balances).
@@ -577,6 +579,15 @@
               dynamicSum += computed;
             }
           });
+        }
+
+        // Fallback: if no bill-linked rows exist, show saved current balance from customer master.
+        if (customerEntries.length === 0) {
+          let signedCurrent = (c.currentBalance != null && c.currentBalance !== "") ? Number(c.currentBalance) : 0;
+          const curType = (c.currentBalanceType || "Dr").toLowerCase();
+          if (curType === "cr") signedCurrent = -Math.abs(signedCurrent);
+          else signedCurrent = Math.abs(signedCurrent);
+          dynamicSum = signedCurrent;
         }
 
         const originalOpBal = openingBal;
