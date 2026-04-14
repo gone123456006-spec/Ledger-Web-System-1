@@ -399,6 +399,22 @@
             border: 1px solid #a3cfbb;
         }
 
+        .badge.meta-added {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+            margin-left: 0;
+            min-width: 26px;
+            height: 26px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            font-size: 14px;
+            line-height: 1;
+        }
+
         /* Checkbox */
         .cb-cell input[type="checkbox"] {
             width: 16px;
@@ -573,6 +589,47 @@
             padding: 14px 18px;
             border-top: 1px solid #edf0f5;
             background: #fafbfc;
+        }
+
+        /* Ready Meta popup form */
+        #readyMetaModal .modal {
+            max-width: 440px;
+        }
+
+        .ri-meta-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .ri-meta-row {
+            display: grid;
+            grid-template-columns: 92px 1fr;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ri-meta-row label {
+            font-size: 13px;
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .ri-meta-row input {
+            width: 100%;
+            min-height: 38px;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1f2937;
+            background: #fff;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .ri-meta-row input:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
         }
 
         .btn-cancel-modal {
@@ -1109,6 +1166,7 @@
                     <tr>
                         <th class="center cb-cell" style="width:46px;" aria-label="Row select"></th>
                         <th class="center">Status</th>
+                        <th class="center">Wt.+</th>
                         <th class="right">Qty</th>
                         <th>Item Name</th>
                         <th>Stamp</th>
@@ -1181,6 +1239,39 @@
                     style="background:#ff3b30;">
                     ↩️ Confirm — Recall Item
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- READY META POPUP -->
+    <div class="modal-overlay" id="readyMetaModal">
+        <div class="modal" style="max-width:420px;">
+            <div class="modal-header">
+                <div class="modal-header-text">
+                    <h3>Ready Item Details</h3>
+                    <p>Add R. Metal, Neg, and R. Wt for this row.</p>
+                </div>
+                <button type="button" class="modal-close-btn" id="riMetaCloseBtn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="ri-meta-form">
+                <div class="ri-meta-row">
+                    <label for="riReadyMetalInput">R. Metal</label>
+                    <input id="riReadyMetalInput" type="text" placeholder="R. metal">
+                </div>
+                <div class="ri-meta-row">
+                    <label for="riNegInput">Neg</label>
+                    <input id="riNegInput" type="number" step="0.01" placeholder="0">
+                </div>
+                <div class="ri-meta-row">
+                    <label for="riReadyWtInput">R. Wt</label>
+                    <input id="riReadyWtInput" type="number" step="0.001" placeholder="0.000">
+                </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel-modal" id="riMetaCancelBtn">Cancel</button>
+                <button type="button" class="btn-confirm-ready" id="riMetaSaveBtn">Save</button>
             </div>
         </div>
     </div>
@@ -1264,6 +1355,7 @@
         let tbody = null;
         let footer = null;
         let ipToastTimer = null;
+        let readyMetaRow = null;
 
         /* ── HELPERS ── */
         function ipGetRoot() {
@@ -1308,6 +1400,98 @@
             ipToastTimer = setTimeout(() => t.classList.remove('show'), 3200);
         }
 
+        function riAutoCalcReadyWtFromPopup() {
+            const metalEl = document.getElementById('riReadyMetalInput');
+            const negEl = document.getElementById('riNegInput');
+            const wtEl = document.getElementById('riReadyWtInput');
+            if (!metalEl || !negEl || !wtEl) return;
+            const metalRaw = String(metalEl.value || '').trim();
+            const negRaw = String(negEl.value || '').trim();
+            const metal = parseFloat(metalRaw);
+            const neg = parseFloat(negRaw);
+            if (!metalRaw && !negRaw) {
+                wtEl.value = '';
+                return;
+            }
+            if (!Number.isFinite(metal) && !Number.isFinite(neg)) return;
+            const m = Number.isFinite(metal) ? metal : 0;
+            const n = Number.isFinite(neg) ? neg : 0;
+            wtEl.value = (m - n).toFixed(3);
+        }
+
+        function openReadyMetaModalForRow(tr) {
+            if (!tr) return;
+            const modal = document.getElementById('readyMetaModal');
+            const metalEl = document.getElementById('riReadyMetalInput');
+            const negEl = document.getElementById('riNegInput');
+            const wtEl = document.getElementById('riReadyWtInput');
+            if (!modal || !metalEl || !negEl || !wtEl) return;
+
+            readyMetaRow = tr;
+            metalEl.value = tr.dataset.readyMetal || '';
+            negEl.value = tr.dataset.neg || '';
+            wtEl.value = tr.dataset.readyWt || '';
+            modal.classList.add('open');
+            setTimeout(() => { try { metalEl.focus(); } catch (e) { } }, 20);
+        }
+
+        function closeReadyMetaModal() {
+            const modal = document.getElementById('readyMetaModal');
+            if (modal) modal.classList.remove('open');
+            readyMetaRow = null;
+        }
+
+        function saveReadyMetaModal() {
+            if (!readyMetaRow) { closeReadyMetaModal(); return; }
+            const metalEl = document.getElementById('riReadyMetalInput');
+            const negEl = document.getElementById('riNegInput');
+            const wtEl = document.getElementById('riReadyWtInput');
+            riAutoCalcReadyWtFromPopup();
+            const metal = String((metalEl && metalEl.value) || '').trim();
+            const neg = String((negEl && negEl.value) || '').trim();
+            const readyWt = String((wtEl && wtEl.value) || '').trim();
+
+            const pid = String(readyMetaRow.dataset.processId || '');
+            const orderId = String(readyMetaRow.dataset.orderId || '');
+            const itemIdx = parseInt(readyMetaRow.dataset.itemIdx || '', 10);
+
+            try {
+                const itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+                const entry = itemProcess.find(e => String(e.id) === pid);
+                if (entry) {
+                    entry.readyMetal = metal;
+                    entry.neg = neg;
+                    entry.readyWt = readyWt;
+                    localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
+                }
+            } catch (e) { }
+
+            try {
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                const ord = orders.find(o => String(o.id) === orderId);
+                if (ord && ord.items && !isNaN(itemIdx) && ord.items[itemIdx]) {
+                    const it = ord.items[itemIdx];
+                    it.readyMetal = metal;
+                    it.neg = neg;
+                    it.readyWt = readyWt;
+                    if (Array.isArray(it.values) && it.values.length >= 16) {
+                        it.values[10] = metal;
+                        it.values[11] = neg;
+                        it.values[12] = readyWt;
+                    }
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                }
+            } catch (e) { }
+
+            readyMetaRow.dataset.readyMetal = metal;
+            readyMetaRow.dataset.neg = neg;
+            readyMetaRow.dataset.readyWt = readyWt;
+            riRefreshStatusBadgeForRow(readyMetaRow);
+
+            closeReadyMetaModal();
+            showIpToast('✅ Ready details saved');
+        }
+
         /**
          * Same rules as pending-items: ready-extra-order saves 17-value rows (Pc at v[4], …);
          * new-order uses a shorter array with optional type-prefix offset.
@@ -1322,6 +1506,9 @@
                     qty: parseFloat(v[4]) || 0,
                     estUnitWt: parseFloat(v[5]) || 0,
                     estTotalWt: parseFloat(v[6]) || 0,
+                    readyMetal: String(v[10] || '').trim(),
+                    neg: String(v[11] || '').trim(),
+                    readyWt: String(v[12] || '').trim(),
                     sampleDetails: item.sample || item.sampleDetails || ord.sampleDetails || '—',
                     remarks: '—',
                     design: '—',
@@ -1338,11 +1525,33 @@
                 qty: parseFloat(get(7)) || 0,
                 estUnitWt: parseFloat(get(8)) || 0,
                 estTotalWt: parseFloat(get(9)) || 0,
+                readyMetal: String(item.readyMetal || '').trim(),
+                neg: String(item.neg || '').trim(),
+                readyWt: String(item.readyWt || '').trim(),
                 sampleDetails: item.sample || item.sampleDetails || ord.sampleDetails || '—',
                 remarks: String(get(4) || '').trim() || '—',
                 design: String(get(5) || '').trim() || '—',
                 size: String(get(6) || '').trim() || '—'
             };
+        }
+
+        function riHasReadyMetaDetails(r) {
+            const metal = String((r && r.readyMetal) || '').trim();
+            const neg = String((r && r.neg) || '').trim();
+            const wt = String((r && r.readyWt) || '').trim();
+            return !!(metal || neg || wt);
+        }
+
+        function riRefreshStatusBadgeForRow(tr) {
+            if (!tr) return;
+            const detailsCell = tr.children && tr.children[2] ? tr.children[2] : null;
+            if (!detailsCell) return;
+            const hasMeta = riHasReadyMetaDetails({
+                readyMetal: tr.dataset.readyMetal,
+                neg: tr.dataset.neg,
+                readyWt: tr.dataset.readyWt
+            });
+            detailsCell.innerHTML = hasMeta ? '<span class="badge meta-added"><strong>✔</strong></span>' : '—';
         }
 
         /** Rebuild qty/name/weights from orders[].items[itemIdx] so old itemProcess rows display correctly. */
@@ -1371,6 +1580,9 @@
                 row.design = f.design;
                 row.size = f.size;
                 row.estUnitWt = f.estUnitWt;
+                row.readyMetal = f.readyMetal || row.readyMetal || '';
+                row.neg = f.neg || row.neg || '';
+                row.readyWt = f.readyWt || row.readyWt || '';
                 const pq = Math.max(0, parseFloat(row.qty) || 0);
                 const u = parseFloat(f.estUnitWt) || 0;
                 if (u > 0 && pq > 0) {
@@ -1825,7 +2037,7 @@
                 if (items.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="15" style="border:none;">
+                            <td colspan="17" style="border:none;">
                             <div class="empty-state">
                               <div class="empty-state-icon">📦</div>
                               <div class="empty-state-text">No Ready Items</div>
@@ -1840,6 +2052,7 @@
 
                 items.forEach((r, idx) => {
                     const isReady = r.status === 'READY';
+                    const hasMeta = riHasReadyMetaDetails(r);
                     const tr = document.createElement('tr');
                     tr.dataset.search = [r.itemName, r.stamp || '', r.jobworkerName, r.orderNo, r.customerName, r.design, r.sampleDetails].join(' ').toLowerCase();
                     tr.dataset.jobworker = (r.jobworkerName || '').trim();
@@ -1850,6 +2063,9 @@
                     tr.dataset.orderNo = String(r.orderNo || '').trim();
                     tr.dataset.stampFilter = String(r.stamp || '').trim().toLowerCase();
                     tr.dataset.itemNameFilter = String(r.itemName || '').trim().toLowerCase();
+                    tr.dataset.readyMetal = String(r.readyMetal || '').trim();
+                    tr.dataset.neg = String(r.neg || '').trim();
+                    tr.dataset.readyWt = String(r.readyWt || '').trim();
                     const rowQty = Math.max(0, parseFloat(r.qty) || 0);
 
                     tr.innerHTML = `
@@ -1863,6 +2079,9 @@
                         </td>
                         <td class="center">
                             <span class="badge ready-done">✓ Ready item</span>
+                        </td>
+                        <td class="center">
+                            ${hasMeta ? '<span class="badge meta-added"><strong>✔</strong></span>' : '—'}
                         </td>
                         <td class="right">${rowQty.toFixed(0)}</td>
                         <td class="col-item-name">${escapeHtml(r.itemName)}</td>
@@ -1878,6 +2097,11 @@
                         <td>${escapeHtml(r.orderNo)}</td>
                         <td>${escapeHtml(r.customerName)}</td>
                         <td>${escapeHtml(r.customerRelation)}</td>`;
+                    tr.addEventListener('click', (e) => {
+                        if (!e || !e.target) return;
+                        if (e.target.closest('.ip-row-cb,.jw-link,button,a,select,textarea')) return;
+                        openReadyMetaModalForRow(tr);
+                    });
                     tbody.appendChild(tr);
                 });
 
@@ -1903,7 +2127,7 @@
                 ipUpdateUI();
             } catch (e) {
                 console.error('Error loading process items:', e);
-                tbody.innerHTML = `<tr><td colspan="15" class="empty-state">Error loading data.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="17" class="empty-state">Error loading data.</td></tr>`;
                 if (footer) footer.textContent = 'Error';
             }
         }
@@ -1988,13 +2212,13 @@
                     const tds = tr.querySelectorAll('td');
                     orderMap[oid] = {
                         orderId: oid,
-                        orderNo: tds[12] ? tds[12].textContent.trim() : oid,
-                        customer: tds[13] ? tds[13].textContent.trim() : '—',
+                        orderNo: tds[13] ? tds[13].textContent.trim() : oid,
+                        customer: tds[14] ? tds[14].textContent.trim() : '—',
                         items: []
                     };
                 }
                 const tds = tr.querySelectorAll('td');
-                orderMap[oid].items.push(tds[3] ? tds[3].textContent.trim() : '—');
+                orderMap[oid].items.push(tds[4] ? tds[4].textContent.trim() : '—');
             });
 
             const orders = Object.values(orderMap);
@@ -2115,13 +2339,13 @@
                     const tds = tr.querySelectorAll('td');
                     orderMap[oid] = {
                         orderId: oid,
-                        orderNo: tds[12] ? tds[12].textContent.trim() : oid,
-                        customer: tds[13] ? tds[13].textContent.trim() : '—',
+                        orderNo: tds[13] ? tds[13].textContent.trim() : oid,
+                        customer: tds[14] ? tds[14].textContent.trim() : '—',
                         items: []
                     };
                 }
                 const tds = tr.querySelectorAll('td');
-                orderMap[oid].items.push(tds[3] ? tds[3].textContent.trim() : '—');
+                orderMap[oid].items.push(tds[4] ? tds[4].textContent.trim() : '—');
             });
 
             const orders = Object.values(orderMap);
@@ -2245,6 +2469,19 @@
         document.getElementById('markUnReadyModal').addEventListener('click', function (e) {
             if (e.target === this) closeMarkUnReadyModal();
         });
+        document.getElementById('readyMetaModal').addEventListener('click', function (e) {
+            if (e.target === this) closeReadyMetaModal();
+        });
+        const riMetaSaveBtn = document.getElementById('riMetaSaveBtn');
+        const riMetaCancelBtn = document.getElementById('riMetaCancelBtn');
+        const riMetaCloseBtn = document.getElementById('riMetaCloseBtn');
+        const riMetaMetalInput = document.getElementById('riReadyMetalInput');
+        const riMetaNegInput = document.getElementById('riNegInput');
+        if (riMetaMetalInput) riMetaMetalInput.addEventListener('input', riAutoCalcReadyWtFromPopup);
+        if (riMetaNegInput) riMetaNegInput.addEventListener('input', riAutoCalcReadyWtFromPopup);
+        if (riMetaSaveBtn) riMetaSaveBtn.addEventListener('click', saveReadyMetaModal);
+        if (riMetaCancelBtn) riMetaCancelBtn.addEventListener('click', closeReadyMetaModal);
+        if (riMetaCloseBtn) riMetaCloseBtn.addEventListener('click', closeReadyMetaModal);
 
         /* ── JW INFO MODAL ── */
         function openJwModal(jwId, jwName) {

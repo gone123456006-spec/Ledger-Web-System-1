@@ -2642,6 +2642,30 @@
     </div>
   </div>
 
+  <!-- READY META POPUP (R. Metal / Neg / R. Wt) -->
+  <div id="ready-order-ready-meta-popup" class="popup-bg ready-order-popup" style="display:none;"
+    onclick="if(event.target===this) closeReadyMetaPopup()">
+    <div class="popup-box" style="max-width: 420px;">
+      <h3>Ready Item Details</h3>
+      <div class="popup-row">
+        <label>R. Metal</label>
+        <input type="text" id="readyMetaMetalInput" placeholder="R. metal">
+      </div>
+      <div class="popup-row">
+        <label>Neg</label>
+        <input type="number" step="0.01" id="readyMetaNegInput" placeholder="0">
+      </div>
+      <div class="popup-row">
+        <label>R. Wt</label>
+        <input type="number" step="0.001" id="readyMetaWtInput" placeholder="0.000">
+      </div>
+      <div class="popup-actions">
+        <button onclick="saveReadyMetaPopup()">Save</button>
+        <button onclick="closeReadyMetaPopup()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- PAYMENT POPUP (same as new-order) -->
   <div id="ready-order-payment-popup" class="popup-bg ready-order-popup"
     onclick="if(event.target===this) closePaymentPopup()">
@@ -2946,6 +2970,10 @@
       var paymentBillTotal = null;
       var paymentAmountDisplay = null;
       var paymentBalance = null;
+      var readyMetaPopup = null;
+      var readyMetaMetalInput = null;
+      var readyMetaNegInput = null;
+      var readyMetaWtInput = null;
 
       var iCustomer = null;
       var iOrderDate = null;
@@ -2954,6 +2982,7 @@
       var iGrand = null;
 
       var activeRow = null;
+      var readyMetaActiveRow = null;
       /** When true, Ut. Wt.–Est. Total columns are hidden; persisted on save (bills / customer balance). */
       var billMidColumnsHidden = false;
       /** Set true only when user taps Bill (UI preview). Next Save uses All Bill finalization and skips Ready Orders. Cleared on Order view restore or after successful finalize. */
@@ -2965,7 +2994,7 @@
       var billModeBaseline = null; // { advancePayments, paidPayments, advanceOrderSheet, paidOrderSheet, purchaseGrid }
 
       (function hideOtherPagesPopupsOnInit() {
-        var ids = ['ready-order-order-popup', 'ready-order-payment-popup', 'ready-order-advanced-payments-popup', 'ready-order-paid-payments-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
+        var ids = ['ready-order-order-popup', 'ready-order-ready-meta-popup', 'ready-order-payment-popup', 'ready-order-advanced-payments-popup', 'ready-order-paid-payments-popup', 'ready-extra-order-purchase-sheet-popup', 'ready-order-ratebook-popup', 'ready-order-ratebook-details-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup', 'new-order-purchase-sheet-popup', 'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'];
         ids.forEach(function (id) {
           try {
             var el = container.querySelector("#" + id);
@@ -3006,6 +3035,10 @@
         paymentBillTotal = searchRoot.querySelector("#popupBillTotal");
         paymentAmountDisplay = searchRoot.querySelector("#popupAmountDisplay");
         paymentBalance = searchRoot.querySelector("#popupBalance");
+        readyMetaPopup = searchRoot.querySelector("#ready-order-ready-meta-popup");
+        readyMetaMetalInput = searchRoot.querySelector("#readyMetaMetalInput");
+        readyMetaNegInput = searchRoot.querySelector("#readyMetaNegInput");
+        readyMetaWtInput = searchRoot.querySelector("#readyMetaWtInput");
 
         iCustomer = searchRoot.querySelector("#iCustomer");
         iOrderDate = searchRoot.querySelector("#iOrderDate");
@@ -3785,6 +3818,25 @@
         }
       }
 
+      /** Also restore ready fields from object properties (used by Ready Items popup saves). */
+      function applyReadyMetaFieldsFromSource(tr, src, onlyIfEmpty) {
+        if (!tr || !tr.cells || !src) return;
+        function setCell(idx, val) {
+          var cell = tr.cells[idx];
+          if (!cell || !cell.children || !cell.children[0]) return;
+          var el = cell.children[0];
+          if (el.tagName !== "INPUT" && el.tagName !== "SELECT") return;
+          if (val === undefined || val === null) return;
+          var txt = String(val).trim();
+          if (!txt) return;
+          if (onlyIfEmpty && el.value && String(el.value).trim() !== "") return;
+          el.value = txt;
+        }
+        setCell(10, src.readyMetal);
+        setCell(11, src.neg);
+        setCell(12, src.readyWt);
+      }
+
       /* ADD ROW */
       function addRow() {
         if (!itemBody) {
@@ -3818,6 +3870,7 @@
 <td><button type="button" class="row-del-btn" onclick="removeReadyExtraRow(this)">X</button></td>
 `;
         itemBody.appendChild(tr);
+        bindReadyMetaPopupForRow(tr);
         var __typeSelNew = tr.cells[0] && tr.cells[0].querySelector("select");
         if (__typeSelNew) setPurchaseOptionalFieldsState(tr, false);
         // Set Job No same as Order No (Bill No)
@@ -4212,6 +4265,80 @@
         if (orderPopup) orderPopup.style.display = "none";
         activeRow = null;
         if (popupDays) popupDays.value = "";
+      }
+
+      function bindReadyMetaPopupForRow(tr) {
+        if (!tr || tr.dataset.readyMetaPopupBound === "1") return;
+        tr.dataset.readyMetaPopupBound = "1";
+        tr.addEventListener("click", function (e) {
+          if (!e || !e.target || !tr.closest("#ready-order-item-table")) return;
+          var td = e.target.closest("td");
+          var idx = td ? Array.prototype.indexOf.call(tr.cells, td) : -1;
+          var isFormHit = !!e.target.closest("button,select,input,textarea,a,label");
+          if (isFormHit && idx !== 2) return;
+          if (isFormHit && idx === 2) {
+            e.preventDefault();
+            openReadyMetaPopup(tr);
+            return;
+          }
+          openReadyMetaPopup(tr);
+        });
+      }
+
+      function openReadyMetaPopup(rowOrCell) {
+        if (!readyMetaPopup || !readyMetaMetalInput || !readyMetaNegInput || !readyMetaWtInput) {
+          if (!initElements()) return;
+        }
+        var row = rowOrCell;
+        if (row && row.closest && row.tagName !== "TR") row = row.closest("tr");
+        if (!row || !row.cells || !row.cells[10] || !row.cells[11] || !row.cells[12]) return;
+
+        readyMetaActiveRow = row;
+        readyMetaMetalInput.value = (row.cells[10].children[0] && row.cells[10].children[0].value) ? row.cells[10].children[0].value : "";
+        readyMetaNegInput.value = (row.cells[11].children[0] && row.cells[11].children[0].value) ? row.cells[11].children[0].value : "";
+        readyMetaWtInput.value = (row.cells[12].children[0] && row.cells[12].children[0].value) ? row.cells[12].children[0].value : "";
+        readyMetaPopup.style.display = "flex";
+        readyMetaPopup.style.alignItems = "center";
+        readyMetaPopup.style.justifyContent = "center";
+        setTimeout(function () {
+          try { readyMetaMetalInput.focus(); } catch (e) { }
+        }, 20);
+      }
+
+      function closeReadyMetaPopup() {
+        if (!readyMetaPopup) {
+          if (!initElements()) return;
+        }
+        if (readyMetaPopup) readyMetaPopup.style.display = "none";
+        readyMetaActiveRow = null;
+      }
+
+      function saveReadyMetaPopup() {
+        if (!readyMetaActiveRow || !readyMetaActiveRow.cells) {
+          closeReadyMetaPopup();
+          return;
+        }
+        var row = readyMetaActiveRow;
+        var rMetalEl = row.cells[10] && row.cells[10].children[0];
+        var negEl = row.cells[11] && row.cells[11].children[0];
+        var wtEl = row.cells[12] && row.cells[12].children[0];
+        if (!rMetalEl || !negEl || !wtEl) {
+          closeReadyMetaPopup();
+          return;
+        }
+
+        var metalVal = String(readyMetaMetalInput && readyMetaMetalInput.value != null ? readyMetaMetalInput.value : "").trim();
+        var negVal = String(readyMetaNegInput && readyMetaNegInput.value != null ? readyMetaNegInput.value : "").trim();
+        var wtVal = String(readyMetaWtInput && readyMetaWtInput.value != null ? readyMetaWtInput.value : "").trim();
+
+        rMetalEl.value = metalVal;
+        negEl.value = negVal;
+        wtEl.value = wtVal;
+
+        if (!wtVal) syncReadyWeight(rMetalEl);
+        else calcReadyTotal(wtEl);
+
+        closeReadyMetaPopup();
       }
 
       /* CALCULATION - AUTO CALCULATE ALL FIELDS */
@@ -6233,6 +6360,7 @@
             // Restore by column index so Stamp, Pc, Ut. Wt., etc. stay in correct columns
             if (item.values && item.values.length > 0) {
               setReadyOrderRowValues(tr, item.values, item.values.length === 13, false);
+              applyReadyMetaFieldsFromSource(tr, item, false);
             }
 
             // Restore order metadata
@@ -6343,6 +6471,7 @@
           const tr = itemBody.lastElementChild;
           const vals = r.values || [];
           if (vals.length > 0) setReadyOrderRowValues(tr, vals, vals.length === 13, false);
+          applyReadyMetaFieldsFromSource(tr, r, false);
 
           // Restore all order metadata
           if (r.delivery || r.orderFilled) {
@@ -7936,6 +8065,7 @@
 
                   if (rowData.values && rowData.values.length > 0) {
                     setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, false);
+                    applyReadyMetaFieldsFromSource(tr, rowData, false);
                   }
 
                   if (rowData.delivery || rowData.orderFilled) {
@@ -8025,6 +8155,7 @@
 
                     if (rowData.values && rowData.values.length > 0) {
                       setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, false);
+                      applyReadyMetaFieldsFromSource(tr, rowData, false);
                     }
 
                     if (rowData.delivery || rowData.orderFilled) {
@@ -8056,6 +8187,7 @@
                       const tr = existingTrs[index];
                       if (rowData.values && rowData.values.length > 0) {
                         setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, true);
+                        applyReadyMetaFieldsFromSource(tr, rowData, true);
                       }
 
                       if (rowData.delivery || rowData.orderFilled) {
@@ -8070,6 +8202,7 @@
 
                       if (rowData.values && rowData.values.length > 0) {
                         setReadyOrderRowValues(tr, rowData.values, rowData.values.length === 13, false);
+                        applyReadyMetaFieldsFromSource(tr, rowData, false);
                       }
 
                       if (rowData.delivery || rowData.orderFilled) {
@@ -9058,6 +9191,9 @@
         window.calculateDeliveryDate = calculateDeliveryDate;
         window.saveOrderPopup = saveOrderPopup;
         window.closePopup = closePopup;
+        window.openReadyMetaPopup = openReadyMetaPopup;
+        window.saveReadyMetaPopup = saveReadyMetaPopup;
+        window.closeReadyMetaPopup = closeReadyMetaPopup;
         window.calculatePaymentBalance = calculatePaymentBalance;
         window.closePaymentPopup = closePaymentPopup;
         window.openAdvancedPaymentsPopup = openAdvancedPaymentsPopup;
@@ -9114,7 +9250,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'openReadyMetaPopup', 'saveReadyMetaPopup', 'closeReadyMetaPopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();
