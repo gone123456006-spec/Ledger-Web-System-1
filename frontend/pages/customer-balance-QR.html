@@ -207,7 +207,7 @@
         }
 
         col.col-int {
-            width: 100px;
+            width: 120px;
         }
 
         .int-cal-cell {
@@ -223,17 +223,7 @@
             color: #7c3aed !important;
         }
 
-        /* Interest module table: hide per-row "Interest Cal" column and "Interest (recorded in Interest module)" rows */
-        .interest-module-table col.col-int {
-            display: none;
-            width: 0;
-            max-width: 0;
-        }
-
-        .interest-module-table thead tr th:last-child,
-        .interest-module-table tbody tr td:last-child {
-            display: none !important;
-        }
+        /* Interest module table: keep the recorded-only rows hidden */
 
         .interest-module-table tr.interest-module-recorded {
             display: none !important;
@@ -1095,7 +1085,7 @@
                                 <th class="right">Credit</th>
                                 <th class="right">Debit</th>
                                 <th class="right">Balance</th>
-                                <th class="right col-int-th" id="thIntCalModule">Interest Cal</th>
+                                <th class="right col-int-th" id="thIntCalModule">Calculated On</th>
                             </tr>
                         </thead>
                         <tbody id="interestModuleBody"></tbody>
@@ -1365,24 +1355,6 @@
 
             const opInt = rowInterestMap['__op__'];
             const opSigned = openingSignedForStatement();
-            const showOpRow = (opSigned !== 0 || !!customerData.openingDate) && (sorted.length > 0 || opInt != null);
-            if (showOpRow) {
-                const ic = intCellContent(opInt);
-                const absb = Math.abs(balance);
-                const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-                const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
-                appendIntRowStatic(
-                    '—',
-                    fmtDate(customerData.openingDate) || '—',
-                    'Opening Balance',
-                    '',
-                    '',
-                    `${fmt(absb)} <span class="${tagClass}">${tag}</span>`,
-                    ic.html,
-                    ic.title,
-                    ''
-                );
-            }
 
             sorted.forEach((tx, i) => {
                 balance += txDelta(tx);
@@ -1447,46 +1419,13 @@
                 tdBal.innerHTML = `${fmt(absbal)} <span class="${tagClass}">${tag}</span>`;
 
                 const intData = rowInterestMap[tx.id];
-                const ic = intCellContent(intData);
                 const tdInt = document.createElement('td');
                 tdInt.className = 'int-cal-cell';
-                const spInt = document.createElement('span');
-                spInt.contentEditable = 'true';
-                if (ic.html === 'N/A') spInt.textContent = 'N/A';
-                else if (ic.html === '—') spInt.textContent = '';
-                else spInt.textContent = ic.html;
-                spInt.title = ic.title || '';
-                spInt.style.cssText = `
-                    display:block; min-width:30px; outline:none;
-                    font-family:inherit; font-size:12px; color:inherit;
-                    border-bottom: 1px dashed transparent;
-                `;
-                spInt.style.textAlign = 'right';
-                spInt.addEventListener('focus', () => {
-                    spInt.style.borderBottomColor = '#aac4e8';
-                });
-                spInt.addEventListener('blur', () => {
-                    spInt.style.borderBottomColor = 'transparent';
-                    const raw = spInt.textContent.trim();
-                    if (raw === '' || raw === '—') {
-                        delete rowInterestMap[tx.id];
-                    } else if (raw.toUpperCase() === 'N/A') {
-                        rowInterestMap[tx.id] = null;
-                    } else {
-                        const n = readMoney(raw);
-                        if (n === 0) delete rowInterestMap[tx.id];
-                        else rowInterestMap[tx.id] = { amount: n, manual: true };
-                    }
-                    saveInterestModule();
-                    renderInterestTable();
-                });
-                spInt.addEventListener('keydown', e => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        spInt.blur();
-                    }
-                });
-                tdInt.appendChild(spInt);
+                const calcOn = intData && intData.principal != null ? Math.abs(Number(intData.principal) || 0) : 0;
+                tdInt.textContent = calcOn > 0 ? fmt(calcOn) : '';
+                if (intData && intData.days != null && intData.rate != null) {
+                    tdInt.title = `${intData.days} days @ ${intData.rate}%`;
+                }
 
                 tr.append(tdIdx, tdDate, tdNar, tdCr, tdDr, tdBal, tdInt);
                 tbody.appendChild(tr);
@@ -1578,14 +1517,6 @@
                         entryType: intEntryType || null, cleared: false
                     });
 
-                    const intRaw = spInt.textContent.trim();
-                    if (intRaw.toUpperCase() === 'N/A') {
-                        rowInterestMap[newId] = null;
-                    } else if (intRaw !== '' && intRaw !== '—') {
-                        const n = readMoney(intRaw);
-                        if (n !== 0) rowInterestMap[newId] = { amount: n, manual: true };
-                    }
-
                     interestDraftRows.splice(dIdx, 1);
                     if (interestDraftRows.length === 0) {
                         interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
@@ -1624,21 +1555,20 @@
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
                 tdBal.style.fontWeight = '700';
-                const rowAbsbal = Math.abs(balance);
-                const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-                tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
+                tdBal.innerHTML = '';
 
-                const { td: tdInt, span: spInt } = makeIntCell(draft.int || '', true, () => { });
+                const tdInt = document.createElement('td');
+                tdInt.className = 'int-cal-cell';
+                tdInt.textContent = '';
 
-                [spDate, spNar, spCr, spDr, spInt].forEach((sp, idx) => {
+                [spDate, spNar, spCr, spDr].forEach((sp, idx) => {
                     sp.addEventListener('input', () => {
                         if (idx === 0) draft.date = sp.textContent;
                         if (idx === 1) draft.nar = sp.textContent;
                         if (idx === 2 || idx === 3) syncDraftCrDrExclusive(draft, spCr, spDr);
-                        if (idx === 4) draft.int = sp.textContent;
                     });
                     sp.addEventListener('keydown', e => {
-                        if (e.key === 'Enter' || e.key === 'Tab' && idx === 4) {
+                        if (e.key === 'Enter' || (e.key === 'Tab' && idx === 3)) {
                             e.preventDefault();
                             saveInterestDraft();
                         }
@@ -1651,7 +1581,6 @@
                                 draft.nar = '';
                                 draft.cr = '';
                                 draft.dr = '';
-                                draft.int = '';
                                 draft.entryType = null;
                                 renderInterestTable();
                             }
@@ -1993,10 +1922,10 @@
                     nums.push(num);
                 }
                 return nums.length
-                    ? "Balance order no. - " + nums.join(", ")
-                    : "Balance order no. - (Ready Order)";
+                    ? "Balance Bill No. - " + nums.join(", ")
+                    : "Balance Bill No. - (Ready Order)";
             } catch (e) {
-                return "Balance order no. -";
+                return "Balance Bill No. -";
             }
         }
 
@@ -2055,19 +1984,8 @@
             let balance = 0;
             let anyStatic = false;
             if (showOpeningRow) {
+                // Keep opening balance in running calculations, but don't render a duplicate row in statement table.
                 balance = opSigned;
-                const opAbs = Math.abs(opSigned);
-                const opCr = opSigned < 0 && opAbs > 0.000001 ? fmt(opAbs) : '';
-                const opDr = opSigned > 0 && opAbs > 0.000001 ? fmt(opAbs) : '';
-                appendStaticStatementRow(
-                    '—',
-                    fmtDate(customerData.openingDate) || '—',
-                    'Opening Balance',
-                    opCr,
-                    opDr,
-                    balance
-                );
-                anyStatic = true;
             }
             if (showBillsSummaryRow) {
                 let bCr = '';
@@ -2077,7 +1995,7 @@
                 balance += billsSum;
                 appendStaticStatementRow(
                     '—',
-                    '—',
+                    fmtDate(todayStr()),
                     getCustomerBillOrderNarrationForSummary(),
                     bCr,
                     bDr,
@@ -2300,9 +2218,7 @@
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
                 tdBal.style.fontWeight = '700';
-                const rowAbsbal = Math.abs(balance);
-                const rowTag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-                tdBal.innerHTML = `${fmt(rowAbsbal)} <span style="font-size:10px;font-weight:700;opacity:.8;">${rowTag}</span>`;
+                tdBal.innerHTML = '';
 
                 const tdClr = document.createElement('td');
                 tdClr.className = 'center';
