@@ -214,29 +214,33 @@
     table {
       width: 100%;
       min-width: 1200px;
-      border-collapse: separate;
+      border-collapse: collapse;
       border-spacing: 0;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     thead th {
       position: sticky;
       top: 0;
-      background: #f5f6fa;
+      background: #f3f3f3;
       z-index: 2;
-      font-size: 15px;
+      font-size: 13px;
+      font-weight: normal;
+      color: #333;
+      border: 1px solid #d4d4d4;
+      border-bottom: 2px solid #a0a0a0;
     }
 
     th,
     td {
-      border-bottom: 1px solid var(--border);
-      padding: 12px 14px;
+      border: 1px solid #d4d4d4;
+      padding: 0;
       white-space: nowrap;
     }
 
     th {
-      background: #f5f6fa;
-      font-weight: 600;
+      background: #f3f3f3;
+      font-weight: normal;
     }
 
     tbody tr:hover {
@@ -304,8 +308,8 @@
     /* Order row: Pc, Ut. Wt., Est. Total Wt., Rate, Lbr.%, Total – non-editable */
     td input.order-detail-readonly {
       cursor: not-allowed;
-      background: #f5f5f7;
-      border-color: #e2e8f0;
+      background: rgba(0,0,0,0.03);
+      border-color: transparent;
     }
 
     /* Optional: purchase-field-disabled for readonly styling */
@@ -350,27 +354,30 @@
     .order-details-table-wrap .order-details-table select {
       width: 100%;
       min-width: 0;
-      height: 32px;
-      padding: 0 6px;
+      height: 100%;
+      min-height: 28px;
+      padding: 4px 6px;
       margin: 0;
       font-size: 14px;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
       box-sizing: border-box;
       border-radius: 0;
-      border: 1px solid #d1d9e0;
+      border: none;
       outline: none;
-      background: #fff;
+      background: transparent;
+      color: #000;
     }
 
     /* R. Metal → Total cells: inputs/selects match light orange band (override #fff above) */
     .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) input,
     .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) select {
-      background-color: #ffe8d2;
-      border-color: #f0c9a8;
+      background-color: transparent;
+      border-color: transparent;
     }
 
     .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) input.order-detail-readonly {
-      background-color: #ffdfc4;
-      border-color: #e8bc96;
+      background-color: rgba(0,0,0,0.05);
+      border-color: transparent;
     }
 
     .order-details-table-wrap #ready-order-item-table td:first-child select,
@@ -466,18 +473,18 @@
       font-size: 12px;
     }
 
-    /* Order Details grid: faint vertical rules; focus = solid 2px black frame (sharp corners, white fill) */
-    /* Header row height matches body cells (no extra vertical gap) */
+    /* Order Details grid: Excel style */
     .order-details-table-wrap #ready-order-item-table thead th {
       padding: 0 4px;
       line-height: 32px;
       height: 32px;
       box-sizing: border-box;
+      border: 1px solid #d4d4d4;
     }
 
     .order-details-table-wrap #ready-order-item-table thead th,
     .order-details-table-wrap #ready-order-item-table tbody td {
-      border-right: 1px solid #e5edf5;
+      border: 1px solid #d4d4d4;
     }
 
     .order-details-table-wrap #itemTable thead th:last-child,
@@ -503,10 +510,12 @@
     .order-details-table-wrap #ready-order-item-table select:focus,
     .order-details-table-wrap .order-details-table input:focus,
     .order-details-table-wrap .order-details-table select:focus {
-      outline: none;
-      border: 2px solid #000;
+      outline: 2px solid #217346 !important;
+      outline-offset: -2px;
       border-radius: 0;
       background: #fff;
+      z-index: 10;
+      position: relative;
     }
 
     .order-details-table-wrap #itemTable input.order-detail-readonly:focus,

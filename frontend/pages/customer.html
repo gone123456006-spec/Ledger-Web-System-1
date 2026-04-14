@@ -21,8 +21,21 @@
       --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
       --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
-    * { box-sizing: border-box; font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif; }
-    html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg-gradient); color: var(--text); overflow-x: hidden; }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg-gradient);
+      color: var(--text);
+      overflow-x: hidden;
+    }
 
     .page {
       width: 100%;
@@ -34,6 +47,7 @@
       align-items: center;
       justify-content: flex-start;
     }
+
     h2 {
       font-weight: 600;
       margin: 0 0 20px 0;
@@ -51,25 +65,35 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px 44px;
-      max-width: none;
+      max-width: 800px;
       width: 100%;
       min-width: 0;
-      align-self: stretch;
+      align-self: center;
       transition: box-shadow 0.2s ease;
     }
-    .erp-form:hover { box-shadow: var(--shadow-hover); }
 
-    .form-left, .form-right {
+    .erp-form:hover {
+      box-shadow: var(--shadow-hover);
+    }
+
+    .form-left,
+    .form-right {
       display: flex;
       flex-direction: column;
       gap: 0;
       min-width: 0;
     }
+
     .form-section {
       margin-bottom: 20px;
     }
-    .form-section:last-child { margin-bottom: 0; }
-    .form-left h4, .form-right h4 {
+
+    .form-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-left h4,
+    .form-right h4 {
       margin: 0 0 14px 0;
       font-size: 16px;
       font-weight: 600;
@@ -78,12 +102,20 @@
       padding-bottom: 8px;
       border-bottom: 2px solid var(--border);
     }
-    .form-left h4:not(:first-child), .form-right h4:not(:first-child) { margin-top: 4px; }
+
+    .form-left h4:not(:first-child),
+    .form-right h4:not(:first-child) {
+      margin-top: 4px;
+    }
 
     .field {
       margin-bottom: 14px;
     }
-    .field:last-child { margin-bottom: 0; }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
     label {
       font-size: 13px;
       color: var(--muted);
@@ -91,8 +123,15 @@
       display: block;
       font-weight: 500;
     }
-    label .required { color: var(--danger); margin-left: 1px; }
-    input, textarea, select {
+
+    label .required {
+      color: var(--danger);
+      margin-left: 1px;
+    }
+
+    input,
+    textarea,
+    select {
       width: 100%;
       padding: 10px 12px;
       border-radius: var(--radius-sm);
@@ -102,36 +141,59 @@
       background: #fff;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    input::placeholder, textarea::placeholder { color: #9aa0a6; }
-    input:focus, textarea:focus, select:focus {
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #9aa0a6;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
     }
-    input[readonly], input:disabled {
+
+    input[readonly],
+    input:disabled {
       background: #f8f9fa;
       color: var(--muted);
       cursor: default;
     }
+
     textarea {
       resize: vertical;
       min-height: 72px;
       font-family: inherit;
     }
+
     .row {
       display: flex;
       gap: 10px;
       align-items: stretch;
     }
-    .row select { width: 80px; flex-shrink: 0; }
-    .row input { flex: 1; min-width: 0; }
+
+    .row select {
+      width: 80px;
+      flex-shrink: 0;
+    }
+
+    .row input {
+      flex: 1;
+      min-width: 0;
+    }
 
     .date-wrap {
       position: relative;
       display: flex;
       align-items: center;
     }
-    .date-wrap input { padding-right: 40px; }
+
+    .date-wrap input {
+      padding-right: 40px;
+    }
+
     .date-wrap::after {
       content: "";
       position: absolute;
@@ -140,6 +202,50 @@
       height: 18px;
       background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'/%3E%3C/svg%3E") center/contain no-repeat;
       pointer-events: none;
+    }
+
+    /* Popup mode overrides for a more compact look */
+    body.popup-mode {
+      background: #fff;
+      min-height: auto;
+    }
+    body.popup-mode .page {
+      padding: 0;
+    }
+    body.popup-mode .erp-form {
+      padding: 10px 15px;
+      gap: 5px 25px;
+      border-radius: 4px;
+      box-shadow: none;
+      border: none;
+    }
+    body.popup-mode h4 {
+      margin: 5px 0 !important;
+      font-size: 14px !important;
+    }
+    body.popup-mode .field {
+      margin-bottom: 5px;
+    }
+    body.popup-mode label {
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+    body.popup-mode input, 
+    body.popup-mode select, 
+    body.popup-mode textarea {
+      padding: 6px 8px;
+      font-size: 13px;
+    }
+    body.popup-mode .form-section {
+      margin-bottom: 5px;
+    }
+    body.popup-mode .form-actions {
+      position: static;
+      box-shadow: none;
+      border-top: 1px solid var(--border);
+      margin-top: 5px;
+      backdrop-filter: none;
+      padding: 5px;
     }
 
     .form-actions {
@@ -157,6 +263,7 @@
       z-index: 100;
       box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
     }
+
     .form-actions button {
       padding: 10px 20px;
       border-radius: var(--radius-sm);
@@ -166,22 +273,31 @@
       cursor: pointer;
       transition: background 0.15s ease, transform 0.05s ease;
     }
-    .form-actions button:active { transform: scale(0.98); }
+
+    .form-actions button:active {
+      transform: scale(0.98);
+    }
+
     .form-actions button:not(.primary) {
       border: 1px solid var(--border);
       background: #fff;
       color: var(--text);
     }
+
     .form-actions button:not(.primary):hover {
       background: #f8f9fa;
       border-color: #bdc1c6;
     }
+
     .form-actions button.primary {
       background: var(--primary);
       color: #fff;
       border: none;
     }
-    .form-actions button.primary:hover { background: var(--primary-hover); }
+
+    .form-actions button.primary:hover {
+      background: var(--primary-hover);
+    }
 
     #customerListSection {
       display: none;
@@ -197,7 +313,11 @@
       box-shadow: var(--shadow);
       padding: 20px;
     }
-    #customerListSection[style*="flex"] { display: flex !important; }
+
+    #customerListSection[style*="flex"] {
+      display: flex !important;
+    }
+
     #customerListSection .list-header {
       display: flex;
       justify-content: space-between;
@@ -208,6 +328,7 @@
       margin-bottom: 16px;
       border-bottom: 2px solid var(--border);
     }
+
     #customerListSection h2 {
       margin: 0;
       font-size: 22px;
@@ -215,18 +336,21 @@
       color: var(--text);
       letter-spacing: -0.02em;
     }
+
     #customerListSection .list-controls {
       display: flex;
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
     }
+
     #customerListSection .list-controls label {
       margin: 0;
       font-size: 13px;
       font-weight: 500;
       color: var(--muted);
     }
+
     #customerListSection .list-controls select {
       padding: 8px 12px;
       border-radius: var(--radius-sm);
@@ -236,11 +360,13 @@
       background: #fff;
       cursor: pointer;
     }
+
     #customerListSection .list-controls select:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
     }
+
     #customerListSection .back-btn {
       padding: 10px 20px;
       font-size: 14px;
@@ -254,15 +380,21 @@
       transition: background 0.2s ease, transform 0.05s ease;
       box-shadow: 0 1px 3px rgba(26, 115, 232, 0.3);
     }
+
     #customerListSection .back-btn:hover {
       background: var(--primary-hover);
       transform: translateY(-1px);
       box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
     }
-    #customerListSection .back-btn:active { transform: translateY(0); }
+
+    #customerListSection .back-btn:active {
+      transform: translateY(0);
+    }
+
     #customerListSection .list-search-wrap {
       margin-bottom: 16px;
     }
+
     #customerListSection #searchCustomer {
       width: 100%;
       max-width: 360px;
@@ -273,39 +405,73 @@
       background: #fff;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
+
     #customerListSection #searchCustomer:focus {
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
     }
-    #customerListSection #searchCustomer::placeholder { color: var(--muted); }
-    .table-wrap { width: 100%; overflow: auto; border-radius: var(--radius-sm); flex: 1; min-height: 0; border: 1px solid var(--border); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04); }
-    #customerListSection table { width: 100%; min-width: 1320px; border-collapse: collapse; background: #fff; }
+
+    #customerListSection #searchCustomer::placeholder {
+      color: var(--muted);
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      border-radius: var(--radius-sm);
+      flex: 1;
+      min-height: 0;
+      border: 1px solid var(--border);
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
+
+    #customerListSection table {
+      width: 100%;
+      min-width: 1600px;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
     #customerListSection th,
     #customerListSection td {
-      padding: 16px 20px;
-      font-size: 15px;
-      line-height: 1.45;
+      padding: 20px 24px;
+      font-size: 17px;
+      line-height: 1.5;
       text-align: left;
       border-bottom: 1px solid var(--border);
     }
+
     #customerListSection th {
       background: linear-gradient(to bottom, #f8f9fa, #f1f3f4);
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text);
       position: sticky;
       top: 0;
       z-index: 10;
-      font-size: 13px;
+      font-size: 15px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: var(--muted);
-      padding: 14px 20px;
+      padding: 18px 24px;
     }
-    #customerListSection tbody tr { transition: background 0.15s ease; }
-    #customerListSection tbody tr:nth-child(even) { background: #fafbfd; }
-    #customerListSection tbody tr:hover { background: #e8f0fe; }
-    #customerListSection tbody tr:last-child td { border-bottom: none; }
+
+    #customerListSection tbody tr {
+      transition: background 0.15s ease;
+    }
+
+    #customerListSection tbody tr:nth-child(even) {
+      background: #fafbfd;
+    }
+
+    #customerListSection tbody tr:hover {
+      background: #e8f0fe;
+    }
+
+    #customerListSection tbody tr:last-child td {
+      border-bottom: none;
+    }
+
     /* Actions column: tighter cell + smaller buttons */
     #customerListSection tbody td:last-child {
       padding: 8px 10px;
@@ -313,6 +479,7 @@
       white-space: nowrap;
       width: 1%;
     }
+
     #customerListSection thead th:last-child {
       padding: 12px 10px;
       font-size: 12px;
@@ -342,6 +509,7 @@
       white-space: nowrap;
       text-align: center;
     }
+
     #customerListSection tbody td:last-child button {
       padding: 4px 8px;
       font-size: 11px;
@@ -354,36 +522,65 @@
       cursor: pointer;
       transition: background 0.15s ease, border-color 0.15s ease;
     }
+
     #customerListSection tbody td:last-child button:hover {
       background: #e8f0fe;
       border-color: var(--primary);
       color: var(--primary);
     }
+
     #customerListSection tbody td:last-child button.primary {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
     }
+
     #customerListSection tbody td:last-child button.primary:hover {
       background: var(--primary-hover);
       border-color: var(--primary-hover);
       color: #fff;
     }
-    .erp-form[style*="none"] { display: none !important; }
+
+    .erp-form[style*="none"] {
+      display: none !important;
+    }
 
     @media (max-width: 960px) {
-      .erp-form { grid-template-columns: 1fr; gap: 20px; padding: 20px 24px; max-width: 100%; }
-      .page { padding: 16px 20px 90px; }
-      #customerListSection .list-header { flex-direction: column; align-items: stretch; }
-      #customerListSection .list-controls { width: 100%; }
-      #customerListSection .list-controls select { flex: 1; min-width: 0; }
-      #customerListSection #searchCustomer { max-width: none; }
+      .erp-form {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 20px 24px;
+        max-width: 100%;
+      }
+
+      .page {
+        padding: 16px 20px 90px;
+      }
+
+      #customerListSection .list-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      #customerListSection .list-controls {
+        width: 100%;
+      }
+
+      #customerListSection .list-controls select {
+        flex: 1;
+        min-width: 0;
+      }
+
+      #customerListSection #searchCustomer {
+        max-width: none;
+      }
     }
 
     .station-select-wrap {
       flex: 1;
       min-width: 0;
     }
+
     select#station {
       width: 100%;
       height: 42px;
@@ -395,9 +592,11 @@
       cursor: pointer;
       color: var(--text);
     }
+
     select#station:invalid {
       color: #757575;
     }
+
     .row .station-select-wrap select#station {
       width: 100%;
       flex: 1;
@@ -405,13 +604,46 @@
     }
   </style>
   <style>
-    .erp-form .field label .required { color: #ff3b30; margin-left: 4px; font-weight: bold; }
-    #customerListSection table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #fff; }
-    #customerListSection th, #customerListSection td { border: 1px solid #ddd !important; padding: 16px 20px; text-align: left; font-size: 15px; }
-    #customerListSection th { background: #f8f9fa; font-weight: 600; color: #333; font-size: 13px; }
-    #customerListSection tbody td:last-child { padding: 8px 10px !important; }
-    #customerListSection tbody td:last-child button { padding: 4px 8px !important; font-size: 11px !important; }
-    #customerListSection tr:hover { background: #f1f7ff; }
+    .erp-form .field label .required {
+      color: #ff3b30;
+      margin-left: 4px;
+      font-weight: bold;
+    }
+
+    #customerListSection table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      background: #fff;
+    }
+
+    #customerListSection th,
+    #customerListSection td {
+      border: 1px solid #ddd !important;
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 15px;
+    }
+
+    #customerListSection th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #333;
+      font-size: 13px;
+    }
+
+    #customerListSection tbody td:last-child {
+      padding: 8px 10px !important;
+    }
+
+    #customerListSection tbody td:last-child button {
+      padding: 4px 8px !important;
+      font-size: 11px !important;
+    }
+
+    #customerListSection tr:hover {
+      background: #f1f7ff;
+    }
   </style>
 </head>
 
@@ -446,8 +678,6 @@
           <label for="type">Type</label>
           <select id="type">
             <option value="Customer">Customer</option>
-            <option value="Jeweller">Jeweller</option>
-            <option value="Agent">Agent</option>
           </select>
         </div>
         <div class="field">
@@ -472,38 +702,12 @@
             </select>
           </div>
         </div>
-        <div class="field">
-          <label for="goldBalance">Gold Balance</label>
-          <div class="row">
-            <input type="number" id="goldBalance" step="0.001" placeholder="0">
-            <select id="goldBalanceType" aria-label="Gold Balance Type">
-              <option value="Dr">Dr</option>
-              <option value="Cr">Cr</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label for="silverBalance">Silver Balance</label>
-          <div class="row">
-            <input type="number" id="silverBalance" step="0.001" placeholder="0">
-            <select id="silverBalanceType" aria-label="Silver Balance Type">
-              <option value="Dr">Dr</option>
-              <option value="Cr">Cr</option>
-            </select>
-          </div>
-        </div>
+
         <div class="field">
           <label for="maxLimit">Max Credit Limit</label>
           <input type="number" id="maxLimit" step="0.01" placeholder="0.00">
         </div>
-        <div class="field">
-          <label for="aadhar">Aadhar No</label>
-          <input id="aadhar" placeholder="Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]*">
-        </div>
-        <div class="field">
-          <label for="pan">PAN No</label>
-          <input id="pan" placeholder="PAN number" maxlength="10">
-        </div>
+
       </div>
       <div class="form-right">
         <h4>Contact Details</h4>
@@ -520,10 +724,11 @@
               </select>
             </div>
             <button type="button" aria-label="Add New Station" title="Add New Station" onclick="openStationPopup()"
-                    style="display:flex; align-items:center; justify-content:center; width:38px; height:100%; min-height:42px; background:#f8f9fa; border:1px solid var(--border, #dadce0); border-radius:4px; cursor:pointer; flex-shrink:0; transition:all 0.2s;" 
-                    onmouseover="this.style.background='#e8eaed'; this.style.borderColor='#bebfc1';" 
-                    onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='var(--border, #dadce0)';">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#5f6368;">
+              style="display:flex; align-items:center; justify-content:center; width:38px; height:100%; min-height:42px; background:#f8f9fa; border:1px solid var(--border, #dadce0); border-radius:4px; cursor:pointer; flex-shrink:0; transition:all 0.2s;"
+              onmouseover="this.style.background='#e8eaed'; this.style.borderColor='#bebfc1';"
+              onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='var(--border, #dadce0)';">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color:#5f6368;">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
@@ -541,6 +746,14 @@
         <div class="field">
           <label for="email">Email</label>
           <input type="email" id="email" placeholder="email@example.com">
+        </div>
+        <div class="field">
+          <label for="aadhar">Aadhar No</label>
+          <input id="aadhar" placeholder="Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]*">
+        </div>
+        <div class="field">
+          <label for="pan">PAN No</label>
+          <input id="pan" placeholder="PAN number" maxlength="10">
         </div>
       </div>
     </form>
@@ -569,8 +782,6 @@
               <th>Mobile</th>
               <th>Station</th>
               <th>Balance</th>
-              <th>Silver Balance</th>
-              <th>Gold Balance</th>
               <th>Opening Date</th>
               <th>Aadhar Number</th>
               <th>PAN Number</th>
@@ -591,23 +802,32 @@
   </div>
 
   <!-- Station Popup -->
-  <div id="stationPopupOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(2px);">
-    <div style="background:#fff; width:500px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:var(--font, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif); overflow:hidden; border:1px solid var(--border);">
-      <div style="background:#f8f9fa; padding:12px 20px; font-weight:600; text-align:center; border-bottom:1px solid var(--border); font-size:16px; color:#1a1a1a;">
+  <div id="stationPopupOverlay"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(2px);">
+    <div
+      style="background:#fff; width:500px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:var(--font, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif); overflow:hidden; border:1px solid var(--border);">
+      <div
+        style="background:#f8f9fa; padding:12px 20px; font-weight:600; text-align:center; border-bottom:1px solid var(--border); font-size:16px; color:#1a1a1a;">
         Station
       </div>
       <div style="padding:24px 32px; display:flex; flex-direction:column; gap:16px;">
         <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Station <span style="color:var(--danger)">*</span></label>
-          <input type="text" id="popStationName" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Station <span
+              style="color:var(--danger)">*</span></label>
+          <input type="text" id="popStationName"
+            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
         </div>
         <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Country <span style="color:var(--danger)">*</span></label>
-          <input type="text" id="popStationCountry" value="India" readonly style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#f8f9fa; color:var(--muted); cursor:not-allowed;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Country <span
+              style="color:var(--danger)">*</span></label>
+          <input type="text" id="popStationCountry" value="India" readonly
+            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#f8f9fa; color:var(--muted); cursor:not-allowed;">
         </div>
         <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">State <span style="color:var(--danger)">*</span></label>
-          <select id="popStationState" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff; cursor:pointer;">
+          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">State <span
+              style="color:var(--danger)">*</span></label>
+          <select id="popStationState"
+            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff; cursor:pointer;">
             <option value="">-- Select State --</option>
             <option value="Andhra Pradesh">Andhra Pradesh</option>
             <option value="Arunachal Pradesh">Arunachal Pradesh</option>
@@ -641,18 +861,31 @@
         </div>
         <div style="display:flex; align-items:center;">
           <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">City</label>
-          <input type="text" id="popStationCity" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
+          <input type="text" id="popStationCity"
+            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
         </div>
         <div style="display:flex; align-items:center;">
           <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Pin code</label>
-          <input type="text" id="popStationPin" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;" maxlength="6" inputmode="numeric">
+          <input type="text" id="popStationPin"
+            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;"
+            maxlength="6" inputmode="numeric">
         </div>
       </div>
-      <div style="background:#f8f9fa; padding:16px 20px; display:flex; justify-content:center; gap:12px; border-top:1px solid var(--border);">
-        <button type="button" onclick="saveStationFromPopup(true)" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And Close</button>
-        <button type="button" onclick="saveStationFromPopup(false)" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And New</button>
-        <button type="button" onclick="resetStationPopup()" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Reset</button>
-        <button type="button" onclick="closeStationPopup()" style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Close</button>
+      <div
+        style="background:#f8f9fa; padding:16px 20px; display:flex; justify-content:center; gap:12px; border-top:1px solid var(--border);">
+        <button type="button" onclick="saveStationFromPopup(true)"
+          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
+          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And
+          Close</button>
+        <button type="button" onclick="saveStationFromPopup(false)"
+          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
+          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And New</button>
+        <button type="button" onclick="resetStationPopup()"
+          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
+          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Reset</button>
+        <button type="button" onclick="closeStationPopup()"
+          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
+          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Close</button>
       </div>
     </div>
   </div>
@@ -732,14 +965,14 @@
       const state = $("popStationState").value.trim();
       if (!name) { alert("Station name is required."); $("popStationName").focus(); return; }
       if (!state) { alert("State is required."); $("popStationState").focus(); return; }
-      
+
       let stations = JSON.parse(localStorage.getItem("stations") || "[]");
       if (stations.some(s => s.name.toLowerCase() === name.toLowerCase())) {
         alert("Station already exists.");
         $("popStationName").focus();
         return;
       }
-      
+
       const newStation = {
         name: name,
         country: $("popStationCountry").value.trim(),
@@ -747,7 +980,7 @@
         city: $("popStationCity").value.trim(),
         pincode: $("popStationPin").value.trim()
       };
-      
+
       stations.push(newStation);
       localStorage.setItem("stations", JSON.stringify(stations));
       populateStationSelect(name);
@@ -821,10 +1054,6 @@
         openingDate: $("openingDate"),
         openingBalance: $("openingBalance"),
         openingBalanceType: $("openingBalanceType"),
-        goldBalance: $("goldBalance"),
-        goldBalanceType: $("goldBalanceType"),
-        silverBalance: $("silverBalance"),
-        silverBalanceType: $("silverBalanceType"),
         maxLimit: $("maxLimit"),
         aadhar: $("aadhar"),
         pan: $("pan"),
@@ -858,8 +1087,8 @@
       form.addEventListener("keydown", e => {
         const isControl = e.target.tagName === "BUTTON" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT";
         const isNumber = e.target.type === "number";
-        
-        const fields = Array.from(form.elements).filter(el => 
+
+        const fields = Array.from(form.elements).filter(el =>
           !el.readOnly && !el.disabled && el.tagName !== "FIELDSET" && el.type !== "hidden" && el.tagName !== "BUTTON"
         );
         const idx = fields.indexOf(e.target);
@@ -882,6 +1111,33 @@
       });
 
       wireCustomerNameTitleCase();
+
+      const urlParams = new URL(window.location.href).searchParams;
+      if (urlParams.get('popup') === '1') {
+        document.body.classList.add('popup-mode');
+        const title = document.getElementById('pageTitle');
+        if (title) title.style.display = 'none';
+
+        const page = document.querySelector('.page');
+        if (page) {
+          page.style.padding = '5px 15px';
+          page.style.boxShadow = 'none';
+          page.style.border = 'none';
+          page.style.background = 'transparent';
+          page.style.maxWidth = '100%';
+        }
+        document.body.style.background = 'transparent';
+
+        const actions = document.querySelector('.form-actions');
+        if (actions) {
+          const btns = actions.querySelectorAll('button');
+          btns.forEach(b => {
+            if (b.innerText.includes('List') || b.innerText.includes('New')) {
+              b.style.display = 'none';
+            }
+          });
+        }
+      }
     }
 
     if (document.readyState === 'loading') {
@@ -940,15 +1196,36 @@
       }
       const entryType = (fields.type && fields.type.value) ? fields.type.value : "Customer";
       const editId = entryType === "Customer" ? localStorage.getItem(EDIT_KEY) : entryType === "Jeweller" ? localStorage.getItem(EDIT_KEY_JEWELLER) : localStorage.getItem(EDIT_KEY_AGENT);
-      if (fields.mobile.value.trim()) {
+      if (fields.mobile.value.trim() || fields.phone.value.trim()) {
+        const phoneVal = fields.phone.value.trim();
+        const mobileVal = fields.mobile.value.trim();
         const list = entryType === "Customer" ? getCustomers() : entryType === "Jeweller" ? getJewellers() : getAgents();
-        const duplicate = list.find(c => (c.mobile || "").trim() === fields.mobile.value.trim() && String(c.id) !== String(editId));
-        if (duplicate) { alert("This mobile number already exists in " + entryType + " list"); return false; }
+        const duplicate = list.find(c => {
+          if (String(c.id) === String(editId)) return false;
+          const cPhone = (c.phone || "").trim();
+          const cMobile = (c.mobile || "").trim();
+          if (phoneVal && (cPhone === phoneVal || cMobile === phoneVal)) return true;
+          if (mobileVal && (cPhone === mobileVal || cMobile === mobileVal)) return true;
+          return false;
+        });
+        if (duplicate) { alert("This customer with this mobile or Phone no, already exists"); return false; }
       }
       return true;
     }
 
-    function submitForm(e) { if (e) e.preventDefault(); if (!form || !fields.name) return; if (!validateForm()) return; saveCustomer(); openList(); }
+    function submitForm(e) {
+      if (e) e.preventDefault();
+      if (!form || !fields.name) return;
+      if (!validateForm()) return;
+      saveCustomer();
+
+      const urlParams = new URL(window.location.href).searchParams;
+      if (urlParams.get('popup') === '1' && window.parent && window.parent.closeCustomerPopup) {
+        window.parent.closeCustomerPopup();
+      } else {
+        openList();
+      }
+    }
     function saveAndNew(e) { if (e) e.preventDefault(); if (!form || !fields.name) return; if (!validateForm()) return; saveCustomer(); resetForm(true); }
 
     function resetForm(focusName) {
@@ -958,7 +1235,7 @@
       localStorage.removeItem(EDIT_KEY_JEWELLER);
       localStorage.removeItem(EDIT_KEY_AGENT);
       if (fields.cid) { fields.cid.value = ""; fields.cid.placeholder = "Auto Generated"; }
-      if (fields.type && fields.type.options.length) fields.type.value = "Customer";
+      if (fields.type) fields.type.value = "Customer";
       if (fields.lfno) fields.lfno.value = getNextLfNo();
       if (fields.openingDate) {
         const d = new Date();
@@ -989,10 +1266,6 @@
         openingDate: fields.openingDate.value,
         openingBalance: num(fields.openingBalance.value),
         openingBalanceType: fields.openingBalanceType.value,
-        goldBalance: num(fields.goldBalance.value),
-        goldBalanceType: fields.goldBalanceType.value,
-        silverBalance: num(fields.silverBalance.value),
-        silverBalanceType: fields.silverBalanceType.value,
         maxLimit: num(fields.maxLimit.value),
         aadhar: fields.aadhar.value.trim(),
         pan: fields.pan.value.trim(),
@@ -1028,8 +1301,6 @@
         openingDate: fields.openingDate.value,
         openingBalance: num(fields.openingBalance.value),
         openingBalanceType: fields.openingBalanceType.value,
-        goldBalance: num(fields.goldBalance.value),
-        silverBalance: num(fields.silverBalance.value),
         maxLimit: num(fields.maxLimit.value),
         aadhar: fields.aadhar.value.trim(),
         pan: fields.pan.value.trim(),
@@ -1084,8 +1355,15 @@
       const listSection = $("customerListSection");
       const actionButtons = document.querySelector(".form-actions");
       const listTypeSelect = $("listTypeSelect");
+      const pageContainer = document.querySelector(".page");
+      if (pageContainer) pageContainer.style.padding = "0";
       if (formEl) formEl.style.display = "none";
-      if (listSection) { listSection.style.display = "flex"; listSection.style.flexDirection = "column"; }
+      if (listSection) {
+        listSection.style.display = "flex";
+        listSection.style.flexDirection = "column";
+        listSection.style.borderRadius = "0";
+        listSection.style.minHeight = "100vh";
+      }
       if (actionButtons) actionButtons.style.display = "none";
       if (listTypeSelect && fields.type && fields.type.value) listTypeSelect.value = fields.type.value;
       switchListType();
@@ -1095,8 +1373,14 @@
       const formEl = document.querySelector(".erp-form");
       const listSection = $("customerListSection");
       const actionButtons = document.querySelector(".form-actions");
+      const pageContainer = document.querySelector(".page");
+      if (pageContainer) pageContainer.style.padding = "24px 32px 100px";
       if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
-      if (listSection) listSection.style.display = "none";
+      if (listSection) {
+        listSection.style.display = "none";
+        listSection.style.borderRadius = "16px";
+        listSection.style.minHeight = "0";
+      }
       if (actionButtons) actionButtons.style.display = "flex";
       resetForm();
       const title = $("pageTitle"); if (title) title.innerText = "Add Customer";
@@ -1117,7 +1401,7 @@
       const fmtDate = (d) => { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString(); };
       const fmtNum = (n) => (n != null && n !== "") ? Number(n) : "—";
       const fmtBal = (n) => (n != null && n !== "") ? (typeof n === "number" ? n : Number(n)) : "—";
-      
+
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
       const norm = (s) => (s || "").trim().toLowerCase();
 
@@ -1186,8 +1470,6 @@
           <th>Mobile</th>
           <th>Station</th>
           <th>Balance</th>
-          <th>Silver Balance</th>
-          <th>Gold Balance</th>
           <th>Opening Date</th>
           <th>Aadhar Number</th>
           <th>PAN Number</th>
@@ -1198,7 +1480,7 @@
           .forEach(j => {
             const dispBal = getCalculatedBalance(j.name, j.openingBalance, j.openingBalanceType, j.currentBalance, j.currentBalanceType);
             tbody.innerHTML += `<tr>
-    <td>${j.cid || ""}</td><td>${j.name || ""}</td><td>${j.mobile || ""}</td><td>${j.station || ""}</td><td>${dispBal}</td><td>${fmtBal(j.silverBalance)}</td><td>${fmtBal(j.goldBalance)}</td><td>${fmtDate(j.openingDate)}</td><td>${j.aadhar || "—"}</td><td>${j.pan || "—"}</td>
+    <td>${j.cid || ""}</td><td>${j.name || ""}</td><td>${j.mobile || ""}</td><td>${j.station || ""}</td><td>${dispBal}</td><td>${fmtDate(j.openingDate)}</td><td>${j.aadhar || "—"}</td><td>${j.pan || "—"}</td>
     <td><button onclick="editJeweller(${j.id})">Edit</button><button onclick="deleteJeweller(${j.id})">Delete</button></td></tr>`;
           });
       } else {
@@ -1209,8 +1491,6 @@
           <th>Mobile</th>
           <th>Station</th>
           <th>Balance</th>
-          <th>Silver Balance</th>
-          <th>Gold Balance</th>
           <th>Opening Date</th>
           <th>Aadhar Number</th>
           <th>PAN Number</th>
@@ -1221,7 +1501,7 @@
           .forEach(a => {
             const dispBal = getCalculatedBalance(a.name, a.openingBalance, a.openingBalanceType, a.currentBalance, a.currentBalanceType);
             tbody.innerHTML += `<tr>
-    <td>${a.cid || a.agentId || ""}</td><td>${a.name || ""}</td><td>${a.mobile || ""}</td><td>${a.station || a.email || "—"}</td><td>${dispBal}</td><td>${fmtBal(a.silverBalance)}</td><td>${fmtBal(a.goldBalance)}</td><td>${fmtDate(a.openingDate)}</td><td>${a.aadhar || "—"}</td><td>${a.pan || "—"}</td>
+    <td>${a.cid || a.agentId || ""}</td><td>${a.name || ""}</td><td>${a.mobile || ""}</td><td>${a.station || a.email || "—"}</td><td>${dispBal}</td><td>${fmtDate(a.openingDate)}</td><td>${a.aadhar || "—"}</td><td>${a.pan || "—"}</td>
     <td><button onclick="editAgent(${a.id})">Edit</button><button onclick="deleteAgent(${a.id})">Delete</button></td></tr>`;
           });
       }
@@ -1279,7 +1559,7 @@
         if (fields.address) fields.address.value = record.notes || "";
         if (fields.type) fields.type.value = "Agent";
       } else {
-        ["cid","name","relation","relationName","lfno","openingDate","openingBalance","openingBalanceType","goldBalance","goldBalanceType","silverBalance","silverBalanceType","maxLimit","aadhar","pan","address","phone","mobile","email"].forEach(k => {
+        ["cid", "name", "relation", "relationName", "lfno", "openingDate", "openingBalance", "openingBalanceType", "maxLimit", "aadhar", "pan", "address", "phone", "mobile", "email"].forEach(k => {
           if (fields[k] && record[k] !== undefined) fields[k].value = record[k];
         });
         if (fields.type) fields.type.value = entryType;
@@ -1332,4 +1612,5 @@
     window.loadStations = loadStations;
   </script>
 </body>
+
 </html>

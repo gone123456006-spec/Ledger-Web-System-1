@@ -337,7 +337,7 @@
     }
 
     /* Entry rows: no inner padding so inputs fill the cell — avoids “double box” with td + input borders */
-    .lc-table .lc-entry-row > td {
+    .lc-table .lc-entry-row>td {
       padding: 0;
       vertical-align: middle;
     }
@@ -572,10 +572,10 @@
       min-width: 0;
     }
   </style>
-      <span>Jobworker Balance</span>
-    </div>
+  <span>Jobworker Balance</span>
+  </div>
 
-    <div class="box">
+  <div class="box">
     <div class="box-title">Balance (own data – not linked to Job Worker List)</div>
     <div class="search-wrap" style="display: flex; gap: 12px; align-items: center;">
       <input type="text" id="searchInput" placeholder="Search by name, id, LF, station..." oninput="filterTable()"
@@ -586,26 +586,26 @@
         <option value="non-zero">Non-Zero Balance</option>
         <option value="zero">Zero Balance</option>
       </select>
-      </div>
-      <div class="list-table-wrap">
-        <table class="list-table">
-          <thead>
-            <tr>
+    </div>
+    <div class="list-table-wrap">
+      <table class="list-table">
+        <thead>
+          <tr>
             <th class="col-mark">Mark</th>
-              <th class="col-id">Jobworker Id</th>
-              <th class="col-name">Name</th>
+            <th class="col-id">Jobworker Id</th>
+            <th class="col-name">Name</th>
             <th class="col-lf">LF</th>
             <th class="col-relation">Relation with Name</th>
-              <th class="col-station">Station</th>
-              <th class="col-num">Metal</th>
-              <th class="col-num">Chain</th>
-              <th class="col-num">Nag</th>
-              <th class="col-num">Maal</th>
-            </tr>
-          </thead>
-          <tbody id="balanceTableBody"></tbody>
-        </table>
-      </div>
+            <th class="col-station">Station</th>
+            <th class="col-num">Metal</th>
+            <th class="col-num">Chain</th>
+            <th class="col-num">Nag</th>
+            <th class="col-num">Maal</th>
+          </tr>
+        </thead>
+        <tbody id="balanceTableBody"></tbody>
+      </table>
+    </div>
     <div id="balanceEmpty" class="empty-list" style="display:none;">No balance rows.</div>
   </div>
   </div>
@@ -803,7 +803,7 @@
           // Check text search
           var matchSearch = !q || (
             (r.jwId || '').toLowerCase().indexOf(q) !== -1 ||
-                     (r.name || '').toLowerCase().indexOf(q) !== -1 ||
+            (r.name || '').toLowerCase().indexOf(q) !== -1 ||
             (r.lfNo || '').toLowerCase().indexOf(q) !== -1 ||
             (r.relation || '').toLowerCase().indexOf(q) !== -1 ||
             (r.station || '').toLowerCase().indexOf(q) !== -1
@@ -1196,6 +1196,6 @@
 
     })();
   </script>
-</body>
+  </body>
 
 </html>

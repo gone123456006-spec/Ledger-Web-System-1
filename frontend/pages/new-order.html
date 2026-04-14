@@ -1747,7 +1747,8 @@
               <h3>Narration / description</h3>
             </div>
             <div class="panel-content panel-content--narration">
-              <p class="order-narration-hint">Optional message or notes for this order. Saved when you save the order.</p>
+              <p class="order-narration-hint">Optional message or notes for this order. Saved when you save the order.
+              </p>
               <label for="orderNarration" class="visually-hidden">Order narration or description</label>
               <textarea id="orderNarration" class="order-narration-textarea" maxlength="8000"
                 placeholder="Write narration, description, or any message for this order…"
@@ -1844,6 +1845,20 @@
       <div class="summary-row" style="color:#dc3545;">
         <span><strong>Balance Amount:</strong></span>
         <span><strong>₹ <span id="iBalance">0.00</span></strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER POPUP -->
+  <div id="new-order-add-customer-popup" class="popup-bg new-order-popup" style="display:none;"
+    onclick="if(event.target===this) cancelCustomerPopup()">
+    <div class="popup-box" style="width: 95%; max-width: 1200px; height: auto; max-height: 95vh; padding: 0; display: flex; flex-direction: column; background: #fff; border-radius: 8px;">
+      <div style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #d4d4d4; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+        <h3 style="margin: 0; font-size: 16px;">Add Customer</h3>
+        <button onclick="cancelCustomerPopup()" style="background:transparent; border:none; font-size: 20px; cursor: pointer; color: #555;">&times;</button>
+      </div>
+      <div style="flex: 1; overflow-y: auto; overflow-x: hidden; background: #fff;">
+        <iframe id="customerPopupIframe" src="" style="width: 100%; height: 600px; border: none; background: transparent; display: block;"></iframe>
       </div>
     </div>
   </div>
@@ -2152,7 +2167,7 @@
 
       function hideOwnPopupsOnInit() {
         ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup',
-          'new-order-payments-detail-popup', 'new-order-purchase-sheet-popup',
+          'new-order-payments-detail-popup', 'new-order-purchase-sheet-popup', 'new-order-add-customer-popup',
           'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'
         ].forEach(function (id) {
           try {
@@ -2345,12 +2360,42 @@
       }
 
       function openCustomer() {
-        if (typeof loadPage === 'function') {
-          loadPage('pages/customer.html');
-        } else {
-          window.open('/pages/customer.html', 'Customer', 'width=1200,height=700');
+        const popup = document.getElementById('new-order-add-customer-popup');
+        const iframe = document.getElementById('customerPopupIframe');
+        if (popup && iframe) {
+          iframe.src = 'pages/customer.html?popup=1';
+          popup.style.display = 'flex';
         }
       }
+
+      // Called when user cancels / clicks X — does NOT select the customer
+      function cancelCustomerPopup() {
+        const popup = document.getElementById('new-order-add-customer-popup');
+        if (popup) popup.style.display = 'none';
+      }
+
+      // Called from iframe after a successful save — selects the new customer
+      function closeCustomerPopup() {
+        const popup = document.getElementById('new-order-add-customer-popup');
+        if (popup) popup.style.display = 'none';
+
+        if (typeof loadCustomers === 'function') loadCustomers();
+
+        setTimeout(() => {
+          let customers = JSON.parse(localStorage.getItem('customers') || '[]');
+          if (customers.length) {
+            const maxId = Math.max(...customers.map(c => c.id));
+            const custSelect = AppState.elements.custName || document.getElementById('custName');
+            if (custSelect) {
+              custSelect.value = maxId;
+              const ev = new Event('change');
+              custSelect.dispatchEvent(ev);
+            }
+          }
+        }, 100);
+      }
+      window.closeCustomerPopup = closeCustomerPopup;
+      window.cancelCustomerPopup = cancelCustomerPopup;
 
       // =====================================================
       // TABLE ROW MANAGEMENT
@@ -3983,7 +4028,7 @@
           }
 
           if (AppState.editMode && AppState.editOrderId != null &&
-              window.OrderProcessing && typeof OrderProcessing.syncOrdersReadyFromProcess === 'function') {
+            window.OrderProcessing && typeof OrderProcessing.syncOrdersReadyFromProcess === 'function') {
             try {
               OrderProcessing.syncOrdersReadyFromProcess(orders, itemProcessArr);
             } catch (e) {

@@ -355,7 +355,17 @@
             background: #fafafa;
         }
 
-        tbody tr:hover:not(.today-row):not(.selected-row) {
+        tbody tr.stmt-static-row {
+            background: #f1f5f9;
+            font-weight: 500;
+        }
+
+        tbody tr.stmt-static-row:hover {
+            background: #e8eef5 !important;
+            cursor: default;
+        }
+
+        tbody tr:hover:not(.today-row):not(.selected-row):not(.stmt-static-row) {
             background: #f1f5f9 !important;
             cursor: pointer;
         }
@@ -1161,6 +1171,9 @@
             name: "",
             station: "",
             openingBalance: 0,
+            openingBalanceType: "Dr",
+            currentBalance: 0,
+            currentBalanceType: "Dr",
             openingDate: "",
             id: null
         };
@@ -1274,9 +1287,7 @@
             if (!tbody) return;
             tbody.innerHTML = '';
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            const opening = parseFloat(customerData.openingBalance || 0) || 0;
-            const billsSum = getCustomerBillsSumFromBalances();
-            let balance = opening + billsSum;
+            let balance = openingBalanceForRunningStatement(sorted);
 
             function makeIntCell(initialVal, isNum, onBlur) {
                 const td = document.createElement('td');
@@ -1353,7 +1364,8 @@
             }
 
             const opInt = rowInterestMap['__op__'];
-            const showOpRow = (opening !== 0 || !!customerData.openingDate) && (sorted.length > 0 || opInt != null);
+            const opSigned = openingSignedForStatement();
+            const showOpRow = (opSigned !== 0 || !!customerData.openingDate) && (sorted.length > 0 || opInt != null);
             if (showOpRow) {
                 const ic = intCellContent(opInt);
                 const absb = Math.abs(balance);
@@ -1405,6 +1417,7 @@
                             if (readMoney(tx.debit) !== 0) tx.entryType = 'debit';
                             else tx.entryType = null;
                         }
+                        if (tx.entryType === 'credit') tx.debit = 0;
                     } else if (field === 'debit') {
                         const prevEt = tx.entryType;
                         tx.debit = readMoney(val);
@@ -1414,18 +1427,19 @@
                             if (readMoney(tx.credit) !== 0) tx.entryType = 'credit';
                             else tx.entryType = null;
                         }
+                        if (tx.entryType === 'debit') tx.credit = 0;
                     }
                     saveTransactions();
                     render();
                 };
 
-                const dispCr = readMoney(tx.credit);
-                const dispDr = readMoney(tx.debit);
+                const effInt = effectiveAmounts(tx);
+                const dispCr = effInt.credit;
+                const dispDr = effInt.debit;
                 const { td: tdDate } = makeIntCell(fmtDate(tx.date), false, (v) => updateTxInt('date', v));
                 const { td: tdNar } = makeIntCell(tx.narration || '', false, (v) => updateTxInt('narration', v));
                 const { td: tdCr, span: spIntCr } = makeIntCell(dispCr ? fmt(dispCr) : '', true, (v) => updateTxInt('credit', v));
                 const { td: tdDr, span: spIntDr } = makeIntCell(dispDr ? fmt(dispDr) : '', true, (v) => updateTxInt('debit', v));
-                normalizeEntryType(tx);
                 applyCrDrBalanceHint(spIntCr, spIntDr, tx.entryType);
 
                 const tdBal = document.createElement('td');
@@ -1712,6 +1726,16 @@
             return Number.isFinite(n) ? n : 0;
         }
 
+        // Statement rule:
+        // Opening DR => add (+), Opening CR => subtract (-)
+        function openingSignedForStatement() {
+            const raw = Math.abs(parseFloat(customerData.openingBalance || 0) || 0);
+            const t = String(customerData.openingBalanceType || '').trim().toLowerCase();
+            if (t === 'dr') return raw;
+            if (t === 'cr') return -raw;
+            return parseFloat(customerData.openingBalance || 0) || 0;
+        }
+
         // Per-row rule: whichever column gets the first non-zero amount on blur stays "active"
         // for balance. The other column may still hold a value but effectiveAmounts() omits it.
         function normalizeEntryType(tx) {
@@ -1729,11 +1753,21 @@
             }
         }
 
-        /** Visual hint only — both cells stay editable. */
+        /** Apply row mode: one side editable (credit xor debit), or both when unset. */
         function applyCrDrBalanceHint(spCr, spDr, entryType) {
             if (!spCr || !spDr) return;
             spCr.classList.toggle('crdr-inactive-for-balance', entryType === 'debit');
             spDr.classList.toggle('crdr-inactive-for-balance', entryType === 'credit');
+            if (entryType === 'credit') {
+                spCr.contentEditable = 'true';
+                spDr.contentEditable = 'false';
+            } else if (entryType === 'debit') {
+                spCr.contentEditable = 'false';
+                spDr.contentEditable = 'true';
+            } else {
+                spCr.contentEditable = 'true';
+                spDr.contentEditable = 'true';
+            }
             if (entryType === 'credit') {
                 spCr.title = '';
                 spDr.title = 'Not included in running balance — Credit was entered first for this row.';
@@ -1763,6 +1797,13 @@
                 if (crv !== 0) draft.entryType = 'credit';
                 else draft.entryType = null;
             }
+            if (draft.entryType === 'credit') {
+                draft.dr = '';
+                if (spDr.textContent) spDr.textContent = '';
+            } else if (draft.entryType === 'debit') {
+                draft.cr = '';
+                if (spCr.textContent) spCr.textContent = '';
+            }
             applyCrDrBalanceHint(spCr, spDr, draft.entryType);
         }
 
@@ -1779,16 +1820,84 @@
             const a = effectiveAmounts(tx);
             return (a.debit || 0) - (a.credit || 0);
         }
+
+        function settleCustomerBalanceToZero() {
+            const norm = (s) => (s || '').trim().toLowerCase();
+            const targetId = customerData && customerData.id != null ? String(customerData.id) : '';
+            const targetCid = customerData && customerData.cid ? norm(customerData.cid) : '';
+            const targetName = customerData && customerData.name ? norm(customerData.name) : '';
+
+            try {
+                const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
+                let changed = false;
+                balances.forEach(b => {
+                    if (!b) return;
+                    const byId = targetId && b.customerId != null && String(b.customerId) === targetId;
+                    const byCid = targetCid && b.cid && norm(b.cid) === targetCid;
+                    const byName = targetName && norm(b.customer) === targetName;
+                    if (byId || byCid || byName) {
+                        if (String(b.computedBalAmt || '') !== '0.00') {
+                            b.computedBalAmt = '0.00';
+                            changed = true;
+                        }
+                    }
+                });
+                if (changed) localStorage.setItem('customerBalances', JSON.stringify(balances));
+            } catch (e) { }
+
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                let changed = false;
+                customers.forEach(c => {
+                    const byId = targetId && c.id != null && String(c.id) === targetId;
+                    const byCid = targetCid && c.cid && norm(c.cid) === targetCid;
+                    const byName = targetName && norm(c.name) === targetName;
+                    if (byId || byCid || byName) {
+                        c.openingBalance = 0;
+                        c.openingBalanceType = 'Dr';
+                        c.currentBalance = 0;
+                        c.currentBalanceType = 'Dr';
+                        changed = true;
+                    }
+                });
+                if (changed) localStorage.setItem('customers', JSON.stringify(customers));
+            } catch (e) { }
+
+            // Keep current screen values in sync immediately.
+            customerData.openingBalance = 0;
+            customerData.openingBalanceType = 'Dr';
+        }
+
         function saveTransactions() {
+            // If balance is settled (0), wipe added statement rows and force statement balance to zero.
+            try {
+                const sortedAuto = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+                let autoBal = openingBalanceForRunningStatement(sortedAuto);
+                sortedAuto.forEach(tx => { autoBal += txDelta(tx); });
+                if (Math.abs(autoBal) < 0.000001 && sortedAuto.length > 0) {
+                    transactions = [];
+                    selectedIdx = null;
+                    ctxTargetIdx = null;
+                    deleteTargetIdx = null;
+                    draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
+                    interestApplied = [];
+                    interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
+                    rowInterestMap = {};
+                    pendingInterest = 0;
+                    interestHasCalcResult = false;
+                    settleCustomerBalanceToZero();
+                }
+            } catch (e) { }
+
             try {
                 const key = 'stmt_' + (customerData.lfNo || customerData.name);
                 localStorage.setItem(key, JSON.stringify(transactions));
             } catch (e) { }
 
             // ── Sync net balance back to customer record ──────────────────────────
-            // Compute current net balance: opening + sum of (debit - credit)
+            // Same running rule as render(): opening (+ bills aggregate when no synced bill rows) + row deltas
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            let balance = customerData.openingBalance || 0;
+            let balance = openingBalanceForRunningStatement(sorted);
             sorted.forEach(tx => { balance += txDelta(tx); });
             const netBalance = Math.abs(balance);
             const netType = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : 'Dr');
@@ -1865,16 +1974,120 @@
             } catch (e) { return 0; }
         }
 
+        /** Distinct bill/order numbers for this customer (same rows as bill total), for statement narration. */
+        function getCustomerBillOrderNarrationForSummary() {
+            try {
+                const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+                const norm = (s) => (s || "").trim().toLowerCase();
+                const nameNorm = norm(customerData.name);
+                const cidNorm = customerData.cid ? norm(customerData.cid) : "";
+                const rows = balances.filter(b => b && (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm)));
+                const seen = new Set();
+                const nums = [];
+                for (const b of rows) {
+                    const num = String(b.orderNo || b.billNo || "").trim();
+                    if (!num || num === "—") continue;
+                    const k = norm(num);
+                    if (seen.has(k)) continue;
+                    seen.add(k);
+                    nums.push(num);
+                }
+                return nums.length
+                    ? "Balance order no. - " + nums.join(", ")
+                    : "Balance order no. - (Ready Order)";
+            } catch (e) {
+                return "Balance order no. -";
+            }
+        }
+
+        /** Ready Order syncs bill lines into stmt; those rows already move the balance — do not also add bills aggregate. */
+        function statementIncludesSyncedBillRows(sorted) {
+            return (sorted || []).some((tx) => {
+                const n = String(tx && tx.narration ? tx.narration : '');
+                return n.includes('Bill No:') || n.includes('for Bill ') || n.includes('Advanced for Bill') || n.includes('Paid (minus) for Bill');
+            });
+        }
+
+        function openingBalanceForRunningStatement(sorted) {
+            const opening = openingSignedForStatement();
+            if (statementIncludesSyncedBillRows(sorted)) return opening;
+            return opening + getCustomerBillsSumFromBalances();
+        }
+
         function render() {
             const tbody = document.getElementById('statementBody');
             tbody.innerHTML = '';
 
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            // Opening Balance: always from Add Customer.
-            // Current Balance: bills total (Customer Balance) added on top of Opening Balance.
-            const opening = parseFloat(customerData.openingBalance || 0) || 0;
+            const opSigned = openingSignedForStatement();
             const billsSum = getCustomerBillsSumFromBalances();
-            let balance = opening + billsSum;
+            const hasBillTx = statementIncludesSyncedBillRows(sorted);
+            const showBillsSummaryRow = !hasBillTx && Math.abs(billsSum) > 0.000001;
+            const showOpeningRow = (Math.abs(opSigned) > 0.000001 || !!customerData.openingDate)
+                && (sorted.length > 0 || showBillsSummaryRow);
+
+            /** Non-editable rows so Opening / bills show in Credit or Debit (not only hidden inside Balance). */
+            function appendStaticStatementRow(idxTxt, dateStr, narText, crHtml, drHtml, balSigned) {
+                const tr = document.createElement('tr');
+                tr.className = 'stmt-static-row';
+                const absb = Math.abs(balSigned);
+                const tag = balSigned > 0 ? 'Dr' : (balSigned < 0 ? 'Cr' : '');
+                const tagClass = balSigned > 0 ? 'dr-tag' : 'cr-tag';
+                const balCell = `${fmt(absb)}${tag ? ` <span class="${tagClass}">${tag}</span>` : ''}`;
+                const td = (cls, inner) => {
+                    const c = document.createElement('td');
+                    if (cls) c.className = cls;
+                    c.innerHTML = inner;
+                    return c;
+                };
+                tr.append(
+                    td('center', idxTxt),
+                    td('', dateStr),
+                    td('', narText),
+                    td('right', crHtml),
+                    td('right', drHtml),
+                    td('right', balCell),
+                    td('center', '—')
+                );
+                tbody.appendChild(tr);
+            }
+
+            let balance = 0;
+            let anyStatic = false;
+            if (showOpeningRow) {
+                balance = opSigned;
+                const opAbs = Math.abs(opSigned);
+                const opCr = opSigned < 0 && opAbs > 0.000001 ? fmt(opAbs) : '';
+                const opDr = opSigned > 0 && opAbs > 0.000001 ? fmt(opAbs) : '';
+                appendStaticStatementRow(
+                    '—',
+                    fmtDate(customerData.openingDate) || '—',
+                    'Opening Balance',
+                    opCr,
+                    opDr,
+                    balance
+                );
+                anyStatic = true;
+            }
+            if (showBillsSummaryRow) {
+                let bCr = '';
+                let bDr = '';
+                if (billsSum > 0) bDr = fmt(billsSum);
+                else if (billsSum < 0) bCr = fmt(Math.abs(billsSum));
+                balance += billsSum;
+                appendStaticStatementRow(
+                    '—',
+                    '—',
+                    getCustomerBillOrderNarrationForSummary(),
+                    bCr,
+                    bDr,
+                    balance
+                );
+                anyStatic = true;
+            }
+            if (!anyStatic) {
+                balance = openingBalanceForRunningStatement(sorted);
+            }
 
             // Updated helper to make editable cell
             function makeCell(initialVal, isNum, onBlur) {
@@ -1933,6 +2146,7 @@
                             if (readMoney(tx.debit) !== 0) tx.entryType = 'debit';
                             else tx.entryType = null;
                         }
+                        if (tx.entryType === 'credit') tx.debit = 0;
                     } else if (field === 'debit') {
                         const prevEt = tx.entryType;
                         tx.debit = readMoney(val);
@@ -1942,18 +2156,19 @@
                             if (readMoney(tx.credit) !== 0) tx.entryType = 'credit';
                             else tx.entryType = null;
                         }
+                        if (tx.entryType === 'debit') tx.credit = 0;
                     }
                     saveTransactions();
                     render();
                 };
 
-                const dispCrM = readMoney(tx.credit);
-                const dispDrM = readMoney(tx.debit);
+                const eff = effectiveAmounts(tx);
+                const dispCrM = eff.credit;
+                const dispDrM = eff.debit;
                 const { td: tdDate, span: spDate } = makeCell(fmtDate(tx.date), false, (v) => updateTx('date', v));
                 const { td: tdNar, span: spNar } = makeCell(tx.narration, false, (v) => updateTx('narration', v));
                 const { td: tdCr, span: spCr } = makeCell(dispCrM ? fmt(dispCrM) : '', true, (v) => updateTx('credit', v));
                 const { td: tdDr, span: spDr } = makeCell(dispDrM ? fmt(dispDrM) : '', true, (v) => updateTx('debit', v));
-                normalizeEntryType(tx);
                 applyCrDrBalanceHint(spCr, spDr, tx.entryType);
 
                 tr.appendChild(tdIdx);
@@ -2036,9 +2251,11 @@
                         else if (crRaw !== 0) entryType = 'credit';
                         else if (drRaw !== 0) entryType = 'debit';
                     }
+                    const finalCredit = entryType === 'debit' ? 0 : crRaw;
+                    const finalDebit = entryType === 'credit' ? 0 : drRaw;
                     transactions.push({
                         id: nextId++, date: dateVal, narration: narVal || '',
-                        debit: drRaw, credit: crRaw, entryType: entryType || null, cleared: false
+                        debit: finalDebit, credit: finalCredit, entryType: entryType || null, cleared: false
                     });
 
                     draftRows.splice(dIdx, 1);
@@ -2423,6 +2640,9 @@
                         if (fromSession.lfno) customerData.lfNo = fromSession.lfno.trim();
                         if (fromSession.station) customerData.station = fromSession.station.trim();
                         if (fromSession.opbal) customerData.openingBalance = parseFloat(fromSession.opbal) || 0;
+                        if (fromSession.opType) customerData.openingBalanceType = String(fromSession.opType);
+                        if (fromSession.curbal) customerData.currentBalance = parseFloat(fromSession.curbal) || 0;
+                        if (fromSession.curType) customerData.currentBalanceType = String(fromSession.curType);
                         if (fromSession.id) customerData.id = fromSession.id;
                     }
                 }
@@ -2433,6 +2653,9 @@
             if (p.get('lfno') && !customerData.lfNo) customerData.lfNo = decodeURIComponent(p.get('lfno')).trim();
             if (p.get('station') && !customerData.station) customerData.station = decodeURIComponent(p.get('station')).trim();
             if (p.get('opbal') && !customerData.openingBalance) customerData.openingBalance = parseFloat(p.get('opbal')) || 0;
+            if (p.get('optype')) customerData.openingBalanceType = p.get('optype');
+            if (p.get('curbal')) customerData.currentBalance = parseFloat(p.get('curbal')) || 0;
+            if (p.get('curtype')) customerData.currentBalanceType = p.get('curtype');
             if (p.get('opdate')) customerData.openingDate = p.get('opdate');
             // Always apply name/station/lfno from URL params if present (override sessionStorage if URL has them)
             if (p.get('name')) customerData.name = decodeURIComponent(p.get('name')).trim() || customerData.name;
@@ -2453,6 +2676,9 @@
                         if (!customerData.station) customerData.station = (cust.station || '').trim();
                         if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
                         if (!customerData.openingBalance) customerData.openingBalance = parseFloat(cust.openingBalance) || 0;
+                        if (cust.openingBalanceType) customerData.openingBalanceType = cust.openingBalanceType;
+                        if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
+                        if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
                         if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
                         if (!customerData.id) customerData.id = cust.id;
                     }
@@ -2470,6 +2696,7 @@
                     saveTransactions();
                 }
             } catch (e) { }
+
             try {
                 const rawMod = localStorage.getItem(stmtKey + '_interestModule');
                 if (rawMod) {

@@ -594,7 +594,10 @@
           originalOpBal,
           amountMinusRateDiff: null,
           mark: c.mark || "—",
-          id: c.id != null ? c.id : null
+          id: c.id != null ? c.id : null,
+          originalOpType: c.openingBalanceType || "Dr",
+          currentBal: Math.abs(dynamicSum),
+          currentBalType: dynamicSum >= 0 ? 'Dr' : 'Cr'
         };
       });
 
@@ -626,11 +629,14 @@
         const safeLfno = encodeURIComponent(r.lfno || '');
         const safeStation = encodeURIComponent(r.station || '');
         const safeOpBal = encodeURIComponent(r.originalOpBal != null ? r.originalOpBal : 0);
+        const safeOpType = encodeURIComponent(r.originalOpType || 'Dr');
+        const safeCurBal = encodeURIComponent(r.currentBal != null ? r.currentBal : 0);
+        const safeCurType = encodeURIComponent(r.currentBalType || 'Dr');
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
           '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-customer-id="' + id + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
           "<td>" + (r.lfno || "—") + "</td>" +
-          `<td><a href="#" onclick="openCustomerStatement('${id}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
+          `<td><a href="#" onclick="openCustomerStatement('${id}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}','${safeOpType}','${safeCurBal}','${safeCurType}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
           "<td>" + relName + "</td>" +
           "<td>" + (r.station || "—") + "</td>" +
           "<td>" + (r.phone || "—") + "</td>" +
@@ -763,17 +769,20 @@
       saveCustomers(customers);
     }
 
-    function openCustomerStatement(id, name, lfno, station, opbal) {
+    function openCustomerStatement(id, name, lfno, station, opbal, opType, curbal, curType) {
       // Decode the encoded params back to plain strings
       const plainName = name ? decodeURIComponent(name) : '';
       const plainLfno = lfno ? decodeURIComponent(lfno) : '';
       const plainStation = station ? decodeURIComponent(station) : '';
       const plainOpbal = opbal ? decodeURIComponent(opbal) : '0';
+      const plainOpType = opType ? decodeURIComponent(opType) : 'Dr';
+      const plainCurbal = curbal ? decodeURIComponent(curbal) : '0';
+      const plainCurType = curType ? decodeURIComponent(curType) : 'Dr';
 
       // Save to sessionStorage so QR page can always read it — even inside iframe
       try {
         sessionStorage.setItem('stmtCustomer', JSON.stringify({
-          id, name: plainName, lfno: plainLfno, station: plainStation, opbal: plainOpbal
+          id, name: plainName, lfno: plainLfno, station: plainStation, opbal: plainOpbal, opType: plainOpType, curbal: plainCurbal, curType: plainCurType
         }));
       } catch (e) { }
 
@@ -784,6 +793,9 @@
       if (plainLfno) params.set('lfno', plainLfno);
       if (plainStation) params.set('station', plainStation);
       if (plainOpbal) params.set('opbal', plainOpbal);
+      if (plainOpType) params.set('optype', plainOpType);
+      if (plainCurbal) params.set('curbal', plainCurbal);
+      if (plainCurType) params.set('curtype', plainCurType);
       const qs = params.toString();
 
       if (window.parent && window.parent.loadPage) {

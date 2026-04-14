@@ -860,3 +860,53 @@ function refreshPageData(workspace, loadSeq) {
 window.addEventListener("load", () => {
     showInfo("Welcome to Ledger Management System");
 });
+
+/* ======================================================
+   UNIVERSAL TITLE CASE FOR ALL TEXT INPUTS
+====================================================== */
+document.addEventListener("input", function(e) {
+    const el = e.target;
+    // Only apply to input and textarea
+    if (!el || (el.tagName !== "INPUT" && el.tagName !== "TEXTAREA")) return;
+    
+    // Ignore readOnly and disabled
+    if (el.readOnly || el.disabled) return;
+
+    // Filter out specific input types where Title Case doesn't make sense
+    const type = (el.type || "").toLowerCase();
+    const excludedTypes = [
+        "email", "password", "number", "url", "search", 
+        "date", "time", "month", "week", "datetime-local", 
+        "file", "color", "hidden", "radio", "checkbox", 
+        "button", "submit", "reset"
+    ];
+    if (excludedTypes.includes(type)) return;
+
+    // Helper to format string with First letter Capital, rest small
+    function toTitleCase(str) {
+        return str.replace(/[^\s]+/g, function(word) {
+            if (!word) return word;
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        });
+    }
+
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const raw = el.value;
+    const next = toTitleCase(raw);
+
+    if (next !== raw) {
+        el.value = next;
+        
+        // Restore cursor position seamlessly
+        const lenDiff = next.length - raw.length;
+        if (typeof start === "number" && typeof end === "number") {
+            try {
+                el.setSelectionRange(
+                    Math.max(0, Math.min(next.length, start + lenDiff)),
+                    Math.max(0, Math.min(next.length, end + lenDiff))
+                );
+            } catch (err) {}
+        }
+    }
+});
