@@ -2867,6 +2867,12 @@
           </table>
         </div>
       </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+        <div id="ready-order-ratebook-total-diff"
+          style="font-size:14px; font-weight:700; color:#1f2937; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 12px;">
+          Total Diff Amount: 0
+        </div>
+      </div>
       <div class="popup-actions">
         <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()">Save</button>
         <button onclick="closeRatebookDetailsPopup()">Close</button>
@@ -8735,6 +8741,14 @@
       }
 
       /* SHOW RATE DETAILS IN POPUP */
+      function setRatebookDetailsTotalDiffDisplay(totalDiff) {
+        var el = getPopupEl("ready-order-ratebook-total-diff");
+        if (!el) return;
+        var val = Number(totalDiff) || 0;
+        var color = val >= 0 ? "#16a34a" : "#dc2626";
+        el.innerHTML = 'Total Diff Amount: <span style="color:' + color + ';">' + val.toFixed(0) + '</span>';
+      }
+
       function showRateDetails(rateId) {
         const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
         const clickedRate = rates.find(r => String(r.id) === String(rateId));
@@ -8823,6 +8837,7 @@
         }
 
         table.innerHTML = html;
+        setRatebookDetailsTotalDiffDisplay(totalDiff);
         popup.style.display = "flex";
       }
 
@@ -8856,6 +8871,22 @@
                 diffCell.textContent = diffAmount.toFixed(0);
                 diffCell.style.color = diffColor;
               }
+            }
+
+            // Recalculate popup total diff from all displayed rows.
+            var table = getPopupEl("ready-order-ratebook-details-table");
+            if (table) {
+              var total = 0;
+              table.querySelectorAll("tr[data-rate-id]").forEach(function (rowEl) {
+                var rid = rowEl.getAttribute("data-rate-id");
+                var rr = rates.find(function (x) { return String(x.id) === String(rid); });
+                if (!rr) return;
+                var rb = Number(rr.rate) || 0;
+                var aw = Number(rr.adjWt) || 0;
+                var cr = Number(rr.curRate) || 0;
+                total += (cr - rb) * aw;
+              });
+              setRatebookDetailsTotalDiffDisplay(total);
             }
 
             // Notify others - COMMENTED OUT to prevent unwanted side effects
@@ -8893,20 +8924,19 @@
 
           const currentBillNo = (billNo && billNo.value) ? billNo.value : "";
           if (currentBillNo && rows.length > 0) {
-            const firstRow = rows[0];
-            const rateId = firstRow.getAttribute("data-rate-id");
-            const rate = rateId ? rates.find(r => String(r.id) === String(rateId)) : rates[0];
-            if (rate) {
-              const weight = Number(rate.weight) || 0;
-              const rateBookVal = Number(rate.rate) || 0;
-              const curRate = Number(rate.curRate) || 0;
-              const adjWt = Number(rate.adjWt) || 0;
-              // Formula: (Rate Book - Cur. Rate) × Adj Wt = Diff Amount (negative shown with minus)
-              const diffAmount = (rateBookVal - curRate) * adjWt;
-              const formatted = diffAmount < 0 ? "\u2212" + Math.abs(diffAmount).toFixed(2) : diffAmount.toFixed(2);
-              const line = `${weight.toFixed(3)} @(${rateBookVal.toFixed(2)} - ${curRate.toFixed(2)}) = ${formatted}`;
-              localStorage.setItem("rateBookDiffSummary_" + currentBillNo, line);
-            }
+            let totalDiff = 0;
+            rows.forEach(function (tr) {
+              const rid = tr.getAttribute("data-rate-id");
+              const rr = rid ? rates.find(r => String(r.id) === String(rid)) : null;
+              if (!rr) return;
+              const rb = Number(rr.rate) || 0;
+              const cr = Number(rr.curRate) || 0;
+              const aw = Number(rr.adjWt) || 0;
+              totalDiff += (cr - rb) * aw;
+            });
+            const formattedTotal = totalDiff < 0 ? "\u2212" + Math.abs(totalDiff).toFixed(2) : totalDiff.toFixed(2);
+            localStorage.setItem("rateBookDiffSummary_" + currentBillNo, "Total Diff Amount = " + formattedTotal);
+            setRatebookDetailsTotalDiffDisplay(totalDiff);
           }
 
           const btn = getPopupEl("ready-order-ratebook-details-save-btn");

@@ -1896,6 +1896,19 @@
       return hit ? String(hit.jobworkerName || '').trim() : '';
     }
 
+    function pendingLineIsReadyFromItemProcess(itemProcessList, orderId, itemIdx) {
+      const oid = String(orderId);
+      const ix = parseInt(itemIdx, 10);
+      if (isNaN(ix)) return false;
+      return (itemProcessList || []).some(function (e) {
+        if (!e) return false;
+        if (String(e.orderId) !== oid) return false;
+        if (parseInt(e.itemIdx, 10) !== ix) return false;
+        const st = String(e.status || '').trim().toUpperCase();
+        return st === 'READY' || st === 'READY_ORDER';
+      });
+    }
+
     function pendingLineIsAssigned(item, itemProcessList, orderId, itemIdx) {
       if (!item) return false;
       if (item.processAssigned === true || item.processAssigned === 'true' || item.processAssigned === 1) return true;
@@ -2007,6 +2020,8 @@
             const v = Array.isArray(item.values) ? item.values : [];
             const lineType = getPendingLineType(item, v);
             if (!['Order', 'Other', 'Sale'].includes(lineType)) return;
+            // If this line is already in Ready Items / Ready Orders queue, don't show it in Pending Items.
+            if (pendingLineIsReadyFromItemProcess(itemProcessList, order.id, idx)) return;
 
             const fields = mapOrderItemValuesForPending(item, order);
             rows.push({

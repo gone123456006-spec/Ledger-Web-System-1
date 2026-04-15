@@ -1245,6 +1245,26 @@
             } catch (e) { }
         }
 
+        function dedupeInterestDebitRows() {
+            if (!Array.isArray(interestApplied) || interestApplied.length === 0) return;
+            const seenDates = new Set();
+            const out = [];
+            for (let i = interestApplied.length - 1; i >= 0; i--) {
+                const r = interestApplied[i];
+                const nar = String(r && r.narration ? r.narration : '').trim().toLowerCase();
+                if (nar !== 'interest debit') {
+                    out.unshift(r);
+                    continue;
+                }
+                const d = String(r && r.date ? r.date : '').trim();
+                const k = d || `row-${i}`;
+                if (seenDates.has(k)) continue;
+                seenDates.add(k);
+                out.unshift(r);
+            }
+            interestApplied = out;
+        }
+
         function scrollInterestTableToBottom(o) {
             const wrap = document.getElementById('interestTableWrap');
             const sec = document.getElementById('interestSection');
@@ -1274,6 +1294,7 @@
         function renderInterestTable(opt) {
             const tbody = document.getElementById('interestModuleBody');
             if (!tbody) return;
+            dedupeInterestDebitRows();
             tbody.innerHTML = '';
             const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
             let balance = openingBalanceForRunningStatement(sorted);
@@ -1471,7 +1492,14 @@
 
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
-                tdBal.innerHTML = '—';
+                if (ap.runningBalance != null && ap.runningBalance !== '') {
+                    const rb = Number(ap.runningBalance) || 0;
+                    const rbTag = rb >= 0 ? 'Dr' : 'Cr';
+                    const rbClass = rb >= 0 ? 'dr-tag' : 'cr-tag';
+                    tdBal.innerHTML = `${fmt(Math.abs(rb))} <span class="${rbClass}">${rbTag}</span>`;
+                } else {
+                    tdBal.innerHTML = '—';
+                }
 
                 const { td: tdInt } = makeIntCell((parseFloat(ap.calculatedOn) || 0) ? fmt(parseFloat(ap.calculatedOn)) : '', true, (v) => updateAp('calculatedOn', v));
                 tdInt.classList.add('int-cal-cell');
@@ -1890,6 +1918,72 @@
             return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
         }
 
+        function round2(n) {
+            return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+        }
+
+        function calculateCompoundByBlocks(principal, monthlyRatePct, totalMonths, blockSizeMonths) {
+            const rows = [];
+            const monthlyRateDecimal = (Number(monthlyRatePct) || 0) / 100;
+            const blockSize = Math.max(1, parseInt(blockSizeMonths, 10) || 6);
+            const months = Math.max(0, parseInt(totalMonths, 10) || 0);
+            const totalBlocks = Math.floor(months / blockSize);
+            const remainingMonths = months % blockSize;
+            let currentBalance = Number(principal) || 0;
+            let totalInterest = 0;
+
+            for (let i = 1; i <= totalBlocks; i++) {
+                const openingBalance = currentBalance;
+                const blockRate = monthlyRateDecimal * blockSize;
+                const interest = round2(openingBalance * blockRate);
+                currentBalance = round2(openingBalance + interest);
+                totalInterest = round2(totalInterest + interest);
+                rows.push({
+                    periodMonths: blockSize,
+                    openingBalance: round2(openingBalance),
+                    interest: round2(interest),
+                    closingBalance: round2(currentBalance)
+                });
+            }
+
+            if (remainingMonths > 0) {
+                const openingBalance = currentBalance;
+                const remRate = monthlyRateDecimal * remainingMonths;
+                const interest = round2(openingBalance * remRate);
+                currentBalance = round2(openingBalance + interest);
+                totalInterest = round2(totalInterest + interest);
+                rows.push({
+                    periodMonths: remainingMonths,
+                    openingBalance: round2(openingBalance),
+                    interest: round2(interest),
+                    closingBalance: round2(currentBalance)
+                });
+            }
+
+            return {
+                rows,
+                totalInterest: round2(totalInterest),
+                finalBalance: round2(currentBalance),
+                totalBlocks,
+                remainingMonths
+            };
+        }
+
+        function addMonthsSafe(dateObj, monthsToAdd) {
+            const d = new Date(dateObj);
+            d.setMonth(d.getMonth() + monthsToAdd);
+            return d;
+        }
+
+        function completeMonthsBetween(startDate, endDate) {
+            const s = new Date(startDate);
+            const e = new Date(endDate);
+            if (e <= s) return 0;
+            let months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth());
+            if (e.getDate() < s.getDate()) months -= 1;
+            return Math.max(0, months);
+        }
+
         // ─── RENDER ──────────────────────────────────────────────────────────────────
         // ─── RENDER ──────────────────────────────────────────────────────────────────
         function getCustomerBillsSumFromBalances() {
@@ -2290,9 +2384,7 @@
 
             const intSec = document.getElementById('interestSection');
             if (intSec && intSec.style.display === 'block') {
-                const toEl = document.getElementById('int_to_inline');
-                if (toEl && toEl.value) calculateAllInterest();
-                else renderInterestTable();
+                renderInterestTable();
             }
         }
 
@@ -2348,44 +2440,71 @@
             // Segment-based running-balance interest:
             // interest = balance * 0.02 * (days / 30), rounded per segment.
             rowInterestMap = {};
+            dedupeInterestDebitRows();
             interestApplied = (interestApplied || []).filter(r => !(r && r.source === 'segment-calc'));
 
-            const events = sorted
+            const txEvents = sorted
                 .map(tx => ({ tx, date: parseDateOnly(tx.date) }))
                 .filter(e => !isNaN(e.date) && e.date >= startDate && e.date <= uptoDate)
                 .sort((a, b) => a.date - b.date);
 
             let runningBal = openingSignedForStatement();
-            let segStart = new Date(startDate);
             let totalInterest = 0;
 
-            const addSegment = (segEndDate) => {
-                const days = Math.round((segEndDate - segStart) / (1000 * 60 * 60 * 24));
-                if (days <= 0 || runningBal === 0) return;
-                const segInterest = Math.round(runningBal * monthlyRate * (days / 30));
-                if (segInterest === 0) return;
-                interestApplied.push({
-                    id: Date.now() + interestApplied.length,
-                    date: segEndDate.toISOString().split('T')[0],
-                    narration: 'Interest Debit',
-                    credit: 0,
-                    debit: Math.abs(segInterest),
-                    calculatedOn: Math.abs(Math.round(runningBal)),
-                    source: 'segment-calc'
+            if (compMonth > 0) {
+                // Compound module: block-based compounding (default block = 6 months).
+                txEvents.forEach(({ tx }) => { rowInterestMap[tx.id] = null; });
+                const totalMonths = completeMonthsBetween(startDate, uptoDate);
+                const blockSize = 6;
+                const comp = calculateCompoundByBlocks(runningBal, rate, totalMonths, blockSize);
+                let periodCursor = new Date(startDate);
+                comp.rows.forEach((step, idx) => {
+                    periodCursor = addMonthsSafe(periodCursor, step.periodMonths);
+                    const periodEndIso = periodCursor.toISOString().split('T')[0];
+                    interestApplied.push({
+                        id: Date.now() + idx,
+                        date: periodEndIso,
+                        narration: 'Interest Debit',
+                        credit: 0,
+                        debit: round2(Math.abs(step.interest)),
+                        calculatedOn: round2(Math.abs(step.openingBalance)),
+                        runningBalance: round2(step.closingBalance),
+                        source: 'segment-calc'
+                    });
                 });
-                totalInterest += Math.abs(segInterest);
-            };
+                totalInterest = round2(comp.totalInterest);
+                runningBal = round2(comp.finalBalance);
+            } else {
+                // Simple segment mode: one interest entry per segment (no capitalization).
+                let segStart = new Date(startDate);
+                const addSegment = (segEndDate) => {
+                    const days = Math.round((segEndDate - segStart) / (1000 * 60 * 60 * 24));
+                    if (days <= 0 || runningBal === 0) return;
+                    const segInterest = Math.round(runningBal * monthlyRate * (days / 30));
+                    if (segInterest === 0) return;
+                    interestApplied.push({
+                        id: Date.now() + interestApplied.length,
+                        date: segEndDate.toISOString().split('T')[0],
+                        narration: 'Interest Debit',
+                        credit: 0,
+                        debit: Math.abs(segInterest),
+                        calculatedOn: Math.abs(Math.round(runningBal)),
+                        source: 'segment-calc'
+                    });
+                    totalInterest += Math.abs(segInterest);
+                };
 
-            events.forEach(({ tx, date }) => {
-                rowInterestMap[tx.id] = null;
-                addSegment(date);
-                runningBal += txDelta(tx);
-                segStart = new Date(date);
-            });
-            addSegment(uptoDate);
+                txEvents.forEach(({ tx, date }) => {
+                    rowInterestMap[tx.id] = null;
+                    addSegment(date);
+                    runningBal += txDelta(tx);
+                    segStart = new Date(date);
+                });
+                addSegment(uptoDate);
+            }
 
-            pendingInterest = Math.round(totalInterest);
-            const closingAfterInterest = runningBal + pendingInterest;
+            pendingInterest = round2(totalInterest);
+            const closingAfterInterest = round2(runningBal);
             interestHasCalcResult = true;
             interestLastCompMonth = compMonth;
             renderInterestTable();
@@ -2395,7 +2514,7 @@
                 <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; flex-direction:column;">
                         <span style="font-weight:600; color:var(--text); font-size:15px;">Net Interest Payable</span>
-                        <span style="font-weight:400; font-size:12px; color:var(--muted);">Segment-wise running balance (${rate}% monthly)</span>
+                        <span style="font-weight:400; font-size:12px; color:var(--muted);">${compMonth > 0 ? `Compound every 6 month(s) @ ${rate}%` : `Simple segment-wise @ ${rate}% monthly`}</span>
                         <span style="font-weight:400; font-size:12px; color:var(--muted);">Closing Balance (after interest): ₹ ${fmt(closingAfterInterest)}</span>
                     </div>
                     <span style="font-size:22px; font-weight:800; color:var(--danger);">₹ ${fmt(pendingInterest)}</span>
@@ -2410,6 +2529,15 @@
         function applyInterestInline() {
             if (!pendingInterest) return;
             const to = document.getElementById('int_to_inline').value;
+            dedupeInterestDebitRows();
+            const hasSameDate = (interestApplied || []).some(r =>
+                r && String(r.narration || '').trim().toLowerCase() === 'interest debit' &&
+                String(r.date || '').trim() === String(to || '').trim()
+            );
+            if (hasSameDate) {
+                showToast('ℹ️ Interest Debit already exists for this date.');
+                return;
+            }
             interestApplied.push({
                 date: to,
                 narration: 'Interest Debit',
@@ -2431,15 +2559,33 @@
 
         // ─── CLEAR BILL ──────────────────────────────────────────────────────────────
         function clearSelected() {
-            if (selectedIdx === null) { showToast('⚠️ Please select a row first.'); return; }
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            const tx = sorted[selectedIdx];
-            if (tx) {
-                tx.cleared = !tx.cleared;
-                saveTransactions();
-                showToast(tx.cleared ? '✅ Marked as cleared' : '↩️ Cleared mark removed');
+            // Full reset for calculated items: interest rows, calculated maps, totals, and result panel values.
+            rowInterestMap = {};
+            interestApplied = [];
+            pendingInterest = 0;
+            interestHasCalcResult = false;
+            interestLastCompMonth = 0;
+            lastInterestCalculatedDate = "";
+            // Also clear any previously posted Interest Debit rows from the main statement table.
+            transactions = (transactions || []).filter(tx => String(tx && tx.narration ? tx.narration : '').trim().toLowerCase() !== 'interest debit');
+
+            const res = document.getElementById('interestResultInline');
+            if (res) {
+                res.style.display = 'none';
+                res.innerHTML = '';
             }
+            const applyBtn = document.getElementById('applyIntInline');
+            if (applyBtn) applyBtn.style.display = 'none';
+
+            const toEl = document.getElementById('int_to_inline');
+            if (toEl) toEl.value = '';
+            const compEl = document.getElementById('int_comp_inline');
+            if (compEl) compEl.value = '';
+
+            saveTransactions();
+            saveInterestModule();
             render();
+            showToast('🧹 Cleared all calculated interest values');
         }
 
         // ─── DELETE ──────────────────────────────────────────────────────────────────
@@ -2662,18 +2808,6 @@
 
         // ─── INIT ────────────────────────────────────────────────────────────────────
         render();
-        const intRateEl = document.getElementById('int_rate_inline');
-        const intToEl = document.getElementById('int_to_inline');
-        const intCompEl = document.getElementById('int_comp_inline');
-        const recalcInterestIfOpen = () => {
-            const sec = document.getElementById('interestSection');
-            if (!sec || sec.style.display !== 'block') return;
-            if (!intToEl || !intToEl.value) return;
-            calculateAllInterest();
-        };
-        if (intRateEl) intRateEl.addEventListener('input', recalcInterestIfOpen);
-        if (intToEl) intToEl.addEventListener('change', recalcInterestIfOpen);
-        if (intCompEl) intCompEl.addEventListener('input', recalcInterestIfOpen);
 
         // ─── EXPORT GLOBALS (FOR DASHBOARD SPA) ───────────────────────────────────────
         window.render = render;
