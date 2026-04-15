@@ -3,6 +3,8 @@
    SIDEBAR BUTTON HANDLING (ERP STYLE)
 ====================================================== */
 const ITEM_MODULE_ENABLED = false; // Disable Add Item / Item Sheet without deleting code
+const AGENTS_MODULE_ENABLED = false; // Disable Agents section without deleting code
+const LOAN_DAYBOOK_MODULE_ENABLED = false; // Disable New Loan / Pending Loans / Day Book
 
 function initGoldOrderSubmenu() {
     const block = document.querySelector(".sidebar-gold-order");
@@ -36,6 +38,10 @@ function initAgentsSubmenu() {
     const trigger = document.querySelector(".agents-order-trigger");
     const submenu = document.querySelector(".sidebar-agents-submenu");
     if (!block || !trigger || !submenu) return;
+    if (!AGENTS_MODULE_ENABLED) {
+        block.style.display = "none";
+        return;
+    }
     let hideTimeout = 0;
     function show() {
         if (hideTimeout) clearTimeout(hideTimeout);
@@ -162,6 +168,11 @@ function initSidebarButtons() {
                     loadPage("pages/customer.html");
                     break;
 
+                case "add station":
+                    if (typeof openStation === "function") openStation();
+                    else showInfo("Station module is not ready.");
+                    break;
+
                 case "add item":
                     if (!ITEM_MODULE_ENABLED) showInfo("Add Item is disabled.");
                     else loadPage("pages/add-item.html");
@@ -174,14 +185,17 @@ function initSidebarButtons() {
 
                 case "agents":
                     // Agents is the hover parent; click does nothing (submenu shows on hover)
+                    if (!AGENTS_MODULE_ENABLED) showInfo("Agents section is disabled.");
                     break;
 
                 case "balance sheet":
-                    loadPage("pages/balance-sheet.html");
+                    if (!AGENTS_MODULE_ENABLED) showInfo("Balance Sheet is disabled.");
+                    else loadPage("pages/balance-sheet.html");
                     break;
 
                 case "purchase":
-                    loadPage("pages/purchase.html");
+                    if (!AGENTS_MODULE_ENABLED) showInfo("Purchase is disabled.");
+                    else loadPage("pages/purchase.html");
                     break;
 
                 case "purchase return":
@@ -262,15 +276,18 @@ function initSidebarButtons() {
                     break;
 
                 case "new loan":
-                    loadPage("pages/new-loan.html");
+                    if (!LOAN_DAYBOOK_MODULE_ENABLED) showInfo("New Loan is disabled.");
+                    else loadPage("pages/new-loan.html");
                     break;
 
                 case "pending loans":
-                    loadPage("pages/pending-loans.html");
+                    if (!LOAN_DAYBOOK_MODULE_ENABLED) showInfo("Pending Loans is disabled.");
+                    else loadPage("pages/pending-loans.html");
                     break;
 
                 case "day book":
-                    loadPage("pages/day-book.html");
+                    if (!LOAN_DAYBOOK_MODULE_ENABLED) showInfo("Day Book is disabled.");
+                    else loadPage("pages/day-book.html");
                     break;
 
                 default:

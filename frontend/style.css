@@ -56,7 +56,7 @@ ul, li{
 .submenu{
     display:none;
     position:absolute;
-    top:36px;
+    top:100%;
     left:0;
     min-width:200px;
     background:#ffffff;
@@ -68,6 +68,9 @@ ul, li{
 }
 
 .menu-item:hover>.submenu{
+    display:block;
+}
+.menu-item:focus-within>.submenu{
     display:block;
 }
 
@@ -84,12 +87,18 @@ ul, li{
 
 .submenu.right{
     top:0;
-    left:100%;
-    margin-left:4px;
+    left:calc(100% - 1px);
+    margin-left:0;
     display:none;
 }
 
 .submenu li.has-submenu:hover>.submenu.right{
+    display:block;
+}
+.submenu li.has-submenu{
+    position:relative;
+}
+.submenu li.has-submenu:focus-within>.submenu.right{
     display:block;
 }
 

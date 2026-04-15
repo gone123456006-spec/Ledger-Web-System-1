@@ -2642,30 +2642,6 @@
     </div>
   </div>
 
-  <!-- READY META POPUP (R. Metal / Neg / R. Wt) -->
-  <div id="ready-order-ready-meta-popup" class="popup-bg ready-order-popup" style="display:none;"
-    onclick="if(event.target===this) closeReadyMetaPopup()">
-    <div class="popup-box" style="max-width: 420px;">
-      <h3>Ready Item Details</h3>
-      <div class="popup-row">
-        <label>R. Metal</label>
-        <input type="text" id="readyMetaMetalInput" placeholder="R. metal">
-      </div>
-      <div class="popup-row">
-        <label>Neg</label>
-        <input type="number" step="0.01" id="readyMetaNegInput" placeholder="0">
-      </div>
-      <div class="popup-row">
-        <label>R. Wt</label>
-        <input type="number" step="0.001" id="readyMetaWtInput" placeholder="0.000">
-      </div>
-      <div class="popup-actions">
-        <button onclick="saveReadyMetaPopup()">Save</button>
-        <button onclick="closeReadyMetaPopup()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
   <!-- PAYMENT POPUP (same as new-order) -->
   <div id="ready-order-payment-popup" class="popup-bg ready-order-popup"
     onclick="if(event.target===this) closePaymentPopup()">
@@ -4276,25 +4252,14 @@
       function bindReadyMetaPopupForRow(tr) {
         if (!tr || tr.dataset.readyMetaPopupBound === "1") return;
         tr.dataset.readyMetaPopupBound = "1";
-        tr.addEventListener("click", function (e) {
-          if (!e || !e.target || !tr.closest("#ready-order-item-table")) return;
-          var td = e.target.closest("td");
-          var idx = td ? Array.prototype.indexOf.call(tr.cells, td) : -1;
-          var isFormHit = !!e.target.closest("button,select,input,textarea,a,label");
-          if (isFormHit && idx !== 2) return;
-          if (isFormHit && idx === 2) {
-            e.preventDefault();
-            openReadyMetaPopup(tr);
-            return;
-          }
-          openReadyMetaPopup(tr);
-        });
+        // Disabled intentionally: Ready Item Details popup removed from Item Name click flow.
       }
 
       function openReadyMetaPopup(rowOrCell) {
         if (!readyMetaPopup || !readyMetaMetalInput || !readyMetaNegInput || !readyMetaWtInput) {
           if (!initElements()) return;
         }
+        if (!readyMetaPopup || !readyMetaMetalInput || !readyMetaNegInput || !readyMetaWtInput) return;
         var row = rowOrCell;
         if (row && row.closest && row.tagName !== "TR") row = row.closest("tr");
         if (!row || !row.cells || !row.cells[10] || !row.cells[11] || !row.cells[12]) return;

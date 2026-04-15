@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Direct Bill</title>
+  <style>
+    :root {
+      --card-bg: #ffffff;
+      --text: #1f2d3d;
+      --muted: #5e6b7a;
+      --border: #d8e0ec;
+      --primary: #2f7ef7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .direct-bill-wrap {
+      max-width: 980px;
+      margin: 8px auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+
+    .direct-bill-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #f4f8ff;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .direct-bill-body {
+      padding: 22px 18px;
+    }
+
+    .direct-bill-note {
+      margin: 0 0 14px;
+      color: var(--muted);
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    .direct-bill-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <section class="direct-bill-wrap">
+    <header class="direct-bill-header">Direct Bill</header>
+    <div class="direct-bill-body">
+      <p class="direct-bill-note">
+        Direct Bill page is ready. You can now continue implementing bill form fields and save logic here.
+      </p>
+      <div class="direct-bill-actions">
+        <button type="button" class="btn primary">New Direct Bill</button>
+        <button type="button" class="btn">View Recent Bills</button>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
