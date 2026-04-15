@@ -2,6 +2,7 @@
 /* ======================================================
    SIDEBAR BUTTON HANDLING (ERP STYLE)
 ====================================================== */
+const ITEM_MODULE_ENABLED = false; // Disable Add Item / Item Sheet without deleting code
 
 function initGoldOrderSubmenu() {
     const block = document.querySelector(".sidebar-gold-order");
@@ -69,6 +70,10 @@ function initAddItemSubmenu() {
     const trigger = document.querySelector(".add-item-trigger");
     const submenu = document.querySelector(".sidebar-add-item-submenu");
     if (!block || !trigger || !submenu) return;
+    if (!ITEM_MODULE_ENABLED) {
+        block.style.display = "none";
+        return;
+    }
 
     let hideTimeout = 0;
     function show() {
@@ -158,11 +163,13 @@ function initSidebarButtons() {
                     break;
 
                 case "add item":
-                    loadPage("pages/add-item.html");
+                    if (!ITEM_MODULE_ENABLED) showInfo("Add Item is disabled.");
+                    else loadPage("pages/add-item.html");
                     break;
 
                 case "item sheet":
-                    loadPage("pages/item-sheet.html");
+                    if (!ITEM_MODULE_ENABLED) showInfo("Item Sheet is disabled.");
+                    else loadPage("pages/item-sheet.html");
                     break;
 
                 case "agents":

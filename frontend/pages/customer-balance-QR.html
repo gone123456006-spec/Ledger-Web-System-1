@@ -794,6 +794,9 @@
             min-width: 0;
             min-height: 0;
             overflow: hidden;
+            position: sticky;
+            top: 56px;
+            z-index: 25;
         }
 
         .interest-section-heading {
@@ -1934,9 +1937,9 @@
 
             for (let i = 1; i <= totalBlocks; i++) {
                 const openingBalance = currentBalance;
-                const blockRate = monthlyRateDecimal * blockSize;
-                const interest = round2(openingBalance * blockRate);
-                currentBalance = round2(openingBalance + interest);
+                const amountAfter = openingBalance * Math.pow(1 + monthlyRateDecimal, blockSize);
+                const interest = round2(amountAfter - openingBalance);
+                currentBalance = round2(amountAfter);
                 totalInterest = round2(totalInterest + interest);
                 rows.push({
                     periodMonths: blockSize,
@@ -1948,9 +1951,9 @@
 
             if (remainingMonths > 0) {
                 const openingBalance = currentBalance;
-                const remRate = monthlyRateDecimal * remainingMonths;
-                const interest = round2(openingBalance * remRate);
-                currentBalance = round2(openingBalance + interest);
+                const amountAfter = openingBalance * Math.pow(1 + monthlyRateDecimal, remainingMonths);
+                const interest = round2(amountAfter - openingBalance);
+                currentBalance = round2(amountAfter);
                 totalInterest = round2(totalInterest + interest);
                 rows.push({
                     periodMonths: remainingMonths,
@@ -1966,6 +1969,99 @@
                 finalBalance: round2(currentBalance),
                 totalBlocks,
                 remainingMonths
+            };
+        }
+
+        function splitIntoFullMonthsAndExtraDays(startDate, endDate) {
+            const s = parseDateOnly(startDate);
+            const e = parseDateOnly(endDate);
+            if (isNaN(s) || isNaN(e) || e <= s) return { totalMonths: 0, extraDays: 0 };
+            const msDay = 1000 * 60 * 60 * 24;
+            const totalDays = Math.max(0, Math.floor((e - s) / msDay));
+            const months = Math.floor(totalDays / 30);
+            const extraDays = totalDays % 30;
+            return { totalMonths: months, extraDays: extraDays };
+        }
+
+        function calculateHalfYearCompoundWithRemainder(principal, monthlyRatePct, startDate, endDate, compoundMonths) {
+            const rows = [];
+            const P = Number(principal) || 0;
+            const R = Number(monthlyRatePct) || 0;
+            const intervalMonths = Math.max(1, parseInt(compoundMonths, 10) || 6);
+            if (!Number.isFinite(P) || !Number.isFinite(R) || P <= 0 || R <= 0) {
+                return { rows, totalInterest: 0, finalBalance: Math.round(P) };
+            }
+            const start = parseDateOnly(startDate);
+            const end = parseDateOnly(endDate);
+            if (isNaN(start) || isNaN(end) || start >= end) {
+                return { rows, totalInterest: 0, finalBalance: Math.round(P) };
+            }
+            const split = splitIntoFullMonthsAndExtraDays(startDate, endDate);
+            const totalMonths = split.totalMonths;
+            const extraDays = split.extraDays;
+            const halfYears = Math.floor(totalMonths / intervalMonths);
+            const remainingMonths = totalMonths % intervalMonths;
+
+            let A = P;
+            let cursor = new Date(start);
+
+            // Phase 1: compounding blocks
+            for (let i = 0; i < halfYears; i++) {
+                const opening = A;
+                const interest = opening * ((R * intervalMonths) / 100);
+                A += interest;
+                cursor = addMonthsSafe(cursor, intervalMonths);
+                rows.push({
+                    from: null,
+                    to: cursor.toISOString().split("T")[0],
+                    date: cursor.toISOString().split("T")[0],
+                    narration: "Interest Debit",
+                    days: 0,
+                    debit: Math.round(interest),
+                    calculatedOn: Math.round(opening),
+                    balance: Math.round(A)
+                });
+            }
+
+            // Phase 2: remaining full months simple interest
+            if (remainingMonths > 0) {
+                const opening = A;
+                const interest = (opening * R * remainingMonths) / 100;
+                A += interest;
+                cursor = addMonthsSafe(cursor, remainingMonths);
+                rows.push({
+                    from: null,
+                    to: cursor.toISOString().split("T")[0],
+                    date: cursor.toISOString().split("T")[0],
+                    narration: "Interest Debit",
+                    days: 0,
+                    debit: Math.round(interest),
+                    calculatedOn: Math.round(opening),
+                    balance: Math.round(A)
+                });
+            }
+
+            // Phase 3: extra days simple interest (30-day month convention)
+            if (extraDays > 0) {
+                const opening = A;
+                const dailyInterest = (opening * R * extraDays) / (100 * 30);
+                A += dailyInterest;
+                rows.push({
+                    from: null,
+                    to: end.toISOString().split("T")[0],
+                    date: end.toISOString().split("T")[0],
+                    narration: "Interest Debit",
+                    days: extraDays,
+                    debit: Math.round(dailyInterest),
+                    calculatedOn: Math.round(opening),
+                    balance: Math.round(A)
+                });
+            }
+
+            return {
+                rows,
+                totalInterest: Math.round(A - P),
+                finalBalance: Math.round(A)
             };
         }
 
@@ -2452,23 +2548,27 @@
             let totalInterest = 0;
 
             if (compMonth > 0) {
-                // Compound module: block-based compounding (default block = 6 months).
-                txEvents.forEach(({ tx }) => { rowInterestMap[tx.id] = null; });
-                const totalMonths = completeMonthsBetween(startDate, uptoDate);
-                const blockSize = 6;
-                const comp = calculateCompoundByBlocks(runningBal, rate, totalMonths, blockSize);
-                let periodCursor = new Date(startDate);
+                // Hybrid rule:
+                // - Compound on selected block months
+                // - Simple for remaining months
+                // - Daily simple for extra days (days/30)
+                const principalBase = sorted
+                    .filter(tx => String(tx && tx.narration ? tx.narration : '').trim().toLowerCase() !== 'interest debit')
+                    .reduce((sum, tx) => sum + txDelta(tx), openingSignedForStatement());
+                if (!Number.isFinite(principalBase) || principalBase <= 0) {
+                    showToast('⚠️ Principal must be greater than zero for compound interest.');
+                    return;
+                }
+                const comp = calculateHalfYearCompoundWithRemainder(principalBase, rate, startDate, uptoDate, compMonth);
                 comp.rows.forEach((step, idx) => {
-                    periodCursor = addMonthsSafe(periodCursor, step.periodMonths);
-                    const periodEndIso = periodCursor.toISOString().split('T')[0];
                     interestApplied.push({
                         id: Date.now() + idx,
-                        date: periodEndIso,
+                        date: step.date,
                         narration: 'Interest Debit',
                         credit: 0,
-                        debit: round2(Math.abs(step.interest)),
-                        calculatedOn: round2(Math.abs(step.openingBalance)),
-                        runningBalance: round2(step.closingBalance),
+                        debit: round2(Math.abs(step.debit)),
+                        calculatedOn: round2(Math.abs(step.calculatedOn)),
+                        runningBalance: round2(step.balance),
                         source: 'segment-calc'
                     });
                 });
@@ -2514,7 +2614,7 @@
                 <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; flex-direction:column;">
                         <span style="font-weight:600; color:var(--text); font-size:15px;">Net Interest Payable</span>
-                        <span style="font-weight:400; font-size:12px; color:var(--muted);">${compMonth > 0 ? `Compound every 6 month(s) @ ${rate}%` : `Simple segment-wise @ ${rate}% monthly`}</span>
+                        <span style="font-weight:400; font-size:12px; color:var(--muted);">${compMonth > 0 ? `Actual Days (365) · every 6 months · annual rate ${round2(rate * 12)}%` : `Simple segment-wise @ ${rate}% monthly`}</span>
                         <span style="font-weight:400; font-size:12px; color:var(--muted);">Closing Balance (after interest): ₹ ${fmt(closingAfterInterest)}</span>
                     </div>
                     <span style="font-size:22px; font-weight:800; color:var(--danger);">₹ ${fmt(pendingInterest)}</span>
