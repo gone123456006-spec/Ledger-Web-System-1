@@ -1878,7 +1878,15 @@
                         updated = true;
                     }
                 });
-                if (updated) localStorage.setItem('customers', JSON.stringify(customers));
+                if (updated) {
+                    localStorage.setItem('customers', JSON.stringify(customers));
+                    try {
+                        const ev = new CustomEvent("customersUpdated");
+                        window.dispatchEvent(ev);
+                        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
+                        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
+                    } catch (e) { }
+                }
             } catch (e) { }
 
             // Update in 'jewellers' list (in case it's a jeweller)
@@ -2131,11 +2139,125 @@
                     nums.push(num);
                 }
                 return nums.length
-                    ? "Balance Bill No. - " + nums.join(", ")
-                    : "Balance Bill No. - (Ready Order)";
+                    ? "Bill No. - " + nums.join(", ")
+                    : "Bill No. - (Ready Order)";
             } catch (e) {
-                return "Balance Bill No. -";
+                return "Bill No. -";
             }
+        }
+
+        function escHtml(text) {
+            return String(text == null ? '' : text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function openStatementBillInvoice(billNo) {
+            const ref = String(billNo || '').trim();
+            if (!ref) return;
+            try {
+                const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+                const norm = (s) => (s || '').trim().toLowerCase();
+                const nameNorm = norm(customerData.name);
+                const cidNorm = customerData.cid ? norm(customerData.cid) : "";
+                const refNorm = norm(ref);
+                const sameCustomer = (b) => norm(b && b.customer) === nameNorm || (cidNorm && b && b.cid && norm(b.cid) === cidNorm);
+                const sameBill = (b) => {
+                    const orderNo = norm(b && b.orderNo);
+                    const billNoVal = norm(b && b.billNo);
+                    return orderNo === refNorm || billNoVal === refNorm;
+                };
+                const balanceEntry = balances.find(b => b && sameCustomer(b) && sameBill(b))
+                    || balances.find(b => b && sameBill(b));
+                if (!balanceEntry) {
+                    alert("Bill not found: " + ref);
+                    return;
+                }
+
+                localStorage.setItem("editBalanceEntry", JSON.stringify(balanceEntry));
+                localStorage.setItem("editFromAllBill", "true");
+                localStorage.setItem("editCustomerReadOnly", "true");
+                if (balanceEntry.rows && balanceEntry.rows.length > 0) {
+                    localStorage.setItem("editBalanceRows", JSON.stringify(balanceEntry.rows));
+                }
+
+                const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+                const fullBill = bills.find(b => norm(b && b.billNo) === refNorm || norm(b && b.orderNo) === refNorm);
+                const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+                const order = orders.find(o => norm(o && o.orderNo) === refNorm || norm(o && o.billNo) === refNorm);
+
+                if (order && order.id != null) {
+                    localStorage.setItem("editOrderId", order.id);
+                    if (fullBill && (fullBill.items || fullBill.rows) && (fullBill.items || fullBill.rows).length > 0) {
+                        const payload = {
+                            id: order.id,
+                            orderNo: fullBill.billNo || ref,
+                            billNo: fullBill.billNo || ref,
+                            sgjBillNo: fullBill.sgjBillNo || "",
+                            customer: fullBill.customer,
+                            customerId: fullBill.customerId,
+                            orderDate: fullBill.date,
+                            dueDate: fullBill.dueDate || "",
+                            items: fullBill.items || fullBill.rows,
+                            hideBillMidColumns: !!(fullBill.hideBillMidColumns || balanceEntry.hideBillMidColumns)
+                        };
+                        localStorage.setItem("editOrderPayload", JSON.stringify(payload));
+                    }
+                } else {
+                    const tempId = balanceEntry.timestamp || Date.now().toString();
+                    localStorage.setItem("editOrderId", tempId);
+                    if (fullBill && (fullBill.items || fullBill.rows) && (fullBill.items || fullBill.rows).length > 0) {
+                        const payload = {
+                            id: tempId,
+                            orderNo: fullBill.billNo || ref,
+                            billNo: fullBill.billNo || ref,
+                            sgjBillNo: fullBill.sgjBillNo || "",
+                            customer: fullBill.customer,
+                            customerId: fullBill.customerId,
+                            orderDate: fullBill.date,
+                            dueDate: fullBill.dueDate || "",
+                            items: fullBill.items || fullBill.rows,
+                            hideBillMidColumns: !!(fullBill.hideBillMidColumns || balanceEntry.hideBillMidColumns)
+                        };
+                        localStorage.setItem("editOrderPayload", JSON.stringify(payload));
+                    }
+                }
+
+                if (typeof loadPage === 'function') {
+                    loadPage("pages/ready-extra-order.html");
+                    return;
+                }
+                if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
+                    window.parent.loadPage("pages/ready-extra-order.html");
+                    return;
+                }
+                if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
+                    window.top.loadPage("pages/ready-extra-order.html");
+                    return;
+                }
+                window.open("/pages/ready-extra-order.html", "EditBill", "width=1400,height=800");
+            } catch (e) {
+                console.error("Error opening statement bill:", e);
+                alert("Error opening bill: " + (e.message || String(e)));
+            }
+        }
+
+        function statementNarrationHtml(narText) {
+            const raw = String(narText || '');
+            const prefix = "Bill No. - ";
+            if (!raw.startsWith(prefix)) return escHtml(raw);
+            const suffix = raw.slice(prefix.length).trim();
+            if (!suffix || suffix === "(Ready Order)") return escHtml(raw);
+            const parts = suffix.split(',').map(s => s.trim()).filter(Boolean);
+            if (!parts.length) return escHtml(raw);
+            const links = parts.map((bill) => {
+                const safe = escHtml(bill);
+                return `<a href="#" onclick="openStatementBillInvoice('${safe.replace(/'/g, "\\'")}'); return false;" style="color:#0d63c9;text-decoration:underline;font-weight:600;">${safe}</a>`;
+            }).join(', ');
+            return `${escHtml(prefix)}${links}`;
         }
 
         /** Ready Order syncs bill lines into stmt; those rows already move the balance — do not also add bills aggregate. */
@@ -2181,7 +2303,7 @@
                 tr.append(
                     td('center', idxTxt),
                     td('', dateStr),
-                    td('', narText),
+                    td('', statementNarrationHtml(narText)),
                     td('right', crHtml),
                     td('right', drHtml),
                     td('right', balCell),
@@ -2925,6 +3047,7 @@
         window.showCtxMenu = showCtxMenu;
         window.closeCtxMenu = closeCtxMenu;
         window.addRow = addRow;
+        window.openStatementBillInvoice = openStatementBillInvoice;
     </script>
 
 </body>

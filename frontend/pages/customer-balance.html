@@ -549,22 +549,26 @@
           return (byCustomerId || byCid || byName) && hasBillRef;
         });
 
-        // Customer Balance table must match All Bill "Balance (₹)" totals (sum of per-bill balances).
-        // Opening Balance is shown/used in Customer Statement, not added here (prevents "random" extra amounts).
+        // Customer Balance row should reflect Customer Master's Current Balance directly.
+        // If Current Balance is missing, fallback to bill-linked computed balance.
         let openingBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
         if ((c.openingBalanceType || "").toLowerCase() === "cr") openingBal = -Math.abs(openingBal);
         if ((c.openingBalanceType || "").toLowerCase() === "dr") openingBal = Math.abs(openingBal);
         let dynamicSum = 0;
+        let signedCurrent = (c.currentBalance != null && c.currentBalance !== "") ? Number(c.currentBalance) : 0;
+        const curType = (c.currentBalanceType || "Dr").toLowerCase();
+        if (curType === "cr") signedCurrent = -Math.abs(signedCurrent);
+        else signedCurrent = Math.abs(signedCurrent);
+        const hasCurrentBalance = Number.isFinite(signedCurrent) && String(c.currentBalance ?? "").trim() !== "";
 
-        if (customerEntries.length > 0) {
-          // Use computedBalAmt written by All Bill (guaranteed identical values)
-          // Falls back to simple calc if All Bill hasn't been loaded yet
+        if (hasCurrentBalance) {
+          dynamicSum = signedCurrent;
+        } else if (customerEntries.length > 0) {
+          // Fallback only when Current Balance is not available.
           customerEntries.forEach(balance => {
             if (balance.computedBalAmt != null) {
-              // All Bill already computed this — use it directly
               dynamicSum += Number(balance.computedBalAmt);
             } else {
-              // Fallback: simple calc using stored amount minus payments
               const billNoVal = balance.orderNo || balance.billNo || "";
               const netAmt = parseFloat(balance.amount || balance.netAmount || 0);
               const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
@@ -574,20 +578,10 @@
                 rateDiffResult = Math.abs(parseFloat(balance.amount) - parseFloat(balance.amountMinusRateDiff));
               }
               const computed = netAmt - advanceAmt - paidAmt - rateDiffResult;
-              // Persist so Customer Balance matches All Bill exactly, even before opening All Bill.
               balance.computedBalAmt = computed;
               dynamicSum += computed;
             }
           });
-        }
-
-        // Fallback: if no bill-linked rows exist, show saved current balance from customer master.
-        if (customerEntries.length === 0) {
-          let signedCurrent = (c.currentBalance != null && c.currentBalance !== "") ? Number(c.currentBalance) : 0;
-          const curType = (c.currentBalanceType || "Dr").toLowerCase();
-          if (curType === "cr") signedCurrent = -Math.abs(signedCurrent);
-          else signedCurrent = Math.abs(signedCurrent);
-          dynamicSum = signedCurrent;
         }
 
         const originalOpBal = openingBal;
