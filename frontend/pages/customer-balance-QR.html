@@ -1137,7 +1137,7 @@
         <!-- ACTIONS BAR -->
         <div class="actions-bar">
             <div class="actions-left">
-                <button class="btn" onclick="clearSelected()">✅ Clear Bill</button>
+                <button type="button" class="btn" onclick="window.clearBillAmount && window.clearBillAmount()">✅ Clear Bill Amount</button>
             </div>
             <div class="actions-right">
                 <button class="btn btn-danger" onclick="deleteSelected()">🗑 Delete</button>
@@ -1153,7 +1153,7 @@
     <div class="ctx-menu" id="ctxMenu">
         <div class="ctx-item danger" onclick="ctxDelete()">🗑️ Delete Entry</div>
         <div class="ctx-sep"></div>
-        <div class="ctx-item" onclick="ctxClearBill()">✅ Toggle Clear Bill</div>
+        <div class="ctx-item" onclick="ctxClearBill()">✅ Toggle row cleared</div>
     </div>
 
     <script>
@@ -1162,12 +1162,15 @@
             lfNo: "",
             name: "",
             station: "",
+            cid: "",
             openingBalance: 0,
             openingBalanceType: "Dr",
             currentBalance: 0,
             currentBalanceType: "Dr",
             openingDate: "",
-            id: null
+            id: null,
+            /** When true: statement shows 0; customer master balance 0; All Bill shows Clear (UI only) — does not change per-bill ₹ in customerBalances. */
+            statementBillAmountCleared: false
         };
 
         let transactions = [];
@@ -1184,6 +1187,7 @@
         let interestApplied = [];
         let interestHasCalcResult = false;
         let interestLastCompMonth = 0;
+        let lastInterestCalculatedDate = '';
 
         function stmtStorageKey() {
             return 'stmt_' + (customerData.lfNo || customerData.name);
@@ -1219,6 +1223,7 @@
             interestApplied = Array.isArray(obj.interestApplied) ? obj.interestApplied : [];
             interestHasCalcResult = !!obj.interestHasCalcResult;
             interestLastCompMonth = parseInt(obj.interestLastCompMonth, 10) || 0;
+            lastInterestCalculatedDate = obj.lastInterestCalculatedDate != null ? String(obj.lastInterestCalculatedDate) : '';
             const rateEl = document.getElementById('int_rate_inline');
             const compEl = document.getElementById('int_comp_inline');
             const toEl = document.getElementById('int_to_inline');
@@ -1239,6 +1244,7 @@
                     interestApplied,
                     interestHasCalcResult,
                     interestLastCompMonth,
+                    lastInterestCalculatedDate,
                     intRate: rateEl ? rateEl.value : '',
                     intComp: compEl ? compEl.value : '',
                     intTo: toEl ? toEl.value : ''
@@ -1299,7 +1305,7 @@
             if (!tbody) return;
             dedupeInterestDebitRows();
             tbody.innerHTML = '';
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             let balance = openingBalanceForRunningStatement(sorted);
 
             function makeIntCell(initialVal, isNum, onBlur) {
@@ -1783,44 +1789,137 @@
             return (a.debit || 0) - (a.credit || 0);
         }
 
-        function settleCustomerBalanceToZero() {
-            const norm = (s) => (s || '').trim().toLowerCase();
-            const targetId = customerData && customerData.id != null ? String(customerData.id) : '';
-            const targetCid = customerData && customerData.cid ? norm(customerData.cid) : '';
-            const targetName = customerData && customerData.name ? norm(customerData.name) : '';
-
+        function normKey(s) {
+            return String(s || '').trim().toLowerCase();
+        }
+        /** Cid stored as "—" must not be used for cross-row matching (false matches). */
+        function isPlaceholderCid(cid) {
+            const t = normKey(cid);
+            return !t || t === '—' || t === '–' || t === '-' || t === '\u2014';
+        }
+        /** Match customers[] row: real id, idx-N, non-placeholder cid, or name. */
+        function matchCustomerRecord(c, idx) {
+            if (!c) return false;
+            const idRaw = customerData.id != null ? String(customerData.id) : '';
+            const idVal = idRaw && !idRaw.startsWith('idx-') ? idRaw : '';
+            if (idVal && c.id != null && String(c.id) === idVal) return true;
+            if (idRaw.startsWith('idx-')) {
+                const xi = parseInt(idRaw.replace('idx-', ''), 10);
+                if (Number.isInteger(xi) && xi === idx) return true;
+            }
+            if (idVal || (idRaw && idRaw.startsWith('idx-'))) return false;
+            const tn = customerData.name ? normKey(customerData.name) : '';
+            const tc = customerData.cid ? String(customerData.cid).trim() : '';
+            const byName = tn && c.name && normKey(c.name) === tn;
+            const byCid = tc && !isPlaceholderCid(tc) && c.cid && !isPlaceholderCid(c.cid) && normKey(c.cid) === normKey(tc);
+            return !!(byCid || byName);
+        }
+        /** Match customerBalances / bills row to current customer (customerId, cid, or customer name). */
+        function matchCustomerBalanceOrBillRow(b) {
+            if (!b) return false;
+            const idRaw = customerData.id != null ? String(customerData.id) : '';
+            const idVal = idRaw && !idRaw.startsWith('idx-') ? idRaw : '';
+            if (idVal && b.customerId != null && String(b.customerId) === idVal) return true;
+            const tn = customerData.name ? normKey(customerData.name) : '';
+            const tc = customerData.cid ? String(customerData.cid).trim() : '';
+            const byName = tn && b.customer && normKey(b.customer) === tn;
+            const byCid = tc && !isPlaceholderCid(tc) && b.cid && !isPlaceholderCid(b.cid) && normKey(b.cid) === normKey(tc);
+            return !!(byName || byCid);
+        }
+        /** Keep session snapshot in sync so reload does not restore stale opbal/curbal after Clear Bill Amount. */
+        function syncStmtSessionFromCustomerData() {
             try {
-                const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
-                let changed = false;
-                balances.forEach(b => {
-                    if (!b) return;
-                    const byId = targetId && b.customerId != null && String(b.customerId) === targetId;
-                    const byCid = targetCid && b.cid && norm(b.cid) === targetCid;
-                    const byName = targetName && norm(b.customer) === targetName;
-                    if (byId || byCid || byName) {
-                        if (String(b.computedBalAmt || '') !== '0.00') {
-                            b.computedBalAmt = '0.00';
-                            changed = true;
-                        }
-                    }
-                });
-                if (changed) localStorage.setItem('customerBalances', JSON.stringify(balances));
+                const raw = sessionStorage.getItem('stmtCustomer');
+                if (!raw) return;
+                const s = JSON.parse(raw);
+                s.opbal = String(parseFloat(customerData.openingBalance) || 0);
+                s.curbal = String(parseFloat(customerData.currentBalance) || 0);
+                s.opType = customerData.openingBalanceType || 'Dr';
+                s.curType = customerData.currentBalanceType || 'Dr';
+                sessionStorage.setItem('stmtCustomer', JSON.stringify(s));
             } catch (e) { }
+        }
+
+        function applyClearedStateToCustomerRow(c) {
+            if (!c) return;
+            c.statementBillAmountCleared = true;
+            c.allBillStatusUiClear = true;
+            c.openingBalance = 0;
+            c.openingBalanceType = 'Dr';
+            c.currentBalance = 0;
+            c.currentBalanceType = 'Dr';
+        }
+        /** Fallback when customerId/cid mismatch: same display name as current statement. */
+        function matchCustomerBalanceOrBillRowLoose(b) {
+            if (!b) return false;
+            const tn = customerData.name ? normKey(customerData.name) : '';
+            return !!(tn && b.customer && normKey(b.customer) === tn);
+        }
+        /** Write cleared master record: strict match first, then exact name match on all customers. */
+        function persistCustomerClearedMasterRecord() {
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                let changed = false;
+                customers.forEach((c, idx) => {
+                    if (!matchCustomerRecord(c, idx)) return;
+                    applyClearedStateToCustomerRow(c);
+                    changed = true;
+                });
+                if (!changed) {
+                    const nm = normKey(customerData.name);
+                    if (nm) {
+                        customers.forEach(c => {
+                            if (!c || !c.name) return;
+                            if (normKey(c.name) !== nm) return;
+                            applyClearedStateToCustomerRow(c);
+                            changed = true;
+                        });
+                    }
+                }
+                if (changed) {
+                    localStorage.setItem('customers', JSON.stringify(customers));
+                    try {
+                        const ev = new CustomEvent('customersUpdated');
+                        window.dispatchEvent(ev);
+                        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent('customersUpdated'));
+                        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent('customersUpdated'));
+                    } catch (e) { }
+                }
+            } catch (e) { }
+        }
+        /** Empty statement + interest payloads for every possible stmt key (lfNo vs name) so old rows cannot reappear. */
+        function wipeStatementStorageForCustomer() {
+            const empty = '[]';
+            const keys = new Set();
+            const add = (suffix) => {
+                const s = String(suffix || '').trim();
+                if (s.length) keys.add('stmt_' + s);
+            };
+            add(customerData.lfNo || customerData.name);
+            add(customerData.name);
+            add(customerData.lfNo);
+            keys.forEach(k => {
+                try {
+                    localStorage.setItem(k, empty);
+                    localStorage.removeItem(k + '_interestModule');
+                    localStorage.removeItem(k + '_intMap');
+                } catch (e) { }
+            });
+        }
+
+        function settleCustomerBalanceToZero() {
+            // Do not mutate customerBalances / per-bill amounts here — All Bill ₹ must stay unchanged.
 
             try {
                 const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                 let changed = false;
-                customers.forEach(c => {
-                    const byId = targetId && c.id != null && String(c.id) === targetId;
-                    const byCid = targetCid && c.cid && norm(c.cid) === targetCid;
-                    const byName = targetName && norm(c.name) === targetName;
-                    if (byId || byCid || byName) {
-                        c.openingBalance = 0;
-                        c.openingBalanceType = 'Dr';
-                        c.currentBalance = 0;
-                        c.currentBalanceType = 'Dr';
-                        changed = true;
-                    }
+                customers.forEach((c, idx) => {
+                    if (!matchCustomerRecord(c, idx)) return;
+                    c.openingBalance = 0;
+                    c.openingBalanceType = 'Dr';
+                    c.currentBalance = 0;
+                    c.currentBalanceType = 'Dr';
+                    changed = true;
                 });
                 if (changed) localStorage.setItem('customers', JSON.stringify(customers));
             } catch (e) { }
@@ -1831,9 +1930,53 @@
         }
 
         function saveTransactions() {
+            // New statement rows with amounts: turn off "cleared view" so opening + bills run normally again.
+            try {
+                if (customerData.statementBillAmountCleared) {
+                    const sorted0 = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+                    let hasMoney = false;
+                    for (let i = 0; i < sorted0.length; i++) {
+                        const eff = effectiveAmounts(sorted0[i]);
+                        if ((eff.debit || 0) !== 0 || (eff.credit || 0) !== 0) {
+                            hasMoney = true;
+                            break;
+                        }
+                    }
+                    if (hasMoney) {
+                        customerData.statementBillAmountCleared = false;
+                        const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                        customers.forEach((c, idx) => {
+                            if (!matchCustomerRecord(c, idx)) return;
+                            c.statementBillAmountCleared = false;
+                            c.allBillStatusUiClear = false;
+                        });
+                        localStorage.setItem('customers', JSON.stringify(customers));
+                        try {
+                            const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
+                            balances.forEach(b => {
+                                if (!b || !matchCustomerBalanceOrBillRow(b)) return;
+                                if (String(b.status || '').toLowerCase() === 'cleared') b.status = 'Pending';
+                            });
+                            localStorage.setItem('customerBalances', JSON.stringify(balances));
+                            const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+                            bills.forEach(b => {
+                                if (!b || !matchCustomerBalanceOrBillRow(b)) return;
+                                if (String(b.status || '').toLowerCase() === 'cleared') b.status = 'Pending';
+                            });
+                            localStorage.setItem('bills', JSON.stringify(bills));
+                            try {
+                                window.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                                if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                                if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                            } catch (e3) { }
+                        } catch (e2) { }
+                    }
+                }
+            } catch (e) { }
+
             // If balance is settled (0), wipe added statement rows and force statement balance to zero.
             try {
-                const sortedAuto = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+                const sortedAuto = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
                 let autoBal = openingBalanceForRunningStatement(sortedAuto);
                 sortedAuto.forEach(tx => { autoBal += txDelta(tx); });
                 if (Math.abs(autoBal) < 0.000001 && sortedAuto.length > 0) {
@@ -1858,28 +2001,39 @@
 
             // ── Sync net balance back to customer record ──────────────────────────
             // Same running rule as render(): opening (+ bills aggregate when no synced bill rows) + row deltas
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             let balance = openingBalanceForRunningStatement(sorted);
             sorted.forEach(tx => { balance += txDelta(tx); });
             const netBalance = Math.abs(balance);
             const netType = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : 'Dr');
 
-            // Update in 'customers' list
+            // Update in 'customers' list (also persist statementBillAmountCleared + zeros when in cleared mode)
             try {
                 const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-                const norm = s => (s || '').trim().toLowerCase();
                 let updated = false;
-                customers.forEach(c => {
-                    const matchById = customerData.id && String(c.id) === String(customerData.id);
-                    const matchByName = !customerData.id && norm(c.name) === norm(customerData.name);
-                    if (matchById || matchByName) {
+                customers.forEach((c, idx) => {
+                    if (!matchCustomerRecord(c, idx)) return;
+                    if (customerData.statementBillAmountCleared) {
+                        applyClearedStateToCustomerRow(c);
+                    } else {
                         c.currentBalance = netBalance;
                         c.currentBalanceType = netType;
-                        updated = true;
                     }
+                    updated = true;
                 });
+                if (!updated && customerData.statementBillAmountCleared) {
+                    const nm = normKey(customerData.name);
+                    if (nm) {
+                        customers.forEach(c => {
+                            if (!c || !c.name || normKey(c.name) !== nm) return;
+                            applyClearedStateToCustomerRow(c);
+                            updated = true;
+                        });
+                    }
+                }
                 if (updated) {
                     localStorage.setItem('customers', JSON.stringify(customers));
+                    if (customerData.statementBillAmountCleared) syncStmtSessionFromCustomerData();
                     try {
                         const ev = new CustomEvent("customersUpdated");
                         window.dispatchEvent(ev);
@@ -1897,8 +2051,13 @@
                 jewellers.forEach(j => {
                     const matchByName = norm(j.name) === norm(customerData.name);
                     if (matchByName) {
-                        j.currentBalance = netBalance;
-                        j.currentBalanceType = netType;
+                        if (customerData.statementBillAmountCleared) {
+                            j.currentBalance = 0;
+                            j.currentBalanceType = 'Dr';
+                        } else {
+                            j.currentBalance = netBalance;
+                            j.currentBalanceType = netType;
+                        }
                         updated = true;
                     }
                 });
@@ -2269,6 +2428,7 @@
         }
 
         function openingBalanceForRunningStatement(sorted) {
+            if (customerData.statementBillAmountCleared) return 0;
             const opening = openingSignedForStatement();
             if (statementIncludesSyncedBillRows(sorted)) return opening;
             return opening + getCustomerBillsSumFromBalances();
@@ -2276,11 +2436,12 @@
 
         function render() {
             const tbody = document.getElementById('statementBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
-            const opSigned = openingSignedForStatement();
-            const billsSum = getCustomerBillsSumFromBalances();
+            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+            const opSigned = customerData.statementBillAmountCleared ? 0 : openingSignedForStatement();
+            const billsSum = customerData.statementBillAmountCleared ? 0 : getCustomerBillsSumFromBalances();
             const hasBillTx = statementIncludesSyncedBillRows(sorted);
             const showBillsSummaryRow = !hasBillTx && Math.abs(billsSum) > 0.000001;
             const showOpeningRow = (Math.abs(opSigned) > 0.000001)
@@ -2571,7 +2732,10 @@
                 tbody.appendChild(tr);
             });
 
-            // Footer displays
+            // Footer displays — force ₹0 when Clear Bill Amount is active (no math edge cases)
+            if (customerData.statementBillAmountCleared) {
+                balance = 0;
+            }
             const absbal = Math.abs(balance);
             const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
             const balEl = document.getElementById('dispCurrentBal');
@@ -2596,7 +2760,17 @@
             document.getElementById('dispName').textContent = customerData.name || '—';
             document.getElementById('dispStation').textContent = customerData.station || '—';
             document.getElementById('dispLfNo').textContent = customerData.lfNo || '—';
-            document.getElementById('dispOpBal').textContent = customerData.openingBalance || '0';
+            (function updateOpeningBalanceHeader() {
+                const el = document.getElementById('dispOpBal');
+                if (!el) return;
+                const raw = parseFloat(customerData.openingBalance || 0) || 0;
+                const absAmt = Math.abs(raw);
+                const t = String(customerData.openingBalanceType || 'Dr').trim().toLowerCase();
+                const isCr = t === 'cr';
+                const tag = isCr ? 'Cr' : 'Dr';
+                const tagClass = isCr ? 'cr-tag' : 'dr-tag';
+                el.innerHTML = fmt(absAmt) + ' <span class="' + tagClass + '">' + tag + '</span>';
+            })();
             document.getElementById('dispOpDate').textContent = fmtDateLabel(customerData.openingDate);
             document.getElementById('toolbarSubtitle').textContent = (customerData.name || '') + (customerData.station ? ' · ' + customerData.station : '');
 
@@ -2645,7 +2819,7 @@
             if (!Number.isFinite(rate) || rate <= 0) { showToast('⚠️ Enter valid monthly rate.'); return; }
             if (isNaN(uptoDate)) { showToast('⚠️ Enter valid Upto date.'); return; }
 
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             const openingDateParsed = parseDateOnly(customerData.openingDate || todayStr());
             const firstTxDateParsed = sorted.length > 0 ? parseDateOnly(sorted[0].date) : openingDateParsed;
             // Start from the earlier of opening date and first transaction date so imported/backdated tx are included.
@@ -2779,41 +2953,126 @@
             showToast('✅ Interest saved in Interest module');
         }
 
-        // ─── CLEAR BILL ──────────────────────────────────────────────────────────────
-        function clearSelected() {
-            // Full reset for calculated items: interest rows, calculated maps, totals, and result panel values.
-            rowInterestMap = {};
-            interestApplied = [];
-            pendingInterest = 0;
-            interestHasCalcResult = false;
-            interestLastCompMonth = 0;
-            lastInterestCalculatedDate = "";
-            // Also clear any previously posted Interest Debit rows from the main statement table.
-            transactions = (transactions || []).filter(tx => String(tx && tx.narration ? tx.narration : '').trim().toLowerCase() !== 'interest debit');
+        // ─── CLEAR BILL AMOUNT (customer-level settlement only; bill status Cleared; All Bill Balance column frozen, not recalculated) ───
+        function clearBillAmount() {
+            if (!confirm('Clear bill amount for this customer? Customer Balance and Current Balance become ₹0. Each bill will be marked status Cleared. Original bill amounts in All Bill are not changed.')) return;
 
-            const res = document.getElementById('interestResultInline');
-            if (res) {
-                res.style.display = 'none';
-                res.innerHTML = '';
+            try {
+                rowInterestMap = {};
+                interestApplied = [];
+                pendingInterest = 0;
+                interestHasCalcResult = false;
+                interestLastCompMonth = 0;
+                lastInterestCalculatedDate = '';
+                transactions = (transactions || []).filter(tx => String(tx && tx.narration ? tx.narration : '').trim().toLowerCase() !== 'interest debit');
+                transactions = [];
+                nextId = 1;
+                selectedIdx = null;
+                ctxTargetIdx = null;
+                deleteTargetIdx = null;
+                draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
+                interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
+
+                const res = document.getElementById('interestResultInline');
+                if (res) {
+                    res.style.display = 'none';
+                    res.innerHTML = '';
+                }
+                const applyBtn = document.getElementById('applyIntInline');
+                if (applyBtn) applyBtn.style.display = 'none';
+                const rateElClear = document.getElementById('int_rate_inline');
+                if (rateElClear) rateElClear.value = '';
+                const toEl = document.getElementById('int_to_inline');
+                if (toEl) toEl.value = '';
+                const compEl = document.getElementById('int_comp_inline');
+                if (compEl) compEl.value = '';
+
+                customerData.statementBillAmountCleared = true;
+                customerData.openingBalance = 0;
+                customerData.openingBalanceType = 'Dr';
+                customerData.currentBalance = 0;
+                customerData.currentBalanceType = 'Dr';
+
+                persistCustomerClearedMasterRecord();
+
+                try {
+                    const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
+                    let balChanged = false;
+                    const markBal = (b) => {
+                        b.status = 'Cleared';
+                        balChanged = true;
+                    };
+                    balances.forEach(b => {
+                        if (!b || !matchCustomerBalanceOrBillRow(b)) return;
+                        markBal(b);
+                    });
+                    if (!balChanged) {
+                        balances.forEach(b => {
+                            if (!b || !matchCustomerBalanceOrBillRowLoose(b)) return;
+                            markBal(b);
+                        });
+                    }
+                    if (balChanged) {
+                        localStorage.setItem('customerBalances', JSON.stringify(balances));
+                        try {
+                            window.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                            if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                            if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                        } catch (e) { }
+                    }
+                } catch (e) { }
+
+                try {
+                    const bills = JSON.parse(localStorage.getItem('bills') || '[]');
+                    let billsChanged = false;
+                    const markBill = (b) => {
+                        b.status = 'Cleared';
+                        billsChanged = true;
+                    };
+                    bills.forEach(b => {
+                        if (!b || !matchCustomerBalanceOrBillRow(b)) return;
+                        markBill(b);
+                    });
+                    if (!billsChanged) {
+                        bills.forEach(b => {
+                            if (!b || !matchCustomerBalanceOrBillRowLoose(b)) return;
+                            markBill(b);
+                        });
+                    }
+                    if (billsChanged) localStorage.setItem('bills', JSON.stringify(bills));
+                } catch (e) { }
+
+                wipeStatementStorageForCustomer();
+                syncStmtSessionFromCustomerData();
+
+                saveInterestModule();
+                saveTransactions();
+                render();
+                try {
+                    renderInterestTable();
+                } catch (e2) { }
+                const balEl = document.getElementById('dispCurrentBal');
+                if (balEl) {
+                    balEl.textContent = fmt(0) + ' Dr';
+                    balEl.className = 'bal-value bal-dr';
+                }
+                showToast('✅ Cleared — statement, interest, and balance reset to ₹0');
+            } catch (err) {
+                console.error('clearBillAmount', err);
+                const msg = err && err.message ? String(err.message) : 'Unknown error';
+                showToast('⚠️ Clear failed: ' + msg);
             }
-            const applyBtn = document.getElementById('applyIntInline');
-            if (applyBtn) applyBtn.style.display = 'none';
+        }
 
-            const toEl = document.getElementById('int_to_inline');
-            if (toEl) toEl.value = '';
-            const compEl = document.getElementById('int_comp_inline');
-            if (compEl) compEl.value = '';
-
-            saveTransactions();
-            saveInterestModule();
-            render();
-            showToast('🧹 Cleared all calculated interest values');
+        /** @deprecated use clearBillAmount */
+        function clearSelected() {
+            clearBillAmount();
         }
 
         // ─── DELETE ──────────────────────────────────────────────────────────────────
         function confirmDelete() {
             if (deleteTargetIdx === null) return;
-            const sorted = [...transactions].sort((a, b) => a.date.localeCompare(b.date));
+            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             const tx = sorted[deleteTargetIdx];
             transactions = transactions.filter(t => t !== tx);
             saveTransactions();
@@ -2943,15 +3202,43 @@
                     const cust = customers.find(c => String(c.id) === String(id)) ||
                         (id.startsWith('idx-') ? customers[parseInt(id.replace('idx-', ''), 10)] : null);
                     if (cust) {
-                        // Only fill fields still empty
+                        if (cust.cid) customerData.cid = String(cust.cid || '');
+                        if (cust.statementBillAmountCleared) {
+                            customerData.statementBillAmountCleared = true;
+                            customerData.openingBalance = 0;
+                            customerData.openingBalanceType = 'Dr';
+                            customerData.currentBalance = 0;
+                            customerData.currentBalanceType = 'Dr';
+                        }
                         if (!customerData.name) customerData.name = (cust.name || '').trim();
                         if (!customerData.station) customerData.station = (cust.station || '').trim();
                         if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
-                        if (!customerData.openingBalance) customerData.openingBalance = parseFloat(cust.openingBalance) || 0;
-                        if (cust.openingBalanceType) customerData.openingBalanceType = cust.openingBalanceType;
-                        if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
-                        if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
+                        if (!cust.statementBillAmountCleared) {
+                            if (customerData.openingBalance == null || customerData.openingBalance === '') customerData.openingBalance = parseFloat(cust.openingBalance) || 0;
+                            if (cust.openingBalanceType) customerData.openingBalanceType = cust.openingBalanceType;
+                            if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
+                            if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
+                        }
                         if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
+                        if (!customerData.id) customerData.id = cust.id;
+                    }
+                } catch (e) { }
+            }
+
+            if (!id && customerData.name) {
+                try {
+                    const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                    const norm = s => (s || '').trim().toLowerCase();
+                    const cust = customers.find(c => norm(c.name) === norm(customerData.name));
+                    if (cust) {
+                        if (cust.cid) customerData.cid = String(cust.cid || '');
+                        if (cust.statementBillAmountCleared) {
+                            customerData.statementBillAmountCleared = true;
+                            customerData.openingBalance = 0;
+                            customerData.openingBalanceType = 'Dr';
+                            customerData.currentBalance = 0;
+                            customerData.currentBalanceType = 'Dr';
+                        }
                         if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
@@ -2965,9 +3252,18 @@
                     transactions = JSON.parse(saved);
                     ensureTransactionIds();
                     transactions.forEach(t => normalizeEntryType(t));
+                    if (customerData.statementBillAmountCleared) {
+                        transactions = [];
+                        localStorage.setItem(stmtKey, JSON.stringify([]));
+                    }
                     saveTransactions();
                 }
             } catch (e) { }
+
+            if (customerData.statementBillAmountCleared) {
+                transactions = [];
+                try { localStorage.setItem(stmtKey, JSON.stringify([])); } catch (e) { }
+            }
 
             try {
                 const rawMod = localStorage.getItem(stmtKey + '_interestModule');
@@ -3042,7 +3338,8 @@
         window.closeModal = closeModal;
         window.confirmDelete = confirmDelete;
         window.ctxDelete = ctxDelete;
-        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => a.date.localeCompare(b.date)); const tx = s[ctxTargetIdx]; if (tx) { tx.cleared = !tx.cleared; saveTransactions(); } render(); };
+        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || ''))); const tx = s[ctxTargetIdx]; if (tx) { tx.cleared = !tx.cleared; saveTransactions(); } render(); };
+        window.clearBillAmount = clearBillAmount;
         window.clearSelected = clearSelected;
         window.showCtxMenu = showCtxMenu;
         window.closeCtxMenu = closeCtxMenu;

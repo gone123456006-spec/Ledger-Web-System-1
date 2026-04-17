@@ -555,14 +555,18 @@
         if ((c.openingBalanceType || "").toLowerCase() === "cr") openingBal = -Math.abs(openingBal);
         if ((c.openingBalanceType || "").toLowerCase() === "dr") openingBal = Math.abs(openingBal);
         let dynamicSum = 0;
-        let signedCurrent = (c.currentBalance != null && c.currentBalance !== "") ? Number(c.currentBalance) : 0;
-        const curType = (c.currentBalanceType || "Dr").toLowerCase();
-        if (curType === "cr") signedCurrent = -Math.abs(signedCurrent);
-        else signedCurrent = Math.abs(signedCurrent);
-        const hasCurrentBalance = Number.isFinite(signedCurrent) && String(c.currentBalance ?? "").trim() !== "";
+        let displayAmount = 0;
+        let displayType = "Dr";
+        const currentRaw = c.currentBalance;
+        const currentNum = Number(currentRaw);
+        const curType = String(c.currentBalanceType || "Dr").toLowerCase();
+        const hasCurrentBalance = currentRaw != null && String(currentRaw).trim() !== "" && Number.isFinite(currentNum);
 
         if (hasCurrentBalance) {
-          dynamicSum = signedCurrent;
+          // Exact mirror of Customer Master current balance/type in this row.
+          displayAmount = Math.abs(currentNum);
+          displayType = curType === "cr" ? "Cr" : "Dr";
+          dynamicSum = displayType === "Cr" ? -displayAmount : displayAmount;
         } else if (customerEntries.length > 0) {
           // Fallback only when Current Balance is not available.
           customerEntries.forEach(balance => {
@@ -584,6 +588,11 @@
           });
         }
 
+        if (!hasCurrentBalance) {
+          displayAmount = Math.abs(dynamicSum);
+          displayType = dynamicSum >= 0 ? "Dr" : "Cr";
+        }
+
         const originalOpBal = openingBal;
 
         return {
@@ -594,15 +603,15 @@
           station: c.station || "—",
           phone: c.phone || "—",
           mobile: c.mobile || "—",
-          amount: Math.abs(dynamicSum),
-          balanceType: dynamicSum >= 0 ? 'Dr' : 'Cr',
+          amount: displayAmount,
+          balanceType: displayType,
           originalOpBal,
           amountMinusRateDiff: null,
           mark: c.mark || "—",
           id: c.id != null ? c.id : null,
           originalOpType: c.openingBalanceType || "Dr",
-          currentBal: Math.abs(dynamicSum),
-          currentBalType: dynamicSum >= 0 ? 'Dr' : 'Cr'
+          currentBal: displayAmount,
+          currentBalType: displayType
         };
       });
 

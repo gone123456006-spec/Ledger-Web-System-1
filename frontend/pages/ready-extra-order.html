@@ -2332,7 +2332,7 @@
       <button type="button" onclick="saveOrder()"
         title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only.">
         Save</button>
-      <button onclick="showInvoice()"> A4 Invoice</button>
+      <button type="button" class="rex-post-transfer-allow" onclick="showInvoice()"> A4 Invoice</button>
       <button type="button" class="rex-post-transfer-allow" onclick="closeDashboard()"
         style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
     </div>
@@ -3045,7 +3045,17 @@
         return getSearchRoot().querySelector("#ready-order-item-table");
       }
 
-      /** After successful Bill → Transfers save: lock all inputs/panels/buttons except .rex-post-transfer-allow (Close). */
+      /** True after Bill → Transfer save (read-only until Close / new load). */
+      function isPostTransferLocked() {
+        try {
+          var app = orderApp || (typeof getSearchRoot === "function" ? getSearchRoot().querySelector("#orderApp") : null);
+          return !!(app && app.getAttribute("data-post-transfer-locked") === "1");
+        } catch (e) {
+          return false;
+        }
+      }
+
+      /** After successful Bill → Transfers save: lock UI; popups are outside #orderApp so we disable fields + guard open*() + close modals. */
       function setPostTransferLocked(locked) {
         var root = typeof getSearchRoot === "function" ? getSearchRoot() : null;
         var app = orderApp || (root && root.querySelector("#orderApp"));
@@ -3055,6 +3065,95 @@
         try {
           app.setAttribute("data-post-transfer-locked", on ? "1" : "0");
         } catch (eA) { }
+        try {
+          if (document.body) document.body.classList.toggle("rex-post-transfer-locked-page", on);
+        } catch (eB) { }
+
+        function setDatesAndNarration() {
+          try {
+            if (orderDate) {
+              orderDate.disabled = on;
+              orderDate.style.opacity = on ? "0.92" : "";
+            }
+            var bd = root && root.querySelector("#billDate");
+            if (bd) {
+              bd.disabled = on;
+              bd.style.opacity = on ? "0.92" : "";
+            }
+            var dd = root && root.querySelector("#dueDate");
+            if (dd) {
+              dd.disabled = on;
+              dd.style.opacity = on ? "0.92" : "";
+            }
+            var gst = root && root.querySelector("#gstRate");
+            if (gst) {
+              gst.readOnly = on;
+              gst.disabled = on;
+            }
+            var nar = root && root.querySelector("#rexOrderNarration");
+            if (nar) nar.readOnly = on;
+            if (custName) custName.disabled = on;
+          } catch (eD) { }
+        }
+
+        function setTableAndPanels() {
+          try {
+            var tbl = root && root.querySelector("#ready-order-item-table");
+            if (tbl) {
+              tbl.querySelectorAll("input, select, textarea, button").forEach(function (el) {
+                try {
+                  el.disabled = on;
+                } catch (e1) { }
+              });
+              tbl.querySelectorAll("[contenteditable]").forEach(function (el) {
+                try {
+                  el.contentEditable = on ? "false" : "true";
+                } catch (e2) { }
+              });
+            }
+            var ip = root && root.querySelector(".info-panel");
+            if (ip) {
+              ip.querySelectorAll("button, input, select, textarea").forEach(function (el) {
+                try {
+                  el.disabled = on;
+                } catch (e3) { }
+              });
+              ip.querySelectorAll("[contenteditable]").forEach(function (el) {
+                try {
+                  el.contentEditable = on ? "false" : "true";
+                } catch (e4) { }
+              });
+            }
+            var act = root && root.querySelector(".actions");
+            if (act) {
+              act.querySelectorAll("button:not(.rex-post-transfer-allow)").forEach(function (b) {
+                try {
+                  b.disabled = on;
+                } catch (e5) { }
+              });
+            }
+          } catch (eP) { }
+        }
+
+        if (on) {
+          setDatesAndNarration();
+          setTableAndPanels();
+          try {
+            if (typeof closePaymentPopup === "function") closePaymentPopup();
+            if (typeof closeAdvancedPaymentsPopup === "function") closeAdvancedPaymentsPopup();
+            if (typeof closePaidPaymentsPopup === "function") closePaidPaymentsPopup();
+            if (typeof closePurchaseSheetPopup === "function") closePurchaseSheetPopup();
+            if (typeof closeRatebookPopup === "function") closeRatebookPopup();
+            if (typeof closeRatebookDetailsPopup === "function") closeRatebookDetailsPopup();
+            if (typeof closeBillTransferPopup === "function") closeBillTransferPopup();
+            if (typeof closePopup === "function") closePopup();
+            if (typeof closeReadyMetaPopup === "function") closeReadyMetaPopup();
+          } catch (eClose) { }
+        } else {
+          setDatesAndNarration();
+          setTableAndPanels();
+        }
+
         try {
           if (typeof updateBillButtonState === "function") updateBillButtonState();
         } catch (eBillLock) { }
@@ -3222,6 +3321,10 @@
       }
 
       function onBillButtonClick() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!readyExtraAllRowsReadyForBillView()) {
           alert("Enter R. Wt (Received Wt.) greater than 0 on each Order / Sale / Other line before Bill. Purchase rows are excluded.");
           return;
@@ -3830,6 +3933,10 @@
         if (!itemBody) {
           if (!initElements()) return;
         }
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -3896,6 +4003,10 @@
       }
 
       function removeReadyExtraRow(btn) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!btn || typeof btn.closest !== "function") return;
         var tr = btn.closest("tr");
         if (tr) tr.remove();
@@ -4231,6 +4342,10 @@
         calculateOrderDetailsDeliveryDate();
       }
       function saveOrderPopup() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!popupDelivery) {
           if (!initElements()) return;
         }
@@ -4262,6 +4377,10 @@
       }
 
       function openReadyMetaPopup(rowOrCell) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!readyMetaPopup || !readyMetaMetalInput || !readyMetaNegInput || !readyMetaWtInput) {
           if (!initElements()) return;
         }
@@ -4878,6 +4997,10 @@
       }
 
       function openAdvancedPaymentsPopup() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!billNo || !String(billNo.value || "").trim()) {
           alert("Order number is required");
           return;
@@ -4978,6 +5101,10 @@
       }
 
       function openPaidPaymentsPopup() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!billNo || !String(billNo.value || "").trim()) {
           alert("Order number is required");
           return;
@@ -5049,6 +5176,10 @@
 
       /** Inline edit form in Advance / Paid payment detail tables (same storage as payment panel). */
       function openPaymentDetailTableEdit(btnEl) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         var tr = btnEl && btnEl.closest("tr");
         if (!tr || tr.classList.contains("advanced-payments-row--editing")) return;
         var advPopup = tr.closest("#ready-order-advanced-payments-popup");
@@ -5092,6 +5223,10 @@
 
       /** Remove one payment from localStorage (same key matching as savePaymentDetailTableEdit). */
       function deletePaymentDetailTableRow(btnEl) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         var tr = btnEl && btnEl.closest("tr");
         if (!tr || tr.classList.contains("advanced-payments-row--editing")) return;
         var advPopup = tr.closest("#ready-order-advanced-payments-popup");
@@ -5147,6 +5282,10 @@
       }
 
       function savePaymentDetailTableEdit(btnEl) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         var wrap = btnEl && btnEl.closest(".advanced-payments-popup-edit-form");
         var tr = btnEl && btnEl.closest("tr");
         if (!wrap || !tr) return;
@@ -5351,7 +5490,6 @@
 
         // Manually show success since saveOrder was silent
         alert("Bill Transferred and Saved Successfully!");
-        if (typeof closeDashboard === 'function') closeDashboard();
       }
 
       /* TRANSFER TO CUSTOMER BALANCE – saves current order data to Customer Balance (customerBalances + customer openingBalance) */
@@ -5441,7 +5579,8 @@
             relationName: targetCust ? (targetCust.relationName || "—") : "—",
             lfno: targetCust ? (targetCust.lfno || "—") : "—",
             cid: targetCust ? (targetCust.cid || "—") : "—",
-            mark: targetCust ? (targetCust.mark || "—") : "—"
+            mark: targetCust ? (targetCust.mark || "—") : "—",
+            customerId: targetCust && targetCust.id != null ? String(targetCust.id) : ""
           };
           if (amountMinusRateDiffVal != null) balanceEntry.amountMinusRateDiff = parseFloat(amountMinusRateDiffVal).toFixed(2);
           delete balanceEntry.rate;
@@ -5527,6 +5666,11 @@
 
         if (!custName.value) { alert("Select customer"); return; }
         if (!billNo.value) { alert("Order number is required"); return; }
+
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
 
         const billTotal = calculateBillTotal();
         const rows = [...itemBody.querySelectorAll("tr")].map(tr => {
@@ -5918,7 +6062,8 @@
           relationName: targetCust?.relationName || "—",
           lfno: targetCust?.lfno || "—",
           cid: targetCust?.cid || "—",
-          hideBillMidColumns: billMidColumnsHidden
+          hideBillMidColumns: billMidColumnsHidden,
+          customerId: targetCust && targetCust.id != null ? String(targetCust.id) : ""
         };
         if (finalBalanceAmount != null) balanceEntry.amountMinusRateDiff = parseFloat(finalBalanceAmount).toFixed(2);
         delete balanceEntry.rate;
@@ -7053,6 +7198,10 @@
 
       /* PAYMENT POPUP */
       function openPayment() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         if (!custName || !billNo) {
           if (!initElements()) {
             alert("Form not initialized. Please refresh the page.");
@@ -7122,6 +7271,10 @@
       }
 
       function savePaymentFromPopup() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         var root = getSearchRoot();
         var amountInput = root.querySelector("#paymentAmount");
         var modeSelect = root.querySelector("#paymentMode");
@@ -7177,6 +7330,10 @@
       }
 
       function openPaymentCardEdit(btnEl) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         var card = btnEl && btnEl.closest(".panel-item");
         if (!card) return;
         if (card.getAttribute("data-payment-advanced") === "1") return;
@@ -7389,6 +7546,10 @@
       }
 
       function savePurchaseSheet() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         var pGuard = getPopupEl("ready-extra-order-purchase-sheet-popup");
         if (pGuard && pGuard.classList.contains("purchase-sheet-popup--readonly")) {
           showError("Advance purchase is read-only in Bill / invoice view. Exit Bill to save changes.");
@@ -7703,6 +7864,10 @@
       }
 
       function openPurchaseSheet(source, readyExtraUi, newOrderUi, opts) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         opts = opts || {};
         /* Bill mode: any full Advance (New Order) purchase sheet must be read-only — not only panel clicks. */
         var noUiStr = String(newOrderUi == null ? "" : newOrderUi).trim();
@@ -7831,6 +7996,10 @@
       }
 
       function openRateBook(rowElement = null) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         activeRateRow = rowElement || null;
         if (!custName || !custName.value) {
           alert("Select customer first");
@@ -7887,6 +8056,10 @@
       }
 
       function saveRatebookEntry() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         try {
           var root = getSearchRoot();
           var stampEl = getPopupEl("rbStamp") || root.querySelector("#rbStamp");
@@ -8721,6 +8894,10 @@
       }
 
       function showRateDetails(rateId) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
         const clickedRate = rates.find(r => String(r.id) === String(rateId));
 
@@ -8813,6 +8990,10 @@
       }
 
       function updateRateBookingRow(input, rateId, field) {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         const val = parseFloat(input.value) || 0;
 
         try {
@@ -8867,6 +9048,10 @@
       }
 
       function saveRatebookDetailsFromPopup() {
+        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
+          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+          return;
+        }
         const table = getPopupEl("ready-order-ratebook-details-table");
         if (!table) return;
 
@@ -9244,6 +9429,7 @@
         window.updateTransferCustDetails = updateTransferCustDetails;
         window.toggleGlobalEdit = toggleGlobalEdit;
         window.setPostTransferLocked = setPostTransferLocked;
+        window.isPostTransferLocked = isPostTransferLocked;
 
         window.closeDashboard = closeDashboard;
       }
@@ -9251,7 +9437,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'openReadyMetaPopup', 'saveReadyMetaPopup', 'closeReadyMetaPopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'isPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'openReadyMetaPopup', 'saveReadyMetaPopup', 'closeReadyMetaPopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();
