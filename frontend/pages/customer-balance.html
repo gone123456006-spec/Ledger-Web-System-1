@@ -127,10 +127,11 @@
 
     table {
       width: 100%;
-      min-width: 920px;
+      min-width: 1080px;
       border-collapse: collapse;
       table-layout: fixed;
     }
+
 
     select {
       height: 40px;
@@ -392,7 +393,7 @@
             <th style="width:12%;">Station</th>
             <th style="width:11%;">Phone no.</th>
             <th style="width:11%;">Mobile</th>
-            <th class="right" style="width:17%;">Balance</th>
+            <th class="right" style="width:27%;">Balance</th>
           </tr>
         </thead>
         <tbody id="customerBalanceTableBody"></tbody>
@@ -519,6 +520,31 @@
       return num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    /** Master opening from Add Customer (unsigned amount + Dr/Cr) for Customer Balance grid */
+    function formatOpeningBalanceCell(rawAmt, typeStr) {
+      if (rawAmt == null || rawAmt === "") return "—";
+      const n = typeof rawAmt === "number" ? rawAmt : Number(rawAmt);
+      if (Number.isNaN(n)) return "—";
+      const t = String(typeStr || "Dr").trim().toLowerCase() === "cr" ? "Cr" : "Dr";
+      const tagColor = t === "Cr" ? "#1a73e8" : "#d93025";
+      if (n === 0) return "0";
+      const abs = Math.abs(n);
+      const txt = abs.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return txt + ' <span style="font-size:11px;font-weight:700;color:' + tagColor + '">' + t + "</span>";
+    }
+
+    function openingMagnitudeForFilter(rawAmt) {
+      if (rawAmt == null || rawAmt === "") return 0;
+      const n = Number(rawAmt);
+      return Number.isFinite(n) ? Math.abs(n) : 0;
+    }
+
+    function hasStoredOpBal(v) {
+      if (v == null) return false;
+      if (typeof v === "string" && v.trim() === "") return false;
+      return true;
+    }
+
     function loadTable() {
       tbody = null;
       footer = null;
@@ -551,10 +577,7 @@
 
         // Customer Balance row should reflect Customer Master's Current Balance directly.
         // If Current Balance is missing, fallback to bill-linked computed balance.
-        let openingBal = (c.openingBalance != null && c.openingBalance !== "") ? Number(c.openingBalance) : 0;
-        if ((c.openingBalanceType || "").toLowerCase() === "cr") openingBal = -Math.abs(openingBal);
-        if ((c.openingBalanceType || "").toLowerCase() === "dr") openingBal = Math.abs(openingBal);
-        let dynamicSum = 0;
+        // Opening for statement link: master copy (Add Customer) — never the running / current total.
         let displayAmount = 0;
         let displayType = "Dr";
         const currentRaw = c.currentBalance;
@@ -562,38 +585,30 @@
         const curType = String(c.currentBalanceType || "Dr").toLowerCase();
         const hasCurrentBalance = currentRaw != null && String(currentRaw).trim() !== "" && Number.isFinite(currentNum);
 
+        const rawOpening = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "")
+          ? c.masterOpeningBalance
+          : c.openingBalance;
+        const rawOpeningType = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "")
+          ? (c.masterOpeningBalanceType || c.openingBalanceType || "Dr")
+          : (c.openingBalanceType || "Dr");
+        const hasOpening = rawOpening != null && String(rawOpening).trim() !== "" && Number.isFinite(Number(rawOpening));
+
         if (hasCurrentBalance) {
-          // Exact mirror of Customer Master current balance/type in this row.
           displayAmount = Math.abs(currentNum);
           displayType = curType === "cr" ? "Cr" : "Dr";
-          dynamicSum = displayType === "Cr" ? -displayAmount : displayAmount;
-        } else if (customerEntries.length > 0) {
-          // Fallback only when Current Balance is not available.
-          customerEntries.forEach(balance => {
-            if (balance.computedBalAmt != null) {
-              dynamicSum += Number(balance.computedBalAmt);
-            } else {
-              const billNoVal = balance.orderNo || balance.billNo || "";
-              const netAmt = parseFloat(balance.amount || balance.netAmount || 0);
-              const advanceAmt = getPaidAmount(billNoVal, 'Advanced');
-              const paidAmt = getPaidAmount(billNoVal, 'Paid');
-              let rateDiffResult = 0;
-              if (balance.amountMinusRateDiff != null && balance.amount != null) {
-                rateDiffResult = Math.abs(parseFloat(balance.amount) - parseFloat(balance.amountMinusRateDiff));
-              }
-              const computed = netAmt - advanceAmt - paidAmt - rateDiffResult;
-              balance.computedBalAmt = computed;
-              dynamicSum += computed;
-            }
-          });
+        } else if (hasOpening) {
+          displayAmount = Math.abs(Number(rawOpening));
+          displayType = String(rawOpeningType).trim().toLowerCase() === "cr" ? "Cr" : "Dr";
+        } else {
+          displayAmount = 0;
+          displayType = "Dr";
         }
 
-        if (!hasCurrentBalance) {
-          displayAmount = Math.abs(dynamicSum);
-          displayType = dynamicSum >= 0 ? "Dr" : "Cr";
+        let originalOpBal = 0;
+        if (rawOpening != null && String(rawOpening).trim() !== "" && Number.isFinite(Number(rawOpening))) {
+          const opAbs = Math.abs(Number(rawOpening));
+          originalOpBal = String(rawOpeningType).trim().toLowerCase() === "cr" ? -opAbs : opAbs;
         }
-
-        const originalOpBal = openingBal;
 
         return {
           name,
@@ -609,7 +624,7 @@
           amountMinusRateDiff: null,
           mark: c.mark || "—",
           id: c.id != null ? c.id : null,
-          originalOpType: c.openingBalanceType || "Dr",
+          originalOpType: rawOpeningType || "Dr",
           currentBal: displayAmount,
           currentBalType: displayType
         };
@@ -632,7 +647,7 @@
         const relName = (r.relation + " " + (r.relationName || "")).trim() || "—";
         const tr = document.createElement("tr");
         tr.dataset.customerId = r.id != null ? r.id : i;
-        tr.dataset.amount = r.amount;   // store raw amount for filter
+        tr.dataset.amount = r.amount;   // current / due balance for filter
         tr.dataset.marked = r.mark && r.mark !== '—' ? '1' : '0';
         tr.dataset.station = (r.station || "—").trim().toLowerCase();
         const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType === 'Dr' ? '#d93025' : '#1a73e8'}">${r.balanceType}</span>` : '';

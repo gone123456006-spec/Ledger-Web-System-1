@@ -649,8 +649,6 @@
 
 <body>
   <div class="page">
-    <h2 id="pageTitle">Add Customer</h2>
-
     <form id="customerForm" class="erp-form">
       <div class="form-left">
         <h4>Personal Details</h4>
@@ -1115,8 +1113,6 @@
       const urlParams = new URL(window.location.href).searchParams;
       if (urlParams.get('popup') === '1') {
         document.body.classList.add('popup-mode');
-        const title = document.getElementById('pageTitle');
-        if (title) title.style.display = 'none';
 
         const page = document.querySelector('.page');
         if (page) {
@@ -1266,6 +1262,8 @@
         openingDate: fields.openingDate.value,
         openingBalance: num(fields.openingBalance.value),
         openingBalanceType: fields.openingBalanceType.value,
+        masterOpeningBalance: num(fields.openingBalance.value),
+        masterOpeningBalanceType: fields.openingBalanceType.value,
         maxLimit: num(fields.maxLimit.value),
         aadhar: fields.aadhar.value.trim(),
         pan: fields.pan.value.trim(),
@@ -1278,7 +1276,8 @@
       if (isEdit) {
         const index = customers.findIndex(c => c.id === id);
         if (index === -1) { alert("Customer not found"); return; }
-        customers[index] = data;
+        const prev = customers[index] || {};
+        customers[index] = { ...prev, ...data };
         localStorage.removeItem(EDIT_KEY);
       } else customers.push(data);
       localStorage.setItem(STORE_KEY, JSON.stringify(customers));
@@ -1383,7 +1382,6 @@
       }
       if (actionButtons) actionButtons.style.display = "flex";
       resetForm();
-      const title = $("pageTitle"); if (title) title.innerText = "Add Customer";
       if (fields && fields.name) setTimeout(() => fields.name.focus(), 100);
     }
 
@@ -1399,8 +1397,6 @@
       if (listTable) listTable.setAttribute("data-list", listType || "");
 
       const fmtDate = (d) => { if (!d) return "—"; const x = new Date(d); return isNaN(x.getTime()) ? d : x.toLocaleDateString(); };
-      const fmtNum = (n) => (n != null && n !== "") ? Number(n) : "—";
-      const fmtBal = (n) => (n != null && n !== "") ? (typeof n === "number" ? n : Number(n)) : "—";
 
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
       const norm = (s) => (s || "").trim().toLowerCase();
@@ -1447,8 +1443,6 @@
           .filter(c => (c.name || "").toLowerCase().includes(search) || (c.mobile || "").includes(search))
           .forEach((c, idx) => {
             const nameEsc = (c.name || "").replace(/'/g, "&#39;");
-            // Keep old balance logic intact; balance is no longer a visible column in Customer list.
-            const dispBal = getCalculatedBalance(c.name, c.openingBalance, c.openingBalanceType, c.currentBalance, c.currentBalanceType);
             tbody.innerHTML += `<tr ondblclick="selectCustomerForOrder('${nameEsc}')">
     <td>${idx + 1}</td>
     <td>${c.cid || ""}</td>
@@ -1548,9 +1542,6 @@
       if (listSection) listSection.style.display = "none";
       if (actionButtons) actionButtons.style.display = "flex";
 
-      const title = $("pageTitle");
-      if (title) title.innerText = "Edit " + entryType;
-
       if (entryType === "Agent") {
         if (fields.cid) { fields.cid.value = record.cid || record.agentId || record.id; fields.cid.disabled = true; }
         if (fields.name) fields.name.value = record.name || "";
@@ -1562,6 +1553,10 @@
         ["cid", "name", "relation", "relationName", "lfno", "openingDate", "openingBalance", "openingBalanceType", "maxLimit", "aadhar", "pan", "address", "phone", "mobile", "email"].forEach(k => {
           if (fields[k] && record[k] !== undefined) fields[k].value = record[k];
         });
+        if (entryType === "Customer" && fields.openingBalance && record.masterOpeningBalance != null && record.masterOpeningBalance !== "") {
+          fields.openingBalance.value = record.masterOpeningBalance;
+          if (fields.openingBalanceType && record.masterOpeningBalanceType) fields.openingBalanceType.value = record.masterOpeningBalanceType;
+        }
         if (fields.type) fields.type.value = entryType;
         if (fields.cid) { fields.cid.value = record.cid; fields.cid.disabled = true; }
       }

@@ -1163,7 +1163,8 @@
             name: "",
             station: "",
             cid: "",
-            openingBalance: 0,
+            /** null = not loaded yet (so we can merge from customers[]); number after load */
+            openingBalance: null,
             openingBalanceType: "Dr",
             currentBalance: 0,
             currentBalanceType: "Dr",
@@ -1386,10 +1387,10 @@
             const opSigned = openingSignedForStatement();
 
             sorted.forEach((tx, i) => {
+                const prevB = balance;
                 balance += txDelta(tx);
                 const absbal = Math.abs(balance);
-                const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-                const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
+                const { tag, cls: tagClass } = drCrTagForRunning(balance, prevB);
 
                 const tr = document.createElement('tr');
                 if (tx.narration === 'Interest') tr.classList.add('interest-row');
@@ -1503,9 +1504,8 @@
                 tdBal.className = 'right';
                 if (ap.runningBalance != null && ap.runningBalance !== '') {
                     const rb = Number(ap.runningBalance) || 0;
-                    const rbTag = rb >= 0 ? 'Dr' : 'Cr';
-                    const rbClass = rb >= 0 ? 'dr-tag' : 'cr-tag';
-                    tdBal.innerHTML = `${fmt(Math.abs(rb))} <span class="${rbClass}">${rbTag}</span>`;
+                    const rbInfo = drCrTagForRunning(rb, rb);
+                    tdBal.innerHTML = `${fmt(Math.abs(rb))} <span class="${rbInfo.cls}">${rbInfo.tag}</span>`;
                 } else {
                     tdBal.innerHTML = '—';
                 }
@@ -1789,6 +1789,17 @@
             return (a.debit || 0) - (a.credit || 0);
         }
 
+        /**
+         * Label for signed running balance. When balance is ~0, use the sign *before* the row
+         * so a payoff from a Cr balance still shows "Cr" (instead of a blank tag).
+         */
+        function drCrTagForRunning(signedBal, signedBeforeRow) {
+            if (signedBal > 0.000001) return { tag: 'Dr', cls: 'dr-tag' };
+            if (signedBal < -0.000001) return { tag: 'Cr', cls: 'cr-tag' };
+            if (signedBeforeRow < -0.000001) return { tag: 'Cr', cls: 'cr-tag' };
+            return { tag: 'Dr', cls: 'dr-tag' };
+        }
+
         function normKey(s) {
             return String(s || '').trim().toLowerCase();
         }
@@ -1846,6 +1857,8 @@
             c.allBillStatusUiClear = true;
             c.openingBalance = 0;
             c.openingBalanceType = 'Dr';
+            c.masterOpeningBalance = 0;
+            c.masterOpeningBalanceType = 'Dr';
             c.currentBalance = 0;
             c.currentBalanceType = 'Dr';
         }
@@ -1907,28 +1920,6 @@
             });
         }
 
-        function settleCustomerBalanceToZero() {
-            // Do not mutate customerBalances / per-bill amounts here — All Bill ₹ must stay unchanged.
-
-            try {
-                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-                let changed = false;
-                customers.forEach((c, idx) => {
-                    if (!matchCustomerRecord(c, idx)) return;
-                    c.openingBalance = 0;
-                    c.openingBalanceType = 'Dr';
-                    c.currentBalance = 0;
-                    c.currentBalanceType = 'Dr';
-                    changed = true;
-                });
-                if (changed) localStorage.setItem('customers', JSON.stringify(customers));
-            } catch (e) { }
-
-            // Keep current screen values in sync immediately.
-            customerData.openingBalance = 0;
-            customerData.openingBalanceType = 'Dr';
-        }
-
         function saveTransactions() {
             // New statement rows with amounts: turn off "cleared view" so opening + bills run normally again.
             try {
@@ -1974,38 +1965,30 @@
                 }
             } catch (e) { }
 
-            // If balance is settled (0), wipe added statement rows and force statement balance to zero.
-            try {
-                const sortedAuto = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
-                let autoBal = openingBalanceForRunningStatement(sortedAuto);
-                sortedAuto.forEach(tx => { autoBal += txDelta(tx); });
-                if (Math.abs(autoBal) < 0.000001 && sortedAuto.length > 0) {
-                    transactions = [];
-                    selectedIdx = null;
-                    ctxTargetIdx = null;
-                    deleteTargetIdx = null;
-                    draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
-                    interestApplied = [];
-                    interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
-                    rowInterestMap = {};
-                    pendingInterest = 0;
-                    interestHasCalcResult = false;
-                    settleCustomerBalanceToZero();
-                }
-            } catch (e) { }
-
             try {
                 const key = 'stmt_' + (customerData.lfNo || customerData.name);
                 localStorage.setItem(key, JSON.stringify(transactions));
             } catch (e) { }
 
-            // ── Sync net balance back to customer record ──────────────────────────
-            // Same running rule as render(): opening (+ bills aggregate when no synced bill rows) + row deltas
-            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
-            let balance = openingBalanceForRunningStatement(sorted);
-            sorted.forEach(tx => { balance += txDelta(tx); });
-            const netBalance = Math.abs(balance);
-            const netType = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : 'Dr');
+            // Statement closing = same math as on-screen running balance (opening base + row deltas).
+            let stmtClosing = 0;
+            try {
+                const sortedS = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+                stmtClosing = openingBalanceForRunningStatement(sortedS);
+                sortedS.forEach(tx => { stmtClosing += txDelta(tx); });
+                if (customerData.statementBillAmountCleared) stmtClosing = 0;
+            } catch (e) { stmtClosing = 0; }
+            const netBalance = Math.abs(Number(stmtClosing) || 0);
+            const netType = stmtClosing < 0 ? 'Cr' : 'Dr';
+            customerData.currentBalance = netBalance;
+            customerData.currentBalanceType = netType;
+
+            /** Fully paid on statement — align customer opening (and master) to ₹0 with current balance. */
+            const closingZero = Math.abs(Number(stmtClosing) || 0) < 0.000001;
+            if (closingZero && !customerData.statementBillAmountCleared) {
+                customerData.openingBalance = 0;
+                customerData.openingBalanceType = 'Dr';
+            }
 
             // Update in 'customers' list (also persist statementBillAmountCleared + zeros when in cleared mode)
             try {
@@ -2016,6 +1999,15 @@
                     if (customerData.statementBillAmountCleared) {
                         applyClearedStateToCustomerRow(c);
                     } else {
+                        if (closingZero) {
+                            c.openingBalance = 0;
+                            c.openingBalanceType = 'Dr';
+                            c.masterOpeningBalance = 0;
+                            c.masterOpeningBalanceType = 'Dr';
+                        } else if (c.masterOpeningBalance != null && c.masterOpeningBalance !== '') {
+                            c.openingBalance = Number(c.masterOpeningBalance);
+                            if (c.masterOpeningBalanceType) c.openingBalanceType = c.masterOpeningBalanceType;
+                        }
                         c.currentBalance = netBalance;
                         c.currentBalanceType = netType;
                     }
@@ -2033,7 +2025,7 @@
                 }
                 if (updated) {
                     localStorage.setItem('customers', JSON.stringify(customers));
-                    if (customerData.statementBillAmountCleared) syncStmtSessionFromCustomerData();
+                    if (customerData.statementBillAmountCleared || closingZero) syncStmtSessionFromCustomerData();
                     try {
                         const ev = new CustomEvent("customersUpdated");
                         window.dispatchEvent(ev);
@@ -2448,13 +2440,13 @@
                 && (sorted.length === 0 && !showBillsSummaryRow);
 
             /** Non-editable rows so Opening / bills show in Credit or Debit (not only hidden inside Balance). */
-            function appendStaticStatementRow(idxTxt, dateStr, narText, crHtml, drHtml, balSigned) {
+            function appendStaticStatementRow(idxTxt, dateStr, narText, crHtml, drHtml, balSigned, prevSignedOpt) {
                 const tr = document.createElement('tr');
                 tr.className = 'stmt-static-row';
                 const absb = Math.abs(balSigned);
-                const tag = balSigned > 0 ? 'Dr' : (balSigned < 0 ? 'Cr' : '');
-                const tagClass = balSigned > 0 ? 'dr-tag' : 'cr-tag';
-                const balCell = `${fmt(absb)}${tag ? ` <span class="${tagClass}">${tag}</span>` : ''}`;
+                const prevS = prevSignedOpt != null ? prevSignedOpt : 0;
+                const { tag, cls: tagClass } = drCrTagForRunning(balSigned, prevS);
+                const balCell = `${fmt(absb)} <span class="${tagClass}">${tag}</span>`;
                 const td = (cls, inner) => {
                     const c = document.createElement('td');
                     if (cls) c.className = cls;
@@ -2486,7 +2478,8 @@
                     'Opening Balance',
                     opCr,
                     opDr,
-                    balance
+                    balance,
+                    0
                 );
                 anyStatic = true;
             }
@@ -2495,14 +2488,17 @@
                 let bDr = '';
                 if (billsSum > 0) bDr = fmt(billsSum);
                 else if (billsSum < 0) bCr = fmt(Math.abs(billsSum));
-                balance += billsSum;
+                // When there are transaction rows, opening is not rendered as its own static row — still include it in the running total before bills.
+                const baseForSummary = showOpeningRow ? balance : opSigned;
+                balance = baseForSummary + billsSum;
                 appendStaticStatementRow(
                     '—',
                     fmtDate(todayStr()),
                     getCustomerBillOrderNarrationForSummary(),
                     bCr,
                     bDr,
-                    balance
+                    balance,
+                    baseForSummary
                 );
                 anyStatic = true;
             }
@@ -2536,6 +2532,7 @@
                 return { td, span };
             }
 
+            let prevSignedForFooter = balance;
             sorted.forEach((tx, i) => {
                 const tr = document.createElement('tr');
                 if (i === selectedIdx) tr.classList.add('selected-row');
@@ -2598,10 +2595,11 @@
                 tr.appendChild(tdCr);
                 tr.appendChild(tdDr);
 
+                const prevRowSigned = balance;
                 balance += txDelta(tx);
+                prevSignedForFooter = prevRowSigned;
                 const absbal = Math.abs(balance);
-                const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
-                const tagClass = balance > 0 ? 'dr-tag' : 'cr-tag';
+                const { tag, cls: tagClass } = drCrTagForRunning(balance, prevRowSigned);
 
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
@@ -2737,11 +2735,11 @@
                 balance = 0;
             }
             const absbal = Math.abs(balance);
-            const tag = balance > 0 ? 'Dr' : (balance < 0 ? 'Cr' : '');
+            const footerTag = drCrTagForRunning(balance, prevSignedForFooter);
             const balEl = document.getElementById('dispCurrentBal');
             if (balEl) {
-                balEl.textContent = fmt(absbal) + (tag ? ' ' + tag : '');
-                balEl.className = 'bal-value ' + (balance > 0 ? 'bal-dr' : 'bal-cr');
+                balEl.textContent = fmt(absbal) + ' ' + footerTag.tag;
+                balEl.className = 'bal-value ' + (footerTag.cls === 'dr-tag' ? 'bal-dr' : 'bal-cr');
             }
 
             // Auto "Clear Bill": when final balance becomes zero, tick cleared automatically.
@@ -2763,9 +2761,10 @@
             (function updateOpeningBalanceHeader() {
                 const el = document.getElementById('dispOpBal');
                 if (!el) return;
-                const raw = parseFloat(customerData.openingBalance || 0) || 0;
+                const showOpeningAsZero = customerData.statementBillAmountCleared || Math.abs(balance) < 0.000001;
+                const raw = showOpeningAsZero ? 0 : (parseFloat(customerData.openingBalance || 0) || 0);
                 const absAmt = Math.abs(raw);
-                const t = String(customerData.openingBalanceType || 'Dr').trim().toLowerCase();
+                const t = showOpeningAsZero ? 'dr' : String(customerData.openingBalanceType || 'Dr').trim().toLowerCase();
                 const isCr = t === 'cr';
                 const tag = isCr ? 'Cr' : 'Dr';
                 const tagClass = isCr ? 'cr-tag' : 'dr-tag';
@@ -3120,7 +3119,6 @@
             }
             if (e.key === 'F5') { e.preventDefault(); render(); }
             if (e.ctrlKey && e.key === 'd') { e.preventDefault(); if (selectedIdx !== null) { ctxTargetIdx = selectedIdx; ctxDelete(); } }
-            if (e.ctrlKey && e.key === 'c') { e.preventDefault(); clearSelected(); }
             if (e.ctrlKey && e.key === 'p') { e.preventDefault(); window.print(); }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
@@ -3137,6 +3135,17 @@
 
         // ─── SAVE / CLOSE ────────────────────────────────────────────────────────────
         function saveAndClose() {
+            // Save the latest statement closing balance into customer master on close.
+            try {
+                const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+                let closing = openingBalanceForRunningStatement(sorted);
+                sorted.forEach(tx => { closing += txDelta(tx); });
+                if (customerData.statementBillAmountCleared) closing = 0;
+                const absClosing = Math.abs(Number(closing) || 0);
+                customerData.currentBalance = absClosing;
+                customerData.currentBalanceType = closing < 0 ? 'Cr' : 'Dr';
+            } catch (e) { }
+
             saveTransactions();
             showToast('💾 Saved!');
             setTimeout(() => {
@@ -3170,8 +3179,11 @@
                         if (fromSession.name) customerData.name = fromSession.name.trim();
                         if (fromSession.lfno) customerData.lfNo = fromSession.lfno.trim();
                         if (fromSession.station) customerData.station = fromSession.station.trim();
-                        if (fromSession.opbal) customerData.openingBalance = parseFloat(fromSession.opbal) || 0;
-                        if (fromSession.opType) customerData.openingBalanceType = String(fromSession.opType);
+                        if (fromSession && Object.prototype.hasOwnProperty.call(fromSession, 'opbal')) {
+                            const ob = parseFloat(fromSession.opbal);
+                            customerData.openingBalance = Number.isFinite(ob) ? ob : 0;
+                        }
+                        if (fromSession && fromSession.opType) customerData.openingBalanceType = String(fromSession.opType);
                         if (fromSession.curbal) customerData.currentBalance = parseFloat(fromSession.curbal) || 0;
                         if (fromSession.curType) customerData.currentBalanceType = String(fromSession.curType);
                         if (fromSession.id) customerData.id = fromSession.id;
@@ -3183,7 +3195,10 @@
             if (p.get('name') && !customerData.name) customerData.name = decodeURIComponent(p.get('name')).trim();
             if (p.get('lfno') && !customerData.lfNo) customerData.lfNo = decodeURIComponent(p.get('lfno')).trim();
             if (p.get('station') && !customerData.station) customerData.station = decodeURIComponent(p.get('station')).trim();
-            if (p.get('opbal') && !customerData.openingBalance) customerData.openingBalance = parseFloat(p.get('opbal')) || 0;
+            if (p.get('opbal') != null && p.get('opbal') !== '' && (customerData.openingBalance == null || customerData.openingBalance === '')) {
+                const obu = parseFloat(p.get('opbal'));
+                customerData.openingBalance = Number.isFinite(obu) ? obu : 0;
+            }
             if (p.get('optype')) customerData.openingBalanceType = p.get('optype');
             if (p.get('curbal')) customerData.currentBalance = parseFloat(p.get('curbal')) || 0;
             if (p.get('curtype')) customerData.currentBalanceType = p.get('curtype');
@@ -3214,8 +3229,12 @@
                         if (!customerData.station) customerData.station = (cust.station || '').trim();
                         if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
                         if (!cust.statementBillAmountCleared) {
-                            if (customerData.openingBalance == null || customerData.openingBalance === '') customerData.openingBalance = parseFloat(cust.openingBalance) || 0;
-                            if (cust.openingBalanceType) customerData.openingBalanceType = cust.openingBalanceType;
+                            const mOp = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
+                            const mOpT = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
+                            if (customerData.openingBalance == null || customerData.openingBalance === '') {
+                                customerData.openingBalance = parseFloat(mOp) || 0;
+                                if (mOpT) customerData.openingBalanceType = mOpT;
+                            }
                             if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
                             if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
                         }
@@ -3238,10 +3257,23 @@
                             customerData.openingBalanceType = 'Dr';
                             customerData.currentBalance = 0;
                             customerData.currentBalanceType = 'Dr';
+                        } else {
+                            const mOpN = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
+                            const mOpTN = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
+                            if (customerData.openingBalance == null || customerData.openingBalance === '') {
+                                customerData.openingBalance = parseFloat(mOpN) || 0;
+                                if (mOpTN) customerData.openingBalanceType = mOpTN;
+                            }
+                            if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
+                            if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
                         }
                         if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
+            }
+
+            if (customerData.openingBalance == null || customerData.openingBalance === '') {
+                customerData.openingBalance = 0;
             }
 
             // ── Step 4: Load saved transactions for this customer from localStorage

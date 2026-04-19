@@ -3856,6 +3856,15 @@
         return selected ? selected.textContent : "";
       }
 
+      /** Add Customer master opening (stable; not replaced by statement current balance). */
+      function resolvedLedgerOpening(c) {
+        if (!c) return { amt: 0, typeStr: "Dr" };
+        const hasM = c.masterOpeningBalance != null && c.masterOpeningBalance !== "";
+        const raw = hasM ? c.masterOpeningBalance : c.openingBalance;
+        const t = hasM ? (c.masterOpeningBalanceType || c.openingBalanceType) : c.openingBalanceType;
+        return { amt: parseFloat(raw || 0) || 0, typeStr: String(t || "Dr") };
+      }
+
       /* Read row values by column index (same as calc: cells[i].children[0]). 0=Type..16=Total (Other=15). */
       function getReadyOrderRowValues(tr) {
         if (!tr || !tr.cells) return [];
@@ -5353,7 +5362,11 @@
         if (advanced > 0) { transactions.push({ id: nextId++, date: dateVal, narration: "Advanced for Bill " + billNoVal, debit: 0, credit: advanced, cleared: false }); }
         if (paid > 0) { transactions.push({ id: nextId++, date: dateVal, narration: "Paid (minus) for Bill " + billNoVal, debit: 0, credit: paid, cleared: false }); }
         localStorage.setItem(stmtKey, JSON.stringify(transactions));
-        let balance = parseFloat(customer.openingBalance || 0);
+        const roStmt = resolvedLedgerOpening(customer);
+        let balance = roStmt.amt;
+        const roT = (roStmt.typeStr || "").toLowerCase();
+        if (roT === "cr") balance = -Math.abs(balance);
+        if (roT === "dr") balance = Math.abs(balance);
         transactions.forEach(tx => { balance += (tx.debit || 0) - (tx.credit || 0); });
         customer.currentBalance = Math.abs(balance);
         customer.currentBalanceType = balance >= 0 ? 'Dr' : 'Cr';
@@ -5596,8 +5609,9 @@
             const custBills = allCustBals.filter(b => (b.customer || "").trim().toLowerCase() === custNorm);
             const paymentsAll = JSON.parse(localStorage.getItem("payments") || "[]");
 
-            let openingSigned = parseFloat(targetCust.openingBalance || 0) || 0;
-            const opType = (targetCust.openingBalanceType || "").toLowerCase();
+            const roTgt = resolvedLedgerOpening(targetCust);
+            let openingSigned = roTgt.amt;
+            const opType = (roTgt.typeStr || "").toLowerCase();
             if (opType === "cr") openingSigned = -Math.abs(openingSigned);
             if (opType === "dr") openingSigned = Math.abs(openingSigned);
 
@@ -6099,8 +6113,9 @@
           const custBills2 = allCustBals2.filter(b => (b.customer || "").trim().toLowerCase() === custNorm2);
           const paymentsAll2 = JSON.parse(localStorage.getItem("payments") || "[]");
 
-          let openingSigned2 = parseFloat(custToUpdate.openingBalance || 0) || 0;
-          const opType2 = (custToUpdate.openingBalanceType || "").toLowerCase();
+          const roUp = resolvedLedgerOpening(custToUpdate);
+          let openingSigned2 = roUp.amt;
+          const opType2 = (roUp.typeStr || "").toLowerCase();
           if (opType2 === "cr") openingSigned2 = -Math.abs(openingSigned2);
           if (opType2 === "dr") openingSigned2 = Math.abs(openingSigned2);
 
