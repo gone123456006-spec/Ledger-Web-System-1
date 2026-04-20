@@ -213,23 +213,6 @@
       background: #dce9ff;
     }
 
-    /* Hint bar */
-    .hint-bar {
-      margin-top: 2px;
-      padding: 6px 10px;
-      font-size: 12px;
-      color: var(--muted);
-      background: var(--card);
-      border-radius: 0 0 var(--radius) var(--radius);
-      border: 1px solid var(--border);
-      border-top: none;
-    }
-
-    .hint-bar span {
-      font-weight: 600;
-      color: var(--primary);
-    }
-
     /* Name dropdown: all job workers from list */
     .jw-dropdown-wrap {
       position: relative;
@@ -414,7 +397,7 @@
                 oninput="filterJwDropdown()" onfocus="showJwDropdown()" required>
               <div id="jwDropdown" class="jw-dropdown" role="listbox"></div>
             </div>
-            <button class="icon-btn" title="Add new Job Worker (Ctrl+M)" onclick="addJobworker()">
+            <button class="icon-btn" title="Add new Job Worker" onclick="addJobworker()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -494,9 +477,6 @@
       <button onclick="resetForm()">Reset</button>
       <button class="danger" onclick="closeForm()">Close</button>
     </div>
-
-    <!-- Hint -->
-    <div class="hint-bar"><span>Ctrl + M :</span> Add Job Worker · <span>↑ ↓</span> move between fields</div>
 
   </div>
 

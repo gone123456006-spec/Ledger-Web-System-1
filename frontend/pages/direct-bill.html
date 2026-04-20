@@ -76,9 +76,9 @@
 </head>
 <body>
   <section class="direct-bill-wrap">
-    <header class="direct-bill-header">Direct Bill</header>
+    <header class="direct-bill-header" id="directBillHeader">Direct Bill</header>
     <div class="direct-bill-body">
-      <p class="direct-bill-note">
+      <p class="direct-bill-note" id="directBillNote">
         Direct Bill page is ready. You can now continue implementing bill form fields and save logic here.
       </p>
       <div class="direct-bill-actions">
@@ -87,5 +87,29 @@
       </div>
     </div>
   </section>
+  <script>
+    (function () {
+      var labels = {
+        gold: "Gold Invoice",
+        silver: "Silver Invoice",
+        "raw-gold": "Raw Gold Invoice",
+        "raw-silver": "Raw Silver Invoice"
+      };
+      try {
+        var p = new URLSearchParams(window.location.search || "");
+        var inv = (p.get("invoice") || "").trim().toLowerCase().replace(/\s+/g, "-");
+        if (inv === "raw_gold") inv = "raw-gold";
+        if (inv === "raw_silver") inv = "raw-silver";
+        var label = labels[inv];
+        if (label) {
+          var h = document.getElementById("directBillHeader");
+          var n = document.getElementById("directBillNote");
+          if (h) h.textContent = "Direct Bill — " + label;
+          if (n) n.textContent = "Invoice type: " + label + ". Add bill fields and save logic for this variant here.";
+          document.title = "Direct Bill — " + label;
+        }
+      } catch (e) {}
+    })();
+  </script>
 </body>
 </html>

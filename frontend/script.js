@@ -33,6 +33,60 @@ function initGoldOrderSubmenu() {
     submenu.addEventListener("mouseleave", scheduleHide);
 }
 
+function initDirectBillSubmenu() {
+    const block = document.querySelector(".sidebar-direct-bill");
+    const trigger = document.querySelector(".direct-bill-trigger");
+    const submenu = document.querySelector(".sidebar-direct-bill-submenu");
+    if (!block || !trigger || !submenu) return;
+    let hideTimeout = 0;
+    function show() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = 0;
+        const rect = trigger.getBoundingClientRect();
+        submenu.style.top = rect.top + "px";
+        submenu.style.right = (window.innerWidth - rect.left + 6) + "px";
+        submenu.classList.add("visible");
+    }
+    function scheduleHide() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(function () {
+            submenu.classList.remove("visible");
+            hideTimeout = 0;
+        }, 200);
+    }
+    block.addEventListener("mouseenter", show);
+    block.addEventListener("mouseleave", scheduleHide);
+    submenu.addEventListener("mouseenter", show);
+    submenu.addEventListener("mouseleave", scheduleHide);
+}
+
+function initJobworkerBookSubmenu() {
+    const block = document.querySelector(".sidebar-jobworker-book");
+    const trigger = document.querySelector(".jobworker-book-trigger");
+    const submenu = document.querySelector(".sidebar-jobworker-submenu");
+    if (!block || !trigger || !submenu) return;
+    let hideTimeout = 0;
+    function show() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = 0;
+        const rect = trigger.getBoundingClientRect();
+        submenu.style.top = rect.top + "px";
+        submenu.style.right = (window.innerWidth - rect.left + 6) + "px";
+        submenu.classList.add("visible");
+    }
+    function scheduleHide() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(function () {
+            submenu.classList.remove("visible");
+            hideTimeout = 0;
+        }, 200);
+    }
+    block.addEventListener("mouseenter", show);
+    block.addEventListener("mouseleave", scheduleHide);
+    submenu.addEventListener("mouseenter", show);
+    submenu.addEventListener("mouseleave", scheduleHide);
+}
+
 function initAgentsSubmenu() {
     const block = document.querySelector(".sidebar-agents-order");
     const trigger = document.querySelector(".agents-order-trigger");
@@ -135,6 +189,8 @@ function initSidebarButtons() {
 
     initEscToDashboard();
     initGoldOrderSubmenu();
+    initJobworkerBookSubmenu();
+    initDirectBillSubmenu();
     initAgentsSubmenu();
     initAddItemSubmenu();
     sidebarButtons.forEach(btn => {
@@ -207,7 +263,23 @@ function initSidebarButtons() {
                     break;
 
                 case "direct bill":
-                    loadPage("pages/direct-bill.html");
+                    // Hover parent; submenu opens to the side
+                    break;
+
+                case "gold invoice":
+                    loadPage("pages/direct-bill.html?invoice=gold");
+                    break;
+
+                case "silver invoice":
+                    loadPage("pages/direct-bill.html?invoice=silver");
+                    break;
+
+                case "raw gold invoice":
+                    loadPage("pages/direct-bill.html?invoice=raw-gold");
+                    break;
+
+                case "raw silver invoice":
+                    loadPage("pages/direct-bill.html?invoice=raw-silver");
                     break;
 
                 case "all bill":
@@ -217,6 +289,11 @@ function initSidebarButtons() {
                 case "gold order":
                 case "gold order book":
                     // Gold Order Book is the hover parent; click does nothing (submenu shows on hover)
+                    break;
+
+                case "job worker book":
+                case "jobworker book":
+                    // Job Worker Book is the hover parent; click does nothing (submenu shows on hover)
                     break;
 
                 case "new order":

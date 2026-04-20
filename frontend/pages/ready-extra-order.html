@@ -318,6 +318,16 @@
       border-color: transparent;
     }
 
+    /* Keep table column alignment with header for Other rows (do not remove td columns). */
+    .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(5)):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)):not(:nth-child(18)) {
+      background-image:
+        linear-gradient(25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%),
+        linear-gradient(-25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%);
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-color: rgba(210, 214, 220, 0.08) !important;
+    }
+
     /* Optional: purchase-field-disabled for readonly styling */
     td input.purchase-field-disabled {
       cursor: not-allowed;
@@ -643,7 +653,13 @@
       cursor: pointer;
     }
 
-    /* Hide Ut. Wt. through Est. Total (columns 6–10); data remains in row for save/calc */
+    /* Hide Type (1) + Ut. Wt. through Est. Total (6–10); data remains in row for save/calc */
+    #ready-order-item-table.ready-order-hide-mid col:nth-child(1),
+    #ready-order-item-table.ready-order-hide-mid thead th:nth-child(1),
+    #ready-order-item-table.ready-order-hide-mid tbody td:nth-child(1),
+    #ready-order-item-table.ready-order-bill-hide-mid col:nth-child(1),
+    #ready-order-item-table.ready-order-bill-hide-mid thead th:nth-child(1),
+    #ready-order-item-table.ready-order-bill-hide-mid tbody td:nth-child(1),
     #ready-order-item-table.ready-order-bill-hide-mid col:nth-child(n+6):nth-child(-n+10),
     #ready-order-item-table.ready-order-bill-hide-mid thead th:nth-child(n+6):nth-child(-n+10),
     #ready-order-item-table.ready-order-bill-hide-mid tbody td:nth-child(n+6):nth-child(-n+10),
@@ -3561,6 +3577,21 @@
             if (!target.matches('input, select')) return;
             const tbody = target.closest('#itemTable tbody, #ready-order-item-table tbody');
             if (!tbody) return;
+            const isEditableNavField = function (el) {
+              if (!el || !el.matches || !el.matches('input, select')) return false;
+              if (el.disabled) return false;
+              if (el.tabIndex === -1) return false;
+              if (el.matches('input') && el.readOnly) return false;
+              const cs = window.getComputedStyle(el);
+              if (cs.visibility === 'hidden' || cs.display === 'none') return false;
+              const td = el.closest('td');
+              if (td) {
+                const tcs = window.getComputedStyle(td);
+                if (tcs.visibility === 'hidden' || tcs.display === 'none') return false;
+              }
+              return true;
+            };
+            if (!isEditableNavField(target)) return;
             const tr = target.closest('tr');
             if (!tr || !tr.cells) return;
             const cells = tr.cells;
@@ -3574,24 +3605,36 @@
             if (e.key === 'ArrowRight') {
               for (let i = colIndex + 1; i < cells.length; i++) {
                 const focusable = cells[i].querySelector('input, select');
-                if (focusable) { nextFocus = focusable; break; }
+                if (isEditableNavField(focusable)) { nextFocus = focusable; break; }
               }
             } else if (e.key === 'ArrowLeft') {
               for (let i = colIndex - 1; i >= 0; i--) {
                 const focusable = cells[i].querySelector('input, select');
-                if (focusable) { nextFocus = focusable; break; }
+                if (isEditableNavField(focusable)) { nextFocus = focusable; break; }
               }
             } else if (e.key === 'ArrowDown') {
               const nextRow = tr.nextElementSibling;
               if (nextRow && nextRow.cells[colIndex]) {
                 const focusable = nextRow.cells[colIndex].querySelector('input, select');
-                if (focusable) nextFocus = focusable;
+                if (isEditableNavField(focusable)) nextFocus = focusable;
+              }
+              if (!nextFocus && nextRow && nextRow.cells) {
+                for (let i = 0; i < nextRow.cells.length; i++) {
+                  const focusable = nextRow.cells[i].querySelector('input, select');
+                  if (isEditableNavField(focusable)) { nextFocus = focusable; break; }
+                }
               }
             } else if (e.key === 'ArrowUp') {
               const prevRow = tr.previousElementSibling;
               if (prevRow && prevRow.cells[colIndex]) {
                 const focusable = prevRow.cells[colIndex].querySelector('input, select');
-                if (focusable) nextFocus = focusable;
+                if (isEditableNavField(focusable)) nextFocus = focusable;
+              }
+              if (!nextFocus && prevRow && prevRow.cells) {
+                for (let i = prevRow.cells.length - 1; i >= 0; i--) {
+                  const focusable = prevRow.cells[i].querySelector('input, select');
+                  if (isEditableNavField(focusable)) { nextFocus = focusable; break; }
+                }
               }
             }
             if (nextFocus) {
@@ -3884,6 +3927,22 @@
       function setReadyOrderRowValues(tr, vals, fromNewOrder, onlyIfEmpty) {
         if (!tr || !tr.cells) return;
         vals = vals || [];
+        // Robust detection: some saved New Order rows can arrive with extra trailing empties.
+        // Treat them as New Order shape when Order-side columns (7..12) are filled and Ready tail (13..16) is empty.
+        if (!fromNewOrder && vals.length >= 13) {
+          var typeHint = (vals[0] != null ? String(vals[0]).trim().toLowerCase() : "");
+          var hasOrderCols = false;
+          for (var oi = 7; oi <= 12; oi++) {
+            if (vals[oi] != null && String(vals[oi]).trim() !== "") { hasOrderCols = true; break; }
+          }
+          var hasReadyTail = false;
+          for (var ri = 13; ri <= 16; ri++) {
+            if (vals[ri] != null && String(vals[ri]).trim() !== "") { hasReadyTail = true; break; }
+          }
+          if ((typeHint === "order" || typeHint === "") && hasOrderCols && !hasReadyTail) {
+            fromNewOrder = true;
+          }
+        }
         // Legacy migration: older saves used 16 values with Total at [15] and no Other.
         if (!fromNewOrder && vals.length === 16) {
           vals = vals.slice();
@@ -3907,7 +3966,7 @@
           if (el.tagName === "INPUT" || el.tagName === "SELECT") el.value = "";
         }
         setCol(0, vals[0]); setCol(1, vals[1]); setCol(2, vals[2]); setCol(3, vals[3]);
-        if (fromNewOrder && vals.length === 13) {
+        if (fromNewOrder && vals.length >= 13) {
           /* New Order: cols 4–6 are Remark/Design/Size; Pc=7, Ut.Wt=8, Est.Total Wt=9, Rate=10, Lbr%=11, Est.Total=12 */
           setCol(4, vals[7]); setCol(5, vals[8]); setCol(6, vals[9]); setCol(7, vals[10]); setCol(8, vals[11]); setCol(9, vals[12]);
           for (var i = 10; i <= 16; i++) clearCol(i);
@@ -3916,6 +3975,35 @@
           /* Ready order: cols 10–16 are R. Metal, Neg, R. Wt, Rate, Making, Other, Total – restore from saved values */
           for (var i = 10; i <= 16; i++) setCol(i, vals[i]);
         }
+      }
+
+      /** Build New-Order values[13] from named properties (legacy/fallback payloads). */
+      function buildNewOrderValuesFromItemObject(src) {
+        if (!src || typeof src !== "object") return null;
+        function pick() {
+          for (var i = 0; i < arguments.length; i++) {
+            var k = arguments[i];
+            if (!k) continue;
+            if (src[k] !== undefined && src[k] !== null && String(src[k]).trim() !== "") return src[k];
+          }
+          return "";
+        }
+        var vals = new Array(13).fill("");
+        vals[0] = pick("type", "rowType", "itemType") || "Order";
+        vals[1] = pick("orderNo", "billNo", "jobNo");
+        vals[2] = pick("itemName", "item", "name");
+        vals[3] = pick("stamp", "metal", "purity");
+        vals[4] = pick("remarks", "remark");
+        vals[5] = pick("design");
+        vals[6] = pick("size");
+        vals[7] = pick("pc", "pcs", "qty", "quantity");
+        vals[8] = pick("utWt", "unitWt", "uWt", "wt");
+        vals[9] = pick("estTotalWt", "estWt", "totalWt", "netWt", "grWt");
+        vals[10] = pick("rate");
+        vals[11] = pick("lbr", "labor", "making", "makingPercent");
+        vals[12] = pick("estTotal", "amount", "total");
+        var hasCore = String(vals[2]).trim() !== "" || String(vals[3]).trim() !== "" || String(vals[7]).trim() !== "" || String(vals[8]).trim() !== "" || String(vals[10]).trim() !== "";
+        return hasCore ? vals : null;
       }
 
       /** Also restore ready fields from object properties (used by Ready Items popup saves). */
@@ -4039,11 +4127,90 @@
         if (!row) return;
         const typeSel = row.cells[0] ? row.cells[0].querySelector("select") : null;
         const alwaysLockedIdx = function (idx) { return idx >= 3 && idx <= 9; }; // Stamp..Est.Total
+        row.classList.remove("rex-row-type-other");
+        // Row may have been initialized as Other before actual values are applied.
+        // Reset hidden styling first; type-specific logic below will re-apply locks.
+        row.querySelectorAll("input").forEach(function (input) {
+          input.style.visibility = "visible";
+          input.style.backgroundColor = "";
+          input.style.cursor = "";
+        });
 
         // Other / Sale: respect Global Edit — off = template-style locks (Edit unlocks all); on = full edit + highlight
         if (isReadyExtraFullLineRow(typeSel)) {
           const isSale = typeSel && typeSel.value === "Sale";
           const isOther = typeSel && typeSel.value === "Other";
+
+          /** Other: only Pc (4), Rate (13), Other (15) editable; Total (16) readonly. */
+          if (isOther) {
+            row.classList.add("rex-row-type-other");
+            row.querySelectorAll("input").forEach(input => {
+              const td = input.closest("td");
+              if (!td || td.closest("tr") !== row) return;
+              const idx = Array.prototype.indexOf.call(row.cells, td);
+              if (idx < 0) return;
+              input.classList.remove("purchase-field-disabled", "order-detail-readonly");
+
+              // Keep Total visible but readonly.
+              if (idx === 16) {
+                input.setAttribute("readonly", "readonly");
+                input.classList.add("order-detail-readonly");
+                input.placeholder = "Total";
+                input.title = "Total = Pc × Rate + Other";
+                input.tabIndex = 0;
+                input.style.visibility = "visible";
+                input.style.border = "";
+                input.style.borderRadius = "";
+                input.style.cursor = "default";
+                input.style.backgroundColor = "";
+                return;
+              }
+
+              // Keep Pc, Rate, Other editable + visible.
+              if (idx === 4 || idx === 13 || idx === 15) {
+                input.removeAttribute("readonly");
+                input.classList.remove("purchase-field-disabled", "order-detail-readonly");
+                if (idx === 4) {
+                  input.placeholder = "Pc";
+                  input.title = "Pc";
+                } else if (idx === 13) {
+                  input.placeholder = "Rate";
+                  input.title = "Rate";
+                } else if (idx === 15) {
+                  input.placeholder = "Other";
+                  input.title = "Other";
+                }
+                input.tabIndex = 0;
+                input.style.visibility = "visible";
+                input.style.border = "1px solid var(--border)";
+                input.style.borderRadius = "4px";
+                input.style.cursor = "";
+                input.style.backgroundColor = "";
+                return;
+              }
+
+              // Hide all other inputs from UI but keep row/cell in DOM.
+              input.setAttribute("readonly", "readonly");
+              input.classList.add("order-detail-readonly", "purchase-field-disabled");
+              input.tabIndex = -1;
+              input.style.visibility = "hidden";
+              input.style.border = "";
+              input.style.borderRadius = "";
+              input.style.cursor = "not-allowed";
+              input.style.backgroundColor = "#f5f5f7";
+            });
+
+            // Type select must stay usable.
+            const sel = row.cells[0] && row.cells[0].querySelector("select");
+            if (sel) {
+              sel.removeAttribute("disabled");
+              sel.style.visibility = "visible";
+              sel.style.display = "";
+            }
+            syncOtherRowSimpleTotal(row);
+            return;
+          }
+
           const globalEditBtn = document.getElementById("globalEditBtn");
           const isGlobalEditing = !globalEditBtn || globalEditBtn.dataset.editing === "true";
           row.querySelectorAll("input").forEach(input => {
@@ -4464,6 +4631,10 @@
           if (p) calc(p);
           return;
         }
+        if (t === "Other") {
+          syncOtherRowSimpleTotal(tr);
+          return;
+        }
         const pc = tr.cells[4] && tr.cells[4].children[0];
         if (pc) calc(pc);
       }
@@ -4514,6 +4685,19 @@
             syncSecondTotalFromRow(r);
           } catch (e) {
             console.error("Error in calc (Sale):", e);
+          }
+          setTimeout(function () {
+            updateInfoPanel();
+            if (typeof updateBillButtonState === "function") updateBillButtonState();
+          }, 100);
+          return;
+        }
+
+        if (typeSelectCalc && typeSelectCalc.value === "Other") {
+          try {
+            syncOtherRowSimpleTotal(r);
+          } catch (e) {
+            console.error("Error in calc (Other):", e);
           }
           setTimeout(function () {
             updateInfoPanel();
@@ -4584,7 +4768,25 @@
         }
       }
 
-      /* Total = R.Wt×Rate×Making + Other (col 15). Purchase: Est. Total (col 9) + Other → col 16. */
+      /** Other-type row: Total (col 16) = Pc (4) × Rate (13) + Other (15). */
+      function syncOtherRowSimpleTotal(r) {
+        if (!r || !r.cells) return;
+        const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
+        if (!typeSelect || typeSelect.value !== "Other") return;
+        try {
+          const pc = parseFloat(r.cells[4] && r.cells[4].children[0] ? r.cells[4].children[0].value : 0) || 0;
+          const rate = parseFloat(r.cells[13] && r.cells[13].children[0] ? r.cells[13].children[0].value : 0) || 0;
+          const other = parseFloat(r.cells[15] && r.cells[15].children[0] ? r.cells[15].children[0].value : 0) || 0;
+          const total = (pc * rate) + other;
+          if (r.cells[16] && r.cells[16].children[0]) {
+            r.cells[16].children[0].value = total.toFixed(2);
+          }
+        } catch (e) {
+          console.error("Error in syncOtherRowSimpleTotal:", e);
+        }
+      }
+
+      /* Total = R.Wt×Rate×Making + Other (col 15). Purchase: Est. Total (col 9) + Other → col 16. Other: Pc×Rate+Other. */
       function syncSecondTotalFromRow(r) {
         if (!r || !r.cells) return;
         try {
@@ -4598,11 +4800,12 @@
             if (r.cells[16] && r.cells[16].children[0]) {
               r.cells[16].children[0].value = (estTotal + otherAmt).toFixed(2);
             }
+          } else if (typeSelect && typeSelect.value === "Other") {
+            syncOtherRowSimpleTotal(r);
           } else {
             const readyWeight = parseFloat(r.cells[12].children[0].value) || 0;
             const rate = parseFloat(r.cells[13].children[0].value) || 0;
-            const isOtherRow = typeSelect && typeSelect.value === "Other";
-            const making = isOtherRow ? 0 : (parseFloat(r.cells[14].children[0].value) || 0);
+            const making = parseFloat(r.cells[14].children[0].value) || 0;
             let mainPart = 0;
             let haveMain = false;
             if (readyWeight > 0 && rate > 0) {
@@ -6497,6 +6700,10 @@
             // Restore by column index so Stamp, Pc, Ut. Wt., etc. stay in correct columns
             if (item.values && item.values.length > 0) {
               setReadyOrderRowValues(tr, item.values, item.values.length === 13, false);
+              applyReadyMetaFieldsFromSource(tr, item, false);
+            } else {
+              var fallbackVals = buildNewOrderValuesFromItemObject(item);
+              if (fallbackVals) setReadyOrderRowValues(tr, fallbackVals, true, false);
               applyReadyMetaFieldsFromSource(tr, item, false);
             }
 
