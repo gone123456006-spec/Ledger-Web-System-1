@@ -267,7 +267,7 @@ function initSidebarButtons() {
                     break;
 
                 case "gold invoice":
-                    loadPage("pages/direct-bill.html?invoice=gold");
+                    loadPage("pages/gold-invoice.html");
                     break;
 
                 case "silver invoice":

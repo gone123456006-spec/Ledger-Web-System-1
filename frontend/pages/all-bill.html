@@ -557,9 +557,6 @@
         return dateB - dateA;
       });
 
-      const customersList = JSON.parse(localStorage.getItem("customers") || "[]");
-      const normName = (s) => (s || "").trim().toLowerCase();
-
       sortedBalances.forEach((balance, index) => {
         try {
           const row = document.createElement("tr");
@@ -567,20 +564,6 @@
           row.dataset.balanceTimestamp = balance.timestamp || "";
           row.dataset.orderNo = balance.orderNo || "";
           const typeVal = (balance.readyMetal === "Gold" || balance.readyMetal === "Order") ? "Order" : (balance.readyMetal || "Order");
-
-          // Overall customer balance: used for Clear / Pending status only (Balance column = Net amount per bill)
-          const overallBal = getCustomerBalance(balance.customer);
-
-          const custForRow = customersList.find(c =>
-            normName(c.name) === normName(balance.customer) ||
-            (balance.cid && c.cid && normName(String(c.cid)) === normName(String(balance.cid)))
-          );
-          const forceClearUi = !!(custForRow && (custForRow.allBillStatusUiClear === true || custForRow.statementBillAmountCleared === true));
-          const billStatusCleared = String(balance.status || "").trim().toLowerCase() === "cleared";
-          const isClear = billStatusCleared || forceClearUi || Math.abs(overallBal) < 0.000001;
-          const statusLabel = isClear
-            ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Clear</span>`
-            : `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Pending</span>`;
 
           // Try to pull richer figures from the linked order
           const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
@@ -658,6 +641,12 @@
           // Pending balance (Ready Extra panel "Pending balance Net Total Amount") — always use live calc for Balance column
           const balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           balance.computedBalAmt = Number.isFinite(balAmt) ? Number(balAmt).toFixed(2) : String(balAmt);
+
+          // Status from Balance (₹) column only: Clear iff zero — not for negative (credit) or positive (due)
+          const isClear = Number.isFinite(balAmt) && Math.abs(balAmt) <= 0.000001;
+          const statusLabel = isClear
+            ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Clear</span>`
+            : `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Pending</span>`;
 
           // Ready Order Total (panel order add); legacy rows with no line items use stored bill amount
           let readyOrderTotalAmt = netOrderSale;

@@ -26,6 +26,12 @@
       --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
       --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
       --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+      --card-pattern:
+        radial-gradient(circle at 14px 14px, rgba(0,0,0,0.015) 0 3px, transparent 3.5px),
+        linear-gradient(140deg, transparent 0 66%, rgba(255, 178, 0, 0.05) 66% 72%, transparent 72%),
+        linear-gradient(140deg, transparent 0 70%, rgba(255,255,255,0.05) 70% 73%, transparent 73%),
+        linear-gradient(140deg, transparent 0 74%, rgba(255, 160, 0, 0.05) 74% 82%, transparent 82%),
+        linear-gradient(145deg, rgba(255,255,255,0.05) 0 45%, rgba(0,0,0,0.006) 45% 100%);
     }
 
     /* OVERLAYS */
@@ -1369,6 +1375,14 @@
       border: 1px solid var(--border);
       overflow: hidden;
     }
+    /* Pattern only inside white cards (5% capacity) */
+    .box, .table-wrap, .info-panel, .panel-section {
+      background-color: #f8f8f9;
+      background-image: var(--card-pattern);
+      background-size: 22px 22px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+      background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+      background-position: 0 0, center, center, center, center;
+    }
 
     .panel-section-header {
       background: #fff;
@@ -2140,17 +2154,34 @@
         return `₹ ${safeNumber(amount).toFixed(2)}`;
       }
 
+      const GLOBAL_ORDER_KEY = 'lastGlobalOrderNo';
+      function getGlobalLastSerial() {
+        const g = Number(localStorage.getItem(GLOBAL_ORDER_KEY) || 0);
+        const n = Number(localStorage.getItem('lastBillNo') || 0);
+        const gi = Number(localStorage.getItem('lastGoldInvoiceOrderNo') || 0);
+        const gv = Number.isFinite(g) ? g : 0;
+        const nv = Number.isFinite(n) ? n : 0;
+        const giv = Number.isFinite(gi) ? gi : 0;
+        return Math.max(gv, nv, giv);
+      }
+
+      function setGlobalLastSerial(value) {
+        const n = Number(value) || 0;
+        localStorage.setItem(GLOBAL_ORDER_KEY, String(n));
+        // Keep legacy keys synced for backward compatibility with old pages.
+        localStorage.setItem('lastBillNo', String(n));
+        localStorage.setItem('lastGoldInvoiceOrderNo', String(n));
+      }
+
       function peekNextBillNo() {
-        const last = localStorage.getItem('lastBillNo') || '0';
-        const next = Number(last) + 1;
-        return `SGJ/0/${String(next).padStart(4, '0')}`;
+        const next = getGlobalLastSerial() + 1;
+        return `SGJ/O/${String(next).padStart(4, '0')}`;
       }
 
       function claimBillNo() {
-        const last = localStorage.getItem('lastBillNo') || '0';
-        const next = Number(last) + 1;
-        localStorage.setItem('lastBillNo', String(next));
-        return `SGJ/0/${String(next).padStart(4, '0')}`;
+        const next = getGlobalLastSerial() + 1;
+        setGlobalLastSerial(next);
+        return `SGJ/O/${String(next).padStart(4, '0')}`;
       }
 
       // =====================================================
@@ -2726,7 +2757,7 @@
       // =====================================================
       // Paid total: sum payments for this draft/session OR displayed bill no.
       // New orders store payments under getCurrentPaymentKey() (DRAFT-…) while the
-      // bill field shows a preview SGJ/0/… number until Save claims it — matching only
+      // bill field shows a preview SGJ/O/… number until Save claims it — matching only
       // the visible bill left Paid at ₹0 in Payment Summary (see savePayment → billNo).
       // =====================================================
       function getPaidAmount(billNo) {

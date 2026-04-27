@@ -500,7 +500,8 @@
         .actions-bar {
             display: flex;
             justify-content: space-between;
-            padding: 10px 14px;
+            align-items: center;
+            padding: 12px 14px;
             background: #ffffff;
             border-top: 1px solid var(--border);
             gap: 10px;
@@ -509,9 +510,22 @@
         }
 
         .actions-left,
+        .actions-center,
         .actions-right {
             display: flex;
+            align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .actions-center {
+            justify-content: center;
+            flex: 1 1 auto;
+        }
+
+        .actions-left,
+        .actions-right {
+            flex: 0 1 auto;
         }
 
         /* ── BUTTONS ── */
@@ -1011,11 +1025,6 @@
                 <h2>Customer Statement</h2>
                 <div class="subtitle" id="toolbarSubtitle"></div>
             </div>
-            <button class="btn btn-success" onclick="addRow()">+ Add Row</button>
-            <button class="btn" onclick="render()">🔄 Refresh</button>
-            <button class="btn" onclick="openCalcInterest()">📊 Interest</button>
-            <button class="btn" onclick="saveAndClose()">↩ Back</button>
-            <button class="btn" onclick="window.print()">🖨 Print</button>
         </div>
 
         <!-- CUSTOMER INFO -->
@@ -1137,11 +1146,19 @@
         <!-- ACTIONS BAR -->
         <div class="actions-bar">
             <div class="actions-left">
-                <button type="button" class="btn" onclick="window.clearBillAmount && window.clearBillAmount()">✅ Clear Bill Amount</button>
+                <button type="button" class="btn" onclick="openAddInvoiceFromStatement()">🧾 Add Invoice</button>
+                <button type="button" class="btn btn-success" onclick="window.clearBillAmount && window.clearBillAmount()">✅ Clear Bill Amount</button>
+                <button type="button" class="btn" onclick="openCalcInterest()">📊 Interest</button>
+            </div>
+            <div class="actions-center">
+                <button type="button" class="btn" onclick="addRow()">+ Add Row</button>
+                <button type="button" class="btn" onclick="render()">🔄 Refresh</button>
+                <button type="button" class="btn" onclick="window.print()">🖨 Print</button>
+                <button type="button" class="btn" onclick="saveAndClose()">↩ Back</button>
             </div>
             <div class="actions-right">
+                <button class="btn" onclick="saveAndClose()">💾 Save &amp; Close</button>
                 <button class="btn btn-danger" onclick="deleteSelected()">🗑 Delete</button>
-                <button class="btn btn-primary" onclick="saveAndClose()">💾 Save &amp; Close</button>
             </div>
         </div>
 
@@ -1189,6 +1206,7 @@
         let interestHasCalcResult = false;
         let interestLastCompMonth = 0;
         let lastInterestCalculatedDate = '';
+        let pendingInterestSide = 'debit';
 
         function stmtStorageKey() {
             return 'stmt_' + (customerData.lfNo || customerData.name);
@@ -1225,6 +1243,7 @@
             interestHasCalcResult = !!obj.interestHasCalcResult;
             interestLastCompMonth = parseInt(obj.interestLastCompMonth, 10) || 0;
             lastInterestCalculatedDate = obj.lastInterestCalculatedDate != null ? String(obj.lastInterestCalculatedDate) : '';
+            pendingInterestSide = String(obj.pendingInterestSide || 'debit').toLowerCase() === 'credit' ? 'credit' : 'debit';
             const rateEl = document.getElementById('int_rate_inline');
             const compEl = document.getElementById('int_comp_inline');
             const toEl = document.getElementById('int_to_inline');
@@ -1246,6 +1265,7 @@
                     interestHasCalcResult,
                     interestLastCompMonth,
                     lastInterestCalculatedDate,
+                    pendingInterestSide,
                     intRate: rateEl ? rateEl.value : '',
                     intComp: compEl ? compEl.value : '',
                     intTo: toEl ? toEl.value : ''
@@ -1255,6 +1275,11 @@
             } catch (e) { }
         }
 
+        function isInterestNarrationText(nar) {
+            const t = String(nar || '').trim().toLowerCase();
+            return /^interest(\s|$)/i.test(t);
+        }
+
         function dedupeInterestDebitRows() {
             if (!Array.isArray(interestApplied) || interestApplied.length === 0) return;
             const seenDates = new Set();
@@ -1262,7 +1287,7 @@
             for (let i = interestApplied.length - 1; i >= 0; i--) {
                 const r = interestApplied[i];
                 const nar = String(r && r.narration ? r.narration : '').trim().toLowerCase();
-                if (nar !== 'interest debit') {
+                if (!isInterestNarrationText(nar)) {
                     out.unshift(r);
                     continue;
                 }
@@ -1441,7 +1466,7 @@
                 const { td: tdDate } = makeIntCell(fmtDate(tx.date), false, (v) => updateTxInt('date', v));
                 const { td: tdNar } = makeIntCell(tx.narration || '', false, (v) => updateTxInt('narration', v));
                 const { td: tdCr, span: spIntCr } = makeIntCell(dispCr ? fmt(dispCr) : '', true, (v) => updateTxInt('credit', v));
-                const { td: tdDr, span: spIntDr } = makeIntCell(dispDr ? fmt(dispDr) : '', true, (v) => updateTxInt('debit', v));
+                const { td: tdDr, span: spIntDr } = makeIntCell(fmtDebitCell(dispDr, tx.narration), true, (v) => updateTxInt('debit', v));
                 applyCrDrBalanceHint(spIntCr, spIntDr, tx.entryType);
 
                 const tdBal = document.createElement('td');
@@ -1498,7 +1523,7 @@
                 const apCredit = parseFloat(ap.credit) || 0;
                 const apDebit = (parseFloat(ap.debit) || parseFloat(ap.amount) || 0);
                 const { td: tdCr } = makeIntCell(apCredit ? fmt(apCredit) : '', true, (v) => updateAp('credit', v));
-                const { td: tdDr } = makeIntCell(apDebit ? fmt(apDebit) : '', true, (v) => updateAp('debit', v));
+                const { td: tdDr } = makeIntCell(fmtDebitCell(apDebit, narLabel), true, (v) => updateAp('debit', v));
 
                 const tdBal = document.createElement('td');
                 tdBal.className = 'right';
@@ -1689,6 +1714,13 @@
             return new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
         }
 
+        function fmtDebitCell(amount, narration) {
+            const num = Number(amount) || 0;
+            if (!num) return '';
+            const nar = String(narration || '').trim().toLowerCase();
+            return nar === 'interest debit' ? `+${fmt(Math.abs(num))}` : fmt(num);
+        }
+
         function readMoney(v) {
             const n = parseFloat(String(v || '').replace(/,/g, ''));
             return Number.isFinite(n) ? n : 0;
@@ -1787,6 +1819,25 @@
         function txDelta(tx) {
             const a = effectiveAmounts(tx);
             return (a.debit || 0) - (a.credit || 0);
+        }
+
+        function isInterestDebitTx(tx) {
+            return isInterestNarrationText(tx && tx.narration);
+        }
+
+        function txDeltaForCurrentBalance(tx) {
+            if (isInterestDebitTx(tx)) return 0;
+            return txDelta(tx);
+        }
+
+        /** True if any statement line has a non-zero debit or credit (history rows must stay consistent with opening). */
+        function statementRowsHaveMoney(txs) {
+            const list = txs || [];
+            for (let i = 0; i < list.length; i++) {
+                const eff = effectiveAmounts(list[i]);
+                if ((eff.debit || 0) !== 0 || (eff.credit || 0) !== 0) return true;
+            }
+            return false;
         }
 
         /**
@@ -1975,7 +2026,7 @@
             try {
                 const sortedS = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
                 stmtClosing = openingBalanceForRunningStatement(sortedS);
-                sortedS.forEach(tx => { stmtClosing += txDelta(tx); });
+                sortedS.forEach(tx => { stmtClosing += txDeltaForCurrentBalance(tx); });
                 if (customerData.statementBillAmountCleared) stmtClosing = 0;
             } catch (e) { stmtClosing = 0; }
             const netBalance = Math.abs(Number(stmtClosing) || 0);
@@ -1983,9 +2034,10 @@
             customerData.currentBalance = netBalance;
             customerData.currentBalanceType = netType;
 
-            /** Fully paid on statement — align customer opening (and master) to ₹0 with current balance. */
+            /** Fully paid on statement — align opening/master to ₹0 only when there are no amount rows left (otherwise math and saved rows disagree). */
             const closingZero = Math.abs(Number(stmtClosing) || 0) < 0.000001;
-            if (closingZero && !customerData.statementBillAmountCleared) {
+            const zeroOpeningAfterPayoff = closingZero && !customerData.statementBillAmountCleared && !statementRowsHaveMoney(transactions);
+            if (zeroOpeningAfterPayoff) {
                 customerData.openingBalance = 0;
                 customerData.openingBalanceType = 'Dr';
             }
@@ -1999,7 +2051,7 @@
                     if (customerData.statementBillAmountCleared) {
                         applyClearedStateToCustomerRow(c);
                     } else {
-                        if (closingZero) {
+                        if (zeroOpeningAfterPayoff) {
                             c.openingBalance = 0;
                             c.openingBalanceType = 'Dr';
                             c.masterOpeningBalance = 0;
@@ -2396,6 +2448,40 @@
             }
         }
 
+        function openAddInvoiceFromStatement() {
+            try {
+                const customerName = String(customerData && customerData.name ? customerData.name : '').trim();
+                if (customerName) {
+                    localStorage.setItem("selectedCustomerName", customerName);
+                }
+
+                // Ensure invoice opens in fresh "new" mode, not edit mode from previous flows.
+                localStorage.removeItem("editOrderId");
+                localStorage.removeItem("editFromAllBill");
+                localStorage.removeItem("editBalanceEntry");
+                localStorage.removeItem("editBalanceRows");
+                localStorage.removeItem("editOrderPayload");
+                localStorage.removeItem("editCustomerReadOnly");
+
+                if (typeof loadPage === 'function') {
+                    loadPage("pages/ready-extra-order.html");
+                    return;
+                }
+                if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
+                    window.parent.loadPage("pages/ready-extra-order.html");
+                    return;
+                }
+                if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
+                    window.top.loadPage("pages/ready-extra-order.html");
+                    return;
+                }
+                window.open("/pages/ready-extra-order.html", "AddInvoice", "width=1400,height=800");
+            } catch (e) {
+                console.error("Error opening Add Invoice:", e);
+                alert("Unable to open Add Invoice: " + (e.message || String(e)));
+            }
+        }
+
         function statementNarrationHtml(narText) {
             const raw = String(narText || '');
             const prefix = "Bill No. - ";
@@ -2436,8 +2522,9 @@
             const billsSum = customerData.statementBillAmountCleared ? 0 : getCustomerBillsSumFromBalances();
             const hasBillTx = statementIncludesSyncedBillRows(sorted);
             const showBillsSummaryRow = !hasBillTx && Math.abs(billsSum) > 0.000001;
-            const showOpeningRow = (Math.abs(opSigned) > 0.000001)
-                && (sorted.length === 0 && !showBillsSummaryRow);
+            // Opening balance is already shown in the upper summary section.
+            // Do not add a duplicate static "Opening Balance" row in statement table.
+            const showOpeningRow = false;
 
             /** Non-editable rows so Opening / bills show in Credit or Debit (not only hidden inside Balance). */
             function appendStaticStatementRow(idxTxt, dateStr, narText, crHtml, drHtml, balSigned, prevSignedOpt) {
@@ -2586,7 +2673,7 @@
                 const { td: tdDate, span: spDate } = makeCell(fmtDate(tx.date), false, (v) => updateTx('date', v));
                 const { td: tdNar, span: spNar } = makeCell(tx.narration, false, (v) => updateTx('narration', v));
                 const { td: tdCr, span: spCr } = makeCell(dispCrM ? fmt(dispCrM) : '', true, (v) => updateTx('credit', v));
-                const { td: tdDr, span: spDr } = makeCell(dispDrM ? fmt(dispDrM) : '', true, (v) => updateTx('debit', v));
+                const { td: tdDr, span: spDr } = makeCell(fmtDebitCell(dispDrM, tx.narration), true, (v) => updateTx('debit', v));
                 applyCrDrBalanceHint(spCr, spDr, tx.entryType);
 
                 tr.appendChild(tdIdx);
@@ -2734,8 +2821,13 @@
             if (customerData.statementBillAmountCleared) {
                 balance = 0;
             }
-            const absbal = Math.abs(balance);
-            const footerTag = drCrTagForRunning(balance, prevSignedForFooter);
+            let currentBalSigned = openingBalanceForRunningStatement(sorted);
+            sorted.forEach(tx => { currentBalSigned += txDeltaForCurrentBalance(tx); });
+            if (customerData.statementBillAmountCleared) {
+                currentBalSigned = 0;
+            }
+            const absbal = Math.abs(currentBalSigned);
+            const footerTag = drCrTagForRunning(currentBalSigned, prevSignedForFooter);
             const balEl = document.getElementById('dispCurrentBal');
             if (balEl) {
                 balEl.textContent = fmt(absbal) + ' ' + footerTag.tag;
@@ -2761,7 +2853,12 @@
             (function updateOpeningBalanceHeader() {
                 const el = document.getElementById('dispOpBal');
                 if (!el) return;
-                const showOpeningAsZero = customerData.statementBillAmountCleared || Math.abs(balance) < 0.000001;
+                const hasStmtMoney = sorted.some(tx => {
+                    const eff = effectiveAmounts(tx);
+                    return (eff.debit || 0) !== 0 || (eff.credit || 0) !== 0;
+                });
+                const showOpeningAsZero = customerData.statementBillAmountCleared
+                    || (Math.abs(balance) < 0.000001 && !hasStmtMoney);
                 const raw = showOpeningAsZero ? 0 : (parseFloat(customerData.openingBalance || 0) || 0);
                 const absAmt = Math.abs(raw);
                 const t = showOpeningAsZero ? 'dr' : String(customerData.openingBalanceType || 'Dr').trim().toLowerCase();
@@ -2848,7 +2945,7 @@
                 // - Simple for remaining months
                 // - Daily simple for extra days (days/30)
                 const principalBase = sorted
-                    .filter(tx => String(tx && tx.narration ? tx.narration : '').trim().toLowerCase() !== 'interest debit')
+                    .filter(tx => !isInterestNarrationText(tx && tx.narration))
                     .reduce((sum, tx) => sum + txDelta(tx), openingSignedForStatement());
                 if (!Number.isFinite(principalBase) || principalBase <= 0) {
                     showToast('⚠️ Principal must be greater than zero for compound interest.');
@@ -2898,8 +2995,9 @@
                 addSegment(uptoDate);
             }
 
-            pendingInterest = round2(totalInterest);
             const closingAfterInterest = round2(runningBal);
+            pendingInterestSide = closingAfterInterest < 0 ? 'credit' : 'debit';
+            pendingInterest = round2(Math.abs(totalInterest));
             interestHasCalcResult = true;
             interestLastCompMonth = compMonth;
             renderInterestTable();
@@ -2915,7 +3013,11 @@
                     <span style="font-size:22px; font-weight:800; color:var(--danger);">₹ ${fmt(pendingInterest)}</span>
                 </div>
             `;
-            document.getElementById('applyIntInline').style.display = 'inline-block';
+            const applyBtn = document.getElementById('applyIntInline');
+            if (applyBtn) {
+                applyBtn.textContent = pendingInterestSide === 'credit' ? '✅ Add as Credit' : '✅ Add as Debit';
+                applyBtn.style.display = 'inline-block';
+            }
             scrollInterestTableToBottom({ smooth: true });
             res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             saveInterestModule();
@@ -2926,7 +3028,7 @@
             const to = document.getElementById('int_to_inline').value;
             dedupeInterestDebitRows();
             const hasSameDate = (interestApplied || []).some(r =>
-                r && String(r.narration || '').trim().toLowerCase() === 'interest debit' &&
+                r && isInterestNarrationText(r.narration) &&
                 String(r.date || '').trim() === String(to || '').trim()
             );
             if (hasSameDate) {
@@ -2935,13 +3037,14 @@
             }
             interestApplied.push({
                 date: to,
-                narration: 'Interest Debit',
-                credit: pendingInterest < 0 ? Math.abs(pendingInterest) : 0,
-                debit: pendingInterest > 0 ? Math.abs(pendingInterest) : 0,
+                narration: pendingInterestSide === 'credit' ? 'Interest Credit' : 'Interest Debit',
+                credit: pendingInterestSide === 'credit' ? Math.abs(pendingInterest) : 0,
+                debit: pendingInterestSide === 'debit' ? Math.abs(pendingInterest) : 0,
                 calculatedOn: 0,
                 id: Date.now()
             });
             pendingInterest = 0;
+            pendingInterestSide = 'debit';
             interestHasCalcResult = false;
             saveInterestModule();
             document.getElementById('interestSection').style.display = 'none';
@@ -2963,7 +3066,7 @@
                 interestHasCalcResult = false;
                 interestLastCompMonth = 0;
                 lastInterestCalculatedDate = '';
-                transactions = (transactions || []).filter(tx => String(tx && tx.narration ? tx.narration : '').trim().toLowerCase() !== 'interest debit');
+                transactions = (transactions || []).filter(tx => !isInterestNarrationText(tx && tx.narration));
                 transactions = [];
                 nextId = 1;
                 selectedIdx = null;
@@ -3139,7 +3242,7 @@
             try {
                 const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
                 let closing = openingBalanceForRunningStatement(sorted);
-                sorted.forEach(tx => { closing += txDelta(tx); });
+                sorted.forEach(tx => { closing += txDeltaForCurrentBalance(tx); });
                 if (customerData.statementBillAmountCleared) closing = 0;
                 const absClosing = Math.abs(Number(closing) || 0);
                 customerData.currentBalance = absClosing;
