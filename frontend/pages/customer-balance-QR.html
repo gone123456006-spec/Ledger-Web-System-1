@@ -2944,6 +2944,7 @@
                 // - Compound on selected block months
                 // - Simple for remaining months
                 // - Daily simple for extra days (days/30)
+                // - Plus fixed extra 5 days as requested
                 const principalBase = sorted
                     .filter(tx => !isInterestNarrationText(tx && tx.narration))
                     .reduce((sum, tx) => sum + txDelta(tx), openingSignedForStatement());
@@ -2951,7 +2952,15 @@
                     showToast('⚠️ Principal must be greater than zero for compound interest.');
                     return;
                 }
-                const comp = calculateHalfYearCompoundWithRemainder(principalBase, rate, startDate, uptoDate, compMonth);
+                const compoundUptoWithExtraDays = new Date(uptoDate);
+                compoundUptoWithExtraDays.setDate(compoundUptoWithExtraDays.getDate() + 5);
+                const comp = calculateHalfYearCompoundWithRemainder(
+                    principalBase,
+                    rate,
+                    startDate,
+                    compoundUptoWithExtraDays,
+                    compMonth
+                );
                 comp.rows.forEach((step, idx) => {
                     interestApplied.push({
                         id: Date.now() + idx,
