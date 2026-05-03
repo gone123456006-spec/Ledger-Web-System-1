@@ -76,6 +76,24 @@
       box-shadow: var(--shadow-hover);
     }
 
+    .ledger-page-shell.customer-add-shell {
+      width: 100%;
+      max-width: 800px;
+      align-self: center;
+      margin-bottom: 24px;
+    }
+
+    .ledger-page-shell.customer-add-shell .erp-form {
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      margin: 0;
+    }
+
+    .ledger-page-shell.customer-add-shell .erp-form:hover {
+      box-shadow: none;
+    }
+
     .form-left,
     .form-right {
       display: flex;
@@ -318,23 +336,20 @@
       display: flex !important;
     }
 
+    #customerListSection > .ledger-page-titlebar:first-child {
+      margin: -20px -20px 16px -20px;
+      border-radius: 16px 16px 0 0;
+    }
+
     #customerListSection .list-header {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       align-items: center;
       flex-wrap: wrap;
       gap: 16px;
       padding-bottom: 16px;
       margin-bottom: 16px;
       border-bottom: 2px solid var(--border);
-    }
-
-    #customerListSection h2 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text);
-      letter-spacing: -0.02em;
     }
 
     #customerListSection .list-controls {
@@ -649,7 +664,9 @@
 
 <body>
   <div class="page">
-    <form id="customerForm" class="erp-form">
+    <div class="ledger-page-shell customer-add-shell">
+      <div class="ledger-page-titlebar">Add Customer</div>
+      <form id="customerForm" class="erp-form">
       <div class="form-left">
         <h4>Personal Details</h4>
         <div class="field">
@@ -755,10 +772,11 @@
         </div>
       </div>
     </form>
+    </div>
 
     <div id="customerListSection">
+      <div class="ledger-page-titlebar" id="listSectionTitle">Customer List</div>
       <div class="list-header">
-        <h2 id="listSectionTitle">Customer List</h2>
         <div class="list-controls">
           <label for="listTypeSelect">Show list</label>
           <select id="listTypeSelect" onchange="switchListType()">
@@ -1351,11 +1369,13 @@
 
     function openList() {
       const formEl = document.querySelector(".erp-form");
+      const addShell = document.querySelector(".customer-add-shell");
       const listSection = $("customerListSection");
       const actionButtons = document.querySelector(".form-actions");
       const listTypeSelect = $("listTypeSelect");
       const pageContainer = document.querySelector(".page");
       if (pageContainer) pageContainer.style.padding = "0";
+      if (addShell) addShell.style.display = "none";
       if (formEl) formEl.style.display = "none";
       if (listSection) {
         listSection.style.display = "flex";
@@ -1370,10 +1390,12 @@
 
     function goBackToAddCustomer() {
       const formEl = document.querySelector(".erp-form");
+      const addShell = document.querySelector(".customer-add-shell");
       const listSection = $("customerListSection");
       const actionButtons = document.querySelector(".form-actions");
       const pageContainer = document.querySelector(".page");
       if (pageContainer) pageContainer.style.padding = "24px 32px 100px";
+      if (addShell) addShell.style.display = "";
       if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
       if (listSection) {
         listSection.style.display = "none";

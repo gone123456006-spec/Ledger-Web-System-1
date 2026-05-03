@@ -121,13 +121,55 @@
     /* =====================
    TITLE
 ===================== */
-    .order-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      display: flex;
-      justify-content: space-between;
+    /* Title + save badge on one row (no gap above cards) */
+    .ledger-page-titlebar.order-page-titlebar-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
       align-items: center;
+      column-gap: 8px;
+      text-align: initial;
+    }
+
+    .order-page-titlebar-grid .order-page-titlebar-heading {
+      grid-column: 2;
+      justify-self: center;
+      text-align: center;
+      font-size: inherit;
+      font-weight: inherit;
+    }
+
+    .ledger-page-titlebar.order-page-titlebar-grid .order-title-meta {
+      grid-column: 3;
+      justify-self: end;
+      margin-bottom: 0;
+      min-height: 0;
+    }
+
+    /* One band: title bar + top row cards — same top radius, no rounded “shoulder” gap */
+    .app.new-order-page > .ledger-page-titlebar.order-page-titlebar-grid {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .workspace[data-page] .app.new-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .app.new-order-page > .order-top {
+      margin-top: 0;
+    }
+
+    .app.new-order-page > .order-top > .box {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-top: none;
+    }
+
+    .order-title-meta {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 16px;
+      min-height: 22px;
     }
 
     .save-indicator {
@@ -676,11 +718,8 @@
         padding: 12px;
       }
 
-      .order-title {
-        font-size: 16px;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+      .order-title-meta {
+        justify-content: flex-start;
       }
 
       .row {
@@ -1620,9 +1659,11 @@
 
   <div class="app new-order-page" id="orderApp" data-page-root="new-order">
 
-    <div class="order-title">
-      <span>GST Order</span>
-      <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
+    <div class="ledger-page-titlebar order-page-titlebar-grid">
+      <span class="order-page-titlebar-heading">New Order</span>
+      <div class="order-title-meta">
+        <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
+      </div>
     </div>
 
     <div class="error-message" id="errorMessageInline" aria-live="polite"></div>

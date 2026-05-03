@@ -41,7 +41,7 @@
       margin: 0;
       height: 100%;
       max-height: 100%;
-      border-radius: 0;
+      border-radius: var(--ledger-ws-r, 10px);
       box-shadow: none;
     }
 
@@ -60,9 +60,12 @@
       box-sizing: border-box;
     }
 
-    .balance-toolbar h2 {
-      font-size: 20px;
-      font-weight: 600;
+    .balance-wrap > .ledger-page-titlebar:first-child {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .workspace .balance-wrap > .ledger-page-titlebar:first-child {
+      border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
     }
 
     .btn {
@@ -283,8 +286,8 @@
   <div class="balance-wrap">
 
     <!-- All Bill = bill ledger (customerBalances). One row per bill. Edit. Different from Customer Balance = one row per customer (customers). -->
+    <div class="ledger-page-titlebar">All Bill</div>
     <div class="balance-toolbar">
-      <h2>All Bill</h2>
       <button class="btn" onclick="loadBalances()">🔄 Refresh</button>
 
       <label>Customer</label>

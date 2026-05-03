@@ -32,12 +32,8 @@
       overflow: hidden;
     }
 
-    .direct-bill-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
-      background: #f4f8ff;
-      font-size: 18px;
-      font-weight: 700;
+    .direct-bill-wrap > .ledger-page-titlebar:first-child {
+      border-radius: 12px 12px 0 0;
     }
 
     .direct-bill-body {
@@ -76,7 +72,7 @@
 </head>
 <body>
   <section class="direct-bill-wrap">
-    <header class="direct-bill-header" id="directBillHeader">Direct Bill</header>
+    <header class="ledger-page-titlebar" id="directBillHeader">Direct Bill</header>
     <div class="direct-bill-body">
       <p class="direct-bill-note" id="directBillNote">
         Direct Bill page is ready. You can now continue implementing bill form fields and save logic here.

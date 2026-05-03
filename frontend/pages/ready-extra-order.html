@@ -67,12 +67,60 @@
     }
 
     /* =====================
-   TITLE
+   TITLE (same bar + flush cards as New Order / Gold Invoice)
 ===================== */
-    .order-title {
-      font-size: 18px;
-      font-weight: 600;
+    .ledger-page-titlebar.order-page-titlebar-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      align-items: center;
+      column-gap: 8px;
+      text-align: initial;
+    }
+
+    .order-page-titlebar-grid .order-page-titlebar-heading {
+      grid-column: 2;
+      justify-self: center;
+      text-align: center;
+      font-size: inherit;
+      font-weight: inherit;
+    }
+
+    .ledger-page-titlebar.order-page-titlebar-grid .order-title-meta {
+      grid-column: 3;
+      justify-self: end;
+      margin-bottom: 0;
+      min-height: 0;
+    }
+
+    .order-title-meta {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
       margin-bottom: 16px;
+      min-height: 22px;
+    }
+
+    .order-page-titlebar-heading.order-title {
+      margin: 0;
+    }
+
+    .app.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid,
+    .app#orderApp.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .workspace[data-page] .app#orderApp.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .app.ready-order-page > .order-top {
+      margin-top: 0;
+    }
+
+    .app.ready-order-page > .order-top > .box {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      border-top: none;
     }
 
     /* =====================
@@ -911,7 +959,7 @@
         padding: 12px;
       }
 
-      .order-title {
+      .order-page-titlebar-heading.order-title {
         font-size: 16px;
       }
 
@@ -2219,7 +2267,10 @@
 
   <div class="app no-print ready-order-page" id="orderApp" data-page-root="ready-extra-order" data-bill-mode="0">
 
-    <div class="order-title">Order</div>
+    <div class="ledger-page-titlebar order-page-titlebar-grid">
+      <span class="order-page-titlebar-heading order-title">Order</span>
+      <div class="order-title-meta"></div>
+    </div>
 
     <!-- TOP -->
     <div class="order-top">

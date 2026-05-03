@@ -42,8 +42,16 @@
       margin: 0;
       height: 100%;
       max-height: 100%;
-      border-radius: 0;
+      border-radius: var(--ledger-ws-r, 10px);
       box-shadow: none;
+    }
+
+    .orders-wrap > .ledger-page-titlebar:first-child {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .workspace .orders-wrap > .ledger-page-titlebar:first-child {
+      border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
     }
 
     /* =========================
@@ -59,11 +67,6 @@
       background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
       flex-shrink: 0;
       box-sizing: border-box;
-    }
-
-    .orders-toolbar h2 {
-      font-size: 20px;
-      font-weight: 600;
     }
 
     .btn {
@@ -464,6 +467,8 @@
 <body>
 
   <div class="orders-wrap">
+
+    <div class="ledger-page-titlebar">Orders</div>
 
     <!-- TOOLBAR -->
     <div class="orders-toolbar">

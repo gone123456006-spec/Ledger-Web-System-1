@@ -36,6 +36,10 @@
       position: relative;
     }
 
+    .wrap > .ledger-page-titlebar:first-child {
+      border-radius: 14px 14px 0 0;
+    }
+
     /* ── TOOLBAR ── */
     .toolbar {
       display: flex;
@@ -53,15 +57,6 @@
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
-    }
-
-    .toolbar h2 {
-      font-size: 17px;
-      font-weight: 700;
-      color: #1a1f2e;
-      flex: 1;
-      min-width: 0;
-      white-space: nowrap;
     }
 
     /* Assign / Skip / Unassign: one horizontal row directly under the page title row */
@@ -1232,10 +1227,10 @@
 <body>
 
   <div class="wrap">
+    <div class="ledger-page-titlebar">Pending Items</div>
     <!-- TOOLBAR -->
     <div class="toolbar">
       <div class="toolbar-row-main">
-      <h2>⏳ Pending Items</h2>
       <span class="sel-pill" id="selPill">0 selected</span>
       <div class="pending-field-filters" id="pendingFieldFilters" aria-label="Filter by column">
         <div class="pending-filter-group">

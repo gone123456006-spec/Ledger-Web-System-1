@@ -349,6 +349,75 @@ ul, li{
     border-radius:16px 16px 0 0;
 }
 
+/* =========================
+   UNIFIED PAGE TITLE (same as Station modal — use in .workspace-loaded pages)
+========================= */
+.ledger-page-titlebar{
+    background:linear-gradient(#f4f6fa,#e6eaf0);
+    color:#1d1d1f;
+    text-align:center;
+    padding:10px 14px;
+    font-size:15px;
+    font-weight:600;
+    border-bottom:1px solid #d1d6de;
+    margin:0;
+    letter-spacing:0.01em;
+    flex-shrink:0;
+    border-radius:8px 8px 0 0;
+}
+
+/* Optional: card shell so title bar matches Station window top corners */
+.ledger-page-shell{
+    background:#ffffff;
+    border:1px solid #d1d6de;
+    border-radius:16px;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+    overflow:hidden;
+    max-width:100%;
+}
+.ledger-page-shell > .ledger-page-titlebar:first-child{
+    border-radius:16px 16px 0 0;
+}
+
+/* Default corner radius for modules in dashboard workspace (overridden per-page with same var) */
+:root{
+    --ledger-ws-r:10px;
+}
+
+/* Full-page apps and misc shells inside workspace */
+.workspace[data-page] .app.new-order-page,
+.workspace[data-page] .app.ready-order-page,
+.workspace[data-page] .app#orderApp{
+    border-radius:var(--ledger-ws-r);
+    overflow:hidden;
+}
+
+.workspace[data-page] .app.new-order-page > .ledger-page-titlebar:first-child,
+.workspace[data-page] .app.ready-order-page > .ledger-page-titlebar:first-child,
+.workspace[data-page] .app#orderApp > .ledger-page-titlebar:first-child{
+    border-radius:var(--ledger-ws-r) var(--ledger-ws-r) 0 0;
+}
+
+.workspace[data-page] .direct-bill-wrap{
+    border-radius:var(--ledger-ws-r);
+}
+
+.workspace[data-page] .direct-bill-wrap > .ledger-page-titlebar:first-child{
+    border-radius:var(--ledger-ws-r) var(--ledger-ws-r) 0 0;
+}
+
+.workspace[data-page] .wrap{
+    border-radius:var(--ledger-ws-r) !important;
+}
+
+.workspace[data-page] .wrap > .ledger-page-titlebar:first-child{
+    border-radius:var(--ledger-ws-r) var(--ledger-ws-r) 0 0 !important;
+}
+
+.workspace[data-page] .ledger-page-shell.customer-add-shell{
+    border-radius:var(--ledger-ws-r);
+}
+
 /* BODY */
 .station-body{
     padding:22px 30px;

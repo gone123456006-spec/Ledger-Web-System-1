@@ -38,8 +38,16 @@
       margin: 0;
       height: 100%;
       max-height: 100%;
-      border-radius: 0;
+      border-radius: var(--ledger-ws-r, 10px);
       box-shadow: none;
+    }
+
+    .customer-balance-wrap > .ledger-page-titlebar:first-child {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .workspace .customer-balance-wrap > .ledger-page-titlebar:first-child {
+      border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
     }
 
     .balance-toolbar {
@@ -53,17 +61,11 @@
       flex-shrink: 0;
     }
 
-    .balance-toolbar h2 {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 600;
-      color: #1d1d1f;
-      flex: 1;
-    }
-
     .balance-toolbar .toolbar-subtitle {
       font-size: 14px;
       color: #6e6e73;
+      flex: 1;
+      min-width: 200px;
     }
 
     .btn {
@@ -304,10 +306,6 @@
         gap: 10px;
       }
 
-      .balance-toolbar h2 {
-        font-size: 18px;
-      }
-
       input {
         min-width: 140px;
         font-size: 14px;
@@ -357,8 +355,8 @@
 
 <body>
   <div class="customer-balance-wrap">
+    <div class="ledger-page-titlebar">Customer Balance</div>
     <div class="balance-toolbar">
-      <h2>Customer Balance</h2>
       <span class="toolbar-subtitle">One row per customer — balance from Add Customer / Transfers</span>
       <button type="button" class="btn" onclick="loadTable()">🔄 Refresh</button>
       <label for="customerBalanceSearch">Search</label>

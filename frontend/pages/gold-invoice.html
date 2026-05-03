@@ -53,9 +53,30 @@
     input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     body { margin: 0; background: var(--bg); color: var(--text); }
     .app { max-width: none; width: 100%; margin: 0; padding: 16px 12px; }
-    .order-title {
-      font-size: 18px; font-weight: 600; margin-bottom: 16px;
-      display: flex; justify-content: space-between; align-items: center;
+    .ledger-page-titlebar.order-page-titlebar-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      align-items: center; column-gap: 8px; text-align: initial;
+    }
+    .order-page-titlebar-grid .order-page-titlebar-heading {
+      grid-column: 2; justify-self: center; text-align: center;
+      font-size: inherit; font-weight: inherit;
+    }
+    .ledger-page-titlebar.order-page-titlebar-grid .order-title-meta {
+      grid-column: 3; justify-self: end; margin-bottom: 0; min-height: 0;
+    }
+    .app.gold-invoice-page > .ledger-page-titlebar.order-page-titlebar-grid {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .workspace[data-page] .app#orderApp.gold-invoice-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .app.gold-invoice-page > .order-top { margin-top: 0; }
+    .app.gold-invoice-page > .order-top > .box {
+      border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
+    }
+    .order-title-meta {
+      display: flex; justify-content: flex-end; align-items: center;
+      margin-bottom: 16px; min-height: 22px;
     }
     .save-indicator { font-size: 12px; color: var(--success); opacity: 0; transition: opacity 0.3s; }
     .save-indicator.show { opacity: 1; }
@@ -237,7 +258,7 @@
     @media(max-width:1024px) { .order-top { grid-template-columns: 1fr; } }
     @media(max-width:600px) {
       .app { padding: 12px; }
-      .order-title { font-size: 16px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .order-title-meta { justify-content: flex-start; }
       .row { flex-direction: column; align-items: flex-start; }
       .row label { min-width: 100%; }
       .row input, .row select { width: 100%; height: 40px; }
@@ -400,10 +421,12 @@
 <div id="toastSuccess" class="toast success">Saved successfully</div>
 <div id="toastError" class="toast error">Error</div>
 
-<div class="app" id="orderApp">
-  <div class="order-title">
-    <span>GOLD INVOICE</span>
-    <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
+<div class="app gold-invoice-page" id="orderApp">
+  <div class="ledger-page-titlebar order-page-titlebar-grid">
+    <span class="order-page-titlebar-heading">Gold Invoice</span>
+    <div class="order-title-meta">
+      <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
+    </div>
   </div>
 
   <div class="error-message" id="errorMessageInline" aria-live="polite"></div>
