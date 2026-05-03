@@ -3991,6 +3991,41 @@
         }
       }
 
+      /** Normalize saved bill row shapes to Ready/Extra 17-col values. */
+      function normalizeToReadyExtraValues(vals) {
+        vals = Array.isArray(vals) ? vals : [];
+        if (vals.length >= 17) return vals.slice(0, 17);
+        // Only Direct Bill / Gold compact rows (do NOT touch New Order [13] or legacy Ready [16]).
+        // 10 cols: [Type, Item, Pc, R.Metal, Neg, R.Wt, Rate, Making, Other, Total]
+        // 11 cols: [Type, Item, Stamp, Pc, R.Metal, Neg, R.Wt, Rate, Making, Other, Total]
+        if (vals.length === 10 || vals.length === 11) {
+          var out = new Array(17).fill("");
+          var tailStart = vals.length - 7; // R.Metal..Total
+          out[0] = vals[0] || "Order";  // Type
+          out[1] = "";                  // Order No.
+          out[2] = vals[1] || "";       // Item Name
+          if (tailStart >= 4) {
+            out[3] = vals[2] || "";     // Stamp
+            out[4] = vals[3] || "";     // Pc
+          } else {
+            out[3] = "";                // Stamp
+            out[4] = vals[2] || "";     // Pc
+          }
+          // Keep legacy left-side fields empty
+          out[5] = ""; out[6] = ""; out[7] = ""; out[8] = ""; out[9] = "";
+          // Ready-side values
+          out[10] = vals[tailStart] || "";       // R. Metal
+          out[11] = vals[tailStart + 1] || "";   // Neg
+          out[12] = vals[tailStart + 2] || "";   // R. Wt
+          out[13] = vals[tailStart + 3] || "";   // Rate
+          out[14] = vals[tailStart + 4] || "";   // Making
+          out[15] = vals[tailStart + 5] || "";   // Other
+          out[16] = vals[tailStart + 6] || "";   // Total
+          return out;
+        }
+        return vals.slice();
+      }
+
       /** Build New-Order values[13] from named properties (legacy/fallback payloads). */
       function buildNewOrderValuesFromItemObject(src) {
         if (!src || typeof src !== "object") return null;
@@ -5996,6 +6031,7 @@
           }
 
           orderDataR.id = orderIdR;
+          orderDataR.orderSource = "ready-extra";
           orderDataR.orderNo = billNo.value;
           orderDataR.sgjBillNo = window.sgjBillNo ? window.sgjBillNo.value : "";
           orderDataR.customer = getCustomerName();
@@ -6168,6 +6204,7 @@
 
         const orderData = {
           id: orderId,
+          orderSource: "ready-extra",
           orderNo: billNo.value,
           sgjBillNo: window.sgjBillNo ? window.sgjBillNo.value : "",
           customer: getCustomerName(),
@@ -6713,7 +6750,8 @@
 
             // Restore by column index so Stamp, Pc, Ut. Wt., etc. stay in correct columns
             if (item.values && item.values.length > 0) {
-              setReadyOrderRowValues(tr, item.values, item.values.length === 13, false);
+              var normalizedValues = normalizeToReadyExtraValues(item.values);
+              setReadyOrderRowValues(tr, normalizedValues, normalizedValues.length === 13, false);
               applyReadyMetaFieldsFromSource(tr, item, false);
             } else {
               var fallbackVals = buildNewOrderValuesFromItemObject(item);
@@ -6827,7 +6865,7 @@
         billRows.forEach(r => {
           addRow();
           const tr = itemBody.lastElementChild;
-          const vals = r.values || [];
+          const vals = normalizeToReadyExtraValues(r.values || []);
           if (vals.length > 0) setReadyOrderRowValues(tr, vals, vals.length === 13, false);
           applyReadyMetaFieldsFromSource(tr, r, false);
 

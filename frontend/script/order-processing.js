@@ -56,6 +56,49 @@
         return Math.max(0, parseFloat(get(7)) || 0);
     }
 
+    /**
+     * Direct Bill / Ready Extra: non–All-Bill save uses status READY as staging (Ready Orders queue).
+     * Pending Orders / Pending Items still treat these like open workshop orders until All Bill or promotion.
+     */
+    function orderIsDirectBillStagingQueue(order) {
+        if (!order) return false;
+        var src = String(order.orderSource || '').toLowerCase();
+        if (src === 'ready-extra') return true;
+        var items = order.items || order.rows || [];
+        for (var i = 0; i < items.length; i++) {
+            var v = items[i] && items[i].values;
+            if (Array.isArray(v) && v.length >= 16) return true;
+        }
+        return false;
+    }
+
+    /** Gold Invoice lives under All Bill / DIRECT BILL — not workshop Pending Orders / Pending Items. */
+    function orderIsGoldInvoiceWorkshopExclude(order) {
+        if (!order) return false;
+        if (String(order.orderSource || '').toLowerCase() === 'gold-invoice') return true;
+        var on = String(order.orderNo != null ? order.orderNo : order.billNo != null ? order.billNo : '').trim();
+        return /^SGJ\/GI\//i.test(on);
+    }
+
+    /** Pending Orders: PENDING new orders plus READY direct-bill staging (not workshop-only READY). */
+    function orderShowsOnPendingOrdersPage(order) {
+        if (!order) return false;
+        if (orderIsGoldInvoiceWorkshopExclude(order)) return false;
+        var s = String(order.status == null ? '' : order.status).trim().toUpperCase();
+        if (s === 'PENDING') return true;
+        if (s === 'READY' && orderIsDirectBillStagingQueue(order)) return true;
+        return false;
+    }
+
+    /** Pending Items: non-READY orders, plus READY direct-bill staging (same lines as 17-col mapping). */
+    function orderShowsOnPendingItemsPage(order) {
+        if (!order || order.id == null) return false;
+        if (orderIsGoldInvoiceWorkshopExclude(order)) return false;
+        var s = String(order.status == null ? '' : order.status).trim().toUpperCase();
+        if (s !== 'READY') return true;
+        return orderIsDirectBillStagingQueue(order);
+    }
+
     function orderLineHasItemProcessRows(itemProcess, orderId, itemIdx) {
         var oid = String(orderId);
         var ix = parseInt(itemIdx, 10);
@@ -342,6 +385,10 @@
     global.OrderProcessing = {
         isOrderLineItem: isOrderLineItem,
         orderLineQty: orderLineQty,
+        orderIsDirectBillStagingQueue: orderIsDirectBillStagingQueue,
+        orderIsGoldInvoiceWorkshopExclude: orderIsGoldInvoiceWorkshopExclude,
+        orderShowsOnPendingOrdersPage: orderShowsOnPendingOrdersPage,
+        orderShowsOnPendingItemsPage: orderShowsOnPendingItemsPage,
         sumQtyForLineWithStatuses: sumQtyForLineWithStatuses,
         readyStatusesUpper: readyStatusesUpper,
         isTerminalProcessStatus: isTerminalProcessStatus,

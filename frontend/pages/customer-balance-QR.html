@@ -528,6 +528,10 @@
             flex: 0 1 auto;
         }
 
+        .actions-left {
+            overflow: visible;
+        }
+
         /* ── BUTTONS ── */
         .btn {
             padding: 8px 12px;
@@ -596,6 +600,52 @@
             border-color: #dc2626;
             color: #fff;
             box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Add Invoice: hover flyout (same routes as sidebar Direct Bill) */
+        .statement-add-invoice {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .statement-add-invoice .add-invoice-trigger {
+            margin-bottom: 0;
+        }
+
+        .statement-add-invoice-submenu {
+            display: none;
+            position: fixed;
+            min-width: 200px;
+            padding: 4px 0;
+            background: #fff;
+            border: 1px solid #d1d6de;
+            border-radius: 10px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            z-index: 10000;
+        }
+
+        .statement-add-invoice-submenu.visible {
+            display: block;
+        }
+
+        .statement-add-invoice-submenu button {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            color: var(--text) !important;
+            font-family: inherit;
+        }
+
+        .statement-add-invoice-submenu button:hover {
+            background: #abccff;
         }
 
         /* ── MODAL ── */
@@ -1162,7 +1212,15 @@
         <!-- ACTIONS BAR -->
         <div class="actions-bar">
             <div class="actions-left">
-                <button type="button" class="btn" onclick="openAddInvoiceFromStatement()">🧾 Add Invoice</button>
+                <div class="statement-add-invoice">
+                    <button type="button" class="btn add-invoice-trigger">🧾 Add Invoice</button>
+                    <div class="statement-add-invoice-submenu" id="statementAddInvoiceSubmenu" aria-hidden="true">
+                        <button type="button" onclick="openAddInvoiceFromStatement('gold')">Gold Invoice</button>
+                        <button type="button" onclick="openAddInvoiceFromStatement('silver')">Silver Invoice</button>
+                        <button type="button" onclick="openAddInvoiceFromStatement('raw-gold')">Raw Gold Invoice</button>
+                        <button type="button" onclick="openAddInvoiceFromStatement('raw-silver')">Raw Silver Invoice</button>
+                    </div>
+                </div>
                 <button type="button" class="btn btn-success"
                     onclick="window.clearBillAmount && window.clearBillAmount()">✅ Clear Bill Amount</button>
                 <button type="button" class="btn" onclick="openCalcInterest()">📊 Interest</button>
@@ -2470,38 +2528,155 @@
             }
         }
 
-        function openAddInvoiceFromStatement() {
+        function prepareAddInvoiceFromStatement() {
+            const customerName = String(customerData && customerData.name ? customerData.name : '').trim();
+            if (customerName) {
+                localStorage.setItem("selectedCustomerName", customerName);
+            }
+            localStorage.removeItem("editOrderId");
+            localStorage.removeItem("editFromAllBill");
+            localStorage.removeItem("editBalanceEntry");
+            localStorage.removeItem("editBalanceRows");
+            localStorage.removeItem("editOrderPayload");
+            localStorage.removeItem("editCustomerReadOnly");
+        }
+
+        function navigateInvoicePageFromStatement(path) {
+            if (typeof loadPage === 'function') {
+                loadPage(path);
+                return;
+            }
+            if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
+                window.parent.loadPage(path);
+                return;
+            }
+            if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
+                window.top.loadPage(path);
+                return;
+            }
+            const url = "/" + String(path || "").replace(/^\/+/, "");
+            window.open(url, "AddInvoice", "width=1400,height=800");
+        }
+
+        function statementRelationFromCustomerMaster() {
             try {
-                const customerName = String(customerData && customerData.name ? customerData.name : '').trim();
-                if (customerName) {
-                    localStorage.setItem("selectedCustomerName", customerName);
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                const norm = (s) => (s || '').trim().toLowerCase();
+                let cust = null;
+                if (customerData.id != null && customerData.id !== '') {
+                    cust = customers.find((c) => String(c.id) === String(customerData.id));
                 }
+                if (!cust && customerData.name) {
+                    cust = customers.find((c) => norm(c.name) === norm(customerData.name));
+                }
+                if (!cust) return { relation: '', relationName: '' };
+                return {
+                    relation: String(cust.relation || '').trim(),
+                    relationName: String(cust.relationName || '').trim(),
+                };
+            } catch (e) {
+                return { relation: '', relationName: '' };
+            }
+        }
 
-                // Ensure invoice opens in fresh "new" mode, not edit mode from previous flows.
-                localStorage.removeItem("editOrderId");
-                localStorage.removeItem("editFromAllBill");
-                localStorage.removeItem("editBalanceEntry");
-                localStorage.removeItem("editBalanceRows");
-                localStorage.removeItem("editOrderPayload");
-                localStorage.removeItem("editCustomerReadOnly");
+        /** Signed: debit positive, credit negative (matches Gold Invoice number field). */
+        function statementSignedCurrentBalanceForInvoice() {
+            const abs = Math.abs(parseFloat(customerData.currentBalance) || 0);
+            const t = String(customerData.currentBalanceType || 'Dr').trim().toLowerCase();
+            if (t === 'cr' || t === 'credit') return -abs;
+            return abs;
+        }
 
-                if (typeof loadPage === 'function') {
-                    loadPage("pages/ready-extra-order.html");
-                    return;
+        function stashCustomerStatementForGoldInvoice() {
+            const rel = statementRelationFromCustomerMaster();
+            const payload = {
+                source: 'customer-statement',
+                name: String(customerData.name || '').trim(),
+                lfNo: String(customerData.lfNo || '').trim(),
+                station: String(customerData.station || '').trim(),
+                cid: String(customerData.cid || '').trim(),
+                currentBal: statementSignedCurrentBalanceForInvoice(),
+                customerId: customerData.id != null && customerData.id !== '' ? String(customerData.id) : '',
+                relation: rel.relation,
+                relationName: rel.relationName,
+            };
+            try {
+                localStorage.setItem('customerStatementInvoicePrefill', JSON.stringify(payload));
+            } catch (e) { }
+        }
+
+        /**
+         * @param {'gold'|'silver'|'raw-gold'|'raw-silver'} kind — same targets as sidebar Direct Bill
+         */
+        function openAddInvoiceFromStatement(kind) {
+            try {
+                prepareAddInvoiceFromStatement();
+                let path;
+                switch (kind) {
+                    case "gold":
+                        path = "pages/gold-invoice.html";
+                        break;
+                    case "silver":
+                        path = "pages/direct-bill.html?invoice=silver";
+                        break;
+                    case "raw-gold":
+                        path = "pages/direct-bill.html?invoice=raw-gold";
+                        break;
+                    case "raw-silver":
+                        path = "pages/direct-bill.html?invoice=raw-silver";
+                        break;
+                    default:
+                        path = "pages/gold-invoice.html";
                 }
-                if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
-                    window.parent.loadPage("pages/ready-extra-order.html");
-                    return;
+                if (path === "pages/gold-invoice.html") stashCustomerStatementForGoldInvoice();
+                else {
+                    try { localStorage.removeItem("customerStatementInvoicePrefill"); } catch (e) { }
                 }
-                if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
-                    window.top.loadPage("pages/ready-extra-order.html");
-                    return;
-                }
-                window.open("/pages/ready-extra-order.html", "AddInvoice", "width=1400,height=800");
+                navigateInvoicePageFromStatement(path);
             } catch (e) {
                 console.error("Error opening Add Invoice:", e);
                 alert("Unable to open Add Invoice: " + (e.message || String(e)));
             }
+        }
+
+        function initStatementAddInvoiceSubmenu() {
+            const block = document.querySelector(".statement-add-invoice");
+            const trigger = document.querySelector(".add-invoice-trigger");
+            const submenu = document.getElementById("statementAddInvoiceSubmenu");
+            if (!block || !trigger || !submenu) return;
+            let hideTimeout = 0;
+            function show() {
+                if (hideTimeout) clearTimeout(hideTimeout);
+                hideTimeout = 0;
+                const rect = trigger.getBoundingClientRect();
+                const gap = 6;
+                const pad = 8;
+                submenu.style.right = "auto";
+                submenu.classList.add("visible");
+                submenu.setAttribute("aria-hidden", "false");
+                const h = submenu.offsetHeight;
+                const w = submenu.offsetWidth;
+                let top = rect.top - h - gap;
+                if (top < 4) top = 4;
+                submenu.style.top = top + "px";
+                let left = rect.left;
+                if (left + w > window.innerWidth - pad) {
+                    left = Math.max(4, window.innerWidth - w - pad);
+                }
+                submenu.style.left = left + "px";
+            }
+            function scheduleHide() {
+                if (hideTimeout) clearTimeout(hideTimeout);
+                hideTimeout = setTimeout(function () {
+                    submenu.classList.remove("visible");
+                    submenu.setAttribute("aria-hidden", "true");
+                    hideTimeout = 0;
+                }, 200);
+            }
+            block.addEventListener("mouseenter", show);
+            block.addEventListener("mouseleave", scheduleHide);
+            submenu.addEventListener("mouseenter", show);
+            submenu.addEventListener("mouseleave", scheduleHide);
         }
 
         function statementNarrationHtml(narText) {
@@ -3815,6 +3990,7 @@
         }
 
         // ─── INIT ────────────────────────────────────────────────────────────────────
+        initStatementAddInvoiceSubmenu();
         render();
 
         // ─── EXPORT GLOBALS (FOR DASHBOARD SPA) ───────────────────────────────────────
@@ -3836,6 +4012,7 @@
         window.closeCtxMenu = closeCtxMenu;
         window.addRow = addRow;
         window.openStatementBillInvoice = openStatementBillInvoice;
+        window.openAddInvoiceFromStatement = openAddInvoiceFromStatement;
     </script>
 
 </body>

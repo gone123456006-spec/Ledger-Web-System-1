@@ -446,9 +446,9 @@
             <th style="min-width:115px;">Type</th>
             <th style="min-width:170px;">Item Name</th>
             <th>Pc</th>
-            <th>Gross Wt.</th>
-            <th>Less Wt.</th>
-            <th>Net Wt.</th>
+            <th>R.Metal</th>
+            <th>Neg</th>
+            <th>R. Wt</th>
             <th>Rate</th>
             <th>Making</th>
             <th>Other</th>
@@ -666,6 +666,8 @@
     orderDetailsRow: null,
     savedThisSession: false,
     selectedCustomerId: '',
+    /** When true, manual name blur must not overwrite Current Bal from customer master (prefilled from Customer Statement). */
+    statementCurrentBalLock: false,
   };
 
   // =====================================================
@@ -715,6 +717,59 @@
         }
       }
     } catch (e2) { }
+  }
+
+  var GOLD_INVOICE_DRAFT_SESSION_KEY = 'goldInvoiceDraftKey';
+
+  /** Leave / refresh / SPA navigate without Save — remove draft payments, prefill, and persisted draft so next open is clean. */
+  function wipeGoldInvoiceUnsavedSession() {
+    if (S.savedThisSession) return;
+    clearGoldInvoiceDraftCache();
+    try {
+      var draftKeys = {};
+      if (S.draftPaymentKey) draftKeys[String(S.draftPaymentKey).trim()] = true;
+      try {
+        var sk = sessionStorage.getItem(GOLD_INVOICE_DRAFT_SESSION_KEY);
+        if (sk) draftKeys[String(sk).trim()] = true;
+      } catch (eSk) { }
+      Object.keys(draftKeys).forEach(function (dkey) {
+        if (!dkey) return;
+        var pmts = getPayments();
+        var next = pmts.filter(function (p) { return !p || String(p.billNo || '').trim() !== dkey; });
+        if (next.length !== pmts.length) savePayments(next);
+      });
+      try { sessionStorage.removeItem(GOLD_INVOICE_DRAFT_SESSION_KEY); } catch (eRm) { }
+      if (!S.billNoClaimed && !S.editMode) {
+        var bnPeek = el('billNo') && String(el('billNo').value || '').trim();
+        if (bnPeek) {
+          var map = readPsMap();
+          if (map[bnPeek]) {
+            delete map[bnPeek];
+            writePsMap(map);
+          }
+        }
+      }
+    } catch (e3) { }
+    try { localStorage.removeItem('customerStatementInvoicePrefill'); } catch (e4) { }
+    try { localStorage.removeItem('selectedCustomerName'); } catch (e4b) { }
+    try {
+      localStorage.removeItem('editOrderId');
+      localStorage.removeItem('editOrderPayload');
+    } catch (e5) { }
+    S.editMode = false;
+    S.editOrderId = null;
+    S.statementCurrentBalLock = false;
+  }
+
+  var _goldInvoiceUnloadWired = false;
+  function wireGoldInvoiceUnloadWipers() {
+    if (_goldInvoiceUnloadWired) return;
+    _goldInvoiceUnloadWired = true;
+    window.addEventListener('pagehide', function () { wipeGoldInvoiceUnsavedSession(); });
+    window.addEventListener('beforeunload', function () { wipeGoldInvoiceUnsavedSession(); });
+    window.addEventListener('pageshow', function (ev) {
+      if (ev && ev.persisted) wipeGoldInvoiceUnsavedSession();
+    });
   }
 
   function showErr(msg) {
@@ -821,7 +876,13 @@
     if (!s || s.tagName !== 'INPUT') return;
     var apply = function() {
       var linked = getLinkedCustomerByName();
-      if (linked) populateCustomerFieldsFromMaster(linked);
+      if (linked) {
+        if (!S.statementCurrentBalLock) populateCustomerFieldsFromMaster(linked);
+        else if (linked.id != null) {
+          S.selectedCustomerId = String(linked.id);
+          setCustomerSelectStatus(true);
+        }
+      }
       var sel = el('custNameSelect');
       if (sel) {
         var customers = getCustomers();
@@ -844,6 +905,7 @@
     var s = el('custNameSelect');
     if (!s || s.tagName !== 'SELECT') return;
     s.addEventListener('change', function() {
+      S.statementCurrentBalLock = false;
       var o = s.selectedOptions && s.selectedOptions[0];
       if (!o || !o.value) return;
       S.selectedCustomerId = String(o.value);
@@ -950,6 +1012,7 @@
   }
 
   function clearCustFields() {
+    S.statementCurrentBalLock = false;
     ['custName','custNameSelect','currentBal','relation','station','lfNo'].forEach(function(id){ if(el(id)) el(id).value = ''; });
     setCustomerSelectStatus(false);
   }
@@ -1560,7 +1623,7 @@
   // ALL BILL (customerBalances — same list as New Order / Ready Extra)
   // =====================================================
   /** Upsert one row in customerBalances so All Bill shows this Gold Invoice after Save. */
-  function syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalGrWt, paidTotal) {
+  function syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paidTotal) {
     var name = getCustomerName();
     var s = { value: getSelectedCustomerId() };
     var cust = getLinkedCustomerByName();
@@ -1580,9 +1643,10 @@
       finalBalanceAmount: finalBal.toFixed(2),
       date: orderDateVal,
       timestamp: ts,
-      readyWeight: safeNum(totalGrWt).toFixed(3),
-      grWt: safeNum(totalGrWt).toFixed(3),
-      neg: 0,
+      readyWeight: safeNum(totalRWt).toFixed(3),
+      grWt: safeNum(totalRWt).toFixed(3),
+      rMetal: safeNum(totalRMetal).toFixed(3),
+      neg: safeNum(totalNeg).toFixed(3),
       readyMetal: 'Gold',
       payment: paidN > 0 ? (Math.abs(finalBal) <= 0.000001 ? 'Clear' : 'Partial') : 'Pending',
       narration: (narr || '').trim() || ('Gold Invoice — ' + safeNum(totalPc) + ' pcs'),
@@ -1700,10 +1764,12 @@
       var psMap = readPsMap();
       var psRec = psMap[bn] || null;
 
-      var totalPc = 0, totalGrWt = 0, orderTotal = 0;
+      var totalPc = 0, totalRMetal = 0, totalNeg = 0, totalRWt = 0, orderTotal = 0;
       rows.forEach(function(r) {
         totalPc += safeNum(r.values[2]);
-        totalGrWt += safeNum(r.values[5]);
+        totalRMetal += safeNum(r.values[3]);
+        totalNeg += safeNum(r.values[4]);
+        totalRWt += safeNum(r.values[5]);
         if (r.type !== 'Purchase') orderTotal += safeNum(r.values[9]);
       });
 
@@ -1729,19 +1795,20 @@
         purchaseSheet: psRec,
         timestamp: tsSave,
         pc: totalPc,
-        grWt: safeNum(totalGrWt).toFixed(3)
+        grWt: safeNum(totalRWt).toFixed(3)
       };
       var bi = bills.findIndex(function(b){ return b.billNo === bn; });
       if (bi >= 0) bills[bi] = billData; else bills.push(billData);
       localStorage.setItem('bills', JSON.stringify(bills));
 
       // All Bill grid reads customerBalances[]
-      syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalGrWt, paid);
+      syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paid);
 
       // Orders
 
       var orderData = {
         id: S.editOrderId || Date.now(),
+        orderSource: 'gold-invoice',
         orderNo: bn, customer: getCustomerName(), customerId: custIdForBill,
         customerOpeningBalance: (el('currentBal') && el('currentBal').value) || '',
         customerRelation: (el('relation') && el('relation').value) || '',
@@ -1749,7 +1816,7 @@
         customerLfNo: (el('lfNo') && el('lfNo').value) || '',
         orderDate: el('orderDate').value,
         type: (rows[0] && rows[0].type) || 'Order',
-        pc: totalPc, grWt: totalGrWt,
+        pc: totalPc, grWt: totalRWt,
         orderTotal: orderTotal.toFixed(2),
         netAmount: billTotal.toFixed(2),
         advance: paid.toFixed(2),
@@ -1769,7 +1836,9 @@
       localStorage.removeItem('editOrderId');
       localStorage.removeItem('editOrderPayload');
       S.savedThisSession = true;
+      S.statementCurrentBalLock = false;
       clearGoldInvoiceDraftCache();
+      try { sessionStorage.removeItem(GOLD_INVOICE_DRAFT_SESSION_KEY); } catch (eSs) { }
 
       showLoading(false);
       showSuccess('Saved — All Bill, orders, and bills updated.');
@@ -1852,6 +1921,9 @@
     S.billNoClaimed = false; S.draftPaymentKey = 'DRAFT-' + Date.now();
     S.savedThisSession = false;
     clearGoldInvoiceDraftCache();
+    try {
+      if (!S.editMode) sessionStorage.setItem(GOLD_INVOICE_DRAFT_SESSION_KEY, String(S.draftPaymentKey || ''));
+    } catch (eSs) { }
     localStorage.removeItem('editOrderId');
     localStorage.removeItem('editOrderPayload');
     updateInfoPanel();
@@ -1866,6 +1938,7 @@
       if (validateOrder()) { saveOrder({ afterSave: goToDashboard }); return; }
       if (!confirm('Close without saving? Unsaved changes will be lost.')) return;
     }
+    wipeGoldInvoiceUnsavedSession();
     goToDashboard();
   }
 
@@ -2027,16 +2100,70 @@
     });
   }
 
+  function tryApplyCustomerStatementPrefill() {
+    var raw = null;
+    try { raw = localStorage.getItem('customerStatementInvoicePrefill'); } catch (e0) { return; }
+    if (!raw) return;
+    var p = null;
+    try { p = JSON.parse(raw); } catch (e1) {
+      try { localStorage.removeItem('customerStatementInvoicePrefill'); } catch (e2) { }
+      return;
+    }
+    if (!p || p.source !== 'customer-statement') return;
+    try { localStorage.removeItem('customerStatementInvoicePrefill'); } catch (e3) { }
+
+    if (el('custName')) el('custName').value = String(p.name || '');
+    var cur = Number(p.currentBal);
+    if (!isFinite(cur)) cur = 0;
+    if (el('currentBal')) el('currentBal').value = cur.toFixed(2);
+    var rel = String(p.relation || '').trim();
+    var rn = String(p.relationName || '').trim();
+    if (el('relation')) el('relation').value = rel && rn ? rel + ' ' + rn : (rel || rn);
+    if (el('station')) el('station').value = String(p.station || '');
+    if (el('lfNo')) el('lfNo').value = String(p.lfNo || '');
+
+    var cid = String(p.customerId || '').trim();
+    var sel = el('custNameSelect');
+    if (cid && sel && sel.tagName === 'SELECT') {
+      var found = false;
+      for (var i = 0; i < sel.options.length; i++) {
+        if (String(sel.options[i].value) === cid) {
+          sel.selectedIndex = i;
+          var o = sel.options[i];
+          var c = {};
+          try { c = JSON.parse(o.dataset.customer || '{}'); } catch (e4) {}
+          S.selectedCustomerId = cid;
+          if (el('custName')) el('custName').value = String(c.name || p.name || '');
+          setCustomerSelectStatus(true);
+          found = true;
+          break;
+        }
+      }
+      if (!found) setCustomerSelectStatus(false);
+    } else {
+      setCustomerSelectStatus(false);
+    }
+
+    S.statementCurrentBalLock = true;
+    updateInfoPanel();
+  }
+
   // =====================================================
   // INIT
   // =====================================================
   function init() {
+    try {
+      var navEntry = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      if (navEntry && navEntry.type === 'reload') wipeGoldInvoiceUnsavedSession();
+    } catch (eNav) { }
+
     loadCustomers();
     bindManualCustomerAutoFill();
     bindCustomerSelectAutoFill();
 
     // Set initial bill number and date
     var editId = localStorage.getItem('editOrderId');
+    var editIdAtStart = editId;
     if (!editId) clearGoldInvoiceDraftCache();
     if (!editId) {
       if (el('orderDate') && !el('orderDate').value) el('orderDate').valueAsDate = new Date();
@@ -2045,21 +2172,26 @@
 
     var editLoaded = loadOrderForEdit();
     if (!editLoaded) {
+      if (!editIdAtStart) tryApplyCustomerStatementPrefill();
       var restored = restoreAutoSave();
       if (!restored) {
         addRow(true);
       }
     }
 
-    // If user leaves this page without saving, clear all draft/customer field persistence.
     window.__currentPageCleanup = function () {
-      if (!S.savedThisSession) clearGoldInvoiceDraftCache();
+      wipeGoldInvoiceUnsavedSession();
     };
+    wireGoldInvoiceUnloadWipers();
 
     if (!editId && el('billNo') && !el('billNo').value) el('billNo').value = peekBillNo();
 
     setupArrowKeys();
     updateInfoPanel();
+
+    if (!S.editMode && !S.savedThisSession) {
+      try { sessionStorage.setItem(GOLD_INVOICE_DRAFT_SESSION_KEY, String(S.draftPaymentKey || '')); } catch (eSs2) { }
+    }
 
     // Listen for customer changes in storage
     window.addEventListener('storage', function(e) {

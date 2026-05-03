@@ -1490,6 +1490,7 @@
     <div class="toast-inner" id="toastInner"></div>
   </div>
 
+  <script src="../script/order-processing.js"></script>
   <script>
     let selectedJwId = null;
     let selectedJwName = null;
@@ -1915,9 +1916,16 @@
       return pendingLineHasItemProcessRow(itemProcessList, orderId, itemIdx);
     }
 
-    /** Pending Items lists all open workshop orders, not only status===PENDING (ASSIGNED / missing status still have lines to show). */
+    /** Pending Items: open workshop orders + Direct Bill (Ready Extra) staging rows saved as status READY. */
     function orderEligibleForPendingItemsList(o) {
       if (!o || o.id == null) return false;
+      const OP = window.OrderProcessing;
+      if (OP && typeof OP.orderShowsOnPendingItemsPage === 'function') {
+        return OP.orderShowsOnPendingItemsPage(o);
+      }
+      if (String(o.orderSource || '').toLowerCase() === 'gold-invoice') return false;
+      const on = String(o.orderNo != null ? o.orderNo : o.billNo != null ? o.billNo : '').trim();
+      if (/^SGJ\/GI\//i.test(on)) return false;
       const s = String(o.status == null ? '' : o.status).trim().toUpperCase();
       return s !== 'READY';
     }
@@ -2054,7 +2062,7 @@
             <div class="empty-state">
               <div class="icon">⏳</div>
               <div class="title">No Pending Items</div>
-              <div class="sub">Items from open orders (not in Ready Orders) will appear here</div>
+              <div class="sub">Items from open workshop orders and Direct Bill (Ready Extra) staging appear here</div>
             </div></td></tr>`;
           ftText.textContent = 'No pending items';
           ftStats.style.display = 'none';

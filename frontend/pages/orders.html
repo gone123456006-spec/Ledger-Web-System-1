@@ -732,9 +732,32 @@
       return getSavedPurchaseSheetTotalForBill(billNo);
     }
 
-    /** Main Orders list = workshop / pending style only; READY lives on Ready Orders (saved from ready-extra-order). */
+    /**
+     * Workshop Order List (this page): only records from the New Order screen.
+     * Excludes Gold Invoice (SGJ/GI/…), Ready Extra / direct-bill line shapes, and explicit orderSource tags.
+     */
+    function ordersListShowOnlyNewOrderRecords(o) {
+      if (!o) return false;
+      const on = String(o.orderNo || o.billNo || "").trim();
+      if (/^SGJ\/GI\//i.test(on)) return false;
+      const src = String(o.orderSource || "").toLowerCase();
+      if (src === "gold-invoice" || src === "ready-extra") return false;
+      if (src === "new-order") return true;
+      const items = o.items || o.rows || [];
+      if (!items.length) return true;
+      for (let i = 0; i < items.length; i++) {
+        const vals = items[i] && items[i].values;
+        const n = Array.isArray(vals) ? vals.length : 0;
+        if (n === 0) continue;
+        if (n !== 13) return false;
+      }
+      return true;
+    }
+
+    /** Main Orders list = workshop New Order only; READY lives on Ready Orders (saved from ready-extra-order). */
     function ordersListVisibleFilter(o) {
-      return o && String(o.status || "").trim().toUpperCase() !== "READY";
+      if (!o || String(o.status || "").trim().toUpperCase() === "READY") return false;
+      return ordersListShowOnlyNewOrderRecords(o);
     }
 
     /* =========================

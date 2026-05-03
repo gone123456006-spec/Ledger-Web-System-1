@@ -4016,6 +4016,7 @@
 
           const orderData = {
             id: AppState.editOrderId || Date.now(),
+            orderSource: 'new-order',
             orderNo: AppState.elements.billNo.value,
             customer: getCustomerName(),
             customerId: AppState.elements.custName.value,

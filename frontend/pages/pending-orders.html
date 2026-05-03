@@ -282,6 +282,12 @@
       border: 1px solid #ffc107;
     }
 
+    .badge.direct-bill {
+      background: #e8f4fd;
+      color: #0b57d0;
+      border: 1px solid #a8c7fa;
+    }
+
     .action-btn {
       padding: 6px 14px;
       border-radius: 8px;
@@ -452,6 +458,7 @@
             <th class="right" title="Purchase lines + Purchase sheet total">Total Purchase</th>
             <th class="right" title="Non-Paid payments + purchase line totals">Advance (Rs)</th>
             <th class="right" title="Net bill after purchases − all payments (same as Orders list Balance)">Balance</th>
+            <th class="center">Edit</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -632,8 +639,17 @@
 
         tbody.innerHTML = "";
 
-        // Filter only PENDING orders
-        const pending = orders.filter(o => o && o.status === "PENDING");
+        const OP = window.OrderProcessing;
+        const pending = orders.filter(o => {
+          if (!o) return false;
+          if (OP && typeof OP.orderShowsOnPendingOrdersPage === "function") {
+            return OP.orderShowsOnPendingOrdersPage(o);
+          }
+          if (String(o.orderSource || "").toLowerCase() === "gold-invoice") return false;
+          const on = String(o.orderNo != null ? o.orderNo : o.billNo != null ? o.billNo : "").trim();
+          if (/^SGJ\/GI\//i.test(on)) return false;
+          return o.status === "PENDING";
+        });
         console.log("⏳ Pending orders:", pending.length);
 
         if (pending.length === 0) {
@@ -756,8 +772,15 @@
       tr.dataset.orderNo = order.orderNo || order.billNo || "";
       tr.dataset.customer = customerName;
 
+      const OPb = window.OrderProcessing;
+      const isDirectBillStaging = OPb && typeof OPb.orderIsDirectBillStagingQueue === "function" &&
+        OPb.orderIsDirectBillStagingQueue(order) && String(order.status || "").trim().toUpperCase() === "READY";
+      const statusBadge = isDirectBillStaging
+        ? '<span class="badge direct-bill">📋 Direct bill</span>'
+        : '<span class="badge pending">⏳ PENDING</span>';
+
       tr.innerHTML = `
-        <td><span class="badge pending">⏳ PENDING</span></td>
+        <td>${statusBadge}</td>
         <td><strong>${escapeHtml(order.orderNo || order.billNo)}</strong></td>
         <td>${escapeHtml(customerName)}</td>
         <td>${escapeHtml(order.customerRelation)}</td>
@@ -768,7 +791,16 @@
         <td class="right">₹${totalPurchaseDisplay.toFixed(2)}</td>
         <td class="right">₹${displayAdvance.toFixed(2)}</td>
         <td class="right">₹${displayBalance.toFixed(2)}</td>
+        <td class="center">
+          <button type="button" class="btn" onclick="editOrder(${order.id}); event.stopPropagation();" style="padding:4px 12px;font-size:12px;">Edit</button>
+        </td>
       `;
+
+      tr.style.cursor = "pointer";
+      tr.onclick = function (e) {
+        if (e.target && (e.target.tagName === "BUTTON" || e.target.tagName === "INPUT")) return;
+        editOrder(order.id);
+      };
 
       tbody.appendChild(tr);
     }
@@ -806,11 +838,11 @@
     function showEmptyState() {
       tbody.innerHTML = `
         <tr>
-          <td colspan="11" style="border:none;">
+          <td colspan="12" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⏳</div>
               <div class="empty-state-text">No Pending Orders</div>
-              <div class="empty-state-subtext">Orders marked as "PENDING" will appear here</div>
+              <div class="empty-state-subtext">Workshop PENDING orders and Direct Bill (Ready Extra) saves appear here</div>
             </div>
           </td>
         </tr>
@@ -823,7 +855,7 @@
     function showErrorState(errorMsg) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="11" style="border:none;">
+          <td colspan="12" style="border:none;">
             <div class="empty-state">
               <div class="empty-state-icon">⚠️</div>
               <div class="empty-state-text">Error Loading Orders</div>
@@ -1019,23 +1051,77 @@
     }
 
     /* =========================
-       EDIT ORDER (open in ready-extra-order)
+       EDIT ORDER (same routing as Orders list: New Order vs Ready Extra)
     ========================= */
-    function editOrder(orderId) {
+    function formatCustomerForPayload(customer, fallbackName) {
+      const rel = customer.relation || "";
+      const relName = customer.relationName || "";
+      return {
+        id: customer.id,
+        name: customer.name || customer.customerName || fallbackName || "",
+        openingBalance: customer.openingBalance ?? customer.currentBal ?? customer.balance ?? "",
+        currentBal: customer.openingBalance ?? customer.currentBal ?? customer.balance ?? "",
+        relation: (rel && relName ? rel + " " + relName : rel || relName) || "",
+        relationName: relName || "",
+        station: customer.station || customer.city || customer.location || ""
+      };
+    }
+
+    function getCustomerDataById(customerId) {
+      if (customerId == null || customerId === "") return null;
       try {
-        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-        const order = orders.find(o => o && (o.id === orderId || o.id === Number(orderId) || String(o.id) === String(orderId)));
-        if (!order) {
-          alert("❌ Order not found!");
-          return;
-        }
-        localStorage.removeItem("editOrderId");
-        localStorage.removeItem("editOrderPayload");
-        localStorage.setItem("editOrderId", String(orderId));
-        navigateToReadyExtraOrder();
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        const customer = customers.find(c =>
+          c && (c.id == customerId || String(c.id) === String(customerId))
+        );
+        if (customer) return formatCustomerForPayload(customer, customer.name);
       } catch (e) {
-        console.error("Error opening order:", e);
-        alert("Error opening order: " + (e.message || e));
+        console.error("Error fetching customer by ID:", e);
+      }
+      return null;
+    }
+
+    function getCustomerData(customerName) {
+      if (!customerName) return null;
+      try {
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        let customer = customers.find(c =>
+          c && (c.name === customerName || c.customerName === customerName)
+        );
+        if (!customer) {
+          const lowerName = customerName.toLowerCase().trim();
+          customer = customers.find(c =>
+            c && (
+              (c.name || "").toLowerCase().trim() === lowerName ||
+              (c.customerName || "").toLowerCase().trim() === lowerName
+            )
+          );
+        }
+        if (customer) return formatCustomerForPayload(customer, customerName);
+      } catch (e) {
+        console.error("Error fetching customer data:", e);
+      }
+      return null;
+    }
+
+    function navigateToNewOrder() {
+      if (typeof loadPage === "function") {
+        loadPage("pages/new-order.html");
+        return;
+      }
+      if (window.parent && window.parent !== window && typeof window.parent.loadPage === "function") {
+        window.parent.loadPage("pages/new-order.html");
+        return;
+      }
+      if (window.top && window.top !== window && typeof window.top.loadPage === "function") {
+        window.top.loadPage("pages/new-order.html");
+        return;
+      }
+      const currentPath = window.location.pathname || "";
+      if (currentPath.includes("/pages/")) {
+        window.location.href = "new-order.html";
+      } else {
+        window.location.href = "/pages/new-order.html";
       }
     }
 
@@ -1054,6 +1140,110 @@
       }
       const path = window.location.pathname || "";
       window.location.href = path.includes("/pages/") ? "ready-extra-order.html" : "/pages/ready-extra-order.html";
+    }
+
+    function editOrder(orderId) {
+      try {
+        const keysToRemove = [
+          "editOrderId",
+          "editOrderPayload",
+          "ratebookOpened",
+          "receiptOpened",
+          "newOrderState",
+          "editCustomerReadOnly",
+          "returnToOrders",
+          "selectedCustomerData"
+        ];
+        keysToRemove.forEach(key => {
+          try {
+            localStorage.removeItem(key);
+          } catch (eRm) { }
+        });
+
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        const order = orders.find(o => o && (o.id == orderId || String(o.id) === String(orderId)));
+
+        if (!order) {
+          alert("Order not found. Please try again.");
+          return;
+        }
+
+        const OP = window.OrderProcessing;
+        const isDirectBillStaging = OP && typeof OP.orderIsDirectBillStagingQueue === "function" &&
+          OP.orderIsDirectBillStagingQueue(order);
+
+        if (isDirectBillStaging) {
+          try {
+            localStorage.setItem("editOrderId", String(orderId));
+            localStorage.setItem("lastOrderPage", "ready-extra");
+          } catch (eLs) { }
+          navigateToReadyExtraOrder();
+          return;
+        }
+
+        const customerId = order.customerId != null && order.customerId !== "" ? order.customerId : null;
+        const customerName = (order.customer || order.customerName || "").toString().trim();
+        let customerData = null;
+        if (customerId) {
+          customerData = getCustomerDataById(customerId);
+        }
+        if (!customerData && customerName) {
+          customerData = getCustomerData(customerName);
+        }
+
+        const customerInfo = customerData || {
+          id: order.customerId || "",
+          name: customerName,
+          openingBalance: order.customerOpeningBalance ?? order.currentBal ?? order.customerBalance ?? "",
+          currentBal: order.customerOpeningBalance ?? order.currentBal ?? order.customerBalance ?? "",
+          relation: order.customerRelation || order.relation || "",
+          station: order.customerStation || order.station || ""
+        };
+
+        const orderSnapshot = {
+          ...order,
+          isEditMode: true,
+          id: order.id,
+          orderNo: order.orderNo || order.billNo || "",
+          billNo: order.billNo || order.orderNo || "",
+          customerId: customerInfo.id || order.customerId || "",
+          customer: customerInfo.name || (order.customer || order.customerName || "").toString().trim(),
+          customerName: customerInfo.name || (order.customerName || order.customer || "").toString().trim(),
+          currentBal: customerInfo.currentBal,
+          customerOpeningBalance: customerInfo.openingBalance ?? customerInfo.currentBal ?? "",
+          relation: customerInfo.relation,
+          customerRelation: customerInfo.relation,
+          station: customerInfo.station,
+          customerStation: customerInfo.station,
+          customerPhone: order.customerPhone || "",
+          customerEmail: order.customerEmail || "",
+          customerAddress: order.customerAddress || "",
+          orderDate: order.orderDate || "",
+          dueDate: order.dueDate || "",
+          hallmark: order.hallmark || "",
+          type: order.type || "Order",
+          items: order.items || [],
+          netAmount: order.netAmount || 0,
+          advance: order.advance || 0,
+          balance: order.balance || 0,
+          pc: order.pc || 0,
+          grWt: order.grWt || 0,
+          status: order.status || "",
+          timestamp: order.timestamp || new Date().toISOString()
+        };
+
+        try {
+          localStorage.setItem("editOrderId", String(orderId));
+          localStorage.setItem("editOrderPayload", JSON.stringify(orderSnapshot));
+          localStorage.setItem("returnToOrders", "true");
+          localStorage.setItem("lastOrderPage", "new-order");
+        } catch (eSet) { }
+
+        navigateToNewOrder();
+      } catch (e) {
+        console.error("Error opening order for edit:", e);
+        alert("Error loading order for editing. Please try again.");
+      }
     }
 
     /* =========================
@@ -1149,7 +1339,17 @@
 
       try {
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-        const pendingOrders = orders.filter(o => o && o.status === "PENDING");
+        const OPp = window.OrderProcessing;
+        const pendingOrders = orders.filter(o => {
+          if (!o) return false;
+          if (OPp && typeof OPp.orderShowsOnPendingOrdersPage === "function") {
+            return OPp.orderShowsOnPendingOrdersPage(o);
+          }
+          if (String(o.orderSource || "").toLowerCase() === "gold-invoice") return false;
+          const onp = String(o.orderNo != null ? o.orderNo : o.billNo != null ? o.billNo : "").trim();
+          if (/^SGJ\/GI\//i.test(onp)) return false;
+          return o.status === "PENDING";
+        });
 
         if (pendingOrders.length !== lastPendingOrderCount) {
           console.log(`🔄 Pending orders count changed: ${lastPendingOrderCount} → ${pendingOrders.length}`);

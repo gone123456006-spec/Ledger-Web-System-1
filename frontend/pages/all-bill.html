@@ -557,6 +557,25 @@
         return dateB - dateA;
       });
 
+      /** Customers whose master Current Balance is ~0 — their All Bill rows show Clear status. */
+      const customersMasterZeroKeys = new Set();
+      try {
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        const norm = (s) => (s || "").trim().toLowerCase();
+        (customers || []).forEach((c) => {
+          if (!c) return;
+          const cur = c.currentBalance;
+          const n = Number(cur);
+          if (cur == null || String(cur).trim() === "" || !Number.isFinite(n)) return;
+          if (Math.abs(n) > 0.000001) return;
+          if (c.id != null && String(c.id).trim() !== "") customersMasterZeroKeys.add("id:" + String(c.id).trim());
+          const nm = (c.name || "").trim();
+          if (nm) customersMasterZeroKeys.add("name:" + norm(nm));
+          const cid = (c.cid || "").trim();
+          if (cid) customersMasterZeroKeys.add("cid:" + norm(cid));
+        });
+      } catch (e) { }
+
       sortedBalances.forEach((balance, index) => {
         try {
           const row = document.createElement("tr");
@@ -642,8 +661,20 @@
           const balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
           balance.computedBalAmt = Number.isFinite(balAmt) ? Number(balAmt).toFixed(2) : String(balAmt);
 
-          // Status from Balance (₹) column only: Clear iff zero — not for negative (credit) or positive (due)
-          const isClear = Number.isFinite(balAmt) && Math.abs(balAmt) <= 0.000001;
+          // Status: Clear if this bill's balance is ~0, OR customer master Current Balance is ~0 (Customer Balance grid).
+          const normRow = (s) => (s || "").trim().toLowerCase();
+          const rowName = normRow(balance.customer || "");
+          const rowIdKey = balance.customerId != null && String(balance.customerId).trim() !== ""
+            ? "id:" + String(balance.customerId).trim() : "";
+          const rowCidKey = balance.cid && String(balance.cid).trim() !== ""
+            ? "cid:" + normRow(balance.cid) : "";
+          const masterCurrentZero =
+            (rowIdKey && customersMasterZeroKeys.has(rowIdKey)) ||
+            (rowCidKey && customersMasterZeroKeys.has(rowCidKey)) ||
+            (rowName && customersMasterZeroKeys.has("name:" + rowName));
+          const isClear =
+            !!masterCurrentZero ||
+            (Number.isFinite(balAmt) && Math.abs(balAmt) <= 0.000001);
           const statusLabel = isClear
             ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Clear</span>`
             : `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Pending</span>`;
@@ -873,6 +904,53 @@
     ========================= */
     function editBill(balanceIndex, timestamp) {
       try {
+        function toReadyExtraValues(vals) {
+          const src = Array.isArray(vals) ? vals : [];
+          // Already Ready/Extra shape
+          if (src.length >= 17) return src.slice(0, 17);
+          // Gold/Direct Bill compact shapes:
+          // 10 cols: [Type, Item, Pc, R.Metal, Neg, R.Wt, Rate, Making, Other, Total]
+          // 11 cols: [Type, Item, Stamp, Pc, R.Metal, Neg, R.Wt, Rate, Making, Other, Total]
+          // Only compact Direct Bill / Gold rows — not New Order (13) or legacy Ready (16).
+          if (src.length === 10 || src.length === 11) {
+            const out = new Array(17).fill("");
+            const tailStart = src.length - 7; // R.Metal..Total are always last 7 in compact bill rows
+            out[0] = src[0] || "Order";   // Type
+            out[1] = "";                  // Order No
+            out[2] = src[1] || "";        // Item Name
+            if (tailStart >= 4) {
+              out[3] = src[2] || "";      // Stamp
+              out[4] = src[3] || "";      // Pc
+            } else {
+              out[3] = "";                // Stamp
+              out[4] = src[2] || "";      // Pc
+            }
+            out[5] = "";                  // Ut. Wt.
+            out[6] = "";                  // Est. Total Wt.
+            out[7] = "";                  // Rate (left block)
+            out[8] = "";                  // Lbr%
+            out[9] = "";                  // Est. Total
+            out[10] = src[tailStart] || "";       // R. Metal
+            out[11] = src[tailStart + 1] || "";   // Neg
+            out[12] = src[tailStart + 2] || "";   // R. Wt
+            out[13] = src[tailStart + 3] || "";   // Rate
+            out[14] = src[tailStart + 4] || "";   // Making
+            out[15] = src[tailStart + 5] || "";   // Other
+            out[16] = src[tailStart + 6] || "";   // Total
+            return out;
+          }
+          return src.slice();
+        }
+        function normalizeRowsForReadyExtra(rows) {
+          if (!Array.isArray(rows)) return [];
+          return rows.map((r) => {
+            if (!r || typeof r !== "object") return r;
+            const copy = { ...r };
+            copy.values = toReadyExtraValues(copy.values);
+            return copy;
+          });
+        }
+
         const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
 
         // Find balance entry by index or timestamp
@@ -898,20 +976,27 @@
         // Otherwise, try to find the order from orders storage
         if (balanceEntry.rows && balanceEntry.rows.length > 0) {
           // Store rows data for ready extra order.html to load
-          localStorage.setItem("editBalanceRows", JSON.stringify(balanceEntry.rows));
+          localStorage.setItem("editBalanceRows", JSON.stringify(normalizeRowsForReadyExtra(balanceEntry.rows)));
         }
 
         // Prefer full bill from bills (has all row data: R. Metal, Neg, R. Wt, Rate, Making, Total)
+        const billKey = String((balanceEntry && (balanceEntry.orderNo || balanceEntry.billNo)) || "").trim();
         const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-        const fullBill = bills.find(b => b.billNo === balanceEntry.orderNo);
+        const fullBill = bills.find(b =>
+          String((b && (b.billNo || b.orderNo)) || "").trim() === billKey
+        );
 
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-        const order = orders.find(o => o.orderNo === balanceEntry.orderNo);
+        const order = orders.find(o =>
+          String((o && (o.orderNo || o.billNo)) || "").trim() === billKey
+        );
+        const targetPage = "pages/ready-extra-order.html";
 
         if (order && order.id) {
           localStorage.setItem("editOrderId", order.id);
-          // Ensure ready-extra-order can load full items (incl. cols 10–15); pass payload from bill if it has more complete rows
+          // Ensure edit page can load full items; pass payload from bill if it has more complete rows.
           if (fullBill && (fullBill.items || fullBill.rows) && (fullBill.items || fullBill.rows).length > 0) {
+            const editItems = normalizeRowsForReadyExtra(fullBill.items || fullBill.rows);
             const payload = {
               id: order.id,
               orderNo: fullBill.billNo,
@@ -920,8 +1005,11 @@
               customer: fullBill.customer,
               customerId: fullBill.customerId,
               orderDate: fullBill.date,
+              customerRelation: balanceEntry.relation || "",
+              customerStation: balanceEntry.station || "",
+              customerLfNo: balanceEntry.lfno || "",
               dueDate: fullBill.dueDate || "",
-              items: fullBill.items || fullBill.rows,
+              items: editItems,
               hideBillMidColumns: !!(fullBill.hideBillMidColumns || balanceEntry.hideBillMidColumns)
             };
             localStorage.setItem("editOrderPayload", JSON.stringify(payload));
@@ -930,6 +1018,7 @@
           const tempId = balanceEntry.timestamp || Date.now().toString();
           localStorage.setItem("editOrderId", tempId);
           if (fullBill && (fullBill.items || fullBill.rows) && (fullBill.items || fullBill.rows).length > 0) {
+            const editItems = normalizeRowsForReadyExtra(fullBill.items || fullBill.rows);
             const payload = {
               id: tempId,
               orderNo: fullBill.billNo,
@@ -938,33 +1027,36 @@
               customer: fullBill.customer,
               customerId: fullBill.customerId,
               orderDate: fullBill.date,
+              customerRelation: balanceEntry.relation || "",
+              customerStation: balanceEntry.station || "",
+              customerLfNo: balanceEntry.lfno || "",
               dueDate: fullBill.dueDate || "",
-              items: fullBill.items || fullBill.rows,
+              items: editItems,
               hideBillMidColumns: !!(fullBill.hideBillMidColumns || balanceEntry.hideBillMidColumns)
             };
             localStorage.setItem("editOrderPayload", JSON.stringify(payload));
           }
         }
 
-        // Open ready-extra-order for editing
+        // Open invoice page for editing (Gold Invoice or Ready Extra)
         if (typeof loadPage === 'function') {
-          loadPage("pages/ready-extra-order.html");
+          loadPage(targetPage);
           return;
         }
 
         // Try parent window
         if (window.parent && window.parent !== window && typeof window.parent.loadPage === 'function') {
-          window.parent.loadPage("pages/ready-extra-order.html");
+          window.parent.loadPage(targetPage);
           return;
         }
 
         // Try top window
         if (window.top && window.top !== window && typeof window.top.loadPage === 'function') {
-          window.top.loadPage("pages/ready-extra-order.html");
+          window.top.loadPage(targetPage);
           return;
         }
 
-        window.open("/pages/ready-extra-order.html", "EditBill", "width=1400,height=800");
+        window.open("/" + String(targetPage || "").replace(/^\/+/, ""), "EditBill", "width=1400,height=800");
 
       } catch (e) {
         console.error("Error editing bill:", e);
