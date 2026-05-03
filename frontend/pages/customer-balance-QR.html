@@ -228,13 +228,13 @@
             background: #fcfcff;
         }
 
-        /* Scroll host: height follows table content up to max-height, then scrolls (do not flex-grow or it leaves blank space) */
+        /* Scroll host: fixed viewport region; table rows scroll inside it. */
         .interest-scroll-host {
-            flex: 0 1 auto;
+            flex: 1 1 auto;
             align-self: stretch;
             width: 100%;
             min-height: 0;
-            max-height: min(42vh, 390px);
+            max-height: min(38vh, 340px);
             overflow: auto;
             position: relative;
             -webkit-overflow-scrolling: touch;
@@ -825,8 +825,8 @@
         }
 
         .interest-section-inner {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-rows: auto auto minmax(0, 1fr) auto;
             gap: 10px;
             flex: 1 1 0%;
             min-height: 0;
@@ -968,17 +968,17 @@
             flex: 1 1 auto !important;
             min-height: 0 !important;
             overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
+            display: grid !important;
+            grid-template-rows: auto auto minmax(0, 1fr) auto !important;
         }
 
         /* Scrollport: grow with rows until max-height, then vertical scroll; no flex-grow — avoids empty area under short tables */
         .stmt-wrap.interest-panel-open #interestTableWrap.interest-scroll-host {
-            flex: 0 1 auto !important;
+            flex: 1 1 auto !important;
             align-self: stretch !important;
             width: 100% !important;
             min-height: 0 !important;
-            max-height: min(42vh, 390px) !important;
+            max-height: min(38vh, 340px) !important;
             height: auto !important;
             overflow-x: auto !important;
             overflow-y: auto !important;
@@ -989,6 +989,12 @@
 
         .interest-section .interest-result {
             flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 34;
+            background: var(--card);
+            padding-top: 6px;
+            border-top: 1px solid var(--border);
         }
 
         .interest-section .interest-scroll-hint {
@@ -1426,7 +1432,7 @@
 
             sorted.forEach((tx, i) => {
                 const prevB = balance;
-                balance += txDelta(tx);
+                balance += txDeltaForCurrentBalance(tx);
                 const absbal = Math.abs(balance);
                 const { tag, cls: tagClass } = drCrTagForRunning(balance, prevB);
 
@@ -1857,7 +1863,9 @@
         }
 
         function txDeltaForCurrentBalance(tx) {
-            // Include posted interest rows in Current Balance (Add as Debit/Credit should affect balance).
+            // Include posted interest rows in Current Balance, except rows dated before Opening Date.
+            // Backdated rows are folded into Opening Balance and must not move running/current separately.
+            if (isStatementRowBackdatedBeforeOpening(tx)) return 0;
             return txDelta(tx);
         }
 
@@ -2003,6 +2011,11 @@
         }
 
         function saveTransactions() {
+            normalizeStatementTransactionDatesInPlace(transactions);
+            const preOpeningAbsorb = absorbPreOpeningDateRowsIntoOpeningBalance();
+            if (preOpeningAbsorb.merged && preOpeningAbsorb.removed > 0) {
+                showToast('📌 Pre–opening date entry added to Opening Balance and removed from the list.');
+            }
             // New statement rows with amounts: turn off "cleared view" so opening + bills run normally again.
             try {
                 if (customerData.statementBillAmountCleared) {
@@ -2087,6 +2100,12 @@
                             c.openingBalanceType = 'Dr';
                             c.masterOpeningBalance = 0;
                             c.masterOpeningBalanceType = 'Dr';
+                        } else if (preOpeningAbsorb.merged) {
+                            const ob = Number(customerData.openingBalance) || 0;
+                            c.openingBalance = ob;
+                            c.openingBalanceType = customerData.openingBalanceType || 'Dr';
+                            c.masterOpeningBalance = ob;
+                            c.masterOpeningBalanceType = c.openingBalanceType;
                         } else if (c.masterOpeningBalance != null && c.masterOpeningBalance !== '') {
                             c.openingBalance = Number(c.masterOpeningBalance);
                             if (c.masterOpeningBalanceType) c.openingBalanceType = c.masterOpeningBalanceType;
@@ -2108,13 +2127,47 @@
                 }
                 if (updated) {
                     localStorage.setItem('customers', JSON.stringify(customers));
-                    if (customerData.statementBillAmountCleared || closingZero) syncStmtSessionFromCustomerData();
+                    if (customerData.statementBillAmountCleared || closingZero || preOpeningAbsorb.merged) syncStmtSessionFromCustomerData();
                     try {
                         const ev = new CustomEvent("customersUpdated");
                         window.dispatchEvent(ev);
                         if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
                         if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
                     } catch (e) { }
+                } else if (preOpeningAbsorb.merged) {
+                    try {
+                        const customers2 = JSON.parse(localStorage.getItem('customers') || '[]');
+                        let touched = false;
+                        customers2.forEach((c, idx) => {
+                            if (!matchCustomerRecord(c, idx)) return;
+                            const ob = Number(customerData.openingBalance) || 0;
+                            c.openingBalance = ob;
+                            c.openingBalanceType = customerData.openingBalanceType || 'Dr';
+                            c.masterOpeningBalance = ob;
+                            c.masterOpeningBalanceType = c.openingBalanceType;
+                            c.currentBalance = netBalance;
+                            c.currentBalanceType = netType;
+                            touched = true;
+                        });
+                        if (!touched) {
+                            const nm = normKey(customerData.name);
+                            if (nm) {
+                                customers2.forEach(c => {
+                                    if (!c || !c.name || normKey(c.name) !== nm) return;
+                                    const ob = Number(customerData.openingBalance) || 0;
+                                    c.openingBalance = ob;
+                                    c.openingBalanceType = customerData.openingBalanceType || 'Dr';
+                                    c.masterOpeningBalance = ob;
+                                    c.masterOpeningBalanceType = c.openingBalanceType;
+                                    c.currentBalance = netBalance;
+                                    c.currentBalanceType = netType;
+                                    touched = true;
+                                });
+                            }
+                        }
+                        if (touched) localStorage.setItem('customers', JSON.stringify(customers2));
+                        syncStmtSessionFromCustomerData();
+                    } catch (eSync) { }
                 }
             } catch (e) { }
 
@@ -2163,6 +2216,31 @@
             return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
         }
 
+        /** Normalize statement date text to yyyy-mm-dd (supports dd-mm-yyyy / dd/mm/yyyy). */
+        function normalizeStatementDateInput(raw) {
+            const s = String(raw || '').trim();
+            if (!s) return '';
+            const parts = s.split(/[-\/]/);
+            if (parts.length === 3) {
+                if (parts[0].length === 4) {
+                    return `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                }
+                return `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+            }
+            const d = parseDateOnly(s);
+            if (isNaN(d.getTime())) return s;
+            return dateToYMD(d);
+        }
+
+        /** Keep all statement row dates canonical before sort/math so back-year entries are handled consistently. */
+        function normalizeStatementTransactionDatesInPlace(list) {
+            const arr = Array.isArray(list) ? list : [];
+            arr.forEach(tx => {
+                if (!tx || tx.date == null) return;
+                tx.date = normalizeStatementDateInput(tx.date);
+            });
+        }
+
         /** Local calendar yyyy-mm-dd for `<input type="date">` and storage. */
         function dateToYMD(d) {
             if (!(d instanceof Date) || isNaN(d.getTime())) return '';
@@ -2199,7 +2277,7 @@
             let run = snapInterestRunningBalance(openingBalanceForRunningStatement(list));
             let lastZeroAtIdx = -1;
             for (let idx = 0; idx < list.length; idx++) {
-                run = snapInterestRunningBalance(run + txDelta(list[idx]));
+                run = snapInterestRunningBalance(run + txDeltaForCurrentBalance(list[idx]));
                 if (isZeroForInterestSegment(run)) lastZeroAtIdx = idx;
             }
             const startIdx = lastZeroAtIdx + 1;
@@ -2456,11 +2534,94 @@
             return opening + getCustomerBillsSumFromBalances();
         }
 
+        function isStatementRowBackdatedBeforeOpening(tx) {
+            if (!tx || !tx.date) return false;
+            const op = parseDateOnly(customerData.openingDate || '');
+            const td = parseDateOnly(tx.date);
+            if (isNaN(op.getTime()) || isNaN(td.getTime())) return false;
+            return td < op;
+        }
+
+        /** Signed sum of rows dated before Opening Date (folded into opening for display / interest base). */
+        function signedBackdatedRowsDelta(sorted) {
+            let d = 0;
+            (sorted || []).forEach(tx => {
+                if (isStatementRowBackdatedBeforeOpening(tx)) d += txDelta(tx);
+            });
+            return d;
+        }
+
+        /** Master opening (signed) + backdated rows — shown in Opening Balance header (bills stay in running base only). */
+        function signedOpeningForHeaderWithBackdated(sorted) {
+            if (customerData.statementBillAmountCleared) return 0;
+            return openingSignedForStatement() + signedBackdatedRowsDelta(sorted);
+        }
+
+        /** Economic opening at loan date: running-statement base + backdated (used for interest principal / segment start). */
+        function openingBalanceWithBackdatedAdjustments(sorted) {
+            return openingBalanceForRunningStatement(sorted) + signedBackdatedRowsDelta(sorted);
+        }
+
+        function applySignedDeltaToCustomerOpening(signedTotal) {
+            const s = Number(signedTotal) || 0;
+            if (Math.abs(s) < 0.000001) {
+                customerData.openingBalance = 0;
+                customerData.openingBalanceType = 'Dr';
+                return;
+            }
+            if (s > 0.000001) {
+                customerData.openingBalance = Math.abs(s);
+                customerData.openingBalanceType = 'Dr';
+            } else {
+                customerData.openingBalance = Math.abs(s);
+                customerData.openingBalanceType = 'Cr';
+            }
+        }
+
+        /**
+         * Statement rows dated before Opening Date (with debit/credit) fold into master opening and are removed
+         * from stored transactions so the grid stays "from opening date onward" only.
+         */
+        function absorbPreOpeningDateRowsIntoOpeningBalance() {
+            if (customerData.statementBillAmountCleared) return { merged: false, removed: 0 };
+            const op = parseDateOnly(customerData.openingDate || '');
+            if (isNaN(op.getTime())) return { merged: false, removed: 0 };
+
+            let totalDelta = 0;
+            let removed = 0;
+            const next = [];
+            (transactions || []).forEach(tx => {
+                if (!tx) return;
+                if (isInterestNarrationText(tx.narration)) {
+                    next.push(tx);
+                    return;
+                }
+                const eff = effectiveAmounts(tx);
+                const hasMoney = (eff.debit || 0) !== 0 || (eff.credit || 0) !== 0;
+                if (hasMoney && isStatementRowBackdatedBeforeOpening(tx)) {
+                    totalDelta += txDelta(tx);
+                    removed++;
+                    return;
+                }
+                next.push(tx);
+            });
+            if (removed === 0) return { merged: false, removed: 0 };
+
+            transactions = next;
+            ensureTransactionIds();
+            if (selectedIdx != null && (selectedIdx >= transactions.length || selectedIdx < 0)) selectedIdx = null;
+
+            const signedBefore = openingSignedForStatement();
+            applySignedDeltaToCustomerOpening(signedBefore + totalDelta);
+            return { merged: true, removed };
+        }
+
         function render() {
             const tbody = document.getElementById('statementBody');
             if (!tbody) return;
             tbody.innerHTML = '';
 
+            normalizeStatementTransactionDatesInPlace(transactions);
             const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             const opSigned = customerData.statementBillAmountCleared ? 0 : openingSignedForStatement();
             const billsSum = customerData.statementBillAmountCleared ? 0 : getCustomerBillsSumFromBalances();
@@ -2627,7 +2788,7 @@
                 tr.appendChild(tdDr);
 
                 const prevRowSigned = balance;
-                balance += txDelta(tx);
+                balance += txDeltaForCurrentBalance(tx);
                 prevSignedForFooter = prevRowSigned;
                 const absbal = Math.abs(balance);
                 const { tag, cls: tagClass } = drCrTagForRunning(balance, prevRowSigned);
@@ -2806,10 +2967,9 @@
                 });
                 const showOpeningAsZero = customerData.statementBillAmountCleared
                     || (Math.abs(balance) < 0.000001 && !hasStmtMoney);
-                const raw = showOpeningAsZero ? 0 : (parseFloat(customerData.openingBalance || 0) || 0);
-                const absAmt = Math.abs(raw);
-                const t = showOpeningAsZero ? 'dr' : String(customerData.openingBalanceType || 'Dr').trim().toLowerCase();
-                const isCr = t === 'cr';
+                const signedHdr = showOpeningAsZero ? 0 : signedOpeningForHeaderWithBackdated(sorted);
+                const absAmt = Math.abs(signedHdr);
+                const isCr = signedHdr < -0.000001;
                 const tag = isCr ? 'Cr' : 'Dr';
                 const tagClass = isCr ? 'cr-tag' : 'dr-tag';
                 el.innerHTML = fmt(absAmt) + ' <span class="' + tagClass + '">' + tag + '</span>';
@@ -2898,7 +3058,7 @@
                 });
 
             // Match Account Statement running total (opening + bill aggregate when used there).
-            let runningBal = snapInterestRunningBalance(openingBalanceForRunningStatement(sorted));
+            let runningBal = snapInterestRunningBalance(openingBalanceWithBackdatedAdjustments(sorted));
             let totalInterest = 0;
             let compoundBreakdown = null;
             function localYmd(d) {
@@ -2968,7 +3128,7 @@
                 // 4) Closing = pending principal + net interest
                 // After balance hits zero (settled), a new draw uses that row's date and post-zero closing as principal — not the original opening.
                 const postZeroCompound = getCompoundRestartAfterZero(sorted);
-                let principalBase = Math.abs(snapInterestRunningBalance(openingBalanceForRunningStatement(sorted)));
+                let principalBase = Math.abs(snapInterestRunningBalance(openingBalanceWithBackdatedAdjustments(sorted)));
                 let compoundPeriodStart = startDate;
                 if (postZeroCompound) {
                     principalBase = postZeroCompound.principalBase;
