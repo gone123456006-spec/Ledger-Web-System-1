@@ -1576,8 +1576,11 @@
                     if (dateTxt) {
                         const parts = dateTxt.split(/[-\/]/);
                         if (parts.length === 3) {
-                            if (parts[0].length === 4) dateVal = dateTxt;
-                            else dateVal = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                            if (parts[0].length === 4) {
+                                dateVal = `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                            } else {
+                                dateVal = `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+                            }
                         }
                     }
 
@@ -1739,6 +1742,16 @@
         function readMoney(v) {
             const n = parseFloat(String(v || '').replace(/,/g, ''));
             return Number.isFinite(n) ? n : 0;
+        }
+
+        /** ~0 signed balance treated as 0 so interest segments end after full payoff (float dust cannot keep accrual on "old" principal). */
+        function snapInterestRunningBalance(signed) {
+            const x = Number(signed);
+            if (!Number.isFinite(x)) return 0;
+            return Math.abs(x) < 0.005 ? 0 : x;
+        }
+        function isZeroForInterestSegment(signed) {
+            return Math.abs(Number(signed) || 0) < 0.005;
         }
 
         // Statement rule:
@@ -2148,6 +2161,59 @@
             const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
             if (!m) return new Date(s);
             return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        }
+
+        /** Local calendar yyyy-mm-dd for `<input type="date">` and storage. */
+        function dateToYMD(d) {
+            if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        /** Latest dated line with debit/credit (excludes interest lines) — aligns interest Upto with newly added balance rows. */
+        function getLatestStatementMoneyDate(transactionsList) {
+            let maxD = null;
+            const list = transactionsList || [];
+            for (let i = 0; i < list.length; i++) {
+                const tx = list[i];
+                if (!tx || isInterestNarrationText(tx.narration)) continue;
+                const eff = effectiveAmounts(tx);
+                if ((eff.debit || 0) === 0 && (eff.credit || 0) === 0) continue;
+                const d = parseDateOnly(tx.date);
+                if (isNaN(d.getTime())) continue;
+                if (!maxD || d > maxD) maxD = d;
+            }
+            return maxD;
+        }
+
+        /**
+         * If the statement running balance (opening + rows) later hits zero and new entries appear after that,
+         * compound interest should use only the new "leg": principal = signed closing built from those rows only,
+         * period start = date of the first row after the last zero balance (same idea as simple segment reset).
+         */
+        function getCompoundRestartAfterZero(sorted) {
+            const list = sorted || [];
+            if (!list.length) return null;
+            let run = snapInterestRunningBalance(openingBalanceForRunningStatement(list));
+            let lastZeroAtIdx = -1;
+            for (let idx = 0; idx < list.length; idx++) {
+                run = snapInterestRunningBalance(run + txDelta(list[idx]));
+                if (isZeroForInterestSegment(run)) lastZeroAtIdx = idx;
+            }
+            const startIdx = lastZeroAtIdx + 1;
+            if (lastZeroAtIdx < 0 || startIdx >= list.length) return null;
+            let rPost = 0;
+            for (let i = startIdx; i < list.length; i++) {
+                rPost = snapInterestRunningBalance(rPost + txDelta(list[i]));
+            }
+            if (isZeroForInterestSegment(rPost)) return null;
+            const principalBase = Math.abs(rPost);
+            if (!Number.isFinite(principalBase) || principalBase < 0.005) return null;
+            const restartDate = parseDateOnly(list[startIdx].date);
+            if (isNaN(restartDate.getTime())) return null;
+            return { restartDate, principalBase, startIdx };
         }
 
         function round2(n) {
@@ -2624,8 +2690,11 @@
                     if (dateTxt) {
                         const parts = dateTxt.split(/[-\/]/);
                         if (parts.length === 3) {
-                            if (parts[0].length === 4) dateVal = dateTxt;
-                            else dateVal = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                            if (parts[0].length === 4) {
+                                dateVal = `${parts[0]}-${String(parts[1]).padStart(2, '0')}-${String(parts[2]).padStart(2, '0')}`;
+                            } else {
+                                dateVal = `${parts[2]}-${String(parts[1]).padStart(2, '0')}-${String(parts[0]).padStart(2, '0')}`;
+                            }
                         }
                     }
 
@@ -2773,7 +2842,12 @@
             if (sec.style.display === 'none' || sec.style.display === '') {
                 sec.style.display = 'block';
                 const toEl = document.getElementById('int_to_inline');
-                if (toEl && !toEl.value) toEl.value = todayStr();
+                if (toEl && !toEl.value) {
+                    const latest = getLatestStatementMoneyDate(transactions);
+                    const t = parseDateOnly(todayStr());
+                    const pick = (latest && !isNaN(latest.getTime()) && latest > t) ? latest : t;
+                    toEl.value = dateToYMD(pick);
+                }
                 renderInterestTable({ scrollBottom: true, scrollSmooth: true });
                 restoreInterestResultPanel();
                 scrollInterestSectionIntoView();
@@ -2785,7 +2859,7 @@
 
         function calculateAllInterest() {
             const uptoStr = document.getElementById('int_to_inline').value;
-            const uptoDate = parseDateOnly(uptoStr);
+            let uptoDate = parseDateOnly(uptoStr);
             const rate = parseFloat(document.getElementById('int_rate_inline').value || '');
             const compMonth = parseInt(document.getElementById('int_comp_inline').value) || 0;
             const monthlyRate = rate / 100;
@@ -2798,6 +2872,14 @@
             // Use loan/opening date as period start for compound statement logic.
             const startDate = openingDateParsed;
 
+            const latestMoneyD = getLatestStatementMoneyDate(sorted);
+            if (latestMoneyD && !isNaN(latestMoneyD.getTime()) && latestMoneyD > uptoDate) {
+                uptoDate = latestMoneyD;
+                const toEl = document.getElementById('int_to_inline');
+                if (toEl) toEl.value = dateToYMD(latestMoneyD);
+                showToast('ℹ️ Upto date set to ' + (fmtDateLabel(dateToYMD(latestMoneyD)) || dateToYMD(latestMoneyD)) + ' so interest runs through your latest balance row (including its date).');
+            }
+
             if (uptoDate < startDate) { showToast('⚠️ Upto date must be after opening date.'); return; }
 
             // Segment-based running-balance interest:
@@ -2807,11 +2889,16 @@
             interestApplied = (interestApplied || []).filter(r => !(r && r.source === 'segment-calc'));
 
             const txEvents = sorted
-                .map(tx => ({ tx, date: parseDateOnly(tx.date) }))
+                .map((tx, idx) => ({ tx, date: parseDateOnly(tx.date), stmtIdx: idx }))
                 .filter(e => !isNaN(e.date) && e.date >= startDate && e.date <= uptoDate)
-                .sort((a, b) => a.date - b.date);
+                .sort((a, b) => {
+                    const d = a.date - b.date;
+                    if (d !== 0) return d;
+                    return (a.stmtIdx || 0) - (b.stmtIdx || 0);
+                });
 
-            let runningBal = openingSignedForStatement();
+            // Match Account Statement running total (opening + bill aggregate when used there).
+            let runningBal = snapInterestRunningBalance(openingBalanceForRunningStatement(sorted));
             let totalInterest = 0;
             let compoundBreakdown = null;
             function localYmd(d) {
@@ -2879,29 +2966,43 @@
                 // 2) For each credit/payment, compute separate credited-interest from credit date to end
                 // 3) Net interest = full principal interest - total credited interest
                 // 4) Closing = pending principal + net interest
-                const principalBase = Math.abs(openingSignedForStatement());
+                // After balance hits zero (settled), a new draw uses that row's date and post-zero closing as principal — not the original opening.
+                const postZeroCompound = getCompoundRestartAfterZero(sorted);
+                let principalBase = Math.abs(snapInterestRunningBalance(openingBalanceForRunningStatement(sorted)));
+                let compoundPeriodStart = startDate;
+                if (postZeroCompound) {
+                    principalBase = postZeroCompound.principalBase;
+                    compoundPeriodStart = postZeroCompound.restartDate;
+                }
                 if (!Number.isFinite(principalBase) || principalBase <= 0) {
                     showToast('⚠️ Principal must be greater than zero for compound interest.');
                     return;
                 }
+                if (compoundPeriodStart > uptoDate) {
+                    showToast('⚠️ Upto date must be on or after the first row after a zero balance for compound interest.');
+                    return;
+                }
 
-                const baseTotalDays = calendarDayDiff(startDate, uptoDate);
+                const baseTotalDays = calendarDayDiff(compoundPeriodStart, uptoDate);
                 const monthsPart = Math.floor(baseTotalDays / 30);
                 const extraDaysPart = baseTotalDays % 30;
 
                 const fullComp = calculateCompoundStatementStyle(
                     principalBase,
                     rate,
-                    startDate,
-                    uptoDate,
+                    dateToYMD(compoundPeriodStart),
+                    dateToYMD(uptoDate),
                     compMonth,
                     0
                 );
+                const principalLabel = postZeroCompound
+                    ? `New balance after settlement (from ${dateToYMD(postZeroCompound.restartDate)})`
+                    : `Full Principal Interest (${monthsPart}m + ${extraDaysPart}d / ${baseTotalDays}d)`;
                 fullComp.rows.forEach((step, idx) => {
                     interestApplied.push({
                         id: Date.now() + idx,
                         date: step.date,
-                        narration: idx === 0 ? `Full Principal Interest (${monthsPart}m + ${extraDaysPart}d / ${baseTotalDays}d)` : 'Full Principal Interest',
+                        narration: idx === 0 ? principalLabel : 'Full Principal Interest',
                         credit: 0,
                         debit: round2(Math.abs(step.debit)),
                         calculatedOn: round2(Math.abs(step.calculatedOn)),
@@ -2912,7 +3013,10 @@
 
                 // Credit/payment rows during period (exclude interest narration rows)
                 const creditsByDate = {};
-                txEvents.forEach(({ tx, date }) => {
+                const txEventsForCompoundCredits = postZeroCompound
+                    ? txEvents.filter(e => e.date >= postZeroCompound.restartDate)
+                    : txEvents;
+                txEventsForCompoundCredits.forEach(({ tx, date }) => {
                     if (!tx || isInterestNarrationText(tx.narration)) return;
                     const eff = effectiveAmounts(tx);
                     const c = round2(eff.credit || 0);
@@ -3016,12 +3120,12 @@
                 let segStart = new Date(startDate);
                 const addSegment = (segEndDate) => {
                     const days = Math.round((segEndDate - segStart) / (1000 * 60 * 60 * 24));
-                    if (days <= 0 || runningBal === 0) return;
+                    if (days <= 0 || isZeroForInterestSegment(runningBal)) return;
                     const segInterest = Math.round(runningBal * monthlyRate * (days / 30));
                     if (segInterest === 0) return;
                     interestApplied.push({
                         id: Date.now() + interestApplied.length,
-                        date: segEndDate.toISOString().split('T')[0],
+                        date: localYmd(segEndDate),
                         narration: 'Interest Debit',
                         credit: 0,
                         debit: Math.abs(segInterest),
@@ -3034,7 +3138,7 @@
                 txEvents.forEach(({ tx, date }) => {
                     rowInterestMap[tx.id] = null;
                     addSegment(date);
-                    runningBal += txDelta(tx);
+                    runningBal = snapInterestRunningBalance(runningBal + txDelta(tx));
                     segStart = new Date(date);
                 });
                 addSegment(uptoDate);
