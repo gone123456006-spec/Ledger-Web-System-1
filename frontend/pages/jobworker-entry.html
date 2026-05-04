@@ -975,6 +975,13 @@
       resetAll();
       document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
       loadJobworkers();
+      setTimeout(function () {
+        var ed = document.getElementById('entryDate');
+        if (!ed || typeof ed.focus !== 'function') return;
+        try { ed.focus({ preventScroll: true }); } catch (eF) {
+          try { ed.focus(); } catch (e2) {}
+        }
+      }, 0);
 
       // Refresh if a new JW was added in another tab
       window.addEventListener('storage', function (e) {

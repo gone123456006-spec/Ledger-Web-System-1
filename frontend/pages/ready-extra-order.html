@@ -2845,9 +2845,11 @@
       <div class="popup-row">
         <label>Stamp *</label>
         <select id="rbStamp">
-          <option value="18K">18K</option>
-          <option value="22K">22K</option>
-          <option value="24K">24K</option>
+          <option value="14 CR">14 CR</option>
+          <option value="18 CR">18 CR</option>
+          <option value="20 CR">20 CR</option>
+          <option value="22 CR">22 CR</option>
+          <option value="24 CR">24 CR</option>
         </select>
       </div>
       <div class="popup-row">
@@ -4023,6 +4025,16 @@
           if (val === undefined || val === null) val = "";
           if (onlyIfEmpty && el.value && String(el.value).trim() !== "") return;
           el.value = String(val);
+          if (cellIdx === 3 && el.tagName === "SELECT") {
+            var sv = String(val).trim();
+            if (sv && el.value !== sv) {
+              var o = document.createElement("option");
+              o.value = sv;
+              o.textContent = sv;
+              el.appendChild(o);
+              el.value = sv;
+            }
+          }
         }
         function clearCol(cellIdx) {
           var cell = tr.cells[cellIdx];
@@ -4145,7 +4157,16 @@
 </td>
 <td><input readonly></td>
 <td><input placeholder="Item Name"></td>
-<td><input placeholder="Stamp"></td>
+<td>
+          <select class="stamp-select" style="width:100%;box-sizing:border-box;">
+            <option value="">-- Select --</option>
+            <option value="14 CR">14 CR</option>
+            <option value="18 CR">18 CR</option>
+            <option value="20 CR">20 CR</option>
+            <option value="22 CR">22 CR</option>
+            <option value="24 CR">24 CR</option>
+          </select>
+        </td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
 <td><input type="number" step="0.01" readonly placeholder="0" class="order-detail-readonly" oninput="calc(this)" onchange="calc(this)"></td>
@@ -6875,17 +6896,20 @@
         loadCustomers();
 
         // Set customer - try by ID first, then by name
+        var customerMatched = false;
         if (b.customerId && custName) {
           const option = Array.from(custName.options).find(opt => opt.value === String(b.customerId));
           if (option) {
             custName.value = option.value;
             custName.dispatchEvent(new Event('change'));
+            customerMatched = true;
           } else {
             // Fallback to name matching
             const optionByName = Array.from(custName.options).find(opt => opt.textContent === b.customer);
             if (optionByName) {
               custName.value = optionByName.value;
               custName.dispatchEvent(new Event('change'));
+              customerMatched = true;
             }
           }
         } else if (b.customer && custName) {
@@ -6894,7 +6918,22 @@
           if (option) {
             custName.value = option.value;
             custName.dispatchEvent(new Event('change'));
+            customerMatched = true;
           }
+        }
+
+        // Unregistered customer from All Bill edit: keep name/details visible even if not in customers master list.
+        if (!customerMatched && custName && b.customer) {
+          var tempVal = "__unregistered__:" + String(b.billNo || b.orderNo || Date.now());
+          var tempOpt = Array.from(custName.options).find(function (opt) { return opt.value === tempVal; });
+          if (!tempOpt) {
+            tempOpt = document.createElement("option");
+            tempOpt.value = tempVal;
+            tempOpt.textContent = String(b.customer || "Unknown");
+            tempOpt.dataset.unregistered = "true";
+            custName.appendChild(tempOpt);
+          }
+          custName.value = tempVal;
         }
 
         if (orderDate) orderDate.value = b.date || "";
@@ -6912,6 +6951,20 @@
           window.sgjBillNo.value = sgjSaved || (b.billNo || (billNo && billNo.value) || "");
         }
         if (itemBody) itemBody.innerHTML = "";
+
+        if (!customerMatched) {
+          var be = null;
+          try { be = JSON.parse(localStorage.getItem("editBalanceEntry") || "null"); } catch (eBe) { be = null; }
+          var sameBill = be && String(be.orderNo || be.billNo || "").trim() === String(b.billNo || b.orderNo || "").trim();
+          var src = sameBill ? be : null;
+          if (currentBal && src && src.currentBalance != null && String(src.currentBalance).trim() !== "") {
+            var cbType = String(src.currentBalanceType || "Dr").trim();
+            currentBal.value = String(src.currentBalance) + (cbType ? (" " + cbType) : "");
+          }
+          if (relation && src && src.relation != null) relation.value = String(src.relation || "");
+          if (station && src && src.station != null) station.value = String(src.station || "");
+          if (lfNo && src) lfNo.value = String(src.lfNo || src.lfno || "");
+        }
 
         const billRows = b.rows || b.items || [];
         billRows.forEach(r => {
@@ -8086,13 +8139,21 @@
           : new Date().toISOString().split("T")[0];
         var tr = document.createElement("tr");
         var roAttr = ro ? " readonly tabindex=\"-1\"" : "";
+        var stampRoAttr = ro ? " disabled tabindex=\"-1\"" : "";
         var lastCell = ro
           ? "<td></td>"
           : '<td><button type="button" title="Remove row">❌</button></td>';
         tr.innerHTML =
           "<td><input type=\"date\" class=\"ps-ondate\"" + roAttr + "></td>" +
           "<td><input type=\"text\" class=\"ps-item\" placeholder=\"Item\"" + roAttr + "></td>" +
-          "<td><input type=\"text\" class=\"ps-stamp\" placeholder=\"Stamp\"" + roAttr + "></td>" +
+          "<td><select class=\"ps-stamp stamp-select\" style=\"width:100%;box-sizing:border-box;\"" + stampRoAttr + ">" +
+          "<option value=\"\">-- Select --</option>" +
+          "<option value=\"14 CR\">14 CR</option>" +
+          "<option value=\"18 CR\">18 CR</option>" +
+          "<option value=\"20 CR\">20 CR</option>" +
+          "<option value=\"22 CR\">22 CR</option>" +
+          "<option value=\"24 CR\">24 CR</option>" +
+          "</select></td>" +
           "<td><input type=\"number\" class=\"ps-gross\" step=\"0.001\" min=\"0\" placeholder=\"0\" title=\"GROSS WT.\"" + roAttr + "></td>" +
           "<td><input type=\"number\" class=\"ps-less\" step=\"0.001\" min=\"0\" placeholder=\"0\" title=\"Less Wt\"" + roAttr + "></td>" +
           "<td><input type=\"number\" class=\"ps-net\" step=\"0.001\" min=\"0\" placeholder=\"0\" title=\"Net Weight\"" + roAttr + "></td>" +
@@ -8112,7 +8173,17 @@
           var rt = tr.querySelector(".ps-rate");
           if (rt && preset.rate != null && preset.rate !== "") rt.value = String(preset.rate);
           var st = tr.querySelector(".ps-stamp");
-          if (st && preset.stamp != null && preset.stamp !== "") st.value = String(preset.stamp);
+          if (st && preset.stamp != null && preset.stamp !== "") {
+            var sv = String(preset.stamp).trim();
+            st.value = sv;
+            if (st.value !== sv && sv) {
+              var o = document.createElement("option");
+              o.value = sv;
+              o.textContent = sv;
+              st.appendChild(o);
+              st.value = sv;
+            }
+          }
         }
         var btn = tr.querySelector("button");
         var netIn = tr.querySelector(".ps-net");
@@ -8342,7 +8413,7 @@
           var el = getPopupEl(id) || root.querySelector("#" + id);
           if (el) el.value = val;
         }
-        setVal("rbStamp", "18K");
+        setVal("rbStamp", "18 CR");
         setVal("rbWeight", "");
         setVal("rbRate", "");
         setVal("rbAmount", "");

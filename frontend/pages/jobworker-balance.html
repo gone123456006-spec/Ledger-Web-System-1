@@ -1018,6 +1018,13 @@
         lcComputeTotals(true);
         document.getElementById('lcOnDate').textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
         document.getElementById('lcOverlay').classList.add('open');
+        setTimeout(function () {
+          var tb = document.getElementById('lcEntriesBody');
+          if (!tb) return;
+          var rows = tb.querySelectorAll('.lc-entry-row');
+          if (!rows.length) return;
+          lcFocusCell(tb, rows.length - 1, 1);
+        }, 0);
       };
 
       window.lcComputeTotals = function (initial) {

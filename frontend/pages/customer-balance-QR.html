@@ -1247,7 +1247,7 @@
         <div class="ctx-sep"></div>
         <div class="ctx-item" onclick="ctxClearBill()">✅ Toggle row cleared</div>
         <div class="ctx-item danger" id="ctxDeleteTickedItem" style="display:none;" onclick="ctxDeleteTickedRow()">🗑️
-            Delete ticked row</div>
+            Delete all ticked rows</div>
     </div>
 
     <script>
@@ -3704,20 +3704,20 @@
 
         function ctxDeleteTickedRow() {
             closeCtxMenu();
-            const targetIdx = ctxTargetIdx !== null ? ctxTargetIdx : selectedIdx;
-            if (targetIdx === null) {
-                showToast('⚠️ Please select a ticked row.');
+            const ticked = transactions.filter(t => t && t.cleared);
+            if (!ticked.length) {
+                showToast('ℹ️ No ticked rows to delete.');
                 return;
             }
-            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
-            const tx = sorted[targetIdx];
-            if (!tx || !tx.cleared) {
-                showToast('ℹ️ This row is not ticked.');
-                return;
-            }
-            if (!confirm('Delete this ticked row?')) return;
-            deleteTargetIdx = targetIdx;
-            confirmDelete();
+            const n = ticked.length;
+            const msg = n === 1 ? 'Delete this ticked row?' : `Delete all ${n} ticked rows?`;
+            if (!confirm(msg)) return;
+            transactions = transactions.filter(t => !t || !t.cleared);
+            saveTransactions();
+            selectedIdx = null;
+            deleteTargetIdx = null;
+            render();
+            showToast(n === 1 ? '🗑 Row deleted' : `🗑 Deleted ${n} ticked rows`);
         }
 
 

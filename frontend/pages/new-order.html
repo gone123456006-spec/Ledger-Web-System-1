@@ -2008,9 +2008,11 @@
       <div class="popup-row">
         <label>Stamp *</label>
         <select id="rbStamp">
-          <option value="18K">18K</option>
-          <option value="22K">22K</option>
-          <option value="24K">24K</option>
+          <option value="14 CR">14 CR</option>
+          <option value="18 CR">18 CR</option>
+          <option value="20 CR">20 CR</option>
+          <option value="22 CR">22 CR</option>
+          <option value="24 CR">24 CR</option>
         </select>
       </div>
       <div class="popup-row">
@@ -2504,9 +2506,11 @@
         <td>
           <select class="stamp-select">
             <option value="">-- Select --</option>
-            <option value="18k">18k</option>
-            <option value="22k">22k</option>
-            <option value="24k">24k</option>
+            <option value="14 CR">14 CR</option>
+            <option value="18 CR">18 CR</option>
+            <option value="20 CR">20 CR</option>
+            <option value="22 CR">22 CR</option>
+            <option value="24 CR">24 CR</option>
           </select>
         </td>
         <td><input placeholder="Remarks"></td>
@@ -3034,7 +3038,14 @@
         tr.innerHTML =
           '<td><input type="date" class="ps-ondate"></td>' +
           '<td><input type="text" class="ps-item" placeholder="Item"></td>' +
-          '<td><input type="text" class="ps-stamp" placeholder="Stamp"></td>' +
+          '<td><select class="ps-stamp stamp-select" style="width:100%;box-sizing:border-box;">' +
+          '<option value="">-- Select --</option>' +
+          '<option value="14 CR">14 CR</option>' +
+          '<option value="18 CR">18 CR</option>' +
+          '<option value="20 CR">20 CR</option>' +
+          '<option value="22 CR">22 CR</option>' +
+          '<option value="24 CR">24 CR</option>' +
+          '</select></td>' +
           '<td><input type="number" class="ps-gross" step="0.001" min="0" placeholder="0" title="GROSS WT."></td>' +
           '<td><input type="number" class="ps-less" step="0.001" min="0" placeholder="0" title="Subtract from net only: Net = GROSS WT. − Less Wt"></td>' +
           '<td><input type="number" class="ps-net" step="0.001" min="0" placeholder="0" title="Net = GROSS − Less (auto); you can edit manually"></td>' +
@@ -3054,7 +3065,17 @@
           var rt = tr.querySelector('.ps-rate');
           if (rt && preset.rate != null && preset.rate !== '') rt.value = String(preset.rate);
           var st = tr.querySelector('.ps-stamp');
-          if (st && preset.stamp != null && preset.stamp !== '') st.value = String(preset.stamp);
+          if (st && preset.stamp != null && preset.stamp !== '') {
+            var sv = String(preset.stamp).trim();
+            st.value = sv;
+            if (st.value !== sv && sv) {
+              var o = document.createElement('option');
+              o.value = sv;
+              o.textContent = sv;
+              st.appendChild(o);
+              st.value = sv;
+            }
+          }
         }
         var btn = tr.querySelector('button');
         var netIn = tr.querySelector('.ps-net');
@@ -3421,7 +3442,7 @@
           const el = getPopupEl(id.replace(/^#/, '')) || getSearchRoot().querySelector(id);
           if (el) el.value = val;
         };
-        setVal('#rbStamp', '18K');
+        setVal('#rbStamp', '18 CR');
         setVal('#rbWeight', '');
         setVal('#rbRate', '');
         setVal('#rbAmount', '');
@@ -4425,6 +4446,21 @@
                 inputs[i].value = String(val);
               } else if (i < values.length && (values[i] === '' || values[i] === null)) {
                 inputs[i].value = '';
+              }
+            }
+
+            const stampSelRestore = tr.querySelector('.stamp-select');
+            if (stampSelRestore && values.length > 3) {
+              const sv = String(values[3]).trim();
+              if (sv) {
+                stampSelRestore.value = sv;
+                if (stampSelRestore.value !== sv) {
+                  const ox = document.createElement('option');
+                  ox.value = sv;
+                  ox.textContent = sv;
+                  stampSelRestore.appendChild(ox);
+                  stampSelRestore.value = sv;
+                }
               }
             }
 

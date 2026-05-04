@@ -54,7 +54,7 @@ module.exports = {
 
   // Purity Standards
   PURITY_STANDARDS: {
-    GOLD: ['24K', '22K', '18K', '14K'],
+    GOLD: ['24 CR', '22 CR', '20 CR', '18 CR', '14 CR', '24K', '22K', '18K', '14K'],
     SILVER: ['999', '925', '835'],
     PLATINUM: ['950', '900', '850'],
   },

@@ -106,6 +106,10 @@
       background-color: #f0fdf4;
       font-weight: 600;
     }
+    .row input#currentBal.current-bal-text {
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
     .row input:focus, .row select:focus {
       outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft);
     }
@@ -149,14 +153,16 @@
       width: 100%; min-width: 0; table-layout: fixed;
       border-collapse: collapse; border-spacing: 0;
     }
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(2),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(2) { min-width: 170px; width: 16%; }
     .order-details-table-wrap #new-order-item-table thead th:nth-child(3),
-    .order-details-table-wrap #new-order-item-table tbody td:nth-child(3) { min-width: 170px; width: 17%; }
-    .order-details-table-wrap #new-order-item-table thead th:nth-child(5),
-    .order-details-table-wrap #new-order-item-table tbody td:nth-child(5) { min-width: 230px; width: 12%; }
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(3) { min-width: 92px; width: 8%; }
     .order-details-table-wrap #new-order-item-table thead th:nth-child(6),
-    .order-details-table-wrap #new-order-item-table tbody td:nth-child(6),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(6) { min-width: 230px; width: 12%; }
     .order-details-table-wrap #new-order-item-table thead th:nth-child(7),
-    .order-details-table-wrap #new-order-item-table tbody td:nth-child(7) { min-width: 115px; width: 6.5%; }
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(7),
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(8),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(8) { min-width: 115px; width: 6.5%; }
     .order-details-table-wrap #new-order-item-table th,
     .order-details-table-wrap #new-order-item-table td {
       padding: 0; vertical-align: middle; white-space: nowrap;
@@ -176,6 +182,11 @@
       display: inline-block; vertical-align: middle; min-width: 28px; height: 32px;
       padding: 0; border-radius: 0; border: 1px solid var(--border, #dee2e6);
       background: #fff; cursor: pointer; font-size: 12px;
+      user-select: none;
+    }
+    .order-details-table-wrap #new-order-item-table th.row-del-col-th,
+    .ps-table th.row-del-col-th {
+      font-weight: 600; color: #6c757d; text-align: center; width: 1%;
     }
     .order-details-table-wrap #new-order-item-table thead th { padding: 0 4px; line-height: 32px; height: 32px; box-sizing: border-box; }
     .order-details-table-wrap #new-order-item-table thead th,
@@ -185,6 +196,19 @@
       border-right: none; text-align: right; vertical-align: middle; width: 1%; white-space: nowrap;
     }
     .order-details-table-wrap #new-order-item-table tbody tr { background: #fff; }
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other { background: #fafafa; }
+    /* Other row: R.Metal, Neg, R.Wt, Making % — not used; thin corner cross (ledger-style), inputs stay hidden in DOM */
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(5),
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(6),
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(7),
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(9) {
+      background-color: #fff;
+      background-image:
+        linear-gradient(45deg, transparent 49.15%, rgba(198, 206, 216, 0.85) 49.35%, rgba(198, 206, 216, 0.85) 50.65%, transparent 50.85%),
+        linear-gradient(-45deg, transparent 49.15%, rgba(198, 206, 216, 0.85) 49.35%, rgba(198, 206, 216, 0.85) 50.65%, transparent 50.85%);
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+    }
     .order-details-table-wrap #new-order-item-table th.total,
     .order-details-table-wrap #new-order-item-table td.total { background: #f5f6fa; }
     .order-details-table-wrap #new-order-item-table input:focus,
@@ -411,7 +435,12 @@
     .ps-table { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 13px; }
     .ps-table th { background: #f5f6fa; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     .ps-table td { padding: 4px; border-bottom: 1px solid var(--border); }
-    .ps-table input { width: 100%; height: 30px; border: 1px solid #d1d9e0; border-radius: 4px; padding: 0 6px; font-size: 12px; }
+    .ps-table input, .ps-table select { width: 100%; height: 30px; border: 1px solid #d1d9e0; border-radius: 4px; padding: 0 6px; font-size: 12px; }
+    .ps-table .ps-row-del-btn {
+      width: auto; min-width: 28px; height: 30px; padding: 0; box-sizing: border-box;
+      border: 1px solid #d1d9e0; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px;
+      user-select: none;
+    }
     .ps-table tfoot td { background: #eef1f5; font-weight: 600; padding: 8px 10px; border-top: 2px solid var(--border); }
   </style>
 </head>
@@ -445,7 +474,7 @@
         </div>
         <datalist id="custNameList"></datalist>
       </div>
-      <div class="row"><label>Current Bal</label><input id="currentBal" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="row"><label>Current Bal</label><input type="text" id="currentBal" class="current-bal-text" placeholder="0.00 Dr" autocomplete="off" title="Example: 10000.00 Dr or 5000.00 Cr"></div>
       <div class="row"><label>Relation</label><input id="relation" placeholder="Relation"></div>
       <div class="row"><label>Station</label><input id="station" placeholder="Station"></div>
       <div class="row"><label>LF No.</label><input id="lfNo" placeholder="LF Number"></div>
@@ -461,13 +490,14 @@
 
   <!-- ORDER DETAILS TABLE -->
   <div class="order-details">
-    <div class="box-title">Order Details</div>
+    <div class="box-title">Bill Details</div>
     <div class="table-wrap order-details-table-wrap">
       <table id="new-order-item-table">
         <thead>
           <tr>
             <th style="min-width:115px;">Type</th>
             <th style="min-width:170px;">Item Name</th>
+            <th>Stamp</th>
             <th>Pc</th>
             <th>R.Metal</th>
             <th>Neg</th>
@@ -476,7 +506,7 @@
             <th title="Percent of (R. Wt × Rate), same as Ready Extra">Making %</th>
             <th>Other</th>
             <th class="total">Total</th>
-            <th>❌</th>
+            <th class="row-del-col-th" aria-label="Remove row">×</th>
           </tr>
         </thead>
         <tbody id="itemBody"></tbody>
@@ -489,7 +519,7 @@
     <button class="primary" onclick="addRow()">+ Add Row</button>
     <button type="button" onclick="openPaymentPopup()" title="Record payment (same storage as New Order)">Payment</button>
     <button onclick="openPurchaseSheetPopup()">Purchase</button>
-    <button type="button" class="primary" onclick="saveOrder()">Save Order</button>
+    <button type="button" class="primary" onclick="saveOrder()">Save Bill</button>
     <button type="button" onclick="saveAndNew()">Save & New</button>
     <button type="button" onclick="resetForm()" title="Reset form">Reset</button>
     <button type="button" class="danger" onclick="closePage()">Close</button>
@@ -569,12 +599,13 @@
   <table>
     <thead>
       <tr>
-        <th style="width:25%;">Item</th>
-        <th style="width:8%;">Pc</th>
+        <th style="width:22%;">Item</th>
+        <th style="width:9%;">Stamp</th>
+        <th style="width:7%;">Pc</th>
         <th style="width:10%;">Net Wt</th>
         <th style="width:10%;">Rate</th>
         <th style="width:12%;">Total</th>
-        <th style="width:35%;">Order Details</th>
+        <th style="width:30%;">Bill Details</th>
       </tr>
     </thead>
     <tbody id="iItems"></tbody>
@@ -649,7 +680,7 @@
           <tr>
             <th>On Date</th><th>Item Name</th><th>Stamp</th>
             <th>Gross Wt.</th><th>Less Wt.</th><th>Net Wt.</th>
-            <th>Rate</th><th>Amount</th><th>❌</th>
+            <th>Rate</th><th>Amount</th><th class="row-del-col-th" aria-label="Remove row">×</th>
           </tr>
         </thead>
         <tbody id="psTbody"></tbody>
@@ -689,6 +720,7 @@
     orderDetailsRow: null,
     savedThisSession: false,
     selectedCustomerId: '',
+    customerPickedFromList: false,
     /** When true, manual name blur must not overwrite Current Bal from customer master (prefilled from Customer Statement). */
     statementCurrentBalLock: false,
   };
@@ -816,7 +848,15 @@
   // CUSTOMERS (all stored in localStorage)
   // =====================================================
   function getCustomers() { try { return JSON.parse(localStorage.getItem('customers') || '[]'); } catch(e){ return []; } }
-  function saveCustomers(arr) { localStorage.setItem('customers', JSON.stringify(arr)); }
+  function saveCustomers(arr) {
+    localStorage.setItem('customers', JSON.stringify(arr));
+    try {
+      var ev = new CustomEvent('customersUpdated');
+      window.dispatchEvent(ev);
+      if (window.parent && window.parent !== window) window.parent.dispatchEvent(ev);
+      if (window.top && window.top !== window) window.top.dispatchEvent(ev);
+    } catch (eEv) {}
+  }
   function getCustomerName() {
     var manual = el('custName');
     var typed = manual ? String(manual.value || '').trim() : '';
@@ -845,11 +885,13 @@
       sel.classList.add('selected-from-list');
       if (first) first.textContent = 'Selected from list ✓';
       sel.value = '';
+      S.customerPickedFromList = true;
     } else {
       sel.classList.remove('selected-from-list');
       if (first) first.textContent = 'Select customer from list';
       sel.value = '';
       S.selectedCustomerId = '';
+      S.customerPickedFromList = false;
     }
   }
 
@@ -865,6 +907,52 @@
       relation: parts[0] || '',
       relationName: parts.slice(1).join(' ')
     };
+  }
+
+  function formatCurrentBalText(amt, typeStr) {
+    var n = safeNum(amt);
+    var t = String(typeStr || 'Dr').trim().toLowerCase();
+    var side = (t === 'cr' || t === 'credit') ? 'Cr' : 'Dr';
+    return n.toFixed(2) + ' ' + side;
+  }
+
+  /** Parse a single display string such as "10000 Dr", "10000.00 cr", "10,000.50 DR". */
+  function parseCurrentBalText(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return { amt: 0, type: 'Dr' };
+    var m = s.match(/^([\d.,\s]+)\s*(dr|cr)?$/i);
+    if (m) {
+      var amt = safeNum(String(m[1]).replace(/,/g, ''));
+      var u = (m[2] || 'Dr').toLowerCase();
+      return { amt: Math.abs(amt), type: u === 'cr' ? 'Cr' : 'Dr' };
+    }
+    var m2 = s.match(/\b(dr|cr)\b/i);
+    var num = safeNum(s.replace(/\b(dr|cr)\b/gi, '').replace(/,/g, ''));
+    if (m2) return { amt: Math.abs(num), type: m2[1].toLowerCase() === 'cr' ? 'Cr' : 'Dr' };
+    return { amt: Math.abs(safeNum(s)), type: 'Dr' };
+  }
+
+  /** Prefer master current balance + type, else opening + type (same idea as Customer Balance). */
+  function getDisplayBalanceFromCustomer(c) {
+    if (!c || typeof c !== 'object') return { amt: 0, type: 'Dr' };
+    var curRaw = c.currentBalance;
+    var curNum = Number(curRaw);
+    var hasCur = curRaw != null && String(curRaw).trim() !== '' && isFinite(curNum);
+    if (hasCur) {
+      var ct = String(c.currentBalanceType || 'Dr').trim().toLowerCase();
+      return { amt: Math.abs(curNum), type: (ct === 'cr' || ct === 'credit') ? 'Cr' : 'Dr' };
+    }
+    var op = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== '')
+      ? c.masterOpeningBalance : c.openingBalance;
+    var opNum = Number(op);
+    if (op != null && String(op).trim() !== '' && isFinite(opNum)) {
+      var rawT = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== '')
+        ? (c.masterOpeningBalanceType || c.openingBalanceType || 'Dr')
+        : (c.openingBalanceType || 'Dr');
+      var ot = String(rawT).trim().toLowerCase();
+      return { amt: Math.abs(opNum), type: (ot === 'cr' || ot === 'credit') ? 'Cr' : 'Dr' };
+    }
+    return { amt: 0, type: 'Dr' };
   }
 
   function getLinkedCustomerByName() {
@@ -884,7 +972,8 @@
 
   function populateCustomerFieldsFromMaster(customer) {
     if (!customer) return;
-    if (el('currentBal')) el('currentBal').value = safeNum(customer.openingBalance).toFixed(2);
+    var d = getDisplayBalanceFromCustomer(customer);
+    if (el('currentBal')) el('currentBal').value = formatCurrentBalText(d.amt, d.type);
     if (el('relation')) {
       var rel = customer.relation || '';
       var rn = customer.relationName || '';
@@ -898,25 +987,16 @@
     var s = el('custName');
     if (!s || s.tagName !== 'INPUT') return;
     var apply = function() {
+      var typed = String(s.value || '').trim();
+      if (typed) {
+        // Manual typing always switches to unregistered mode until user selects from list again.
+        S.selectedCustomerId = '';
+        S.customerPickedFromList = false;
+        setCustomerSelectStatus(false);
+      }
       var linked = getLinkedCustomerByName();
       if (linked) {
         if (!S.statementCurrentBalLock) populateCustomerFieldsFromMaster(linked);
-        else if (linked.id != null) {
-          S.selectedCustomerId = String(linked.id);
-          setCustomerSelectStatus(true);
-        }
-      }
-      var sel = el('custNameSelect');
-      if (sel) {
-        var customers = getCustomers();
-        var typed = normalizeCustomerName(s.value);
-        var matched = customers.find(function(c){ return normalizeCustomerName(c && c.name) === typed; });
-        if (matched && matched.id != null) {
-          S.selectedCustomerId = String(matched.id);
-          setCustomerSelectStatus(true);
-        } else {
-          setCustomerSelectStatus(false);
-        }
       }
       updateInfoPanel();
     };
@@ -932,6 +1012,7 @@
       var o = s.selectedOptions && s.selectedOptions[0];
       if (!o || !o.value) return;
       S.selectedCustomerId = String(o.value);
+      S.customerPickedFromList = true;
       if (el('custName')) el('custName').value = String(o.textContent || '').trim();
       var c = {};
       try { c = JSON.parse(o.dataset.customer || '{}'); } catch(e) {}
@@ -942,35 +1023,25 @@
   }
 
   /**
-   * If user types a new customer manually, create it in customers list on save
-   * so both All Bill and Customer Balance can link to same customer master row.
+   * Registered customer = selected from customer list.
+   * Manual typed customer remains unregistered (no customer master auto-create).
    */
   function ensureCustomerMasterForSave() {
     var name = getCustomerName();
     if (!name) return null;
+    if (!S.customerPickedFromList) return null;
+    var selectedId = getSelectedCustomerId();
     var customers = getCustomers();
+    if (selectedId) {
+      var byId = customers.find(function(c) {
+        return c && c.id != null && String(c.id) === String(selectedId);
+      });
+      if (byId) return byId;
+    }
     var existing = customers.find(function(c) {
       return normalizeCustomerName(c && c.name) === normalizeCustomerName(name);
     });
-    if (existing) return existing;
-
-    var relParts = parseRelationParts(el('relation') && el('relation').value);
-    var created = {
-      id: Date.now(),
-      cid: '',
-      name: name,
-      openingBalance: safeNum(el('currentBal') && el('currentBal').value),
-      openingBalanceType: 'Dr',
-      relation: relParts.relation,
-      relationName: relParts.relationName,
-      station: (el('station') && el('station').value) || '',
-      lfNo: (el('lfNo') && el('lfNo').value) || '',
-      lfno: (el('lfNo') && el('lfNo').value) || '',
-      createdAt: new Date().toISOString()
-    };
-    customers.push(created);
-    saveCustomers(customers);
-    return created;
+    return existing || null;
   }
 
   function loadCustomers(retainValue) {
@@ -1023,7 +1094,8 @@
     var c = {};
     try { c = JSON.parse(o.dataset.customer || '{}'); } catch(e) {}
     if (el('custName')) el('custName').value = c.name || '';
-    if (el('currentBal')) el('currentBal').value = safeNum(c.openingBalance).toFixed(2);
+    var d = getDisplayBalanceFromCustomer(c);
+    if (el('currentBal')) el('currentBal').value = formatCurrentBalText(d.amt, d.type);
     if (el('relation')) {
       var rel = c.relation || ''; var rn = c.relationName || '';
       el('relation').value = rel && rn ? rel + ' ' + rn : (rel || rn);
@@ -1108,6 +1180,14 @@
         '</select>' +
       '</div></td>' +
       '<td><input placeholder="Item Name"></td>' +
+      '<td><select class="stamp-select" style="width:100%;box-sizing:border-box;">' +
+        '<option value="">-- Select --</option>' +
+        '<option value="14 CR">14 CR</option>' +
+        '<option value="18 CR">18 CR</option>' +
+        '<option value="20 CR">20 CR</option>' +
+        '<option value="22 CR">22 CR</option>' +
+        '<option value="24 CR">24 CR</option>' +
+      '</select></td>' +
       '<td><input type="number" step="0.01" placeholder="0" oninput="calcRow(this)" min="0"></td>' +
       '<td><input type="number" step="0.001" placeholder="0" oninput="calcRow(this)" min="0"></td>' +
       '<td><input type="number" step="0.001" placeholder="0" oninput="calcRow(this)" min="0"></td>' +
@@ -1116,8 +1196,17 @@
       '<td><input type="number" step="0.01" placeholder="0" oninput="calcRow(this)" min="0"></td>' +
       '<td><input type="number" step="0.01" placeholder="0" oninput="calcRow(this)" min="0"></td>' +
       '<td class="total"><input type="number" step="0.01" readonly placeholder="0.00"></td>' +
-      '<td><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Remove row">❌</button></td>';
+      '<td><button type="button" class="row-del-btn" tabindex="-1" onclick="removeRow(this)" title="Remove row">X</button></td>';
     tbody.appendChild(tr);
+    var typeSel0 = tr.cells[0] && tr.cells[0].querySelector('select');
+    if (typeSel0) setPurchaseState(tr, false);
+    setTimeout(function() {
+      if (typeSel0 && typeSel0.value === 'Other') syncGoldInvoiceOtherTotal(tr);
+      else {
+        var t4 = tr.cells[4] && tr.cells[4].children[0];
+        if (t4) calcRow(t4);
+      }
+    }, 10);
     if (!skipThrottle) tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     updateInfoPanel();
     scheduleAutoSave();
@@ -1129,42 +1218,149 @@
     if (row) { row.remove(); updateInfoPanel(); scheduleAutoSave(); }
   }
 
+  function getGoldInvoiceRowType(row) {
+    if (!row || !row.cells || !row.cells[0]) return '';
+    var sel = row.cells[0].querySelector('select');
+    return sel ? String(sel.value || '').trim() : '';
+  }
+
+  /** Other row (same rule as Ready Extra): Total = Pc × Rate + Other. */
+  function syncGoldInvoiceOtherTotal(row) {
+    if (!row || !row.cells || getGoldInvoiceRowType(row) !== 'Other') return;
+    try {
+      var pc = safeNum(row.cells[3] && row.cells[3].children[0] && row.cells[3].children[0].value);
+      var rate = safeNum(row.cells[7] && row.cells[7].children[0] && row.cells[7].children[0].value);
+      var other = safeNum(row.cells[9] && row.cells[9].children[0] && row.cells[9].children[0].value);
+      var total = pc * rate + other;
+      if (row.cells[10] && row.cells[10].children[0]) row.cells[10].children[0].value = total.toFixed(2);
+    } catch (e0) {}
+  }
+
+  function resetGoldInvoiceRowFieldDecor(row) {
+    if (!row) return;
+    row.querySelectorAll('input').forEach(function(inp) {
+      inp.classList.remove('purchase-field-disabled', 'order-detail-readonly');
+      inp.removeAttribute('readonly');
+      inp.style.visibility = '';
+      inp.style.backgroundColor = '';
+      inp.style.cursor = '';
+      inp.style.border = '';
+      inp.style.borderRadius = '';
+      inp.tabIndex = 0;
+    });
+    row.querySelectorAll('select').forEach(function(sel) {
+      sel.removeAttribute('disabled');
+      sel.style.visibility = '';
+      sel.style.opacity = '';
+      sel.classList.remove('purchase-field-disabled');
+      sel.tabIndex = 0;
+    });
+  }
+
+  /**
+   * Ready Extra–style row: type "Other" locks/hides order-detail weight columns; only Pc, Rate, Other (+ Item, Stamp, Type) stay active.
+   * Type "Sale" uses full R.Wt–based calc (same as before).
+   */
+  function setPurchaseState(row, isPurchaseIgnored) {
+    if (!row || !row.cells || row.cells.length < 11) return;
+    resetGoldInvoiceRowFieldDecor(row);
+    row.classList.remove('gi-row-type-other');
+    var type = getGoldInvoiceRowType(row);
+    if (type === 'Other') {
+      row.classList.add('gi-row-type-other');
+      for (var ci = 0; ci < row.cells.length; ci++) {
+        var cell = row.cells[ci];
+        var input = cell.querySelector('input');
+        var selectEl = cell.querySelector('select');
+        if (ci === 0 && selectEl) {
+          selectEl.removeAttribute('disabled');
+          continue;
+        }
+        if (ci === 2 && selectEl) {
+          selectEl.removeAttribute('disabled');
+          continue;
+        }
+        if (ci === 10 && input) {
+          input.setAttribute('readonly', 'readonly');
+          input.classList.add('order-detail-readonly');
+          input.style.visibility = 'visible';
+          continue;
+        }
+        if (ci === 1 && input) {
+          input.removeAttribute('readonly');
+          continue;
+        }
+        if ((ci === 3 || ci === 7 || ci === 9) && input) {
+          input.removeAttribute('readonly');
+          input.style.visibility = 'visible';
+          continue;
+        }
+        if (ci === 11) continue;
+        if (input) {
+          input.setAttribute('readonly', 'readonly');
+          input.classList.add('order-detail-readonly', 'purchase-field-disabled');
+          input.tabIndex = -1;
+          input.style.visibility = 'hidden';
+          input.style.cursor = 'not-allowed';
+          input.style.backgroundColor = '#f5f5f7';
+          input.style.border = 'none';
+        }
+        if (selectEl && ci !== 0 && ci !== 2) {
+          selectEl.setAttribute('disabled', 'disabled');
+        }
+      }
+      syncGoldInvoiceOtherTotal(row);
+      return;
+    }
+    if (row.cells[6] && row.cells[6].children[0]) {
+      row.cells[6].children[0].setAttribute('readonly', 'readonly');
+    }
+    if (row.cells[10] && row.cells[10].children[0]) {
+      row.cells[10].children[0].setAttribute('readonly', 'readonly');
+      row.cells[10].children[0].classList.add('order-detail-readonly');
+    }
+  }
+
   function calcRow(input) {
     var row = input.closest('tr');
     if (!row) return;
     try {
-      // Col indices: 0=type, 1=item, 2=pc, 3=R.Metal, 4=Neg, 5=R.Wt, 6=rate, 7=making%, 8=other, 9=total, 10=del
+      if (getGoldInvoiceRowType(row) === 'Other') {
+        syncGoldInvoiceOtherTotal(row);
+        updateInfoPanel();
+        scheduleAutoSave();
+        return;
+      }
+      // Col indices: 0=type, 1=item, 2=stamp, 3=pc, 4=R.Metal, 5=Neg, 6=R.Wt, 7=rate, 8=making%, 9=other, 10=total, 11=del
       // Making matches Ready Extra: labor = (R.Wt × Rate) × (making% / 100); total = base + labor + other.
-      var grossWt = safeNum(row.cells[3].children[0].value);
-      var lessWt = safeNum(row.cells[4].children[0].value);
+      var grossWt = safeNum(row.cells[4].children[0].value);
+      var lessWt = safeNum(row.cells[5].children[0].value);
       var netWt = Math.max(0, grossWt - lessWt);
-      if (row.cells[5].children[0]) row.cells[5].children[0].value = netWt.toFixed(3);
-      var rate = safeNum(row.cells[6].children[0].value);
-      var makingPct = safeNum(row.cells[7].children[0].value);
-      var other = safeNum(row.cells[8].children[0].value);
+      if (row.cells[6].children[0]) row.cells[6].children[0].value = netWt.toFixed(3);
+      var rate = safeNum(row.cells[7].children[0].value);
+      var makingPct = safeNum(row.cells[8].children[0].value);
+      var other = safeNum(row.cells[9].children[0].value);
       var base = netWt * rate;
       var labor = base * (makingPct / 100);
       var total = base + labor + other;
-      if (row.cells[9].children[0]) row.cells[9].children[0].value = total.toFixed(2);
+      if (row.cells[10].children[0]) row.cells[10].children[0].value = total.toFixed(2);
       updateInfoPanel();
       scheduleAutoSave();
     } catch(e) {}
   }
 
   function handleTypeChange(select) {
-    var type = select.value;
     var row = select.closest('tr');
     if (row) {
       setPurchaseState(row, false);
-      var trigger = row.cells[3] && row.cells[3].children[0];
-      if (trigger) calcRow(trigger);
+      if (select.value === 'Other') syncGoldInvoiceOtherTotal(row);
+      else {
+        var trigger = row.cells[4] && row.cells[4].children[0];
+        if (trigger) calcRow(trigger);
+      }
     }
     updateInfoPanel();
     scheduleAutoSave();
-  }
-
-  function setPurchaseState(row, isPurchase) {
-    return;
   }
 
   // =====================================================
@@ -1230,7 +1426,7 @@
       out.push({
         onDate: (c[0].querySelector('input') || {}).value || '',
         itemName: (c[1].querySelector('input') || {}).value || '',
-        stamp: (c[2].querySelector('input') || {}).value || '',
+        stamp: (c[2].querySelector('input, select') || {}).value || '',
         grossWt: (c[3].querySelector('input') || {}).value || '',
         lessWt: (c[4].querySelector('input') || {}).value || '',
         netWt: (c[5].querySelector('input') || {}).value || '',
@@ -1270,13 +1466,20 @@
     tr.innerHTML =
       '<td><input type="date" class="ps-ondate"></td>' +
       '<td><input type="text" class="ps-item" placeholder="Item"></td>' +
-      '<td><input type="text" class="ps-stamp" placeholder="Stamp"></td>' +
+      '<td><select class="ps-stamp stamp-select" style="width:100%;box-sizing:border-box;">' +
+      '<option value="">-- Select --</option>' +
+      '<option value="14 CR">14 CR</option>' +
+      '<option value="18 CR">18 CR</option>' +
+      '<option value="20 CR">20 CR</option>' +
+      '<option value="22 CR">22 CR</option>' +
+      '<option value="24 CR">24 CR</option>' +
+      '</select></td>' +
       '<td><input type="number" class="ps-gross" step="0.001" min="0" placeholder="0"></td>' +
       '<td><input type="number" class="ps-less" step="0.001" min="0" placeholder="0"></td>' +
       '<td><input type="number" class="ps-net" step="0.001" min="0" placeholder="0"></td>' +
       '<td><input type="number" class="ps-rate" step="0.01" min="0" placeholder="0"></td>' +
       '<td><input type="number" class="ps-amt" step="0.01" min="0" placeholder="0"></td>' +
-      '<td><button type="button" onclick="this.closest(\'tr\').remove();updatePsTotal();" style="background:none;border:none;cursor:pointer;">❌</button></td>';
+      '<td><button type="button" class="row-del-btn ps-row-del-btn" tabindex="-1" onclick="this.closest(\'tr\').remove();updatePsTotal();" title="Remove row">X</button></td>';
     tbody.appendChild(tr);
     (tr.querySelector('.ps-ondate') || {}).value = (preset && preset.onDate) ? preset.onDate : od;
     if (preset) {
@@ -1284,7 +1487,17 @@
         var cls = {itemName:'ps-item',stamp:'ps-stamp',grossWt:'ps-gross',lessWt:'ps-less',netWt:'ps-net',rate:'ps-rate',amount:'ps-amt'}[k];
         if (cls && preset[k] != null && preset[k] !== '') {
           var inp = tr.querySelector('.'+cls);
-          if (inp) inp.value = String(preset[k]);
+          if (inp) {
+            var pv = String(preset[k]).trim();
+            inp.value = pv;
+            if (k === 'stamp' && inp.tagName === 'SELECT' && inp.value !== pv && pv) {
+              var o = document.createElement('option');
+              o.value = pv;
+              o.textContent = pv;
+              inp.appendChild(o);
+              inp.value = pv;
+            }
+          }
         }
       });
     }
@@ -1389,7 +1602,7 @@
     if (!tbody) return 0;
     var total = 0;
     tbody.querySelectorAll('tr').forEach(function(row) {
-      var amt = safeNum(row.cells[9] && row.cells[9].children[0] && row.cells[9].children[0].value);
+      var amt = safeNum(row.cells[10] && row.cells[10].children[0] && row.cells[10].children[0].value);
       var type = row.cells[0] && row.cells[0].querySelector('select') && row.cells[0].querySelector('select').value;
       if (type === 'Purchase') total -= amt; else total += amt;
     });
@@ -1552,7 +1765,7 @@
     if (!tbody) return;
     var rows = tbody.querySelectorAll('tr');
     for (var i = 0; i < rows.length; i++) {
-      var rateInp = rows[i].cells[6] && rows[i].cells[6].children[0];
+      var rateInp = rows[i].cells[7] && rows[i].cells[7].children[0];
       if (rateInp && (!rateInp.value || rateInp.value === '0')) {
         rateInp.value = rate.rate;
         calcRow(rateInp);
@@ -1561,7 +1774,7 @@
       }
     }
     if (rows.length > 0) {
-      var rateInp = rows[0].cells[6] && rows[0].cells[6].children[0];
+      var rateInp = rows[0].cells[7] && rows[0].cells[7].children[0];
       if (rateInp) { rateInp.value = rate.rate; calcRow(rateInp); alert('Rate ₹' + rate.rate + ' applied to first row'); }
     }
   }
@@ -1590,7 +1803,7 @@
     var tbody = el('itemBody');
     if (tbody) {
       tbody.querySelectorAll('tr').forEach(function(row) {
-        var amt = safeNum(row.cells[9] && row.cells[9].children[0] && row.cells[9].children[0].value);
+        var amt = safeNum(row.cells[10] && row.cells[10].children[0] && row.cells[10].children[0].value);
         var type = row.cells[0] && row.cells[0].querySelector('select') && row.cells[0].querySelector('select').value;
         if (type === 'Purchase') purchaseTotal += amt; else orderTotal += amt;
       });
@@ -1648,11 +1861,12 @@
   // =====================================================
   // ALL BILL (customerBalances — same list as New Order / Ready Extra)
   // =====================================================
-  /** Upsert one row in customerBalances so All Bill shows this Gold Invoice after Save. */
-  function syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paidTotal) {
+  /** Upsert one row in customerBalances so All Bill shows this Gold Invoice after Save.
+   *  @param linkedCustomerOverride  Customer row from ensureCustomerMasterForSave() (typed name).
+   *         When set, avoids wrong customerId when list selection is stale but Name field was edited manually. */
+  function syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paidTotal, linkedCustomerOverride) {
     var name = getCustomerName();
-    var s = { value: getSelectedCustomerId() };
-    var cust = getLinkedCustomerByName();
+    var cust = linkedCustomerOverride || getLinkedCustomerByName();
     var cidStr = cust && cust.cid != null && String(cust.cid).trim() !== '' ? String(cust.cid) : '—';
 
     var orderDateVal = (el('orderDate') && el('orderDate').value) || today();
@@ -1684,7 +1898,7 @@
       relationName: (cust && cust.relationName) || '—',
       lfno: (cust && cust.lfno) || (el('lfNo') && el('lfNo').value) || '—',
       cid: cidStr,
-      customerId: cust && cust.id != null ? String(cust.id) : (s && s.value ? String(s.value) : '')
+      customerId: cust && cust.id != null ? String(cust.id) : String(getSelectedCustomerId() || '')
     };
     balanceEntry.amountMinusRateDiff = finalBal.toFixed(2);
 
@@ -1774,8 +1988,9 @@
     if (!el('orderDate') || !el('orderDate').value) { showErr('Order date is required'); return false; }
     var tbody = el('itemBody');
     if (!tbody || !tbody.querySelectorAll('tr').length) { showErr('Please add at least one item'); return false; }
+    var isRegisteredCustomer = !!ensureCustomerMasterForSave();
     var paidNow = getPaid(el('billNo') && el('billNo').value);
-    if (paidNow <= 0) { showErr('Please add payment before saving order'); return false; }
+    if (!isRegisteredCustomer && paidNow <= 0) { showErr('Please add payment for unregistered customer before saving bill'); return false; }
     return true;
   }
 
@@ -1818,9 +2033,8 @@
         S.draftPaymentKey = null;
       }
 
-      // Keep customer master up-to-date:
-      // - auto-filled existing customer stays linked
-      // - manual customer gets auto-created on save
+      // Registered customer = selected from list.
+      // Manual typed customer remains unregistered and is not auto-added to customers.
       var linkedCustomer = ensureCustomerMasterForSave();
 
       var bn = el('billNo').value;
@@ -1844,18 +2058,19 @@
 
       var totalPc = 0, totalRMetal = 0, totalNeg = 0, totalRWt = 0, orderTotal = 0;
       rows.forEach(function(r) {
-        totalPc += safeNum(r.values[2]);
-        totalRMetal += safeNum(r.values[3]);
-        totalNeg += safeNum(r.values[4]);
-        totalRWt += safeNum(r.values[5]);
-        if (r.type !== 'Purchase') orderTotal += safeNum(r.values[9]);
+        totalPc += safeNum(r.values[3]);
+        totalRMetal += safeNum(r.values[4]);
+        totalNeg += safeNum(r.values[5]);
+        totalRWt += safeNum(r.values[6]);
+        if (r.type !== 'Purchase') orderTotal += safeNum(r.values[10]);
       });
 
       var narr = (el('orderNarration') && el('orderNarration').value) || '';
       var paid = getPaid(bn);
       var billTotal = calcBillTotal();
-      var custIdForBill = linkedCustomer && linkedCustomer.id != null ? String(linkedCustomer.id) : getSelectedCustomerId();
+      var custIdForBill = linkedCustomer && linkedCustomer.id != null ? String(linkedCustomer.id) : '';
       var tsSave = new Date().toISOString();
+      var giBalSave = parseCurrentBalText(el('currentBal') && el('currentBal').value);
 
       // Bills (All Bill links rows from here)
       var bills = JSON.parse(localStorage.getItem('bills') || '[]');
@@ -1879,8 +2094,9 @@
       if (bi >= 0) bills[bi] = billData; else bills.push(billData);
       localStorage.setItem('bills', JSON.stringify(bills));
 
-      // All Bill grid reads customerBalances[]
-      syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paid);
+      // All Bill reads customerBalances. Keep writing for both registered and unregistered customers.
+      // Unregistered typed names still stay out of customer master because ensureCustomerMasterForSave() returns null.
+      syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paid, linkedCustomer);
 
       // Orders
 
@@ -1888,7 +2104,8 @@
         id: S.editOrderId || Date.now(),
         orderSource: 'gold-invoice',
         orderNo: bn, customer: getCustomerName(), customerId: custIdForBill,
-        customerOpeningBalance: (el('currentBal') && el('currentBal').value) || '',
+        customerOpeningBalance: giBalSave.amt.toFixed(2),
+        customerBalType: giBalSave.type,
         customerRelation: (el('relation') && el('relation').value) || '',
         customerStation: (el('station') && el('station').value) || '',
         customerLfNo: (el('lfNo') && el('lfNo').value) || '',
@@ -1996,6 +2213,7 @@
     var tbody = el('itemBody');
     if (tbody) tbody.innerHTML = '';
     S.editMode = false; S.editOrderId = null;
+    S.customerPickedFromList = false;
     S.billNoClaimed = false; S.draftPaymentKey = 'DRAFT-' + Date.now();
     S.savedThisSession = false;
     clearGoldInvoiceDraftCache();
@@ -2027,6 +2245,8 @@
     var editId = localStorage.getItem('editOrderId');
     if (!editId) return false;
     try {
+      var editBalanceEntry = null;
+      try { editBalanceEntry = JSON.parse(localStorage.getItem('editBalanceEntry') || 'null'); } catch (eBE) { editBalanceEntry = null; }
       var order = null;
       try { var p = JSON.parse(localStorage.getItem('editOrderPayload') || 'null'); if (p && (p.id == editId || String(p.id) === editId)) order = p; } catch(e){}
       if (!order) {
@@ -2040,7 +2260,7 @@
       S.currentOrderMarked = order.marked || false;
 
       var custId = order.customerId != null ? String(order.customerId) : '';
-      var custName = (order.customer || order.customerName || '').trim();
+      var custName = (order.customer || order.customerName || (editBalanceEntry && editBalanceEntry.customer) || '').trim();
       var customers = JSON.parse(localStorage.getItem('customers') || '[]');
       var cust = custId ? customers.find(function(c){ return String(c.id) === custId; }) : null;
       if (!cust && custName) cust = customers.find(function(c){ return (c.name||'').trim().toLowerCase() === custName.toLowerCase(); });
@@ -2049,23 +2269,46 @@
       if (el('custName')) el('custName').value = custName || '';
       var s = el('custNameSelect');
       if (s && s.tagName === 'SELECT') {
-        var opt = Array.from(s.options).find(function(o){ return String(o.value) === custId; });
+        var opt = custId ? Array.from(s.options).find(function(o){ return String(o.value) === custId; }) : null;
         if (!opt && (custId || custName)) {
           opt = document.createElement('option');
           opt.value = custId || ('legacy_' + editId);
           opt.textContent = custName || 'Unknown';
-          opt.dataset.customer = JSON.stringify({ id: custId, name: custName, openingBalance: order.customerOpeningBalance || '', relation: order.customerRelation || '', station: order.customerStation || '' });
+          opt.dataset.customer = JSON.stringify({
+            id: custId,
+            name: custName,
+            openingBalance: order.customerOpeningBalance != null ? safeNum(order.customerOpeningBalance) : (editBalanceEntry && editBalanceEntry.currentBalance != null ? safeNum(editBalanceEntry.currentBalance) : ''),
+            openingBalanceType: order.customerBalType || order.customerOpeningBalanceType || 'Dr',
+            relation: order.customerRelation || (editBalanceEntry && editBalanceEntry.relation) || '',
+            station: order.customerStation || (editBalanceEntry && editBalanceEntry.station) || '',
+            lfNo: order.customerLfNo || (editBalanceEntry && (editBalanceEntry.lfNo || editBalanceEntry.lfno)) || ''
+          });
           s.appendChild(opt);
         }
-        if (opt) {
+        if (opt && custId) {
           S.selectedCustomerId = String(opt.value || '');
           setCustomerSelectStatus(true);
+        } else {
+          S.selectedCustomerId = '';
+          setCustomerSelectStatus(false);
         }
       }
-      if (el('currentBal')) el('currentBal').value = order.customerOpeningBalance != null ? safeNum(order.customerOpeningBalance).toFixed(2) : '';
-      if (el('relation')) el('relation').value = order.customerRelation || '';
-      if (el('station')) el('station').value = order.customerStation || '';
-      if (el('lfNo')) el('lfNo').value = order.customerLfNo || '';
+      if (el('currentBal')) {
+        var rawCo = order.customerOpeningBalance;
+        var strCo = rawCo == null ? '' : String(rawCo).trim();
+        if (strCo && /dr|cr/i.test(strCo)) {
+          var pc = parseCurrentBalText(strCo);
+          el('currentBal').value = formatCurrentBalText(pc.amt, pc.type);
+        } else {
+          var rawFallback = (editBalanceEntry && editBalanceEntry.currentBalance != null) ? editBalanceEntry.currentBalance : 0;
+          var ob = strCo !== '' ? safeNum(rawCo) : safeNum(rawFallback);
+          var ot = order.customerBalType || order.customerOpeningBalanceType || (editBalanceEntry && editBalanceEntry.currentBalanceType) || 'Dr';
+          el('currentBal').value = formatCurrentBalText(ob, ot);
+        }
+      }
+      if (el('relation')) el('relation').value = order.customerRelation || (editBalanceEntry && editBalanceEntry.relation) || '';
+      if (el('station')) el('station').value = order.customerStation || (editBalanceEntry && editBalanceEntry.station) || '';
+      if (el('lfNo')) el('lfNo').value = order.customerLfNo || (editBalanceEntry && (editBalanceEntry.lfNo || editBalanceEntry.lfno)) || '';
 
       if (el('billNo') && order.orderNo) el('billNo').value = String(order.orderNo);
       if (el('orderDate') && order.orderDate) el('orderDate').value = order.orderDate;
@@ -2079,18 +2322,36 @@
           var tr = tbody.lastElementChild;
           if (!tr) return;
           tr.dataset.originalItemIdx = String(idx);
-          var vals = item.values || [];
+          var vals = (item.values || []).slice();
+          if (vals.length === 10) { vals.splice(2, 0, ''); }
           var inputs = tr.querySelectorAll('input,select');
           inputs.forEach(function(inp, i){ if (vals[i] !== undefined && vals[i] !== null) inp.value = String(vals[i]); });
+          var stampSelGI = tr.querySelector('.stamp-select');
+          if (stampSelGI && vals[2]) {
+            var sv = String(vals[2]).trim();
+            stampSelGI.value = sv;
+            if (sv && stampSelGI.value !== sv) {
+              var ox = document.createElement('option');
+              ox.value = sv; ox.textContent = sv;
+              stampSelGI.appendChild(ox);
+              stampSelGI.value = sv;
+            }
+          }
           if (item.delivery) tr.dataset.delivery = item.delivery;
           if (item.deliveryDate) tr.dataset.deliveryDate = item.deliveryDate;
           if (item.daysToDelivery) tr.dataset.daysToDelivery = item.daysToDelivery;
           if (item.sample) tr.dataset.sample = item.sample;
           var sel = tr.cells[0] && tr.cells[0].querySelector('select');
-          setPurchaseState(tr, sel && sel.value === 'Purchase');
+          setPurchaseState(tr, false);
           var editBtn = tr.querySelector('.edit-details-btn');
           if (editBtn && sel) editBtn.style.display = sel.value === 'Order' ? 'block' : 'none';
-          setTimeout(function(){ var t = tr.cells[5] && tr.cells[5].children[0]; if (t) calcRow(t); }, 20 + idx * 5);
+          setTimeout(function() {
+            if (sel && sel.value === 'Other') syncGoldInvoiceOtherTotal(tr);
+            else {
+              var t = tr.cells[4] && tr.cells[4].children[0];
+              if (t) calcRow(t);
+            }
+          }, 20 + idx * 5);
         });
       }
 
@@ -2126,12 +2387,13 @@
     if (itemTbody) {
       itemTbody.querySelectorAll('tr').forEach(function(row) {
         var itemName = row.cells[1] && row.cells[1].children[0] ? row.cells[1].children[0].value : '—';
-        var pc = row.cells[2] && row.cells[2].children[0] ? row.cells[2].children[0].value : '0';
-        var netWt = safeNum(row.cells[5] && row.cells[5].children[0] ? row.cells[5].children[0].value : 0);
-        var rate = row.cells[6] && row.cells[6].children[0] ? row.cells[6].children[0].value : '0';
-        var total = safeNum(row.cells[9] && row.cells[9].children[0] ? row.cells[9].children[0].value : 0);
+        var stamp = row.cells[2] && row.cells[2].children[0] ? row.cells[2].children[0].value : '';
+        var pc = row.cells[3] && row.cells[3].children[0] ? row.cells[3].children[0].value : '0';
+        var netWt = safeNum(row.cells[6] && row.cells[6].children[0] ? row.cells[6].children[0].value : 0);
+        var rate = row.cells[7] && row.cells[7].children[0] ? row.cells[7].children[0].value : '0';
+        var total = safeNum(row.cells[10] && row.cells[10].children[0] ? row.cells[10].children[0].value : 0);
         var details = row.dataset.delivery ? 'Delivery: ' + row.dataset.delivery + (row.dataset.sample ? ' | ' + row.dataset.sample : '') : '—';
-        tbody.innerHTML += '<tr><td>' + itemName.substring(0,25) + '</td><td>' + pc + '</td><td>' + netWt.toFixed(3) + '</td><td>' + rate + '</td><td>₹ ' + total.toFixed(2) + '</td><td style="font-size:8px;">' + details + '</td></tr>';
+        tbody.innerHTML += '<tr><td>' + itemName.substring(0,22) + '</td><td>' + (stamp || '—') + '</td><td>' + pc + '</td><td>' + netWt.toFixed(3) + '</td><td>' + rate + '</td><td>₹ ' + total.toFixed(2) + '</td><td style="font-size:8px;">' + details + '</td></tr>';
       });
     }
     var grand = calcBillTotal();
@@ -2153,27 +2415,91 @@
   // =====================================================
   function setupArrowKeys() {
     document.addEventListener('keydown', function(e) {
-      var table = document.getElementById('new-order-item-table');
-      if (!table || !table.contains(document.activeElement)) return;
-      var tbody = table.querySelector('tbody');
-      if (!tbody || !tbody.contains(document.activeElement)) return;
-      var active = document.activeElement;
-      var tr = active.closest('tr');
-      if (!tr) return;
+      if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+      var target = document.activeElement;
+      if (!target || !target.matches || !target.matches('input, select')) return;
+      var tbody = target.closest('#new-order-item-table tbody');
+      if (!tbody) return;
+      function isEditableNavField(el) {
+        if (!el || !el.matches || !el.matches('input, select')) return false;
+        if (el.disabled) return false;
+        if (el.tabIndex === -1) return false;
+        if (el.matches('input') && el.readOnly) return false;
+        var cs = window.getComputedStyle(el);
+        if (cs.visibility === 'hidden' || cs.display === 'none') return false;
+        var td = el.closest('td');
+        if (td) {
+          var tcs = window.getComputedStyle(td);
+          if (tcs.visibility === 'hidden' || tcs.display === 'none') return false;
+        }
+        return true;
+      }
+      if (!isEditableNavField(target)) return;
+      var tr = target.closest('tr');
+      if (!tr || !tr.cells) return;
+      var cells = tr.cells;
+      var colIndex = -1;
+      for (var i = 0; i < cells.length; i++) {
+        if (cells[i].contains(target)) { colIndex = i; break; }
+      }
+      if (colIndex < 0) return;
       var rows = Array.from(tbody.querySelectorAll('tr'));
       var ri = rows.indexOf(tr);
-      var cells = Array.from(tr.cells);
-      var cell = active.closest('td');
-      var ci = cell ? cells.indexOf(cell) : -1;
-      if (ci < 0) return;
-      var nextTr, nextCell;
-      if (e.key === 'ArrowDown' && ri < rows.length - 1) { e.preventDefault(); nextTr = rows[ri+1]; nextCell = nextTr.cells[ci]; }
-      else if (e.key === 'ArrowUp' && ri > 0) { e.preventDefault(); nextTr = rows[ri-1]; nextCell = nextTr.cells[ci]; }
-      else if (e.key === 'ArrowRight' && ci < cells.length - 1) { e.preventDefault(); nextCell = tr.cells[ci+1]; }
-      else if (e.key === 'ArrowLeft' && ci > 0) { e.preventDefault(); nextCell = tr.cells[ci-1]; }
-      if (nextCell) {
-        var focusable = nextCell.querySelector('input,select,button');
-        if (focusable) focusable.focus();
+      var nextFocus = null;
+      if (e.key === 'ArrowRight') {
+        for (var j = colIndex + 1; j < cells.length; j++) {
+          var list = cells[j].querySelectorAll('input, select');
+          for (var k = 0; k < list.length; k++) {
+            if (isEditableNavField(list[k])) { nextFocus = list[k]; break; }
+          }
+          if (nextFocus) break;
+        }
+      } else if (e.key === 'ArrowLeft') {
+        for (var j2 = colIndex - 1; j2 >= 0; j2--) {
+          var listL = cells[j2].querySelectorAll('input, select');
+          for (var k2 = listL.length - 1; k2 >= 0; k2--) {
+            if (isEditableNavField(listL[k2])) { nextFocus = listL[k2]; break; }
+          }
+          if (nextFocus) break;
+        }
+      } else if (e.key === 'ArrowDown' && ri < rows.length - 1) {
+        var nextRow = rows[ri + 1];
+        if (nextRow && nextRow.cells[colIndex]) {
+          var listD = nextRow.cells[colIndex].querySelectorAll('input, select');
+          for (var kd = 0; kd < listD.length; kd++) {
+            if (isEditableNavField(listD[kd])) { nextFocus = listD[kd]; break; }
+          }
+        }
+        if (!nextFocus && nextRow && nextRow.cells) {
+          for (var i0 = 0; i0 < nextRow.cells.length; i0++) {
+            var listF = nextRow.cells[i0].querySelectorAll('input, select');
+            for (var kf = 0; kf < listF.length; kf++) {
+              if (isEditableNavField(listF[kf])) { nextFocus = listF[kf]; break; }
+            }
+            if (nextFocus) break;
+          }
+        }
+      } else if (e.key === 'ArrowUp' && ri > 0) {
+        var prevRow = rows[ri - 1];
+        if (prevRow && prevRow.cells[colIndex]) {
+          var listU = prevRow.cells[colIndex].querySelectorAll('input, select');
+          for (var ku = listU.length - 1; ku >= 0; ku--) {
+            if (isEditableNavField(listU[ku])) { nextFocus = listU[ku]; break; }
+          }
+        }
+        if (!nextFocus && prevRow && prevRow.cells) {
+          for (var i1 = prevRow.cells.length - 1; i1 >= 0; i1--) {
+            var listP = prevRow.cells[i1].querySelectorAll('input, select');
+            for (var kp = listP.length - 1; kp >= 0; kp--) {
+              if (isEditableNavField(listP[kp])) { nextFocus = listP[kp]; break; }
+            }
+            if (nextFocus) break;
+          }
+        }
+      }
+      if (nextFocus) {
+        e.preventDefault();
+        nextFocus.focus();
       }
     });
   }
@@ -2193,7 +2519,7 @@
     if (el('custName')) el('custName').value = String(p.name || '');
     var cur = Number(p.currentBal);
     if (!isFinite(cur)) cur = 0;
-    if (el('currentBal')) el('currentBal').value = cur.toFixed(2);
+    if (el('currentBal')) el('currentBal').value = formatCurrentBalText(Math.abs(cur), cur < 0 ? 'Cr' : 'Dr');
     var rel = String(p.relation || '').trim();
     var rn = String(p.relationName || '').trim();
     if (el('relation')) el('relation').value = rel && rn ? rel + ' ' + rn : (rel || rn);
@@ -2266,6 +2592,14 @@
 
     setupArrowKeys();
     updateInfoPanel();
+
+    setTimeout(function () {
+      var od = el('orderDate');
+      if (!od || typeof od.focus !== 'function') return;
+      try { od.focus({ preventScroll: true }); } catch (eF) {
+        try { od.focus(); } catch (e2) {}
+      }
+    }, 0);
 
     if (!S.editMode && !S.savedThisSession) {
       try { sessionStorage.setItem(GOLD_INVOICE_DRAFT_SESSION_KEY, String(S.draftPaymentKey || '')); } catch (eSs2) { }

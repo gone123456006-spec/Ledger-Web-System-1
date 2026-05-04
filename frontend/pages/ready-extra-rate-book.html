@@ -681,7 +681,7 @@
                             </select>
                         </td>
                         <td><input value="${entry.metal || ""}" placeholder="Gold/Silver" onchange="updateHistoryRow(this, 'metal')"></td>
-                        <td><input value="${entry.stamp || ""}" placeholder="916" onchange="updateHistoryRow(this, 'stamp')"></td>
+                        <td><select onchange="updateHistoryRow(this, 'stamp')">${stampCrOptionsHtml(entry.stamp)}</select></td>
                         <td><input value="${entry.narration || ""}" placeholder="-" onchange="updateHistoryRow(this, 'narration')"></td>
                         <td><input type="number" step="0.001" value="${entryWeight > 0 ? entryWeight.toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'weight')"></td>
                         <td><input type="number" step="0.01" value="${entryRate > 0 ? entryRate.toFixed(2) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'rate')" oninput="calcDiff(this)"></td>
@@ -690,7 +690,7 @@
                         <td><input type="number" step="0.001" value="${adjWt !== 0 ? adjWt.toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'adjWt')" oninput="calcDiff(this)"></td>
 
                         <!-- New Columns -->
-                        <td><input value="${entry.curStamp || ""}" placeholder="Stamp" onchange="updateHistoryRow(this, 'curStamp')"></td>
+                        <td><select onchange="updateHistoryRow(this, 'curStamp')">${stampCrOptionsHtml(entry.curStamp)}</select></td>
                         <td><input type="number" step="0.001" value="${safeNumber(entry.curWt, 0) > 0 ? safeNumber(entry.curWt, 0).toFixed(3) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'curWt')" oninput="calcDiff(this)"></td>
                         <td><input type="number" step="0.01" value="${safeNumber(entry.curRate, 0) > 0 ? safeNumber(entry.curRate, 0).toFixed(2) : ''}" style="text-align:right;" onchange="updateHistoryRow(this, 'curRate')" oninput="calcDiff(this)"></td>
                         <td>
@@ -728,6 +728,22 @@
             if (type === 'Sale' || type === 'S') return 'type-badge-sale';
             if (type === 'Purchase' || type === 'P') return 'type-badge-purchase';
             return '';
+        }
+
+        /** Stamp dropdown options (14–24 CR); keeps legacy saved values as extra options. */
+        function stampCrOptionsHtml(selectedVal) {
+            const vals = ['14 CR', '18 CR', '20 CR', '22 CR', '24 CR'];
+            const s = String(selectedVal == null ? '' : selectedVal).trim();
+            let h = '<option value="">-- Select --</option>';
+            for (let i = 0; i < vals.length; i++) {
+                const v = vals[i];
+                h += '<option value="' + v + '"' + (s === v ? ' selected' : '') + '>' + v + '</option>';
+            }
+            if (s && vals.indexOf(s) === -1) {
+                const esc = s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '');
+                h += '<option value="' + esc + '" selected>' + esc + '</option>';
+            }
+            return h;
         }
 
         /* UPDATE HISTORY ROW */

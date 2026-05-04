@@ -89,21 +89,21 @@ const rateBooks = [
     rates: [
       {
         metal: 'gold',
-        purity: '24K',
+        purity: '24 CR',
         buyingRate: 6200,
         sellingRate: 6250,
         unit: 'gm',
       },
       {
         metal: 'gold',
-        purity: '22K',
+        purity: '22 CR',
         buyingRate: 5700,
         sellingRate: 5750,
         unit: 'gm',
       },
       {
         metal: 'gold',
-        purity: '18K',
+        purity: '18 CR',
         buyingRate: 4650,
         sellingRate: 4700,
         unit: 'gm',
