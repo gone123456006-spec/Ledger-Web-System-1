@@ -738,7 +738,6 @@
         <thead>
           <tr>
             <th>Status</th>
-            <th>Job Worker</th>
             <th>Order No</th>
             <th>Order Date</th>
             <th>Ready Date</th>
@@ -1372,29 +1371,8 @@
       tr.dataset.items = itemNamesStr;
       tr.dataset.dueDate = order.dueDate || order.due_date || order.deliveryDate || "";
 
-      const jobWorker = order.jobWorker || order.jobWorkerName || order.assignedWorker || "";
-      // Look up from itemProcess (saved by Pending Items when assigning to a Job Worker)
-      let jobWorkerDisplay = jobWorker;
-      if (!jobWorkerDisplay) {
-        try {
-          const processItems = JSON.parse(localStorage.getItem("itemProcess") || "[]");
-          const ordId = String(order.id || "");
-          const matched = processItems.filter(p => String(p.orderId || "") === ordId && p.jobworkerName);
-          if (matched.length > 0) {
-            const unique = [...new Set(matched.map(p => (p.jobworkerName || "").trim()).filter(Boolean))];
-            jobWorkerDisplay = unique.join(", ");
-          }
-        } catch (e) { }
-      }
-      if (!jobWorkerDisplay) jobWorkerDisplay = "\u2014";
-
       tr.innerHTML = `
     <td><span class="badge ready">✓ READY</span></td>
-    <td style="font-weight:600; color:#1d6fa8;">
-      ${jobWorkerDisplay !== '\u2014'
-          ? `<span class="jw-link" onclick="event.stopPropagation(); roOpenJwModal('', '${jobWorkerDisplay.replace(/'/g, "\\'")}')"> ${jobWorkerDisplay}</span>`
-          : jobWorkerDisplay}
-    </td>
     <td><strong>${order.orderNo || order.billNo || "\u2014"}</strong></td>
     <td>${formatDate(order.orderDate || order.date)}</td>
     <td>${formatDate(order.readyDate || order.readyAt || order.timestamp || order.orderDate || order.date)}</td>

@@ -376,6 +376,67 @@
             accent-color: #34c759;
         }
 
+        .mark-cb-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mark-cb {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .mark-cb-box {
+            width: 22px;
+            height: 22px;
+            border: 2px solid #b8c8f5;
+            border-radius: 6px;
+            background: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .mark-cb-wrap:hover .mark-cb-box {
+            border-color: #4f7ef8;
+            background: #eef4ff;
+        }
+
+        .mark-cb:checked+.mark-cb-box {
+            background: #4f7ef8;
+            border-color: #4f7ef8;
+        }
+
+        .mark-cb:checked+.mark-cb-box::after {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 11px;
+            border: 2px solid #fff;
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg) translateY(-1px);
+        }
+
+        .mark-done-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid #86efac;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
         /* Empty state */
         .empty-state {
             text-align: center;
@@ -936,6 +997,7 @@
                 <thead>
                     <tr>
                         <th class="center cb-cell" style="width:46px;" aria-label="Row select"></th>
+                        <th class="center" style="width:68px;">Mark</th>
                         <th class="center">Status</th>
                         <th class="right">Qty</th>
                         <th>Item Name</th>
@@ -983,6 +1045,24 @@
                     ✅ Confirm — Mark Ready Item
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- ENTRY POPUP OVERLAY -->
+    <div class="modal-overlay" id="ipEntryPopupOverlay" style="z-index: 9999; padding: 20px; position: fixed; inset: 0;"
+        onclick="if(event.target===this)closeIpEntryPopup()">
+        <div class="modal"
+            style="width: 90%; max-width: 1100px; height: 88vh; max-height: 700px; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="modal-header"
+                style="background: #f8f9fc; border-bottom: 2px solid #e2e8f0; padding: 12px 20px; flex-shrink:0;">
+                <div class="modal-header-text">
+                    <h3>👷 New Job Worker Entry</h3>
+                    <p>Fill in entry details and save.</p>
+                </div>
+                <button class="modal-close-btn" onclick="closeIpEntryPopup()">✕</button>
+            </div>
+            <iframe id="ipEntryFrame" style="flex: 1; border: none; background: #f8f9fc; min-height: 0;"
+                src="about:blank"></iframe>
         </div>
     </div>
 
@@ -1065,6 +1145,7 @@
         let tbody = null;
         let footer = null;
         let ipToastTimer = null;
+        let _ipCurrentMarkCb = null;
 
         /* ── HELPERS ── */
         function ipGetRoot() {
@@ -1107,6 +1188,90 @@
             t.classList.add('show');
             clearTimeout(ipToastTimer);
             ipToastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        function getIpEntryPageUrl() {
+            const path = window.location.pathname || '';
+            const isDashboard = /index\.html$/i.test(path) || /\/$/.test(path) || !/pages\//i.test(path);
+            return isDashboard ? 'pages/jobworker-entry.html?mode=assignment' : 'jobworker-entry.html?mode=assignment';
+        }
+
+        function openIpEntryPopup() {
+            const overlay = document.getElementById('ipEntryPopupOverlay');
+            const frame = document.getElementById('ipEntryFrame');
+            if (!overlay || !frame) return;
+            overlay.classList.add('open');
+            frame.src = getIpEntryPageUrl();
+        }
+
+        function closeIpEntryPopup() {
+            const overlay = document.getElementById('ipEntryPopupOverlay');
+            const frame = document.getElementById('ipEntryFrame');
+            if (overlay) overlay.classList.remove('open');
+            if (frame) frame.src = 'about:blank';
+            if (_ipCurrentMarkCb) { _ipCurrentMarkCb.checked = false; _ipCurrentMarkCb = null; }
+        }
+
+        function onIpMarkCbChange(cb, event) {
+            if (!cb || (event && !event.isTrusted)) {
+                if (cb) cb.checked = false;
+                return;
+            }
+            if (!cb.checked) return;
+            _ipCurrentMarkCb = cb;
+            const orderId = cb.dataset.orderId;
+            const itemIdx = cb.dataset.itemIdx;
+            const rowCb = document.querySelector(`.ip-row-cb[data-order-id="${orderId}"][data-item-idx="${itemIdx}"]`);
+            if (rowCb && !rowCb.disabled) {
+                rowCb.checked = true;
+                ipOnCbChange(rowCb);
+            }
+            openIpEntryPopup();
+        }
+
+        function onItemProcessMessage(event) {
+            if (event && event.data && event.data.type === 'jwEntrySaved') {
+                try {
+                    if (_ipCurrentMarkCb) {
+                        const orderId = _ipCurrentMarkCb.dataset.orderId;
+                        const itemIdx = _ipCurrentMarkCb.dataset.itemIdx;
+                        const rowCbForPid = document.querySelector(`.ip-row-cb[data-order-id="${orderId}"][data-item-idx="${itemIdx}"]`);
+                        const pid = rowCbForPid ? String(rowCbForPid.dataset.processId || '') : '';
+                        if (pid) {
+                            const proc = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+                            const idx = proc.findIndex(function (x) { return x && String(x.id) === pid; });
+                            if (idx >= 0) {
+                                proc[idx].jwEntryDone = true;
+                                proc[idx].jwEntryDoneAt = new Date().toISOString();
+                                localStorage.setItem('itemProcess', JSON.stringify(proc));
+                            }
+                        }
+                    }
+                } catch (eSaveMark) { }
+                document.querySelectorAll('.mark-cb:checked').forEach(function (cb) { cb.checked = false; });
+                document.querySelectorAll('.ip-row-cb:checked').forEach(function (cb) { cb.checked = false; ipOnCbChange(cb); });
+                if (_ipCurrentMarkCb) {
+                    const orderId = _ipCurrentMarkCb.dataset.orderId;
+                    const itemIdx = _ipCurrentMarkCb.dataset.itemIdx;
+                    const rowCb = document.querySelector(`.ip-row-cb[data-order-id="${orderId}"][data-item-idx="${itemIdx}"]`);
+                    if (rowCb) {
+                        rowCb.checked = false;
+                        ipOnCbChange(rowCb);
+                    }
+                }
+                closeIpEntryPopup();
+                showIpToast('✅ Job worker entry saved');
+                setTimeout(function () { tbody = null; loadProcessItems(); }, 150);
+                return;
+            }
+            if (event && event.data && event.data.type === 'jwEntryClosed') {
+                closeIpEntryPopup();
+            }
+        }
+        if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(window, 'message', onItemProcessMessage);
+        } else {
+            window.addEventListener('message', onItemProcessMessage);
         }
 
         /**
@@ -1381,7 +1546,7 @@
                 if (items.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="15" style="border:none;">
+                            <td colspan="16" style="border:none;">
                             <div class="empty-state">
                               <div class="empty-state-icon">⚙️</div>
                               <div class="empty-state-text">No Items in Process</div>
@@ -1410,6 +1575,7 @@
                     tr.dataset.itemIdx = String(r.itemIdx != null ? r.itemIdx : '');
 
                     const rowQty = Math.max(0, parseFloat(r.qty) || 0);
+                    const isEntryDone = !!r.jwEntryDone;
                     tr.innerHTML = `
                         <td class="center cb-cell">
                             <input type="checkbox" class="ip-row-cb"
@@ -1419,6 +1585,17 @@
                                 data-qty="${escapeHtml(String(rowQty))}"
                                 data-status="${escapeHtml(r.status || '')}"
                                 onchange="ipOnCbChange(this)">
+                        </td>
+                        <td class="center">
+                            ${isEntryDone
+                            ? `<span class="mark-done-chip" title="Job Worker Entry already done">Done</span>`
+                            : `<label class="mark-cb-wrap" title="Mark to open Job Worker Entry">
+                                <input type="checkbox" class="mark-cb"
+                                    data-order-id="${escapeHtml(r.orderId)}"
+                                    data-item-idx="${escapeHtml(String(r.itemIdx != null ? r.itemIdx : ''))}"
+                                    onchange="onIpMarkCbChange(this, event)">
+                                <span class="mark-cb-box"></span>
+                            </label>`}
                         </td>
                         <td class="center">
                             ${isReady
@@ -1463,7 +1640,7 @@
                 ledgerTryFocusItemProcessFromNav();
             } catch (e) {
                 console.error('Error loading process items:', e);
-                tbody.innerHTML = `<tr><td colspan="15" class="empty-state">Error loading data.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="16" class="empty-state">Error loading data.</td></tr>`;
                 if (footer) footer.textContent = 'Error';
                 populateIpFieldFilterDropdowns([]);
             }
@@ -1867,6 +2044,10 @@
         window.confirmMarkReady = confirmMarkReady;
         window.openJwModal = openJwModal;
         window.closeJwModal = closeJwModal;
+        window.openIpEntryPopup = openIpEntryPopup;
+        window.closeIpEntryPopup = closeIpEntryPopup;
+        window.getIpEntryPageUrl = getIpEntryPageUrl;
+        window.onIpMarkCbChange = onIpMarkCbChange;
     </script>
 </body>
 

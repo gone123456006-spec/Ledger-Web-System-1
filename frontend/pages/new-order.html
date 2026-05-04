@@ -1725,7 +1725,7 @@
 
         <div class="row">
           <label>Due Date</label>
-          <input type="date" id="dueDate">
+          <input type="date" id="dueDate" autocomplete="off">
         </div>
 
         <div class="row" style="display: none;">
@@ -2195,6 +2195,33 @@
 
       function formatCurrency(amount) {
         return `₹ ${safeNumber(amount).toFixed(2)}`;
+      }
+
+      function normalizeDateInputValue(raw) {
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        return '';
+      }
+
+      function getLastSavedDueDateISO() {
+        try {
+          const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+          if (!Array.isArray(orders) || orders.length === 0) return '';
+          const sorted = orders.slice().sort((a, b) => {
+            const ta = new Date((a && a.timestamp) || 0).getTime() || 0;
+            const tb = new Date((b && b.timestamp) || 0).getTime() || 0;
+            return tb - ta;
+          });
+          for (let i = 0; i < sorted.length; i++) {
+            const o = sorted[i] || {};
+            const d = normalizeDateInputValue(o.dueDate || o.due_date || '');
+            if (d) return d;
+          }
+        } catch (e) { }
+        return '';
       }
 
       const GLOBAL_ORDER_KEY = 'lastGlobalOrderNo';
@@ -3561,7 +3588,6 @@
             customerId: AppState.elements.custName.value,
             billNo: AppState.elements.billNo.value,
             orderDate: AppState.elements.orderDate.value,
-            dueDate: AppState.elements.dueDate ? AppState.elements.dueDate.value : '',
             gstRate: AppState.elements.gstRate ? AppState.elements.gstRate.value : '',
             orderNarration: narEl ? String(narEl.value || '') : '',
             rows: []
@@ -3602,7 +3628,7 @@
 
           if (orderState.billNo) AppState.elements.billNo.value = orderState.billNo;
           if (orderState.orderDate) AppState.elements.orderDate.value = orderState.orderDate;
-          if (orderState.dueDate && AppState.elements.dueDate) AppState.elements.dueDate.value = orderState.dueDate;
+          // For fresh flow, do not restore due date from temporary page state.
           if (orderState.gstRate && AppState.elements.gstRate) AppState.elements.gstRate.value = orderState.gstRate;
 
           const narRestore = AppState.elements.orderNarration || getSearchRoot().querySelector('#orderNarration');
@@ -4210,7 +4236,6 @@
           customerId: AppState.elements.custName && AppState.elements.custName.value,
           billNo: AppState.elements.billNo && AppState.elements.billNo.value,
           orderDate: AppState.elements.orderDate && AppState.elements.orderDate.value,
-          dueDate: AppState.elements.dueDate && AppState.elements.dueDate.value,
           gstRate: AppState.elements.gstRate && AppState.elements.gstRate.value,
           orderNarration: narElCap ? String(narElCap.value || '') : '',
           rows: rows,
@@ -4240,7 +4265,7 @@
           }
           if (state.billNo && AppState.elements.billNo) AppState.elements.billNo.value = state.billNo;
           if (state.orderDate && AppState.elements.orderDate) AppState.elements.orderDate.value = state.orderDate;
-          if (state.dueDate && AppState.elements.dueDate) AppState.elements.dueDate.value = state.dueDate;
+          // For fresh flow, do not restore due date from autosave draft.
           if (state.gstRate && AppState.elements.gstRate) AppState.elements.gstRate.value = state.gstRate;
 
           const narAuto = AppState.elements.orderNarration || getSearchRoot().querySelector('#orderNarration');
@@ -4408,7 +4433,11 @@
 
           if (order.orderNo != null && order.orderNo !== '') AppState.elements.billNo.value = String(order.orderNo);
           if (order.orderDate != null && order.orderDate !== '') AppState.elements.orderDate.value = order.orderDate;
-          if (AppState.elements.dueDate && order.dueDate != null && order.dueDate !== '') AppState.elements.dueDate.value = order.dueDate;
+          if (AppState.elements.dueDate) {
+            var dueRaw = (order.dueDate != null && order.dueDate !== '') ? order.dueDate : (order.due_date || '');
+            var dueNorm = normalizeDateInputValue(dueRaw);
+            if (dueNorm) AppState.elements.dueDate.value = dueNorm;
+          }
           if (AppState.elements.gstRate && order.gstRate != null && order.gstRate !== '') AppState.elements.gstRate.value = order.gstRate;
 
           AppState.elements.itemBody.innerHTML = '';
@@ -4809,6 +4838,18 @@
 
         const editLoaded = loadOrderForEdit();
         const restored = editLoaded ? true : (cameFromReadyExtraPage ? false : restoreFormState());
+
+        // Fresh New Order: prefill from previous saved order due date (ISO storage, browser-local display).
+        if (!pendingEditOrderId && AppState.elements.dueDate) {
+          var lastDue = getLastSavedDueDateISO();
+          AppState.elements.dueDate.value = lastDue || '';
+          setTimeout(function () {
+            if (!localStorage.getItem('editOrderId') && AppState.elements.dueDate) {
+              var dueAgain = getLastSavedDueDateISO();
+              AppState.elements.dueDate.value = dueAgain || '';
+            }
+          }, 350);
+        }
 
         if (!pendingEditOrderId) {
           setTimeout(function () {
