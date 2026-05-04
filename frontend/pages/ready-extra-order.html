@@ -5905,33 +5905,33 @@
           localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
 
           if (targetCust) {
-            // Recalculate (overwrite) customer currentBalance from scratch:
-            // signed opening balance + Σ per-bill computedBalAmt (bill due). No incremental adds.
+            // currentBalance = sum of finalBalanceAmount (or computed due) across all bills — no opening balance.
+            // Opening balance is a separate ledger concept; mixing it in causes mismatch with All Bill.
             const allCustBals = JSON.parse(localStorage.getItem("customerBalances") || "[]");
             const custNorm = (targetCust.name || "").trim().toLowerCase();
-            const custBills = allCustBals.filter(b => (b.customer || "").trim().toLowerCase() === custNorm);
+            const custId2Str = targetCust.id != null ? String(targetCust.id) : "";
+            const custBills = allCustBals.filter(b => {
+              if (!b) return false;
+              const byId = custId2Str && b.customerId && String(b.customerId) === custId2Str;
+              const byName = (b.customer || "").trim().toLowerCase() === custNorm;
+              return byId || byName;
+            });
             const paymentsAll = JSON.parse(localStorage.getItem("payments") || "[]");
 
-            const roTgt = resolvedLedgerOpening(targetCust);
-            let openingSigned = roTgt.amt;
-            const opType = (roTgt.typeStr || "").toLowerCase();
-            if (opType === "cr") openingSigned = -Math.abs(openingSigned);
-            if (opType === "dr") openingSigned = Math.abs(openingSigned);
-
-            let runningBal = openingSigned;
+            let runningBal = 0; // No opening balance — matches All Bill and Gold Invoice
             custBills.forEach(b => {
-              let due = (b.computedBalAmt != null && b.computedBalAmt !== "") ? (parseFloat(b.computedBalAmt) || 0) : null;
-              if (due == null) {
-                const bno = b.orderNo || b.billNo || "";
-                const bAmt = parseFloat(b.amount || b.netAmount || 0);
-                const bAdv = paymentsAll.filter(p => p.billNo === bno && !isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
-                const bPaid = paymentsAll.filter(p => p.billNo === bno && isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
-                let bRateDiff = 0;
-                if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
-                due = bAmt - bAdv - bPaid - bRateDiff;
-                b.computedBalAmt = due.toFixed(2);
-              }
-              runningBal += due;
+              // Prefer stored finalBalanceAmount (same as All Bill Balance column).
+              const storedFba = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ""
+                ? parseFloat(b.finalBalanceAmount) : null;
+              if (storedFba != null && Number.isFinite(storedFba)) { runningBal += storedFba; return; }
+              // Fallback recompute for legacy entries lacking finalBalanceAmount.
+              const bno = b.orderNo || b.billNo || "";
+              const bAmt = parseFloat(b.amount || b.netAmount || 0);
+              const bAdv = paymentsAll.filter(p => p.billNo === bno && !isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              const bPaid = paymentsAll.filter(p => p.billNo === bno && isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+              let bRateDiff = 0;
+              if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+              runningBal += bAmt - bAdv - bPaid - bRateDiff;
             });
 
             try { localStorage.setItem("customerBalances", JSON.stringify(allCustBals)); } catch (e) { }
@@ -6412,35 +6412,36 @@
         }
 
         if (custToUpdate) {
-          // Recalculate (overwrite) customer currentBalance from scratch (no incremental adds).
+          // ROOT CAUSE FIX: compute currentBalance = sum of finalBalanceAmount only (no opening balance).
+          // This matches Gold Invoice and All Bill so all three pages show the same balance.
           const allCustBals2 = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+          const custId2Str = custToUpdate.id != null ? String(custToUpdate.id) : "";
           const custNorm2 = (custToUpdate.name || "").trim().toLowerCase();
-          const custBills2 = allCustBals2.filter(b => (b.customer || "").trim().toLowerCase() === custNorm2);
           const paymentsAll2 = JSON.parse(localStorage.getItem("payments") || "[]");
 
-          const roUp = resolvedLedgerOpening(custToUpdate);
-          let openingSigned2 = roUp.amt;
-          const opType2 = (roUp.typeStr || "").toLowerCase();
-          if (opType2 === "cr") openingSigned2 = -Math.abs(openingSigned2);
-          if (opType2 === "dr") openingSigned2 = Math.abs(openingSigned2);
-
-          let runningBal2 = openingSigned2;
-          custBills2.forEach(b => {
-            let due = (b.computedBalAmt != null && b.computedBalAmt !== "") ? (parseFloat(b.computedBalAmt) || 0) : null;
-            if (due == null) {
-              const bno = b.orderNo || b.billNo || "";
-              const bAmt = parseFloat(b.amount || b.netAmount || 0);
-              const bAdv = paymentsAll2.filter(p => p.billNo === bno && !isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
-              const bPaid = paymentsAll2.filter(p => p.billNo === bno && isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
-              let bRateDiff = 0;
-              if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
-              due = bAmt - bAdv - bPaid - bRateDiff;
-              b.computedBalAmt = due.toFixed(2);
+          let runningBal2 = 0;
+          allCustBals2.forEach(b => {
+            if (!b) return;
+            const matchById = custId2Str && b.customerId && String(b.customerId) === custId2Str;
+            const matchByName = (b.customer || "").trim().toLowerCase() === custNorm2;
+            if (!matchById && !matchByName) return;
+            // Prefer stored finalBalanceAmount (same as All Bill Balance column).
+            const storedFba = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ""
+              ? parseFloat(b.finalBalanceAmount) : null;
+            if (storedFba != null && Number.isFinite(storedFba)) {
+              runningBal2 += storedFba;
+              return;
             }
-            runningBal2 += due;
+            // Fallback: recompute from stored amounts for legacy entries.
+            const bno = b.orderNo || b.billNo || "";
+            const bAmt = parseFloat(b.amount || b.netAmount || 0);
+            const bAdv = paymentsAll2.filter(p => p.billNo === bno && !isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+            const bPaid = paymentsAll2.filter(p => p.billNo === bno && isPaidTypePayment(p)).reduce((s, p) => s + (Number(p.amount) || 0), 0);
+            let bRateDiff = 0;
+            if (b.amountMinusRateDiff != null && b.amount != null) bRateDiff = Math.abs(parseFloat(b.amount) - parseFloat(b.amountMinusRateDiff));
+            runningBal2 += bAmt - bAdv - bPaid - bRateDiff;
           });
 
-          try { localStorage.setItem("customerBalances", JSON.stringify(allCustBals2)); } catch (e) { }
           custToUpdate.currentBalance = Math.abs(runningBal2);
           custToUpdate.currentBalanceType = runningBal2 >= 0 ? 'Dr' : 'Cr';
           custToUpdate.timestamp = new Date().toISOString();

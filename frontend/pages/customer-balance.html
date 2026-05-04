@@ -708,11 +708,17 @@
           : (c.openingBalanceType || "Dr");
         const hasOpening = rawOpening != null && String(rawOpening).trim() !== "" && Number.isFinite(Number(rawOpening));
 
+        // Priority: `currentBalance` from customer master is the source of truth.
+        // It is updated automatically on every bill save (Ready Extra / Gold Invoice) to sum(finalBalanceAmount).
+        // A manual change to `currentBalance` in the Customer Statement / Add Customer form is always respected.
+        // Fallback: sum of `finalBalanceAmount` from bill entries (same value as All Bill Balance column).
         var sumBillDue = 0;
         var anyBillDue = false;
         if (customerEntries.length > 0) {
           customerEntries.forEach(function (b) {
-            var v = allBillComputeRowBalance(b);
+            var stored = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ""
+              ? parseFloat(b.finalBalanceAmount) : null;
+            var v = (stored != null && Number.isFinite(stored)) ? stored : allBillComputeRowBalance(b);
             if (Number.isFinite(v)) {
               sumBillDue += v;
               anyBillDue = true;
@@ -720,9 +726,11 @@
           });
         }
         if (hasCurrentBalance) {
+          // Manual currentBalance change or auto-set by bill save — always respect this.
           displayAmount = Math.abs(currentNum);
           displayType = curType === "cr" ? "Cr" : "Dr";
         } else if (anyBillDue) {
+          // No currentBalance set: use sum of per-bill finalBalanceAmount (same as All Bill).
           displayAmount = Math.abs(sumBillDue);
           displayType = sumBillDue < 0 ? "Cr" : "Dr";
         } else if (hasOpening) {
