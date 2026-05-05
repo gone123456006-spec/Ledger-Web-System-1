@@ -2377,6 +2377,10 @@
       function handleCustomerChange() {
         const select = AppState.elements.custName;
         const opt = select.selectedOptions[0];
+        const getCustomerLfNo = (c) => {
+          if (!c) return '';
+          return c.lfNo || c.lfno || c.LFNo || c.LfNo || '';
+        };
 
         if (!opt || !opt.value || !opt.dataset.customer) {
           if (AppState.editMode && select && select.value) {
@@ -2391,7 +2395,7 @@
                   AppState.elements.relation.value = rel && relName ? `${rel} ${relName}` : (rel || relName);
                 }
                 if (AppState.elements.station) AppState.elements.station.value = c.station || '';
-                if (AppState.elements.lfNo) AppState.elements.lfNo.value = c.lfNo || '';
+                if (AppState.elements.lfNo) AppState.elements.lfNo.value = getCustomerLfNo(c);
                 updateInfoPanel();
               }
             } catch (e) { }
@@ -2419,7 +2423,7 @@
           }
 
           if (AppState.elements.lfNo) {
-            AppState.elements.lfNo.value = customer.lfNo || '';
+            AppState.elements.lfNo.value = getCustomerLfNo(customer);
           }
 
           updateInfoPanel();

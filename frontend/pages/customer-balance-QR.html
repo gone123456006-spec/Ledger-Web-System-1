@@ -2827,7 +2827,7 @@
                     td('right', crHtml),
                     td('right', drHtml),
                     td('right', balCell),
-                    td('center', '—')
+                    td('center', '<span class="clr-mark">✔</span>')
                 );
                 tbody.appendChild(tr);
             }
@@ -2900,6 +2900,15 @@
             }
 
             let prevSignedForFooter = balance;
+            const ZERO_BAL_EPS = 0.000001;
+            let zeroBalanceRowIdx = -1;
+            let scanBalance = balance;
+            sorted.forEach((tx, idx) => {
+                scanBalance += txDeltaForCurrentBalance(tx);
+                if (zeroBalanceRowIdx === -1 && Math.abs(scanBalance) < ZERO_BAL_EPS) {
+                    zeroBalanceRowIdx = idx;
+                }
+            });
             sorted.forEach((tx, i) => {
                 const tr = document.createElement('tr');
                 if (i === selectedIdx) tr.classList.add('selected-row');
@@ -2975,7 +2984,8 @@
 
                 const tdClr = document.createElement('td');
                 tdClr.className = 'center';
-                tdClr.innerHTML = tx.cleared ? '<span class="clr-mark">✔</span>' : '';
+                const shouldTick = !!tx.cleared || (zeroBalanceRowIdx !== -1 && i <= zeroBalanceRowIdx);
+                tdClr.innerHTML = shouldTick ? '<span class="clr-mark">✔</span>' : '';
                 tr.appendChild(tdClr);
 
                 tr.addEventListener('click', (e) => {
@@ -3604,6 +3614,12 @@
                     let balChanged = false;
                     const markBal = (b) => {
                         b.status = 'Cleared';
+                        b.computedBalAmt = '0.00';
+                        b.finalBalanceAmount = '0.00';
+                        b.balance = '0.00';
+                        b.netBalance = '0.00';
+                        b.pendingBalance = '0.00';
+                        b.amountMinusRateDiff = '0.00';
                         balChanged = true;
                     };
                     balances.forEach(b => {
@@ -3631,6 +3647,10 @@
                     let billsChanged = false;
                     const markBill = (b) => {
                         b.status = 'Cleared';
+                        b.balance = '0.00';
+                        b.finalBalanceAmount = '0.00';
+                        b.pendingBalance = '0.00';
+                        b.netBalance = '0.00';
                         billsChanged = true;
                     };
                     bills.forEach(b => {
@@ -3704,15 +3724,34 @@
 
         function ctxDeleteTickedRow() {
             closeCtxMenu();
-            const ticked = transactions.filter(t => t && t.cleared);
-            if (!ticked.length) {
+            const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+            const ZERO_BAL_EPS = 0.000001;
+            let running = openingSignedForStatement();
+            let zeroBalanceRowIdx = -1;
+            sorted.forEach((tx, idx) => {
+                running += txDeltaForCurrentBalance(tx);
+                if (zeroBalanceRowIdx === -1 && Math.abs(running) < ZERO_BAL_EPS) zeroBalanceRowIdx = idx;
+            });
+            const ticked = sorted.filter((tx, idx) => tx && (tx.cleared || (zeroBalanceRowIdx !== -1 && idx <= zeroBalanceRowIdx)));
+            const opSigned = customerData.statementBillAmountCleared ? 0 : openingSignedForStatement();
+            const billsSum = customerData.statementBillAmountCleared ? 0 : getCustomerBillsSumFromBalances();
+            const hasBillTx = statementIncludesSyncedBillRows(sorted);
+            const tickedStaticBillsRow = !hasBillTx && Math.abs(opSigned + billsSum) > ZERO_BAL_EPS && Math.abs(billsSum) > ZERO_BAL_EPS;
+
+            const totalTickedRows = ticked.length + (tickedStaticBillsRow ? 1 : 0);
+            if (!totalTickedRows) {
                 showToast('ℹ️ No ticked rows to delete.');
                 return;
             }
-            const n = ticked.length;
+            const n = totalTickedRows;
             const msg = n === 1 ? 'Delete this ticked row?' : `Delete all ${n} ticked rows?`;
             if (!confirm(msg)) return;
-            transactions = transactions.filter(t => !t || !t.cleared);
+            const tickedSet = new Set(ticked);
+            transactions = transactions.filter(t => !tickedSet.has(t));
+            if (tickedStaticBillsRow) {
+                // Hide/remove bill summary row as part of "delete all ticked rows".
+                customerData.statementBillAmountCleared = true;
+            }
             saveTransactions();
             selectedIdx = null;
             deleteTargetIdx = null;
@@ -3730,7 +3769,14 @@
                 if (ctxTargetIdx !== null) {
                     const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
                     const tx = sorted[ctxTargetIdx];
-                    showTickDelete = !!(tx && tx.cleared);
+                    const ZERO_BAL_EPS = 0.000001;
+                    let running = openingSignedForStatement();
+                    let zeroBalanceRowIdx = -1;
+                    sorted.forEach((row, idx) => {
+                        running += txDeltaForCurrentBalance(row);
+                        if (zeroBalanceRowIdx === -1 && Math.abs(running) < ZERO_BAL_EPS) zeroBalanceRowIdx = idx;
+                    });
+                    showTickDelete = !!(tx && (tx.cleared || (zeroBalanceRowIdx !== -1 && ctxTargetIdx <= zeroBalanceRowIdx)));
                 }
                 tickDeleteItem.style.display = showTickDelete ? 'block' : 'none';
             }

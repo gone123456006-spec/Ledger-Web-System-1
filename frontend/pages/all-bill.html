@@ -661,7 +661,12 @@
           }
 
           // Pending balance (Ready Extra panel "Pending balance Net Total Amount") — always use live calc for Balance column
-          const balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          let balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          const balStatus = String(balance.status || "").trim().toLowerCase();
+          const linkedStatus = String((linkedOrder && linkedOrder.status) || "").trim().toLowerCase();
+          if (balStatus === "cleared" || linkedStatus === "cleared") {
+            balAmt = 0;
+          }
           balance.computedBalAmt = Number.isFinite(balAmt) ? Number(balAmt).toFixed(2) : String(balAmt);
 
           // Status: Clear if this bill's balance is ~0, OR customer master Current Balance is ~0 (Customer Balance grid).

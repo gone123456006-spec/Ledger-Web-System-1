@@ -3937,7 +3937,7 @@
           if (currentBal) currentBal.value = c.openingBalance || 0;
           if (relation) relation.value = (c.relation || "") + " " + (c.relationName || "");
           if (station) station.value = c.station || "";
-          if (lfNo) lfNo.value = c.lfNo || "";
+          if (lfNo) lfNo.value = c.lfNo || c.lfno || c.LFNo || c.LfNo || "";
           // Keep panels in sync with customer selection
           updateInfoPanel();
         };
@@ -6323,6 +6323,11 @@
         // Also save to "bills" for All Bills page – with all data (rows, totals, rate diff, etc.)
         const allBills = JSON.parse(localStorage.getItem("bills") || "[]");
         const billIndex = allBills.findIndex(b => b.billNo === billNo.value);
+        const existingBill = billIndex >= 0 ? allBills[billIndex] : null;
+        const existingBalancesBeforeSave = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+        const oldEntryBeforeSave = existingBalancesBeforeSave.find(b => b && (b.orderNo === billNo.value || b.billNo === billNo.value)) || null;
+        const isStatusCleared = (v) => String(v || "").trim().toLowerCase() === "cleared";
+        const preserveClearedZeroState = isStatusCleared(existingBill && existingBill.status) || isStatusCleared(oldEntryBeforeSave && oldEntryBeforeSave.status);
         const rateBookDiffSummaryStored = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
 
         const newBillData = {
@@ -6335,8 +6340,9 @@
           amount: billTotal.toFixed(2),
           totalAmount: billTotal,
           paid: advanceTotal.toFixed(2),
-          balance: (billTotal - advanceTotal).toFixed(2),
-          status: orderData.status,
+          balance: preserveClearedZeroState ? "0.00" : (billTotal - advanceTotal).toFixed(2),
+          finalBalanceAmount: preserveClearedZeroState ? "0.00" : (billTotal - advanceTotal).toFixed(2),
+          status: preserveClearedZeroState ? "Cleared" : orderData.status,
           timestamp: orderTimestamp,
           items: rows,
           rows: rows,
@@ -6384,7 +6390,7 @@
             rateDiffResultSave = parseFloat(numStrSave) || 0;
           }
         }
-        const finalBalanceAmount = billTotal - advanceTotal - Math.abs(rateDiffResultSave);
+        const finalBalanceAmount = preserveClearedZeroState ? 0 : (billTotal - advanceTotal - Math.abs(rateDiffResultSave));
 
         const balanceEntry = {
           orderNo: billNo.value,
@@ -6392,6 +6398,7 @@
           amount: billTotal.toFixed(2),
           netAmount: billTotal.toFixed(2),
           finalBalanceAmount: finalBalanceAmount.toFixed(2),
+          balance: finalBalanceAmount.toFixed(2),
           date: dateOverride || (billDate && billDate.value) || orderDate.value || new Date().toISOString().split("T")[0],
           timestamp: orderTimestamp,
           readyWeight: totalGrWt.toFixed(3),
@@ -6408,6 +6415,7 @@
           lfno: targetCust?.lfno || "—",
           cid: targetCust?.cid || "—",
           hideBillMidColumns: billMidColumnsHidden,
+          status: preserveClearedZeroState ? "Cleared" : ((oldEntry && oldEntry.status) || "Pending"),
           customerId: targetCust && targetCust.id != null ? String(targetCust.id) : ""
         };
         if (finalBalanceAmount != null) balanceEntry.amountMinusRateDiff = parseFloat(finalBalanceAmount).toFixed(2);
@@ -9010,6 +9018,15 @@
 
       function updatePaymentPanel() {
         if (!billNo || !billNo.value) return;
+        const currentBillNo = String(billNo.value || "").trim();
+        let isBillCleared = false;
+        try {
+          const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+          const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+          const isCleared = (row) => String((row && row.status) || "").trim().toLowerCase() === "cleared";
+          isBillCleared = (balances || []).some(r => r && String((r.orderNo || r.billNo || "")).trim() === currentBillNo && isCleared(r))
+            || (bills || []).some(r => r && String((r.orderNo || r.billNo || "")).trim() === currentBillNo && isCleared(r));
+        } catch (e) { }
 
         // Total section (Final col 15): Ready Order Total = sum of Order + Sale + Other line finals; Purchase handled separately below.
         let finalOrderTotal = 0;
@@ -9098,7 +9115,7 @@
           if (advancedMinusEl) advancedMinusEl.textContent = formatCurrency(baseAdvPay2);
         }
         if (rateDiffAmtEl) rateDiffAmtEl.textContent = rateDiffAbs > 0 ? formatCurrencySigned(-rateDiffAbs) : formatCurrency(0);
-        if (netBalanceMidEl) netBalanceMidEl.textContent = formatCurrency(netBalanceMid);
+        if (netBalanceMidEl) netBalanceMidEl.textContent = formatCurrency(isBillCleared ? 0 : netBalanceMid);
         if (paidMinusEl && paidPurchaseMinusEl) {
           if (billMidColumnsHidden) {
             paidMinusEl.textContent = formatCurrency(paid);
@@ -9109,7 +9126,7 @@
             paidPurchaseMinusEl.textContent = formatCurrency(readyExtraPurchaseRupees);
           }
         }
-        if (netDetailEl) netDetailEl.textContent = formatCurrency(netTotalAmount);
+        if (netDetailEl) netDetailEl.textContent = formatCurrency(isBillCleared ? 0 : netTotalAmount);
 
         var paymentListEl = pickPanelEl("#paymentList");
 
