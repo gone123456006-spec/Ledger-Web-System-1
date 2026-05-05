@@ -348,10 +348,10 @@
       border-right: 6mm solid #c3d5ef !important;
     }
 
-    /* R. Metal through Total: light orange column band (cols 11–17; delete col excluded) */
+    /* R. Metal through Total: light green column band (cols 11–17; delete col excluded) */
     .order-details-table-wrap #ready-order-item-table thead th:nth-child(n+11):nth-child(-n+17),
     .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) {
-      background-color: #fff3e0;
+      background-color: #ecf9ee;
     }
 
     table input,
@@ -2319,7 +2319,7 @@
           <input type="date" id="orderDate">
         </div>
 
-        <div class="row">
+        <div class="row" id="rexSgjBillNoRow" style="display: none;">
           <label id="rexSgjBillNoLabel">Bill No.</label>
           <input id="sgjBillNo" readonly>
         </div>
@@ -3296,6 +3296,11 @@
             var odVal = orderDate && orderDate.value ? orderDate.value : "";
             billDateInput.value = odVal || new Date().toISOString().split("T")[0];
           }
+        }
+
+        var sgjBillNoRow = root.querySelector("#rexSgjBillNoRow");
+        if (sgjBillNoRow) {
+          sgjBillNoRow.style.display = billMidColumnsHidden ? "" : "none";
         }
 
         var paidBillRows = root.querySelector("#paymentSummaryPaidBillRows");

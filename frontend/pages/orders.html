@@ -759,9 +759,9 @@
       return true;
     }
 
-    /** Main Orders list = workshop New Order only; READY lives on Ready Orders (saved from ready-extra-order). */
+    /** Main Orders list = workshop New Order records across pending + ready; billed removal is handled in ready-extra-order save/bill flow. */
     function ordersListVisibleFilter(o) {
-      if (!o || String(o.status || "").trim().toUpperCase() === "READY") return false;
+      if (!o) return false;
       return ordersListShowOnlyNewOrderRecords(o);
     }
 
@@ -1028,7 +1028,7 @@
       if (prev && stations.indexOf(prev) !== -1) sel.value = prev;
     }
 
-    /** Dropdown of order numbers for rows currently shown on the Orders list (non-READY). */
+    /** Dropdown of order numbers for rows currently shown on the Orders list. */
     function populateOrderNoFilter(ordersForList) {
       const workspace = document.querySelector(".workspace");
       let sel = workspace ? workspace.querySelector("#filterOrderNo") : null;

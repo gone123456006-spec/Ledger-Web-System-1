@@ -518,6 +518,13 @@
             justify-content: space-between;
         }
 
+        .mark-ready-header {
+            background: #f8f9fc;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 12px 20px;
+            align-items: center;
+        }
+
         .modal-header-text h3 {
             font-size: 16px;
             font-weight: 700;
@@ -616,6 +623,14 @@
             text-align: right;
             font-size: 14px;
             font-weight: 600;
+        }
+
+        .mark-ready-qty-input[disabled] {
+            background: #f1f5f9;
+            color: #334155;
+            border-color: #d6dee8;
+            cursor: not-allowed;
+            opacity: 1;
         }
 
         .mark-ready-qty-input:focus {
@@ -1027,11 +1042,10 @@
     <!-- MARK READY CONFIRMATION MODAL -->
     <div class="modal-overlay" id="markReadyModal">
         <div class="modal">
-            <div class="modal-header">
+            <div class="modal-header mark-ready-header">
                 <div class="modal-header-text">
-                    <h3>✅ Mark Ready Item</h3>
-                    <p id="modalSubtitle">Choose how many units to mark ready for each selected row. Partial quantities stay in
-                        Item Processing.</p>
+                    <h3>Mark Ready Item</h3>
+                    <p id="modalSubtitle">Selected rows are shown below with fixed ready quantity.</p>
                 </div>
                 <button class="modal-close-btn" onclick="closeMarkReadyModal()">✕</button>
             </div>
@@ -1727,7 +1741,7 @@
             const orderCount = orders.length;
 
             document.getElementById('modalSubtitle').textContent =
-                `${itemCount} row${itemCount > 1 ? 's' : ''} from ${orderCount} order${orderCount > 1 ? 's' : ''} — set quantity to mark ready (default: full row qty).`;
+                `${itemCount} row${itemCount > 1 ? 's' : ''} from ${orderCount} order${orderCount > 1 ? 's' : ''} — ready quantity is fixed to full row qty.`;
             document.getElementById('modalInfo').textContent =
                 `Ready units move to Ready Items. Orders appear under Ready Orders only when every line's full order quantity is ready.`;
 
@@ -1749,7 +1763,7 @@
                         Qty
                         <input type="number" class="mark-ready-qty-input" data-process-id="${escapeHtml(pid)}"
                             min="0" ${step === '1' ? 'step="1"' : 'step="0.01"'}
-                            max="${maxQ}" value="${maxQ}">
+                            max="${maxQ}" value="${maxQ}" readonly disabled>
                     </label>
                 </div>`;
             }).join('');
