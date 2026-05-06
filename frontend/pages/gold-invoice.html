@@ -197,17 +197,13 @@
     }
     .order-details-table-wrap #new-order-item-table tbody tr { background: #fff; }
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other { background: #fafafa; }
-    /* Other row: R.Metal, Neg, R.Wt, Making % — not used; thin corner cross (ledger-style), inputs stay hidden in DOM */
+    /* Other row: R.Metal, Neg, R.Wt, Making % — not used; keep cells plain */
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(5),
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(6),
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(7),
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(9) {
       background-color: #fff;
-      background-image:
-        linear-gradient(45deg, transparent 49.15%, rgba(198, 206, 216, 0.85) 49.35%, rgba(198, 206, 216, 0.85) 50.65%, transparent 50.85%),
-        linear-gradient(-45deg, transparent 49.15%, rgba(198, 206, 216, 0.85) 49.35%, rgba(198, 206, 216, 0.85) 50.65%, transparent 50.85%);
-      background-size: 100% 100%;
-      background-repeat: no-repeat;
+      background-image: none;
     }
     .order-details-table-wrap #new-order-item-table th.total,
     .order-details-table-wrap #new-order-item-table td.total { background: #f5f6fa; }
@@ -430,16 +426,31 @@
     .cust-list-item:hover { background: #f8faff; }
     .cust-list-item.selected { background: var(--primary-soft); }
     /* Purchase sheet popup */
-    #purchaseSheetPopup .popup-box { max-width: 900px; width: 95vw; }
+    #purchaseSheetPopup .popup-box { max-width: 1080px; width: 98vw; padding-top: 0; overflow: hidden; }
+    #purchaseSheetPopup .purchase-popup-title {
+      margin: 0 -20px 12px -20px;
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+    }
     .ps-wrap { overflow-x: auto; max-height: 400px; margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; }
-    .ps-table { width: 100%; min-width: 700px; border-collapse: collapse; font-size: 13px; }
+    .ps-table { width: 100%; min-width: 860px; border-collapse: collapse; font-size: 13px; }
     .ps-table th { background: #f5f6fa; font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     .ps-table td { padding: 4px; border-bottom: 1px solid var(--border); }
-    .ps-table input, .ps-table select { width: 100%; height: 30px; border: 1px solid #d1d9e0; border-radius: 4px; padding: 0 6px; font-size: 12px; }
+    .ps-table th:last-child, .ps-table td:last-child { width: 1%; white-space: nowrap; text-align: center; padding: 1px; }
+    .ps-table tbody tr:focus-within { background: #f8fbff; }
+    .ps-table input, .ps-table select { width: 100%; height: 36px; border: 1px solid #d1d9e0; border-radius: 6px; padding: 0 8px; font-size: 13px; }
+    .ps-table th:nth-child(3), .ps-table td:nth-child(3) { min-width: 120px; }
+    .ps-table .ps-stamp { min-width: 110px; height: 40px; font-size: 14px; }
+    .ps-table input:focus, .ps-table select:focus { border-color: var(--primary); outline: none; }
     .ps-table .ps-row-del-btn {
-      width: auto; min-width: 28px; height: 30px; padding: 0; box-sizing: border-box;
+      width: auto; min-width: 18px; height: 20px; padding: 0 2px; box-sizing: border-box;
       border: 1px solid #d1d9e0; border-radius: 4px; background: #fff; cursor: pointer; font-size: 12px;
-      user-select: none;
+      user-select: none; line-height: 1;
     }
     .ps-table tfoot td { background: #eef1f5; font-weight: 600; padding: 8px 10px; border-top: 2px solid var(--border); }
   </style>
@@ -549,7 +560,7 @@
         <div class="panel-content">
           <div class="panel-summary">
             <div class="summary-item">
-              <span class="summary-label">Order Total:</span>
+              <span class="summary-label">Sub Total:</span>
               <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
             </div>
             <div class="summary-item" style="color:#d63384;">
@@ -635,7 +646,7 @@
 <!-- PAYMENT POPUP -->
 <div id="paymentPopup" class="popup-bg" onclick="if(event.target===this)closePaymentPopup()">
   <div class="popup-box" style="max-width:420px;" onclick="event.stopPropagation()">
-    <h3>Add Payment</h3>
+    <h3 id="paymentPopupTitle">Add Payment</h3>
     <div class="pay-grid">
       <label>Amount (₹)</label>
       <input type="number" id="payAmount" step="0.01" min="0" placeholder="0.00" oninput="updatePaymentBalance()">
@@ -653,7 +664,7 @@
       <div class="pay-summary-row" style="font-weight:600;"><span>Balance after</span><span id="popBalanceWrap" style="color:#dc3545;">₹ <span id="popBalance">0.00</span></span></div>
     </div>
     <div class="popup-actions">
-      <button type="button" onclick="savePayment()">Save payment</button>
+      <button type="button" id="paymentPopupSaveBtn" onclick="savePayment()">Save payment</button>
       <button type="button" onclick="closePaymentPopup()">Cancel</button>
     </div>
   </div>
@@ -672,8 +683,8 @@
 
 <!-- PURCHASE SHEET POPUP -->
 <div id="purchaseSheetPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this)closePurchaseSheetPopup()">
-  <div class="popup-box" style="max-width:900px; width:95vw;" onclick="event.stopPropagation()">
-    <h3>Purchase</h3>
+  <div class="popup-box" style="max-width:1080px; width:98vw;" onclick="event.stopPropagation()">
+    <h3 class="purchase-popup-title">Purchase</h3>
     <div class="ps-wrap">
       <table class="ps-table">
         <thead>
@@ -723,6 +734,7 @@
     customerPickedFromList: false,
     /** When true, manual name blur must not overwrite Current Bal from customer master (prefilled from Customer Statement). */
     statementCurrentBalLock: false,
+    editPaymentId: null,
   };
 
   // =====================================================
@@ -1458,6 +1470,52 @@
     updatePsTotal();
   }
 
+  function getPsRowFields(tr) {
+    if (!tr) return [];
+    return [
+      tr.querySelector('.ps-ondate'),
+      tr.querySelector('.ps-item'),
+      tr.querySelector('.ps-stamp'),
+      tr.querySelector('.ps-gross'),
+      tr.querySelector('.ps-less'),
+      tr.querySelector('.ps-net'),
+      tr.querySelector('.ps-rate'),
+      tr.querySelector('.ps-amt')
+    ].filter(Boolean);
+  }
+
+  function wirePsArrowNavigation(tr) {
+    var fields = getPsRowFields(tr);
+    fields.forEach(function(field, colIdx) {
+      field.addEventListener('keydown', function(e) {
+        var key = e.key;
+        if (key !== 'ArrowLeft' && key !== 'ArrowRight' && key !== 'ArrowUp' && key !== 'ArrowDown') return;
+
+        var rows = Array.from((el('psTbody') || {}).querySelectorAll ? el('psTbody').querySelectorAll('tr') : []);
+        var rowIdx = rows.indexOf(tr);
+        if (rowIdx < 0) return;
+
+        var nextRowIdx = rowIdx;
+        var nextColIdx = colIdx;
+        if (key === 'ArrowLeft') nextColIdx = colIdx - 1;
+        if (key === 'ArrowRight') nextColIdx = colIdx + 1;
+        if (key === 'ArrowUp') nextRowIdx = rowIdx - 1;
+        if (key === 'ArrowDown') nextRowIdx = rowIdx + 1;
+
+        if (nextRowIdx < 0 || nextRowIdx >= rows.length) return;
+        var targetFields = getPsRowFields(rows[nextRowIdx]);
+        var target = targetFields[nextColIdx];
+        if (!target) return;
+
+        e.preventDefault();
+        target.focus();
+        try {
+          if (typeof target.select === 'function' && target.tagName === 'INPUT' && target.type !== 'date') target.select();
+        } catch (eSel) {}
+      });
+    });
+  }
+
   function addPsRow(preset) {
     var tbody = el('psTbody');
     if (!tbody) return;
@@ -1515,6 +1573,7 @@
       });
     });
     if (amtInp) ['input','change'].forEach(function(ev){ amtInp.addEventListener(ev, updatePsTotal); });
+    wirePsArrowNavigation(tr);
     recalcPsRow(tr);
   }
 
@@ -1597,6 +1656,20 @@
     if (w) w.style.color = balanceAfter <= 0.000001 ? '#28a745' : '#dc3545';
   }
 
+  function getEditingPaymentAmount() {
+    if (!S.editPaymentId) return 0;
+    var all = getPayments();
+    var row = all.find(function(p) { return String(p && p.id) === String(S.editPaymentId); });
+    return row ? safeNum(row.amount) : 0;
+  }
+
+  function setPaymentPopupMode(isEdit) {
+    var t = el('paymentPopupTitle');
+    var b = el('paymentPopupSaveBtn');
+    if (t) t.textContent = isEdit ? 'Edit Payment' : 'Add Payment';
+    if (b) b.textContent = isEdit ? 'Update payment' : 'Save payment';
+  }
+
   function calcBillTotal() {
     var tbody = el('itemBody');
     if (!tbody) return 0;
@@ -1613,6 +1686,8 @@
 
   function openPaymentPopup() {
     if (!validateBasic()) return;
+    S.editPaymentId = null;
+    setPaymentPopupMode(false);
     var total = calcBillTotal();
     var paid = getPaid(el('billNo') && el('billNo').value);
     var balance = total - paid;
@@ -1631,7 +1706,9 @@
 
   function updatePaymentBalance() {
     var total = safeNum(el('popBillTotal') && el('popBillTotal').textContent);
-    var paid = getPaid(el('billNo') && el('billNo').value);
+    var paid = getPaid(el('billNo') && el('billNo').value) - getEditingPaymentAmount();
+    if (paid < 0) paid = 0;
+    if (el('popPaidSoFar')) el('popPaidSoFar').textContent = paid.toFixed(2);
     var amt = safeNum(el('payAmount') && el('payAmount').value);
     if (el('popAmtDisplay')) el('popAmtDisplay').textContent = amt.toFixed(2);
     var after = total - paid - amt;
@@ -1657,19 +1734,76 @@
       timestamp: ts
     };
     var arr = getPayments();
-    arr.push(payment);
+    if (S.editPaymentId) {
+      var idx = arr.findIndex(function(p) { return String(p && p.id) === String(S.editPaymentId); });
+      if (idx >= 0) {
+        payment.id = arr[idx].id;
+        payment.billNo = arr[idx].billNo || payment.billNo;
+        arr[idx] = payment;
+      } else {
+        arr.push(payment);
+      }
+    } else {
+      arr.push(payment);
+    }
     savePayments(arr);
+    var wasEdit = !!S.editPaymentId;
+    S.editPaymentId = null;
+    setPaymentPopupMode(false);
     closePaymentPopup();
     updateInfoPanel();
     try { window.dispatchEvent(new CustomEvent('paymentSaved')); } catch (e1) { }
-    showSuccess('Payment saved');
+    showSuccess(wasEdit ? 'Payment updated' : 'Payment saved');
     var det = el('paymentsDetailPopup');
     if (det && det.style.display === 'flex') openPaymentsDetailPopup();
   }
 
   function closePaymentPopup() {
+    S.editPaymentId = null;
+    setPaymentPopupMode(false);
     var p = el('paymentPopup');
     if (p) p.style.display = 'none';
+  }
+
+  function editPayment(paymentId) {
+    if (!paymentId) return;
+    var arr = getPayments();
+    var row = arr.find(function(p) { return String(p && p.id) === String(paymentId); });
+    if (!row) { showErr('Payment not found'); return; }
+    closePaymentsDetailPopup();
+    S.editPaymentId = row.id;
+    setPaymentPopupMode(true);
+
+    var total = calcBillTotal();
+    var paidExcludingCurrent = getPaid(el('billNo') && el('billNo').value) - safeNum(row.amount);
+    if (paidExcludingCurrent < 0) paidExcludingCurrent = 0;
+    var balance = total - paidExcludingCurrent - safeNum(row.amount);
+
+    if (el('popBillTotal')) el('popBillTotal').textContent = total.toFixed(2);
+    if (el('popPaidSoFar')) el('popPaidSoFar').textContent = paidExcludingCurrent.toFixed(2);
+    if (el('payAmount')) el('payAmount').value = safeNum(row.amount).toFixed(2);
+    if (el('popAmtDisplay')) el('popAmtDisplay').textContent = safeNum(row.amount).toFixed(2);
+    if (el('payMode')) el('payMode').value = row.mode || 'Cash';
+    if (el('payNarration')) el('payNarration').value = row.narration || '';
+    if (el('payDate')) el('payDate').value = row.date || today();
+    if (el('popBalance')) el('popBalance').textContent = balance.toFixed(2);
+    setPopBalanceStyle(balance);
+
+    var p = el('paymentPopup');
+    if (p) { p.style.display = 'flex'; p.style.alignItems = 'center'; p.style.justifyContent = 'center'; }
+  }
+
+  function deletePayment(paymentId) {
+    if (!paymentId) return;
+    if (!confirm('Delete this payment entry?')) return;
+    var arr = getPayments();
+    var next = arr.filter(function(p) { return String(p && p.id) !== String(paymentId); });
+    if (next.length === arr.length) { showErr('Payment not found'); return; }
+    savePayments(next);
+    updateInfoPanel();
+    openPaymentsDetailPopup();
+    try { window.dispatchEvent(new CustomEvent('paymentSaved')); } catch (e1) { }
+    showSuccess('Payment deleted');
   }
 
   function openPaymentsDetailPopup() {
@@ -1681,17 +1815,22 @@
     if (!cont) return;
     if (!rows.length) { cont.innerHTML = '<div class="empty-state" style="padding:16px;">No payments for this bill yet.</div>'; }
     else {
-      var html = '<table class="adv-table"><thead><tr><th>Date</th><th>Type</th><th>Mode</th><th>Amount</th><th>Narration</th></tr></thead><tbody>';
+      var html = '<table class="adv-table"><thead><tr><th>Date</th><th>Type</th><th>Mode</th><th>Amount</th><th>Narration</th><th>Action</th></tr></thead><tbody>';
       rows.forEach(function(p) {
         var typ = (String(p.type || '').toLowerCase() === 'paid') ? 'Paid' : 'Advance';
         var ds = p.date || (p.timestamp && String(p.timestamp).split('T')[0]) || '';
         var dt = ds ? new Date(ds.length <= 10 ? ds + 'T12:00:00' : ds) : null;
         var dlab = dt && !isNaN(dt.getTime()) ? dt.toLocaleDateString() : '—';
+        var pid = String(p.id || '');
         html += '<tr><td>' + dlab + '</td>' +
           '<td>' + typ + '</td>' +
           '<td>' + (p.mode || 'Cash') + '</td>' +
           '<td>' + fmtCur(p.amount) + '</td>' +
-          '<td style="color:var(--muted);">' + (p.narration || '—') + '</td></tr>';
+          '<td style="color:var(--muted);">' + (p.narration || '—') + '</td>' +
+          '<td style="white-space:nowrap;">' +
+            '<button type="button" onclick="editPayment(' + pid + ')" style="margin-right:6px; border:1px solid var(--border); background:#fff; border-radius:6px; padding:4px 8px; cursor:pointer;">Edit</button>' +
+            '<button type="button" onclick="deletePayment(' + pid + ')" style="border:1px solid #f1b8c0; color:#b42318; background:#fff5f7; border-radius:6px; padding:4px 8px; cursor:pointer;">Delete</button>' +
+          '</td></tr>';
       });
       html += '</tbody></table>';
       cont.innerHTML = html;
@@ -1990,7 +2129,13 @@
     if (!tbody || !tbody.querySelectorAll('tr').length) { showErr('Please add at least one item'); return false; }
     var isRegisteredCustomer = !!ensureCustomerMasterForSave();
     var paidNow = getPaid(el('billNo') && el('billNo').value);
-    if (!isRegisteredCustomer && paidNow <= 0) { showErr('Please add payment for unregistered customer before saving bill'); return false; }
+    if (!isRegisteredCustomer) {
+      var balanceNow = calcBillTotal() - paidNow;
+      if (Math.abs(balanceNow) > 0.000001) {
+        showErr('For unregistered customer, save is allowed only when Balance is zero');
+        return false;
+      }
+    }
     return true;
   }
 
@@ -2626,6 +2771,8 @@
     window.closePaymentPopup = closePaymentPopup;
     window.savePayment = savePayment;
     window.updatePaymentBalance = updatePaymentBalance;
+    window.editPayment = editPayment;
+    window.deletePayment = deletePayment;
     window.openPaymentsDetailPopup = openPaymentsDetailPopup;
     window.closePaymentsDetailPopup = closePaymentsDetailPopup;
     window.openRatebookPopup = openRatebookPopup;

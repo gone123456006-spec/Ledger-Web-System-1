@@ -1076,8 +1076,21 @@
 
     /* Purchase sheet popup (New Order vs Ready / Extra storage selected by data-purchase-sheet-source) */
     #ready-extra-order-purchase-sheet-popup .purchase-sheet-box {
-      max-width: min(1220px, 98vw);
-      width: 100%;
+      max-width: 1080px;
+      width: 98vw;
+      padding-top: 0;
+      overflow: hidden;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-popup-title {
+      margin: 0 -20px 12px -20px;
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+      background: #f8fbff;
+      border-bottom: 1px solid #e6edf5;
     }
 
     #ready-extra-order-purchase-sheet-popup .purchase-sheet-wrap {
@@ -1092,10 +1105,9 @@
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table {
       width: 100%;
-      min-width: 960px;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: 14px;
+      min-width: 860px;
+      border-collapse: collapse;
+      font-size: 13px;
     }
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table thead th {
@@ -1103,14 +1115,17 @@
       top: 0;
       background: #f5f6fa;
       z-index: 1;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
+      border: none;
+      border-bottom: 1px solid var(--border);
     }
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table th,
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td {
+      border: none;
       border-bottom: 1px solid var(--border);
-      padding: 10px 12px;
+      padding: 4px;
       white-space: nowrap;
       vertical-align: middle;
     }
@@ -1122,30 +1137,50 @@
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:last-child {
       text-align: center;
-      width: 48px;
+      width: 1%;
+      white-space: nowrap;
+      padding: 1px;
     }
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table tbody tr:hover {
       background: #f8faff;
     }
 
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table tbody tr:focus-within {
+      background: #f8fbff;
+    }
+
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table input,
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table select,
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table button {
       width: 100%;
       height: 36px;
       border-radius: 8px;
       border: 1px solid var(--border);
       padding: 8px 10px;
-      font-size: 14px;
+      font-size: 13px;
       box-sizing: border-box;
+    }
+
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table th:nth-child(3),
+    #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:nth-child(3) {
+      min-width: 120px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .ps-stamp {
+      min-width: 110px;
+      height: 40px !important;
+      font-size: 14px !important;
     }
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table td:last-child button {
       width: auto;
-      min-width: 36px;
-      padding: 4px 8px;
+      min-width: 18px;
+      height: 20px;
+      padding: 0 2px;
       background: #fff;
       cursor: pointer;
+      line-height: 1;
     }
 
     #ready-extra-order-purchase-sheet-popup table.purchase-sheet-table tfoot td {
@@ -2798,7 +2833,7 @@
   <div id="ready-extra-order-purchase-sheet-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closePurchaseSheetPopup()">
     <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
-      <h3 id="rex-purchase-popup-title">Purchase</h3>
+      <h3 id="rex-purchase-popup-title" class="purchase-popup-title">Purchase</h3>
       <p id="rex-purchase-popup-readonly-hint" class="rex-purchase-readonly-hint"
         style="display:none; margin:0 0 10px; font-size:13px; color:#666;"></p>
       <div class="purchase-sheet-wrap">
@@ -7866,6 +7901,52 @@
         return Number.isFinite(n) ? n : 0;
       }
 
+      function getPurchaseSheetRowFields(tr) {
+        if (!tr) return [];
+        return [
+          tr.querySelector(".ps-ondate"),
+          tr.querySelector(".ps-item"),
+          tr.querySelector(".ps-stamp"),
+          tr.querySelector(".ps-gross"),
+          tr.querySelector(".ps-less"),
+          tr.querySelector(".ps-net"),
+          tr.querySelector(".ps-rate"),
+          tr.querySelector(".ps-amt")
+        ].filter(Boolean);
+      }
+
+      function wirePurchaseSheetArrowNavigation(tr) {
+        var fields = getPurchaseSheetRowFields(tr);
+        fields.forEach(function (field, colIdx) {
+          field.addEventListener("keydown", function (e) {
+            var key = e.key;
+            if (key !== "ArrowLeft" && key !== "ArrowRight" && key !== "ArrowUp" && key !== "ArrowDown") return;
+            var tb = getPurchaseSheetTbody();
+            if (!tb) return;
+            var rows = Array.from(tb.querySelectorAll("tr"));
+            var rowIdx = rows.indexOf(tr);
+            if (rowIdx < 0) return;
+
+            var nextRowIdx = rowIdx;
+            var nextColIdx = colIdx;
+            if (key === "ArrowLeft") nextColIdx = colIdx - 1;
+            if (key === "ArrowRight") nextColIdx = colIdx + 1;
+            if (key === "ArrowUp") nextRowIdx = rowIdx - 1;
+            if (key === "ArrowDown") nextRowIdx = rowIdx + 1;
+            if (nextRowIdx < 0 || nextRowIdx >= rows.length) return;
+
+            var targetFields = getPurchaseSheetRowFields(rows[nextRowIdx]);
+            var target = targetFields[nextColIdx];
+            if (!target) return;
+            e.preventDefault();
+            target.focus();
+            try {
+              if (target.tagName === "INPUT" && target.type !== "date" && typeof target.select === "function") target.select();
+            } catch (eSel) { }
+          });
+        });
+      }
+
       function recalcPurchaseSheetRow(tr) {
         if (!tr || !tr.cells || tr.cells.length < 8) return;
         var grossIn = tr.cells[3].querySelector("input");
@@ -8225,6 +8306,7 @@
             tr.remove();
             updatePurchaseSheetTotalDisplay();
           });
+          wirePurchaseSheetArrowNavigation(tr);
         }
         recalc();
         if (preset) {
