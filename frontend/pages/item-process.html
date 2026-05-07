@@ -368,6 +368,34 @@
             border: 1px solid #a3cfbb;
         }
 
+        /* Stage reflection: Item Process */
+        .workflow-stage-process tbody tr[data-order-id] {
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.13) 0%, rgba(255,255,255,0.98) 38%) !important;
+            border-left: 4px solid #2563eb;
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.16);
+            transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
+            animation: workflowProcessFade .28s ease;
+        }
+        .workflow-stage-process tbody tr[data-order-id]:hover {
+            background: linear-gradient(110deg, rgba(37, 99, 235, 0.2) 0%, rgba(255,255,255,0.97) 58%) !important;
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.24), 0 6px 14px rgba(37, 99, 235, 0.14);
+        }
+        .workflow-stage-process tbody tr.workflow-item-processing {
+            animation: workflowProcessPulse 2s ease-in-out infinite;
+        }
+        .workflow-stage-process .badge.process,
+        .workflow-stage-process .badge.ready-done {
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.14), 0 0 12px rgba(37, 99, 235, 0.2);
+        }
+        @keyframes workflowProcessFade {
+            from { opacity: .74; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes workflowProcessPulse {
+            0%, 100% { box-shadow: inset 0 0 0 1px rgba(37,99,235,0.16), 0 0 0 rgba(37,99,235,0); }
+            50% { box-shadow: inset 0 0 0 1px rgba(37,99,235,0.25), 0 0 16px rgba(59,130,246,0.26); }
+        }
+
         /* Checkbox */
         .cb-cell input[type="checkbox"] {
             width: 16px;
@@ -965,7 +993,7 @@
 
 <body>
 
-    <div class="process-items-wrap">
+    <div class="process-items-wrap workflow-stage-process">
         <div class="ledger-page-titlebar">Item Process</div>
         <!-- TOOLBAR -->
         <div class="process-toolbar">
@@ -1578,6 +1606,7 @@
                 items.forEach((r, idx) => {
                     const isReady = r.status === 'READY';
                     const tr = document.createElement('tr');
+                    tr.classList.add(isReady ? 'workflow-item-ready' : 'workflow-item-processing');
                     tr.dataset.search = '1';
                     tr.dataset.orderNoFilter = String(r.orderNo || '').trim().toLowerCase();
                     tr.dataset.stampFilter = String(r.stamp != null ? r.stamp : '').trim().toLowerCase();

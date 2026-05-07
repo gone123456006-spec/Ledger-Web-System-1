@@ -415,6 +415,27 @@
             line-height: 1;
         }
 
+        /* Stage reflection: Ready Items */
+        .workflow-stage-ready-items tbody tr[data-order-id] {
+            background: linear-gradient(90deg, rgba(22, 163, 74, 0.13) 0%, rgba(255,255,255,0.98) 38%) !important;
+            border-left: 4px solid #16a34a;
+            box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.15);
+            transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
+            animation: workflowReadyFade .28s ease;
+        }
+        .workflow-stage-ready-items tbody tr[data-order-id]:hover {
+            background: linear-gradient(110deg, rgba(22, 163, 74, 0.21) 0%, rgba(255,255,255,0.97) 58%) !important;
+            box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.24), 0 6px 14px rgba(22, 163, 74, 0.15);
+        }
+        .workflow-stage-ready-items .badge.ready-done,
+        .workflow-stage-ready-items .badge.meta-added {
+            box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.15), 0 0 12px rgba(22, 163, 74, 0.18);
+        }
+        @keyframes workflowReadyFade {
+            from { opacity: .74; transform: translateY(3px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* Checkbox */
         .cb-cell input[type="checkbox"] {
             width: 16px;
@@ -1115,7 +1136,7 @@
 
 <body>
 
-    <div class="process-items-wrap">
+    <div class="process-items-wrap workflow-stage-ready-items">
         <div class="ledger-page-titlebar">Ready Items</div>
         <!-- TOOLBAR -->
         <div class="process-toolbar">

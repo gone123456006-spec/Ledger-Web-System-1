@@ -734,6 +734,8 @@
     customerPickedFromList: false,
     /** When true, manual name blur must not overwrite Current Bal from customer master (prefilled from Customer Statement). */
     statementCurrentBalLock: false,
+    /** Lock customer info when opened from Customer Statement -> Add Invoice. */
+    statementCustomerInfoLocked: false,
     editPaymentId: null,
   };
 
@@ -1120,12 +1122,49 @@
 
   function clearCustFields() {
     S.statementCurrentBalLock = false;
+    setCustomerInfoLockedFromStatement(false);
     ['custName','custNameSelect','currentBal','relation','station','lfNo'].forEach(function(id){ if(el(id)) el(id).value = ''; });
     setCustomerSelectStatus(false);
   }
 
+  function setCustomerInfoLockedFromStatement(locked) {
+    S.statementCustomerInfoLocked = !!locked;
+    var nameInput = el('custName');
+    var nameSelect = el('custNameSelect');
+    var currentBalInput = el('currentBal');
+    var relationInput = el('relation');
+    var stationInput = el('station');
+    var lfNoInput = el('lfNo');
+    var addCustomerBtn = document.querySelector('button[onclick="openCustomerPopup()"]');
+
+    if (nameInput) {
+      nameInput.readOnly = !!locked;
+      if (locked) nameInput.setAttribute('tabindex', '-1');
+      else nameInput.removeAttribute('tabindex');
+    }
+    if (nameSelect) {
+      nameSelect.disabled = !!locked;
+      if (locked) nameSelect.setAttribute('tabindex', '-1');
+      else nameSelect.removeAttribute('tabindex');
+    }
+
+    [currentBalInput, relationInput, stationInput, lfNoInput].forEach(function(inp) {
+      if (!inp) return;
+      inp.readOnly = !!locked;
+      if (locked) inp.setAttribute('tabindex', '-1');
+      else inp.removeAttribute('tabindex');
+    });
+
+    if (addCustomerBtn) {
+      addCustomerBtn.disabled = !!locked;
+      addCustomerBtn.style.opacity = locked ? '0.55' : '';
+      addCustomerBtn.style.cursor = locked ? 'not-allowed' : '';
+    }
+  }
+
   // Customer popup
   function openCustomerPopup() {
+    if (S.statementCustomerInfoLocked) return false;
     var popup = el('gold-invoice-add-customer-popup');
     var iframe = el('customerPopupIframe');
     if (popup && iframe) {
@@ -2694,6 +2733,7 @@
     }
 
     S.statementCurrentBalLock = true;
+    setCustomerInfoLockedFromStatement(true);
     updateInfoPanel();
   }
 
@@ -2709,6 +2749,7 @@
     loadCustomers();
     bindManualCustomerAutoFill();
     bindCustomerSelectAutoFill();
+    setCustomerInfoLockedFromStatement(false);
 
     // Set initial bill number and date
     var editId = localStorage.getItem('editOrderId');

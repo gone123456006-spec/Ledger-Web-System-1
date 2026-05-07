@@ -338,6 +338,32 @@
       border: 1px solid #a3cfbb;
     }
 
+    /* Stage reflection: Ready Orders (finalized) */
+    .workflow-stage-ready-orders tbody tr[data-order-id] {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.14) 0%, rgba(255,255,255,0.98) 40%) !important;
+      border-left: 4px solid #7c3aed;
+      box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.18);
+      transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
+      animation: workflowOrderFade .28s ease;
+    }
+    .workflow-stage-ready-orders tbody tr[data-order-id]:hover {
+      background: linear-gradient(110deg, rgba(124, 58, 237, 0.24) 0%, rgba(255,255,255,0.97) 58%) !important;
+      box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.26), 0 7px 16px rgba(124, 58, 237, 0.18);
+    }
+    .workflow-stage-ready-orders .badge.ready {
+      background: linear-gradient(90deg, #ede9fe, #f5f3ff);
+      border-color: #c4b5fd;
+      color: #4c1d95;
+      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.18), 0 0 12px rgba(124, 58, 237, 0.22);
+    }
+    .workflow-stage-ready-orders .action-btn {
+      box-shadow: inset 0 -1px 0 rgba(255,255,255,0.2), 0 6px 16px rgba(124, 58, 237, 0.2);
+    }
+    @keyframes workflowOrderFade {
+      from { opacity: .74; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .action-btn {
       padding: 6px 14px;
       border-radius: 8px;
@@ -706,7 +732,7 @@
 
 <body>
 
-  <div class="ready-orders-wrap">
+  <div class="ready-orders-wrap workflow-stage-ready-orders">
     <div class="ledger-page-titlebar">Ready Orders</div>
     <!-- TOOLBAR -->
     <div class="ready-toolbar">
