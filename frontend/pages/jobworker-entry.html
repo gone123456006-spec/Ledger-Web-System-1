@@ -817,6 +817,14 @@
         var jw = validate();
         if (!jw) return false;
         var data = collectData(jw);
+        // Don't create an empty row in Jobworker Details when user skipped filling values.
+        // Require at least one numeric value > 0 OR a non-empty narration; else: no save, no balance row.
+        var hasValue = (num(data.metal) > 0) || (num(data.chain) > 0) || (num(data.nag) > 0) || (num(data.maal) > 0);
+        var hasNarration = (data.narration || '').toString().trim() !== '';
+        if (!hasValue && !hasNarration) {
+          showToast('Enter Metal / Chain / Nag / Maal or a narration before saving.', 'error');
+          return false;
+        }
         var list = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
         list.push(data);
         localStorage.setItem('jobworkerEntries', JSON.stringify(list));
