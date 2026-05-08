@@ -197,13 +197,14 @@
     }
     .order-details-table-wrap #new-order-item-table tbody tr { background: #fff; }
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other { background: #fafafa; }
-    /* Other row: R.Metal, Neg, R.Wt, Making % — not used; keep cells plain */
-    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(5),
-    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(6),
-    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(7),
-    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(9) {
-      background-color: #fff;
-      background-image: none;
+    /* Other row: cross-hatch on locked cells; inputs use transparent bg so pattern shows */
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(4)):not(:nth-child(8)):not(:nth-child(10)):not(:nth-child(11)):not(:nth-child(12)) {
+      background-image:
+        linear-gradient(25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%),
+        linear-gradient(-25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%);
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      background-color: rgba(210, 214, 220, 0.08) !important;
     }
     .order-details-table-wrap #new-order-item-table th.total,
     .order-details-table-wrap #new-order-item-table td.total { background: #f5f6fa; }
@@ -1303,6 +1304,9 @@
       sel.removeAttribute('disabled');
       sel.style.visibility = '';
       sel.style.opacity = '';
+      sel.style.cursor = '';
+      sel.style.backgroundColor = '';
+      sel.style.border = '';
       sel.classList.remove('purchase-field-disabled');
       sel.tabIndex = 0;
     });
@@ -1328,7 +1332,14 @@
           continue;
         }
         if (ci === 2 && selectEl) {
-          selectEl.removeAttribute('disabled');
+          // Stamp is meaningless for "Other" rows — disable + visually mute.
+          selectEl.value = '';
+          selectEl.setAttribute('disabled', 'disabled');
+          selectEl.tabIndex = -1;
+          selectEl.style.visibility = 'hidden';
+          selectEl.style.cursor = 'not-allowed';
+          selectEl.style.backgroundColor = 'transparent';
+          selectEl.style.border = 'none';
           continue;
         }
         if (ci === 10 && input) {
@@ -1353,7 +1364,7 @@
           input.tabIndex = -1;
           input.style.visibility = 'hidden';
           input.style.cursor = 'not-allowed';
-          input.style.backgroundColor = '#f5f5f7';
+          input.style.backgroundColor = 'transparent';
           input.style.border = 'none';
         }
         if (selectEl && ci !== 0 && ci !== 2) {
