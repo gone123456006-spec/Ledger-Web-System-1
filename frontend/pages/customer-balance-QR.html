@@ -1229,7 +1229,7 @@
                 <button type="button" class="btn" onclick="addRow()">+ Add Row</button>
                 <button type="button" class="btn" onclick="render()">🔄 Refresh</button>
                 <button type="button" class="btn" onclick="window.print()">🖨 Print</button>
-                <button type="button" class="btn" onclick="saveAndClose()">↩ Back</button>
+                <button type="button" class="btn" onclick="closeStatementWithoutSave()">↩ Back</button>
             </div>
             <div class="actions-right">
                 <button class="btn" onclick="saveAndClose()">💾 Save &amp; Close</button>
@@ -1284,6 +1284,80 @@
         let interestLastCompMonth = 0;
         let lastInterestCalculatedDate = '';
         let pendingInterestSide = 'debit';
+
+        /** Deep snapshot of statement + interest session; restored on Back without Save. */
+        let stmtSessionSnapshot = null;
+
+        function captureStmtSessionSnapshot() {
+            try {
+                stmtSessionSnapshot = {
+                    transactions: JSON.parse(JSON.stringify(transactions || [])),
+                    nextId: nextId,
+                    draftRows: JSON.parse(JSON.stringify(draftRows || [])),
+                    interestDraftRows: JSON.parse(JSON.stringify(interestDraftRows || [])),
+                    rowInterestMap: JSON.parse(JSON.stringify(rowInterestMap || {})),
+                    interestApplied: JSON.parse(JSON.stringify(interestApplied || [])),
+                    pendingInterest: pendingInterest,
+                    interestHasCalcResult: interestHasCalcResult,
+                    interestLastCompMonth: interestLastCompMonth,
+                    lastInterestCalculatedDate: lastInterestCalculatedDate,
+                    pendingInterestSide: pendingInterestSide,
+                    customerData: JSON.parse(JSON.stringify(customerData || {})),
+                    selectedIdx: selectedIdx,
+                    ctxTargetIdx: ctxTargetIdx,
+                    deleteTargetIdx: deleteTargetIdx,
+                    intRate: (document.getElementById('int_rate_inline') && document.getElementById('int_rate_inline').value) || '',
+                    intComp: (document.getElementById('int_comp_inline') && document.getElementById('int_comp_inline').value) || '',
+                    intTo: (document.getElementById('int_to_inline') && document.getElementById('int_to_inline').value) || ''
+                };
+            } catch (e) {
+                console.error('captureStmtSessionSnapshot', e);
+                stmtSessionSnapshot = null;
+            }
+        }
+
+        function restoreStmtSessionSnapshot() {
+            if (!stmtSessionSnapshot) return;
+            try {
+                const s = stmtSessionSnapshot;
+                transactions = JSON.parse(JSON.stringify(s.transactions || []));
+                nextId = s.nextId;
+                draftRows = JSON.parse(JSON.stringify(s.draftRows || []));
+                interestDraftRows = JSON.parse(JSON.stringify(s.interestDraftRows || []));
+                rowInterestMap = JSON.parse(JSON.stringify(s.rowInterestMap || {}));
+                interestApplied = JSON.parse(JSON.stringify(s.interestApplied || []));
+                pendingInterest = parseFloat(s.pendingInterest) || 0;
+                interestHasCalcResult = !!s.interestHasCalcResult;
+                interestLastCompMonth = parseInt(s.interestLastCompMonth, 10) || 0;
+                lastInterestCalculatedDate = s.lastInterestCalculatedDate != null ? String(s.lastInterestCalculatedDate) : '';
+                pendingInterestSide = String(s.pendingInterestSide || 'debit').toLowerCase() === 'credit' ? 'credit' : 'debit';
+                Object.assign(customerData, JSON.parse(JSON.stringify(s.customerData || {})));
+                selectedIdx = s.selectedIdx;
+                ctxTargetIdx = s.ctxTargetIdx;
+                deleteTargetIdx = s.deleteTargetIdx;
+                const rateEl = document.getElementById('int_rate_inline');
+                const compEl = document.getElementById('int_comp_inline');
+                const toEl = document.getElementById('int_to_inline');
+                if (rateEl) rateEl.value = s.intRate != null ? s.intRate : '';
+                if (compEl) compEl.value = s.intComp != null ? s.intComp : '';
+                if (toEl) toEl.value = s.intTo != null ? s.intTo : '';
+            } catch (e) {
+                console.error('restoreStmtSessionSnapshot', e);
+            }
+        }
+
+        function closeStatementWithoutSave() {
+            restoreStmtSessionSnapshot();
+            if (typeof window.loadPage === 'function') {
+                window.loadPage('pages/customer-balance.html');
+            } else if (window.parent && typeof window.parent.loadPage === 'function') {
+                window.parent.loadPage('pages/customer-balance.html');
+            } else if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.close();
+            }
+        }
 
         function stmtStorageKey() {
             return 'stmt_' + (customerData.lfNo || customerData.name);
@@ -1533,7 +1607,6 @@
                         }
                         if (tx.entryType === 'debit') tx.credit = 0;
                     }
-                    saveTransactions();
                     render();
                 };
 
@@ -1590,7 +1663,6 @@
                     } else if (field === 'calculatedOn') {
                         rec.calculatedOn = Math.abs(readMoney(val));
                     }
-                    saveInterestModule();
                     renderInterestTable();
                 };
 
@@ -1666,10 +1738,8 @@
                         interestDraftRows = [{ date: '', nar: '', cr: '', dr: '', int: '', entryType: null }];
                     }
 
-                    saveTransactions();
-                    saveInterestModule();
                     render();
-                    showToast('✅ Row saved');
+                    showToast('✅ Row added — use Save & Close to keep changes');
 
                     setTimeout(() => {
                         scrollInterestTableToBottom({ smooth: true });
@@ -2952,7 +3022,6 @@
                         }
                         if (tx.entryType === 'debit') tx.credit = 0;
                     }
-                    saveTransactions();
                     render();
                 };
 
@@ -3060,9 +3129,8 @@
                     draftRows.splice(dIdx, 1);
                     if (draftRows.length === 0) draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
 
-                    saveTransactions();
                     render();
-                    showToast('✅ Row saved');
+                    showToast('✅ Row added — use Save & Close to keep changes');
                 };
 
                 const { td: tdDate, span: spDate } = makeCell(draft.date || fmtDate(todayStr()), false);
@@ -3137,7 +3205,9 @@
                         changed = true;
                     }
                 });
-                if (changed) saveTransactions();
+                if (changed) {
+                    requestAnimationFrame(() => { try { render(); } catch (eR) { } });
+                }
             }
 
             document.getElementById('dispName').textContent = customerData.name || '—';
@@ -3531,7 +3601,6 @@
             }
             // Keep controls visible after calculation; avoid forcing viewport jump.
             scrollInterestTableToBottom({ smooth: true });
-            saveInterestModule();
         }
 
         function applyInterestInline() {
@@ -3557,14 +3626,12 @@
             pendingInterest = 0;
             pendingInterestSide = 'debit';
             interestHasCalcResult = false;
-            saveTransactions();
-            saveInterestModule();
             document.getElementById('interestSection').style.display = 'none';
             document.getElementById('interestResultInline').style.display = 'none';
             document.getElementById('applyIntInline').style.display = 'none';
             syncInterestPanelOpenClass();
             render();
-            showToast('✅ Interest posted and added to Current Balance');
+            showToast('✅ Interest added to statement — use Save & Close to keep changes');
         }
 
         // ─── CLEAR BILL AMOUNT (customer-level settlement only; bill status Cleared; All Bill Balance column frozen, not recalculated) ───
@@ -3681,6 +3748,7 @@
                     balEl.className = 'bal-value bal-dr';
                 }
                 showToast('✅ Cleared — statement, interest, and balance reset to ₹0');
+                captureStmtSessionSnapshot();
             } catch (err) {
                 console.error('clearBillAmount', err);
                 const msg = err && err.message ? String(err.message) : 'Unknown error';
@@ -3699,11 +3767,10 @@
             const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             const tx = sorted[deleteTargetIdx];
             transactions = transactions.filter(t => t !== tx);
-            saveTransactions();
             selectedIdx = null;
             deleteTargetIdx = null;
             render();
-            showToast('🗑 Row deleted');
+            showToast('🗑 Row removed — use Save & Close to keep changes');
         }
 
         // ─── DELETE ──────────────────────────────────────────────────────────────────
@@ -3752,11 +3819,10 @@
                 // Hide/remove bill summary row as part of "delete all ticked rows".
                 customerData.statementBillAmountCleared = true;
             }
-            saveTransactions();
             selectedIdx = null;
             deleteTargetIdx = null;
             render();
-            showToast(n === 1 ? '🗑 Row deleted' : `🗑 Deleted ${n} ticked rows`);
+            showToast(n === 1 ? '🗑 Row removed — use Save & Close to keep changes' : `🗑 Removed ${n} rows — use Save & Close to keep changes`);
         }
 
 
@@ -3825,6 +3891,7 @@
                 customerData.currentBalanceType = closing < 0 ? 'Cr' : 'Dr';
             } catch (e) { }
 
+            try { saveInterestModule(); } catch (eIm) { }
             saveTransactions();
             showToast('💾 Saved!');
             setTimeout(() => {
@@ -3967,7 +4034,6 @@
                         transactions = [];
                         localStorage.setItem(stmtKey, JSON.stringify([]));
                     }
-                    saveTransactions();
                 }
             } catch (e) { }
 
@@ -3984,7 +4050,6 @@
                     const legacy = localStorage.getItem(stmtKey + '_intMap');
                     if (legacy) {
                         rowInterestMap = JSON.parse(legacy);
-                        saveInterestModule();
                     }
                 }
             } catch (e) { }
@@ -4037,6 +4102,7 @@
 
         // ─── INIT ────────────────────────────────────────────────────────────────────
         initStatementAddInvoiceSubmenu();
+        captureStmtSessionSnapshot();
         render();
 
         // ─── EXPORT GLOBALS (FOR DASHBOARD SPA) ───────────────────────────────────────
@@ -4047,11 +4113,12 @@
         window.doPrint = () => window.print();
         window.deleteSelected = deleteSelected;
         window.saveAndClose = saveAndClose;
+        window.closeStatementWithoutSave = closeStatementWithoutSave;
         window.closeModal = closeModal;
         window.confirmDelete = confirmDelete;
         window.ctxDelete = ctxDelete;
         window.ctxDeleteTickedRow = ctxDeleteTickedRow;
-        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || ''))); const tx = s[ctxTargetIdx]; if (tx) { tx.cleared = !tx.cleared; saveTransactions(); } render(); };
+        window.ctxClearBill = function () { closeCtxMenu(); if (ctxTargetIdx === null) return; const s = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || ''))); const tx = s[ctxTargetIdx]; if (tx) { tx.cleared = !tx.cleared; } render(); };
         window.clearBillAmount = clearBillAmount;
         window.clearSelected = clearSelected;
         window.showCtxMenu = showCtxMenu;

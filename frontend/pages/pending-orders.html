@@ -1114,10 +1114,11 @@
         return;
       }
       const currentPath = window.location.pathname || "";
-      if (currentPath.includes("/pages/")) {
-        window.location.href = "new-order.html";
-      } else {
-        window.location.href = "/pages/new-order.html";
+      const rel = currentPath.includes("/pages/") ? "new-order.html" : "pages/new-order.html";
+      try {
+        window.location.href = new URL(rel, window.location.href).href;
+      } catch (eNav) {
+        window.location.href = rel;
       }
     }
 
@@ -1135,7 +1136,12 @@
         return;
       }
       const path = window.location.pathname || "";
-      window.location.href = path.includes("/pages/") ? "ready-extra-order.html" : "/pages/ready-extra-order.html";
+      const rel = path.includes("/pages/") ? "ready-extra-order.html" : "pages/ready-extra-order.html";
+      try {
+        window.location.href = new URL(rel, window.location.href).href;
+      } catch (eNav) {
+        window.location.href = rel;
+      }
     }
 
     function editOrder(orderId) {

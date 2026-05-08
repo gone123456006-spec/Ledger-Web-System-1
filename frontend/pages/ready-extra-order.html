@@ -3982,7 +3982,8 @@
         if (typeof loadPage === 'function') {
           loadPage("pages/customer.html");
         } else {
-          window.open("/pages/customer.html", "Customer", "width=1200,height=700");
+          var customerPopupUrl = new URL("customer.html", window.location.href).href;
+          window.open(customerPopupUrl, "Customer", "width=1200,height=700");
         }
       }
 
@@ -7845,8 +7846,8 @@
           return;
         }
 
-        // Return target for Receipt → back to this page
-        localStorage.setItem("receiptReturnTarget", "pages/new-order.html");
+        // Return target for Receipt → back to Ready Extra (not New Order)
+        localStorage.setItem("receiptReturnTarget", "pages/ready-extra-order.html");
         // Force restore even if flags get cleared elsewhere
         localStorage.setItem("readyExtraForceRestore", "true");
 
@@ -7859,15 +7860,18 @@
 
         // Open receipt page with customer, customerId, and bill number
         const customerId = custName.value || "";
-        const receiptUrl = `pages/receipt.html?customer=${encodeURIComponent(customerName)}&customerId=${encodeURIComponent(customerId)}&billNo=${encodeURIComponent(billNo.value)}`;
+        const receiptQs = `customer=${encodeURIComponent(customerName)}&customerId=${encodeURIComponent(customerId)}&billNo=${encodeURIComponent(billNo.value)}`;
+        // loadPage resolves paths from the app root (index.html); window.open resolves from this document (under pages/).
+        const receiptUrlForLoadPage = `pages/receipt.html?${receiptQs}`;
+        const receiptUrlForPopup = new URL(`receipt.html?${receiptQs}`, window.location.href).href;
 
         if (typeof loadPage === 'function') {
           // If in dashboard context, load in workspace
           // The workspace will replace content, but we've saved state
-          loadPage(receiptUrl);
+          loadPage(receiptUrlForLoadPage);
         } else {
           // Otherwise open in new window (this preserves current page)
-          window.open(receiptUrl, "Receipt", "width=800,height=700");
+          window.open(receiptUrlForPopup, "Receipt", "width=800,height=700");
         }
       }
 

@@ -1689,13 +1689,14 @@
         return;
       }
 
-      // Fallback: direct navigation
+      // Fallback: direct navigation (resolve from app root or sibling under pages/)
       console.log("Using direct navigation");
-      const currentPath = window.location.pathname;
-      if (currentPath.includes('/pages/')) {
-        window.location.href = "ready-extra-order.html";
-      } else {
-        window.location.href = "/pages/ready-extra-order.html";
+      const currentPath = window.location.pathname || "";
+      const rel = currentPath.includes("/pages/") ? "ready-extra-order.html" : "pages/ready-extra-order.html";
+      try {
+        window.location.href = new URL(rel, window.location.href).href;
+      } catch (eNav) {
+        window.location.href = rel;
       }
     }
 

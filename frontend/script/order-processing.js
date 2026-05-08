@@ -402,6 +402,8 @@
         orderEveryLineFinalizedAtFullQuantity: orderEveryLineFinalizedAtFullQuantity,
         /** Alias — same as isOrderReadyForReadyOrdersList (strict Ready Orders policy). */
         orderMeetsReadyOrdersPolicy: isOrderReadyForReadyOrdersList,
+        /** True if any itemProcess row exists for this order (workshop / Item Process). */
+        orderHasProcessEntries: orderHasProcessEntries,
         syncOrdersReadyFromProcess: syncOrdersReadyFromProcess,
         pruneItemProcessForOrder: pruneItemProcessForOrder,
         syncOrderLineAssignmentFromItemProcess: syncOrderLineAssignmentFromItemProcess,

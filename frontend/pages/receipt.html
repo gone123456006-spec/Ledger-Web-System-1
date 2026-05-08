@@ -318,6 +318,22 @@ function saveReceipt(){
   closeReceipt();
 }
 
+/** Resolve paths like pages/foo.html from app root (index) even when this document is under pages/. */
+function ledgerResolveAppPageHref(pathFromAppRoot) {
+  try {
+    var p = (pathFromAppRoot || "").trim();
+    if (!p) return p;
+    var pathname = window.location.pathname || "";
+    var baseHref = window.location.href;
+    if (pathname.indexOf("/pages/") !== -1) {
+      baseHref = new URL("../", window.location.href).href;
+    }
+    return new URL(p, baseHref).href;
+  } catch (e) {
+    return pathFromAppRoot;
+  }
+}
+
 /* CLOSE RECEIPT */
 function closeReceipt(){
   try {
@@ -336,8 +352,8 @@ function closeReceipt(){
       }
       
       if(loadPageFunc){
-        // Check if we should restore new-order (was open before receipt)
-        const shouldRestore = localStorage.getItem("newOrderState");
+        // Check if we should restore order UI (new-order or ready-extra saved state before receipt)
+        const shouldRestore = localStorage.getItem("newOrderState") || localStorage.getItem("readyExtraOrderState");
         const returnTarget = localStorage.getItem("receiptReturnTarget") || "pages/new-order.html";
         
         if(shouldRestore){
@@ -374,16 +390,16 @@ function closeReceipt(){
     } else if(window.history && window.history.length > 1){
       window.history.back();
     } else {
-      // Last resort - navigate to new-order
+      // Last resort — resolve target from app root (avoids /pages/pages/... when this file is under pages/)
       const returnTarget = localStorage.getItem("receiptReturnTarget") || "pages/new-order.html";
-      window.location.href = returnTarget;
+      window.location.href = ledgerResolveAppPageHref(returnTarget);
     }
   } catch(e) {
     console.error("Error closing receipt:", e);
     // Fallback navigation
     try {
       const returnTarget = localStorage.getItem("receiptReturnTarget") || "pages/new-order.html";
-      window.location.href = returnTarget;
+      window.location.href = ledgerResolveAppPageHref(returnTarget);
     } catch(e2) {
       alert("Payment saved. Please navigate back manually.");
     }

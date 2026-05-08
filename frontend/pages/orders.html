@@ -295,6 +295,39 @@
       border-color: #b8d4f0;
     }
 
+    /* Orders list: workshop stage (same rules as Ready Orders / Item Process screens) */
+    #ordersTable tbody tr.orders-row-ready-orders {
+      background: #ecfdf5;
+    }
+
+    #ordersTable tbody tr.orders-row-ready-orders:nth-child(even) {
+      background: #d1fae5;
+    }
+
+    #ordersTable tbody tr.orders-row-ready-orders:hover {
+      background: #a7f3d0;
+    }
+
+    #ordersTable tbody tr.orders-row-ready-orders:hover td {
+      border-color: #6ee7b7;
+    }
+
+    #ordersTable tbody tr.orders-row-item-process {
+      background: #fffbeb;
+    }
+
+    #ordersTable tbody tr.orders-row-item-process:nth-child(even) {
+      background: #fef3c7;
+    }
+
+    #ordersTable tbody tr.orders-row-item-process:hover {
+      background: #fde68a;
+    }
+
+    #ordersTable tbody tr.orders-row-item-process:hover td {
+      border-color: #fcd34d;
+    }
+
     tbody tr.selected {
       background: #ffe6e6 !important;
       border-left: 3px solid #ff3b30;
@@ -537,6 +570,7 @@
 
   </div>
 
+  <script src="../script/order-processing.js"></script>
   <script>
     /* =========================
        ELEMENT REFERENCES
@@ -765,6 +799,34 @@
       return ordersListShowOnlyNewOrderRecords(o);
     }
 
+    /**
+     * Row highlight for main Orders list:
+     *   • green = order fully meets Ready Orders policy (same as Ready Orders screen)
+     *   • amber = order has Item Process rows AND no line is still in Pending Items
+     *     (so it is fully in workshop / Item Process, just not finalized to Ready Orders yet)
+     *   • default = anything else, including any line still in Pending Items
+     */
+    function ordersListRowWorkflowClass(order, listOrders, itemProcess) {
+      if (!order || order.id == null) return "";
+      const OP = window.OrderProcessing;
+      if (!OP || typeof OP.isOrderReadyForReadyOrdersList !== "function") return "";
+      try {
+        if (OP.orderIsGoldInvoiceWorkshopExclude && OP.orderIsGoldInvoiceWorkshopExclude(order)) return "";
+        const oid = order.id;
+        if (OP.isOrderReadyForReadyOrdersList(listOrders, itemProcess, oid)) return "orders-row-ready-orders";
+        const hasProcess = typeof OP.orderHasProcessEntries === "function" &&
+          OP.orderHasProcessEntries(itemProcess, oid);
+        if (!hasProcess) return "";
+        const stillInPendingItems = typeof OP.orderHasUnassignedPendingLines === "function" &&
+          OP.orderHasUnassignedPendingLines(order, itemProcess, oid);
+        if (stillInPendingItems) return "";
+        return "orders-row-item-process";
+      } catch (e) {
+        console.debug("ordersListRowWorkflowClass:", e);
+      }
+      return "";
+    }
+
     /* =========================
        LOAD ORDERS
     ========================= */
@@ -781,6 +843,13 @@
       tbody.innerHTML = "";
 
       const listOrders = allOrders.filter(ordersListVisibleFilter);
+      let itemProcess = [];
+      try {
+        itemProcess = JSON.parse(localStorage.getItem("itemProcess") || "[]");
+        if (!Array.isArray(itemProcess)) itemProcess = [];
+      } catch (e) {
+        itemProcess = [];
+      }
 
       if (listOrders.length === 0) {
         populateStationFilter();
@@ -867,6 +936,9 @@
           const stationForRow = getStationForOrder(order);
           row.dataset.station = stationForRow;
           row.dataset.orderNo = String(order.orderNo != null ? order.orderNo : order.billNo != null ? order.billNo : "").trim();
+
+          const wfClass = ordersListRowWorkflowClass(order, listOrders, itemProcess);
+          if (wfClass) row.classList.add(wfClass);
 
           /* BUG FIX: escapeHtml was called with order.customer which can be undefined.
              Now explicitly falls back to order.customerName before calling escapeHtml,
@@ -1206,11 +1278,12 @@
         window.top.loadPage("pages/new-order.html");
         return;
       }
-      const currentPath = window.location.pathname;
-      if (currentPath.includes('/pages/')) {
-        window.location.href = "new-order.html";
-      } else {
-        window.location.href = "/pages/new-order.html";
+      const currentPath = window.location.pathname || "";
+      const rel = currentPath.includes("/pages/") ? "new-order.html" : "pages/new-order.html";
+      try {
+        window.location.href = new URL(rel, window.location.href).href;
+      } catch (eNav) {
+        window.location.href = rel;
       }
     }
 
