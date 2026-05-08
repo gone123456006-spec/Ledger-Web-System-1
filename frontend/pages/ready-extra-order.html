@@ -3461,6 +3461,31 @@
         updateBillButtonState();
       }
 
+      /**
+       * Stamp dropdown keyboard UX: when a `.stamp-select` is focused (item table or
+       * purchase-sheet popup) any keystroke should open the option list so the user can
+       * pick with arrow keys + Enter — instead of having to mouse-click or know Alt+Down.
+       * Native typeahead (e.g. press "1" to jump to "14 CR") still works once open.
+       */
+      function setupStampKeyboardOpen() {
+        if (window.__readyExtraStampKeyboardWired) return;
+        window.__readyExtraStampKeyboardWired = true;
+        document.addEventListener('keydown', function (e) {
+          var t = e.target;
+          if (!t || t.tagName !== 'SELECT') return;
+          if (!t.classList || !t.classList.contains('stamp-select')) return;
+          var k = e.key;
+          if (k === 'Tab' || k === 'Shift' || k === 'Control' || k === 'Alt' ||
+            k === 'Meta' || k === 'Escape') return;
+          if (typeof t.showPicker === 'function') {
+            try { t.showPicker(); } catch (err) { /* already open / unsupported */ }
+          }
+          if (k === 'Enter' || k === ' ') {
+            e.preventDefault();
+          }
+        });
+      }
+
       /* INIT */
       function initOrderPage() {
         // Wait for elements to be ready
@@ -3641,6 +3666,7 @@
         ensureFunctionsGlobal();
         wirePurchaseSheetOpenButton();
         wirePurchaseSheetPopupButtons();
+        setupStampKeyboardOpen();
 
         // NOTE: Return-from-Ratebook/Receipt restoration is handled by `restoreOrderState()`.
         // Do not clear `ratebookOpened` / `receiptOpened` here; we clear them AFTER restoring

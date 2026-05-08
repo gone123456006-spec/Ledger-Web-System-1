@@ -1558,10 +1558,20 @@
       if (!record) return;
 
       const formEl = document.querySelector(".erp-form");
+      const addShell = document.querySelector(".customer-add-shell");
       const listSection = $("customerListSection");
       const actionButtons = document.querySelector(".form-actions");
+      const pageContainer = document.querySelector(".page");
+      // openList() hides .customer-add-shell and zeroes .page padding; restore those here
+      // so the edit form is actually visible after clicking Edit from the list.
+      if (pageContainer) pageContainer.style.padding = "24px 32px 100px";
+      if (addShell) addShell.style.display = "";
       if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
-      if (listSection) listSection.style.display = "none";
+      if (listSection) {
+        listSection.style.display = "none";
+        listSection.style.borderRadius = "16px";
+        listSection.style.minHeight = "0";
+      }
       if (actionButtons) actionButtons.style.display = "flex";
 
       if (entryType === "Agent") {
@@ -1583,6 +1593,13 @@
         if (fields.cid) { fields.cid.value = record.cid; fields.cid.disabled = true; }
       }
       populateStationSelect(resolveStationCanonical(record.station || ""));
+
+      try {
+        const ws = document.querySelector(".workspace");
+        if (ws && typeof ws.scrollTo === "function") ws.scrollTo({ top: 0, behavior: "auto" });
+        else window.scrollTo({ top: 0, behavior: "auto" });
+      } catch (e) { /* ignore */ }
+      if (fields.name) setTimeout(() => { try { fields.name.focus(); } catch (e) { } }, 50);
     }
 
     function getCustomers() { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); }

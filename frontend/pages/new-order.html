@@ -2794,6 +2794,33 @@
       // FIX #3: setupTableArrowKeys used wrong table ID 'itemTable'.
       // Correct ID is 'new-order-item-table'. Arrow-key navigation now works.
       // =====================================================
+      /**
+       * Stamp dropdown keyboard UX: when a `.stamp-select` is focused (item table or
+       * purchase-sheet popup) any keystroke should open the option list so the user can
+       * pick with arrow keys + Enter — instead of having to mouse-click or know Alt+Down.
+       * Native typeahead (e.g. press "1" to jump to "14 CR") still works once open.
+       */
+      function setupStampKeyboardOpen() {
+        if (window.__newOrderStampKeyboardWired) return;
+        window.__newOrderStampKeyboardWired = true;
+        document.addEventListener('keydown', function (e) {
+          var t = e.target;
+          if (!t || t.tagName !== 'SELECT') return;
+          if (!t.classList || !t.classList.contains('stamp-select')) return;
+          var k = e.key;
+          if (k === 'Tab' || k === 'Shift' || k === 'Control' || k === 'Alt' ||
+            k === 'Meta' || k === 'Escape') return;
+          if (typeof t.showPicker === 'function') {
+            try { t.showPicker(); } catch (err) { /* already open / unsupported */ }
+          }
+          // Enter / Space would otherwise submit a parent form or do nothing useful;
+          // suppress so the dropdown stays open instead.
+          if (k === 'Enter' || k === ' ') {
+            e.preventDefault();
+          }
+        });
+      }
+
       function setupTableArrowKeys() {
         document.addEventListener('keydown', function (e) {
           const table = getSearchRoot().querySelector('#new-order-item-table'); // FIXED
@@ -4864,6 +4891,7 @@
           updateInfoPanel();
           setupBillNoHandler();
           setupTableArrowKeys();
+          setupStampKeyboardOpen();
           attachInitListeners();
           registerGlobals();
           return;
@@ -4899,6 +4927,7 @@
           }, 200);
           updateInfoPanel();
           setupTableArrowKeys();
+          setupStampKeyboardOpen();
           setupBillNoHandler();
           attachInitListeners();
           registerGlobals();
@@ -4946,6 +4975,7 @@
         attachInitListeners();
         updateInfoPanel();
         setupTableArrowKeys();
+        setupStampKeyboardOpen();
         registerGlobals();
       }
 
