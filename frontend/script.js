@@ -496,8 +496,8 @@ function loadPage(pageUrl) {
     const isDashboard = /dashboard\.html$/i.test(String(pageUrl).trim());
     if (isDashboard) {
         workspace.innerHTML = `
-            <div style="padding:40px; font-size:16px; color:#1f3b57;">
-                <h2 style="margin:0 0 12px 0; font-weight:600;">Dashboard</h2>
+            <div style="padding:40px; font-size:16px; color:#6b7280;">
+                <h2 style="margin:0 0 12px 0; font-weight:600; color:#6b7280;">Dashboard</h2>
                 <p style="margin:0; opacity:0.85;">Use the sidebar to open a page. Press <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Esc</kbd> anytime to return here.</p>
             </div>
         `;
