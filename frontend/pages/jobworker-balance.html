@@ -777,6 +777,53 @@
         return Number.isFinite(n) ? n : 0;
       }
 
+      /** Resolve jobworkers[] row for a balance row or modal context (id or jwId string or name). */
+      function findJwRecord(jws, jwIdStr, jwNameStr) {
+        var idStr = String(jwIdStr || '').trim();
+        var nn = String(jwNameStr || '').trim().toLowerCase();
+        if (!jws || !jws.length) return null;
+        if (idStr) {
+          var by = jws.filter(Boolean).find(function (j) {
+            return String(j.id) === idStr || String(j.jwId || '').trim() === idStr;
+          });
+          if (by) return by;
+        }
+        if (nn) {
+          return jws.filter(Boolean).find(function (j) {
+            return String(j.name || '').trim().toLowerCase() === nn;
+          }) || null;
+        }
+        return null;
+      }
+
+      /**
+       * Same rows as Job Worker Details modal: entries linked by jobworkerId (numeric id or jwId string) or name.
+       * Totals match lcComputeTotals (sum of Metal / Chain / Nag / Maal columns only — no opening balance).
+       */
+      function filterEntriesForWorker(entries, jw, jwIdStr, jwNameStr) {
+        var idStr = String(jwIdStr || '').trim();
+        var nn = String(jwNameStr || '').trim().toLowerCase();
+        var jn = jw && String(jw.name || '').trim().toLowerCase();
+        return (entries || []).filter(function (e) {
+          if (!e) return false;
+          if (idStr && String(e.jobworkerId || '') === idStr) return true;
+          if (jw && jw.id != null && String(e.jobworkerId || '') === String(jw.id)) return true;
+          if (jw && jw.jwId && String(e.jobworkerId || '').trim() === String(jw.jwId).trim()) return true;
+          if (nn && String(e.jobworkerName || '').trim().toLowerCase() === nn) return true;
+          if (jn && String(e.jobworkerName || '').trim().toLowerCase() === jn) return true;
+          return false;
+        });
+      }
+
+      function ledgerColumnTotalsFromEntries(entries, jw, jwIdStr, jwNameStr) {
+        var list = filterEntriesForWorker(entries, jw, jwIdStr, jwNameStr);
+        var sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
+        list.forEach(function (e) {
+          sumM += num(e.metal); sumC += num(e.chain); sumN += num(e.nag); sumMl += num(e.maal);
+        });
+        return { metal: sumM, chain: sumC, nag: sumN, maal: sumMl };
+      }
+
       /** Add balance rows for job workers that are not yet in jobworkerBalances (legacy + new saves). */
       function reconcileMissingJobworkerRows() {
         var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
@@ -792,15 +839,7 @@
               (jwName && (b.name || '').trim().toLowerCase() === jwName.toLowerCase());
           });
           if (exists) return;
-          var forJw = entries.filter(function (e) {
-            return (jwId && String(e.jobworkerId) === String(jwId)) ||
-              (jwName && (e.jobworkerName || '').trim().toLowerCase() === jwName.toLowerCase());
-          });
-          var sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
-          forJw.forEach(function (e) {
-            sumM += num(e.metal); sumC += num(e.chain); sumN += num(e.nag); sumMl += num(e.maal);
-          });
-          var obM = num(jw.obMetal), obC = num(jw.obChain), obN = num(jw.obNag), obMl = num(jw.obMaal);
+          var t = ledgerColumnTotalsFromEntries(entries, jw, jwId, jwName);
           var relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim();
           bals.push({
             id: Date.now() + Math.random(),
@@ -810,10 +849,10 @@
             lfNo: jw.lfNo || '',
             relation: relation,
             station: jw.station || '',
-            metal: obM + sumM,
-            chain: obC + sumC,
-            nag: obN + sumN,
-            maal: obMl + sumMl
+            metal: t.metal,
+            chain: t.chain,
+            nag: t.nag,
+            maal: t.maal
           });
           changed = true;
         });
@@ -888,7 +927,26 @@
 
       function loadTable() {
         reconcileMissingJobworkerRows();
-        _allRows = getBalances();
+        var entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        _allRows = getBalances().map(function (r) {
+          if (!r) return r;
+          var jw = findJwRecord(jws, r.jwId, r.name);
+          var t = ledgerColumnTotalsFromEntries(entries, jw, r.jwId, r.name);
+          return {
+            id: r.id,
+            mark: !!r.mark,
+            jwId: r.jwId,
+            name: r.name,
+            lfNo: r.lfNo,
+            relation: r.relation,
+            station: r.station,
+            metal: t.metal,
+            chain: t.chain,
+            nag: t.nag,
+            maal: t.maal
+          };
+        });
         filterTable();
       }
 
@@ -915,45 +973,33 @@
       function lcFmt(v) { return v || ''; }
       function lcFmtNum(v) { v = parseFloat(v); return Number.isFinite(v) && v !== 0 ? v.toFixed(3) : ''; }
 
-      // Sync JW balance directly (replaces logic from jobworker-entry)
+      // Sync JW balance: Metal/Chain/Nag/Maal = same sums as Job Worker Details total row (entries only).
       function lcSyncToBalance() {
         var entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
-        var forJw = entries.filter(function (e) {
-          return (_lcJwId && String(e.jobworkerId) === String(_lcJwId)) ||
-            (e.jobworkerName || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase();
-        });
-        var sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
-        forJw.forEach(function (e) {
-          sumM += num(e.metal); sumC += num(e.chain); sumN += num(e.nag); sumMl += num(e.maal);
-        });
+        var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
+        var jw = findJwRecord(jws, _lcJwId, _lcJwName) || {};
+        var t = ledgerColumnTotalsFromEntries(entries, jw, _lcJwId, _lcJwName);
 
         var bals = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
         var bIdx = bals.findIndex(function (b) {
-          return (_lcJwId && b.jwId === _lcJwId) ||
+          return (_lcJwId != null && _lcJwId !== '' && String(b.jwId) === String(_lcJwId)) ||
             (_lcJwName && (b.name || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase());
         });
 
-        // Need original JobWorker record to get obMetal etc...
-        var jws = JSON.parse(localStorage.getItem('jobworkers') || '[]');
-        var jw = jws.find(function (j) { return String(j.id) === String(_lcJwId) || String(j.jwId) === String(_lcJwId); }) ||
-          jws.find(function (j) { return (j.name || '').trim().toLowerCase() === (_lcJwName || '').trim().toLowerCase(); }) || {};
-
-        var obM = num(jw.obMetal), obC = num(jw.obChain), obN = num(jw.obNag), obMl = num(jw.obMaal);
-        var finM = obM + sumM, finC = obC + sumC, finN = obN + sumN, finMl = obMl + sumMl;
         var relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim();
 
         if (bIdx >= 0) {
-          bals[bIdx].metal = finM;
-          bals[bIdx].chain = finC;
-          bals[bIdx].nag = finN;
-          bals[bIdx].maal = finMl;
+          bals[bIdx].metal = t.metal;
+          bals[bIdx].chain = t.chain;
+          bals[bIdx].nag = t.nag;
+          bals[bIdx].maal = t.maal;
           bals[bIdx].relation = relation;
-          bals[bIdx].station = jw.station || '';
-          bals[bIdx].lfNo = jw.lfNo || '';
+          bals[bIdx].station = jw.station || bals[bIdx].station || '';
+          bals[bIdx].lfNo = jw.lfNo != null ? String(jw.lfNo) : (bals[bIdx].lfNo || '');
         } else {
           bals.push({
             id: Date.now(), mark: false, jwId: jw.jwId || '', name: jw.name || _lcJwName, lfNo: jw.lfNo || '',
-            relation: relation, station: jw.station || '', metal: finM, chain: finC, nag: finN, maal: finMl
+            relation: relation, station: jw.station || '', metal: t.metal, chain: t.chain, nag: t.nag, maal: t.maal
           });
         }
         localStorage.setItem('jobworkerBalances', JSON.stringify(bals));

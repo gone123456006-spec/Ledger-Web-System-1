@@ -498,9 +498,39 @@
       background: #fff;
     }
 
+    /* Ready Items workshop line (edit from Orders list): full row light green */
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item {
+      background: #bbf7d0 !important;
+      border-left: 4px solid #15803d;
+      box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.18);
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item > td {
+      background: #bbf7d0 !important;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item input,
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item select {
+      background: #d1fae5 !important;
+      border-color: #6ee7b7;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item .row-del-btn {
+      background: #d1fae5 !important;
+      border-color: #6ee7b7;
+    }
+
     .order-details-table-wrap #new-order-item-table th.total,
     .order-details-table-wrap #new-order-item-table td.total {
       background: #f5f6fa;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item td.total {
+      background: #bbf7d0 !important;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item td.total input {
+      background: #d1fae5 !important;
     }
 
     .order-details-table-wrap #new-order-item-table input:focus,
@@ -509,6 +539,46 @@
       border: 2px solid #000;
       border-radius: 0;
       background: #fff;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item input:focus,
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-ready-item select:focus {
+      background: #d1fae5 !important;
+    }
+
+    /* Item Process (assigned / non-terminal workshop qty) — edit from Orders list only */
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process {
+      background: #fef08a !important;
+      border-left: 4px solid #ca8a04;
+      box-shadow: inset 0 0 0 1px rgba(202, 138, 4, 0.2);
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process > td {
+      background: #fef08a !important;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process input,
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process select {
+      background: #fef9c3 !important;
+      border-color: #fde047;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process .row-del-btn {
+      background: #fef9c3 !important;
+      border-color: #fde047;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process td.total {
+      background: #fef08a !important;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process td.total input {
+      background: #fef9c3 !important;
+    }
+
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process input:focus,
+    .order-details-table-wrap #new-order-item-table tbody tr.new-order-row-item-process select:focus {
+      background: #fef9c3 !important;
     }
 
     .order-details-table-wrap #new-order-item-table input.order-detail-readonly:focus,
@@ -2715,6 +2785,15 @@
           const trigger = row.cells[7]?.children[0];
           if (trigger) calculateRow(trigger);
         }
+        if (AppState.editMode && AppState.editOrderId != null) {
+          try {
+            if (localStorage.getItem('returnToOrders') === 'true') {
+              const ordersLive = JSON.parse(localStorage.getItem('orders') || '[]');
+              const ordLive = ordersLive.find(o => o && String(o.id) === String(AppState.editOrderId));
+              if (ordLive) applyReadyItemHighlightFromOrdersListEdit(ordLive);
+            }
+          } catch (eTint) { /* ignore */ }
+        }
         updateInfoPanel();
         scheduleAutoSave();
       }
@@ -4421,6 +4500,79 @@
       // LOAD ORDER FOR EDITING
       // =====================================================
 
+      /**
+       * Orders / Pending Orders → New Order: tint workshop rows when editing from the list.
+       * Green: qty in Ready Items (READY / READY_ORDER). Yellow: Item Process (assigned or non-terminal qty).
+       * Green wins if both apply. Uses saved line `type` when the Type dropdown was cleared by legacy values[0].
+       */
+      function applyReadyItemHighlightFromOrdersListEdit(order) {
+        if (!AppState.editMode || AppState.editOrderId == null || !AppState.elements.itemBody) return;
+        var fromList = false;
+        try {
+          fromList = localStorage.getItem('returnToOrders') === 'true';
+        } catch (eR) {
+          fromList = false;
+        }
+        function stripRowStageClasses(tr) {
+          tr.classList.remove('new-order-row-ready-item');
+          tr.classList.remove('new-order-row-item-process');
+        }
+        if (!fromList || !order || order.id == null) {
+          AppState.elements.itemBody.querySelectorAll('tr').forEach(stripRowStageClasses);
+          return;
+        }
+        var itemProcess = [];
+        try {
+          itemProcess = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+        } catch (eIp) {
+          itemProcess = [];
+        }
+        var OP = window.OrderProcessing;
+        if (!OP || typeof OP.isOrderLineItem !== 'function' ||
+          typeof OP.sumQtyForLineWithStatuses !== 'function' ||
+          typeof OP.readyStatusesUpper !== 'function') {
+          AppState.elements.itemBody.querySelectorAll('tr').forEach(stripRowStageClasses);
+          return;
+        }
+        var statuses = OP.readyStatusesUpper();
+        var oid = String(AppState.editOrderId);
+        var itemsArr = order.items || order.rows || [];
+
+        AppState.elements.itemBody.querySelectorAll('tr').forEach(function (tr) {
+          stripRowStageClasses(tr);
+          var rawIdx = tr.dataset.originalItemIdx;
+          if (rawIdx === undefined || rawIdx === '') return;
+          var idx = parseInt(rawIdx, 10);
+          if (isNaN(idx)) return;
+          var saved = itemsArr[idx];
+          if (!saved) return;
+          var sel = tr.cells[0] && tr.cells[0].querySelector('select');
+          var domType = sel && String(sel.value || '').trim() !== '' ? String(sel.value).trim() : '';
+          var savedType = saved.type != null && String(saved.type).trim() !== '' ? String(saved.type).trim() : '';
+          var effectiveType = domType || savedType || 'Order';
+          var domValues = Array.from(tr.querySelectorAll('input,select')).map(function (el) {
+            return el.value;
+          });
+          var valsForLine = domValues.length ? domValues : (saved.values || []);
+          var checkItem = { type: effectiveType, values: valsForLine };
+          if (!OP.isOrderLineItem(checkItem)) return;
+          var sumReady = parseFloat(OP.sumQtyForLineWithStatuses(itemProcess, oid, idx, statuses)) || 0;
+          if (sumReady > 1e-9) {
+            tr.classList.add('new-order-row-ready-item');
+            return;
+          }
+          var sumNonTerm = typeof OP.sumQtyForLineNonTerminal === 'function'
+            ? (parseFloat(OP.sumQtyForLineNonTerminal(itemProcess, oid, idx)) || 0)
+            : 0;
+          var assigned = typeof OP.orderLineIsWorkshopAssigned === 'function'
+            ? !!OP.orderLineIsWorkshopAssigned(order, idx, itemProcess, oid)
+            : false;
+          if (sumNonTerm > 1e-9 || assigned) {
+            tr.classList.add('new-order-row-item-process');
+          }
+        });
+      }
+
       function loadOrderForEdit() {
         try {
           const editOrderId = localStorage.getItem('editOrderId');
@@ -4589,6 +4741,12 @@
               }
             }
 
+            /* values[0] is often blank on legacy saves; re-apply line type so the Type column is not cleared. */
+            if (typeSelect) {
+              typeSelect.value = typeVal;
+              normalizeNewOrderLineTypeSelect(typeSelect);
+            }
+
             const stampSelRestore = tr.querySelector('.stamp-select');
             if (stampSelRestore && values.length > 3) {
               const sv = String(values[3]).trim();
@@ -4622,6 +4780,8 @@
               editBtn.style.display = sel.value === 'Order' ? 'block' : 'none';
             }
           });
+
+          applyReadyItemHighlightFromOrdersListEdit(order);
 
           if (order.purchaseSheet && order.purchaseSheet.rows && order.purchaseSheet.rows.length) {
             writePurchaseSheetForBill(

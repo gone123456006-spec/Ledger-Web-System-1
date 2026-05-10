@@ -611,9 +611,13 @@ function loadPage(pageUrl) {
                     persistence.setContext(pageUrl);
                     // Do not restore draft form over "edit from Orders" — loadOrderForEdit fills the form;
                     // restore() would re-apply stale persisted empty customer / rows and glitch the UI.
+                    // Same for Add Jobworker when opening a row from Job Worker List — fillFormForEdit must win.
                     var skipPersistRestore =
-                        /pages\/new-order\.html$/i.test(String(pageUrl || "")) &&
-                        !!localStorage.getItem("editOrderId");
+                        (/pages\/new-order\.html$/i.test(String(pageUrl || "")) &&
+                            !!localStorage.getItem("editOrderId")) ||
+                        (/pages\/add-jobworker\.html$/i.test(String(pageUrl || "")) &&
+                            !!localStorage.getItem("editJobworkerId") &&
+                            !!localStorage.getItem("editJobworkerPayload"));
                     if (!skipPersistRestore) {
                         // Restore immediately after HTML injection so users see data
                         // even before scripts might fully run (though scripts often need to run to populate dropdowns first)
@@ -654,8 +658,11 @@ function loadPage(pageUrl) {
                                 if (window.FormPersistence) {
                                     try {
                                         var skipPersistRestore2 =
-                                            /pages\/new-order\.html$/i.test(String(pageUrl || "")) &&
-                                            !!localStorage.getItem("editOrderId");
+                                            (/pages\/new-order\.html$/i.test(String(pageUrl || "")) &&
+                                                !!localStorage.getItem("editOrderId")) ||
+                                            (/pages\/add-jobworker\.html$/i.test(String(pageUrl || "")) &&
+                                                !!localStorage.getItem("editJobworkerId") &&
+                                                !!localStorage.getItem("editJobworkerPayload"));
                                         if (!skipPersistRestore2) {
                                             window.FormPersistence.getInstance().restore();
                                         }

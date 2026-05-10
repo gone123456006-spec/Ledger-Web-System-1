@@ -760,21 +760,26 @@
       function num(v) { var n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
       function syncToJobworkerBalance(jw) {
         var entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
+        var jwIdStr = String(jw.jwId || '').trim();
+        var jwNameStr = String(jw.name || '').trim();
+        var jn = jwNameStr.toLowerCase();
         var forJw = entries.filter(function (e) {
-          return e.jobworkerId === jw.id || String(e.jobworkerId) === String(jw.id);
+          if (!e) return false;
+          if (jwIdStr && String(e.jobworkerId || '') === jwIdStr) return true;
+          if (jw.id != null && String(e.jobworkerId || '') === String(jw.id)) return true;
+          if (jw.jwId && String(e.jobworkerId || '').trim() === String(jw.jwId).trim()) return true;
+          if (jn && String(e.jobworkerName || '').trim().toLowerCase() === jn) return true;
+          return false;
         });
         var sumMetal = forJw.reduce(function (a, e) { return a + num(e.metal); }, 0);
         var sumChain = forJw.reduce(function (a, e) { return a + num(e.chain); }, 0);
         var sumNag = forJw.reduce(function (a, e) { return a + num(e.nag); }, 0);
         var sumMaal = forJw.reduce(function (a, e) { return a + num(e.maal); }, 0);
-        var obMetal = num(jw.obMetal);
-        var obChain = num(jw.obChain);
-        var obNag = num(jw.obNag);
-        var obMaal = num(jw.obMaal);
-        var metal = obMetal + sumMetal;
-        var chain = obChain + sumChain;
-        var nag = obNag + sumNag;
-        var maal = obMaal + sumMaal;
+        /* Same four columns as Job Worker Details total row (ledger lines only, no opening balance). */
+        var metal = sumMetal;
+        var chain = sumChain;
+        var nag = sumNag;
+        var maal = sumMaal;
         var relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim() || '';
         var jwId = (jw.jwId || '').trim();
         var name = (jw.name || '').trim();

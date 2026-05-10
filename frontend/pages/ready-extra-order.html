@@ -373,8 +373,7 @@
     }
 
     /* Keep table column alignment with header for Other rows (do not remove td columns). */
-    /* Exclude Type(1), Item Name(3) — editable on Other, Pc(5), Rate(14), Other(16), Total(17), delete(18) */
-    .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(3)):not(:nth-child(5)):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)):not(:nth-child(18)) {
+    .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(5)):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)):not(:nth-child(18)) {
       background-image:
         linear-gradient(25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%),
         linear-gradient(-25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%);
@@ -3462,31 +3461,6 @@
         updateBillButtonState();
       }
 
-      /**
-       * Stamp dropdown keyboard UX: when a `.stamp-select` is focused (item table or
-       * purchase-sheet popup) any keystroke should open the option list so the user can
-       * pick with arrow keys + Enter — instead of having to mouse-click or know Alt+Down.
-       * Native typeahead (e.g. press "1" to jump to "14 CR") still works once open.
-       */
-      function setupStampKeyboardOpen() {
-        if (window.__readyExtraStampKeyboardWired) return;
-        window.__readyExtraStampKeyboardWired = true;
-        document.addEventListener('keydown', function (e) {
-          var t = e.target;
-          if (!t || t.tagName !== 'SELECT') return;
-          if (!t.classList || !t.classList.contains('stamp-select')) return;
-          var k = e.key;
-          if (k === 'Tab' || k === 'Shift' || k === 'Control' || k === 'Alt' ||
-            k === 'Meta' || k === 'Escape') return;
-          if (typeof t.showPicker === 'function') {
-            try { t.showPicker(); } catch (err) { /* already open / unsupported */ }
-          }
-          if (k === 'Enter' || k === ' ') {
-            e.preventDefault();
-          }
-        });
-      }
-
       /* INIT */
       function initOrderPage() {
         // Wait for elements to be ready
@@ -3667,7 +3641,6 @@
         ensureFunctionsGlobal();
         wirePurchaseSheetOpenButton();
         wirePurchaseSheetPopupButtons();
-        setupStampKeyboardOpen();
 
         // NOTE: Return-from-Ratebook/Receipt restoration is handled by `restoreOrderState()`.
         // Do not clear `ratebookOpened` / `receiptOpened` here; we clear them AFTER restoring
@@ -4324,22 +4297,13 @@
           input.style.backgroundColor = "";
           input.style.cursor = "";
         });
-        // Also reset selects so e.g. Stamp re-appears when leaving Other → Sale.
-        row.querySelectorAll("select").forEach(function (selEl) {
-          selEl.removeAttribute("disabled");
-          selEl.style.visibility = "";
-          selEl.style.backgroundColor = "";
-          selEl.style.cursor = "";
-          selEl.style.border = "";
-          selEl.tabIndex = 0;
-        });
 
         // Other / Sale: respect Global Edit — off = template-style locks (Edit unlocks all); on = full edit + highlight
         if (isReadyExtraFullLineRow(typeSel)) {
           const isSale = typeSel && typeSel.value === "Sale";
           const isOther = typeSel && typeSel.value === "Other";
 
-          /** Other: Item Name (2), Pc (4), Rate (13), Other (15) editable; Total (16) readonly. Stamp (3) disabled. */
+          /** Other: only Pc (4), Rate (13), Other (15) editable; Total (16) readonly. */
           if (isOther) {
             row.classList.add("rex-row-type-other");
             row.querySelectorAll("input").forEach(input => {
@@ -4364,14 +4328,11 @@
                 return;
               }
 
-              // Keep Item Name, Pc, Rate, Other editable + visible.
-              if (idx === 2 || idx === 4 || idx === 13 || idx === 15) {
+              // Keep Pc, Rate, Other editable + visible.
+              if (idx === 4 || idx === 13 || idx === 15) {
                 input.removeAttribute("readonly");
                 input.classList.remove("purchase-field-disabled", "order-detail-readonly");
-                if (idx === 2) {
-                  input.placeholder = "Item Name";
-                  input.title = "Item Name";
-                } else if (idx === 4) {
+                if (idx === 4) {
                   input.placeholder = "Pc";
                   input.title = "Pc";
                 } else if (idx === 13) {
@@ -4398,8 +4359,7 @@
               input.style.border = "";
               input.style.borderRadius = "";
               input.style.cursor = "not-allowed";
-              /* transparent so td cross-hatch (rex-row-type-other) shows through */
-              input.style.backgroundColor = "transparent";
+              input.style.backgroundColor = "#f5f5f7";
             });
 
             // Type select must stay usable.
@@ -4408,17 +4368,6 @@
               sel.removeAttribute("disabled");
               sel.style.visibility = "visible";
               sel.style.display = "";
-            }
-            // Stamp (col 3) is meaningless for Other rows — disable + visually mute.
-            const stampSel = row.cells[3] && row.cells[3].querySelector("select");
-            if (stampSel) {
-              stampSel.value = "";
-              stampSel.setAttribute("disabled", "disabled");
-              stampSel.tabIndex = -1;
-              stampSel.style.visibility = "hidden";
-              stampSel.style.cursor = "not-allowed";
-              stampSel.style.backgroundColor = "transparent";
-              stampSel.style.border = "none";
             }
             syncOtherRowSimpleTotal(row);
             return;

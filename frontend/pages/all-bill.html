@@ -60,11 +60,11 @@
       box-sizing: border-box;
     }
 
-    .balance-wrap > .ledger-page-titlebar:first-child {
+    .balance-wrap>.ledger-page-titlebar:first-child {
       border-radius: 12px 12px 0 0;
     }
 
-    .workspace .balance-wrap > .ledger-page-titlebar:first-child {
+    .workspace .balance-wrap>.ledger-page-titlebar:first-child {
       border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
     }
 
@@ -309,11 +309,18 @@
             <th>Order No.</th>
             <th>Customer</th>
             <th>Bill Date</th>
-            <th class="right" title="Ready Order Total — sum of Order + Sale + Other line finals (Ready Extra payment panel)">Net Total Amount (₹)</th>
-            <th class="right" title="Advance minus + Advance purchase minus — advance payments + New Order purchase sheet + Purchase-type grid lines">Advance (₹)</th>
-            <th class="right" title="Paid rupees + Paid purchase — Paid-type payments + Ready/Extra purchase sheet">Paid (₹)</th>
+            <th class="right"
+              title="Ready Order Total — sum of Order + Sale + Other line finals (Ready Extra payment panel)">Net Total
+              Amount (₹)</th>
+            <th class="right"
+              title="Advance minus + Advance purchase minus — advance payments + New Order purchase sheet + Purchase-type grid lines">
+              Advance (₹)</th>
+            <th class="right" title="Paid rupees + Paid purchase — Paid-type payments + Ready/Extra purchase sheet">Paid
+              (₹)</th>
             <th class="right">Weight (g)</th>
-            <th class="right" title="Pending balance net total amount — Ready Order Total minus purchases, sheets, payments, and |rate diff|">Balance (₹)</th>
+            <th class="right"
+              title="Pending balance net total amount — Ready Order Total minus purchases, sheets, payments, and |rate diff|">
+              Balance (₹)</th>
             <th class="center">Action</th>
           </tr>
         </thead>
@@ -693,9 +700,9 @@
             readyOrderTotalAmt =
               parseFloat(
                 (linkedOrder && (linkedOrder.totalAmount || linkedOrder.netAmount)) ||
-                  balance.netAmount ||
-                  balance.amount ||
-                  0
+                balance.netAmount ||
+                balance.amount ||
+                0
               ) || 0;
           }
 

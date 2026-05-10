@@ -257,6 +257,19 @@
       border-color: #b8d4f0;
     }
 
+    .pending-orders-wrap tbody tr.pending-orders-row-overdue,
+    .pending-orders-wrap tbody tr.pending-orders-row-overdue:nth-child(even) {
+      background: #fee2e2 !important;
+    }
+
+    .pending-orders-wrap tbody tr.pending-orders-row-overdue:hover {
+      background: #fecaca !important;
+    }
+
+    .pending-orders-wrap tbody tr.pending-orders-row-overdue:hover td {
+      border-color: #fca5a5;
+    }
+
     .center {
       text-align: center;
     }
@@ -767,6 +780,26 @@
       tr.dataset.orderId = order.id;
       tr.dataset.orderNo = order.orderNo || order.billNo || "";
       tr.dataset.customer = customerName;
+
+      let itemProcessPo = [];
+      try {
+        itemProcessPo = JSON.parse(localStorage.getItem("itemProcess") || "[]");
+        if (!Array.isArray(itemProcessPo)) itemProcessPo = [];
+      } catch (eIp) {
+        itemProcessPo = [];
+      }
+      let ordersSnap = [];
+      try {
+        ordersSnap = JSON.parse(localStorage.getItem("orders") || "[]");
+        if (!Array.isArray(ordersSnap)) ordersSnap = [];
+      } catch (eOr) {
+        ordersSnap = [];
+      }
+      const OPdue = window.OrderProcessing;
+      if (OPdue && typeof OPdue.orderIsPastDueAndNotReadyForReadyOrders === "function" &&
+          OPdue.orderIsPastDueAndNotReadyForReadyOrders(order, ordersSnap, itemProcessPo)) {
+        tr.classList.add("pending-orders-row-overdue");
+      }
 
       const OPb = window.OrderProcessing;
       const isDirectBillStaging = OPb && typeof OPb.orderIsDirectBillStagingQueue === "function" &&

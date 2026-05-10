@@ -328,6 +328,20 @@
       border-color: #fcd34d;
     }
 
+    /* Past due and not yet on Ready Orders — overrides green/amber row tint */
+    #ordersTable tbody tr.orders-row-overdue-not-ready,
+    #ordersTable tbody tr.orders-row-overdue-not-ready:nth-child(even) {
+      background: #fee2e2 !important;
+    }
+
+    #ordersTable tbody tr.orders-row-overdue-not-ready:hover {
+      background: #fecaca !important;
+    }
+
+    #ordersTable tbody tr.orders-row-overdue-not-ready:hover td {
+      border-color: #fca5a5;
+    }
+
     tbody tr.selected {
       background: #ffe6e6 !important;
       border-left: 3px solid #ff3b30;
@@ -939,6 +953,12 @@
 
           const wfClass = ordersListRowWorkflowClass(order, listOrders, itemProcess);
           if (wfClass) row.classList.add(wfClass);
+
+          const OPdue = window.OrderProcessing;
+          if (OPdue && typeof OPdue.orderIsPastDueAndNotReadyForReadyOrders === "function" &&
+              OPdue.orderIsPastDueAndNotReadyForReadyOrders(order, allOrders, itemProcess)) {
+            row.classList.add("orders-row-overdue-not-ready");
+          }
 
           /* BUG FIX: escapeHtml was called with order.customer which can be undefined.
              Now explicitly falls back to order.customerName before calling escapeHtml,

@@ -634,16 +634,21 @@
           const entries = JSON.parse(localStorage.getItem('jobworkerEntries') || '[]');
           const jwId = (jw.jwId || '').trim();
           const jwName = (jw.name || '').trim();
+          const jwNameLc = jwName.toLowerCase();
           const forJw = entries.filter(function (e) {
-            return (jwId && String(e.jobworkerId) === String(jwId)) ||
-              (jwName && (e.jobworkerName || '').trim().toLowerCase() === jwName.toLowerCase());
+            if (!e) return false;
+            if (jwId && String(e.jobworkerId || '') === String(jwId)) return true;
+            if (jw.id != null && String(e.jobworkerId || '') === String(jw.id)) return true;
+            if (jw.jwId && String(e.jobworkerId || '').trim() === String(jw.jwId).trim()) return true;
+            if (jwName && (e.jobworkerName || '').trim().toLowerCase() === jwNameLc) return true;
+            return false;
           });
           let sumM = 0, sumC = 0, sumN = 0, sumMl = 0;
           forJw.forEach(function (e) {
             sumM += numJw(e.metal); sumC += numJw(e.chain); sumN += numJw(e.nag); sumMl += numJw(e.maal);
           });
-          const obM = numJw(jw.obMetal), obC = numJw(jw.obChain), obN = numJw(jw.obNag), obMl = numJw(jw.obMaal);
-          const finM = obM + sumM, finC = obC + sumC, finN = obN + sumN, finMl = obMl + sumMl;
+          /* Match Job Worker Details column totals (entries only). */
+          const finM = sumM, finC = sumC, finN = sumN, finMl = sumMl;
           const relation = [jw.relationType, jw.relationName].filter(Boolean).join(' ').trim();
 
           let bals = JSON.parse(localStorage.getItem('jobworkerBalances') || '[]');
@@ -806,24 +811,50 @@
         return null;
       }
 
+      function jwFormRoot() {
+        return document.querySelector('.workspace .app') || document.querySelector('.workspace') || document;
+      }
+
       function fillFormForEdit(editData) {
-        const j = editData;
-        document.getElementById('jwId').value = j.jwId || '';
-        document.getElementById('jwName').value = j.name || '';
-        document.getElementById('jwRelationName').value = j.relationName || '';
-        const relSelect = document.getElementById('jwRelationType');
+        const j = editData || {};
+        const root = jwFormRoot();
+        function field(id) {
+          return root.querySelector('#' + id) || document.getElementById(id);
+        }
+        function setText(id, v) {
+          var el = field(id);
+          if (el) el.value = v != null && v !== undefined ? String(v) : '';
+        }
+        function setNum(id, v) {
+          var el = field(id);
+          if (!el) return;
+          if (v == null || v === '') {
+            el.value = '';
+            return;
+          }
+          var n = parseFloat(v);
+          el.value = Number.isFinite(n) ? String(n) : '';
+        }
+        var obDateRaw = (j.obDate != null && String(j.obDate).trim() !== '') ? j.obDate : (j.date || '');
+        var obDateStr = String(obDateRaw || '').trim();
+        if (obDateStr.length >= 10) obDateStr = obDateStr.slice(0, 10);
+
+        setText('jwId', j.jwId || '');
+        setText('jwName', j.name || '');
+        setText('jwRelationName', j.relationName || '');
+        var relSelect = field('jwRelationType');
         if (relSelect) relSelect.value = j.relationType || '';
-        document.getElementById('jwLfNo').value = j.lfNo || '';
-        document.getElementById('jwObDate').value = (j.obDate || '').slice(0, 10);
-        document.getElementById('jwObMetal').value = j.obMetal != null ? j.obMetal : '';
-        document.getElementById('jwObChain').value = j.obChain != null ? j.obChain : '';
-        document.getElementById('jwObNag').value = j.obNag != null ? j.obNag : '';
-        document.getElementById('jwObMaal').value = j.obMaal != null ? j.obMaal : '';
-        document.getElementById('jwAddress').value = j.address || '';
-        document.getElementById('jwStation').value = j.station || '';
-        document.getElementById('jwPhone').value = j.phone || '';
-        document.getElementById('jwMobile').value = j.mobile || '';
-        document.getElementById('jwEmail').value = j.email || '';
+        setText('jwLfNo', j.lfNo != null ? j.lfNo : '');
+        setText('jwObDate', obDateStr);
+        setNum('jwObMetal', j.obMetal);
+        setNum('jwObChain', j.obChain);
+        setNum('jwObNag', j.obNag);
+        setNum('jwObMaal', j.obMaal);
+        setText('jwAddress', j.address || '');
+        setText('jwStation', j.station || '');
+        setText('jwPhone', j.phone || '');
+        setText('jwMobile', j.mobile || '');
+        setText('jwEmail', j.email || '');
       }
 
       // ── COLLECT DATA ───────────────────────────────
@@ -906,7 +937,7 @@
 
       // ── RESET / BLANK FORM (use root so we clear the form inside workspace when in dashboard) ─────────────────────────
       function getFormRoot() {
-        return document.querySelector('.workspace .app') || document.querySelector('.workspace') || document;
+        return jwFormRoot();
       }
       function resetFields() {
         localStorage.removeItem('editJobworkerId');
@@ -1079,9 +1110,11 @@
         try { window.FormPersistence.getInstance().clear(); } catch (e) { }
       }
 
-      const fromSidebar = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('jobworkerFormClear');
-      if (fromSidebar) try { sessionStorage.removeItem('jobworkerFormClear'); } catch (e) { }
-      const editPayload = !fromSidebar && getEditPayload();
+      /* Consume "left add-jobworker" flag — must not block List→Edit: that flow also has this flag set. */
+      var hadFormClearFlag = !!(typeof sessionStorage !== 'undefined' && sessionStorage.getItem('jobworkerFormClear'));
+      if (hadFormClearFlag) try { sessionStorage.removeItem('jobworkerFormClear'); } catch (e) { }
+
+      var editPayload = getEditPayload();
       if (editPayload && editPayload.data) {
         editId = editPayload.id;
         fillFormForEdit(editPayload.data);

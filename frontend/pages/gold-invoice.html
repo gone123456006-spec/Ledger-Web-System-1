@@ -530,6 +530,7 @@
   <div class="actions">
     <button class="primary" onclick="addRow()">+ Add Row</button>
     <button type="button" onclick="openPaymentPopup()" title="Record payment (same storage as New Order)">Payment</button>
+    <button type="button" onclick="openDiscountPopup()">Discount</button>
     <button onclick="openPurchaseSheetPopup()">Purchase</button>
     <button type="button" class="primary" onclick="saveOrder()">Save Bill</button>
     <button type="button" onclick="saveAndNew()">Save & New</button>
@@ -573,6 +574,13 @@
               <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
             </div>
             <div class="summary-item summary-item--paid-open" role="button" tabindex="0"
+              title="Tap to manage discount"
+              onclick="openDiscountDetailPopup()"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDiscountDetailPopup();}">
+              <span class="summary-label">Discount:</span>
+              <span class="summary-value" style="color:#0ea5e9;" id="panelDiscount">₹ 0.00</span>
+            </div>
+            <div class="summary-item summary-item--paid-open" role="button" tabindex="0"
               title="Tap to view payments"
               onclick="openPaymentsDetailPopup()"
               onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPaymentsDetailPopup();}">
@@ -584,7 +592,7 @@
               <span class="summary-value" style="color:#dc3545;" id="panelBalance">₹ 0.00</span>
             </div>
           </div>
-          <div class="panel-list" id="paymentList"><div class="empty-state">No payments yet</div></div>
+          <div class="panel-list" id="paymentList" style="display:none;"><div class="empty-state">No payments yet</div></div>
         </div>
       </div>
     </div>
@@ -624,6 +632,7 @@
   </table>
   <div class="summary-box">
     <div class="summary-row"><span><strong>Grand Total:</strong></span><span><strong>₹ <span id="iGrand">0.00</span></strong></span></div>
+    <div class="summary-row" style="color:#0ea5e9;"><span><strong>Discount:</strong></span><span><strong>₹ <span id="iDiscount">0.00</span></strong></span></div>
     <div class="summary-row" style="color:#28a745;"><span><strong>Paid Amount:</strong></span><span><strong>₹ <span id="iPaid">0.00</span></strong></span></div>
     <div class="summary-row" style="color:#dc3545;"><span><strong>Balance Amount:</strong></span><span><strong>₹ <span id="iBalance">0.00</span></strong></span></div>
   </div>
@@ -678,6 +687,35 @@
     <div id="paymentsDetailContent"></div>
     <div id="paymentsDetailTotal" style="font-weight:600; font-size:13px; text-align:right; margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">Total: ₹ 0.00</div>
     <div class="popup-actions"><button onclick="closePaymentsDetailPopup()">Close</button></div>
+  </div>
+</div>
+
+<!-- DISCOUNT POPUP -->
+<div id="discountPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this)closeDiscountPopup()">
+  <div class="popup-box" style="max-width:420px;" onclick="event.stopPropagation()">
+    <h3>Add Discount</h3>
+    <div class="pay-grid">
+      <label>Discount Amount (₹)</label>
+      <input type="number" id="discountAmount" step="0.01" min="0" placeholder="0.00" oninput="updateDiscountPreview()">
+    </div>
+    <div class="pay-summary">
+      <div class="pay-summary-row"><span>Net bill total</span><span>₹ <span id="discountPopNet">0.00</span></span></div>
+      <div class="pay-summary-row"><span>Current discount</span><span style="color:#0ea5e9;">₹ <span id="discountPopCurrent">0.00</span></span></div>
+      <div class="pay-summary-row"><span>Balance after discount</span><span id="discountPopBalanceWrap" style="color:#dc3545;">₹ <span id="discountPopBalance">0.00</span></span></div>
+    </div>
+    <div class="popup-actions">
+      <button type="button" onclick="saveDiscount()">Save discount</button>
+      <button type="button" onclick="closeDiscountPopup()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCOUNT DETAIL POPUP -->
+<div id="discountDetailPopup" class="popup-bg" style="display:none;" onclick="if(event.target===this)closeDiscountDetailPopup()">
+  <div class="popup-box" style="max-width:540px; width:95vw;" onclick="event.stopPropagation()">
+    <h3>Discount</h3>
+    <div id="discountDetailContent"></div>
+    <div class="popup-actions"><button type="button" onclick="closeDiscountDetailPopup()">Close</button></div>
   </div>
 </div>
 
@@ -737,6 +775,7 @@
     statementCurrentBalLock: false,
     /** Lock customer info when opened from Customer Statement -> Add Invoice. */
     statementCustomerInfoLocked: false,
+    discountAmount: 0,
     editPaymentId: null,
   };
 
@@ -1038,13 +1077,12 @@
   }
 
   /**
-   * Registered customer = selected from customer list.
-   * Manual typed customer remains unregistered (no customer master auto-create).
+   * Resolve customer from selected id / typed name.
+   * Does not mutate customer master.
    */
-  function ensureCustomerMasterForSave() {
+  function findLinkedCustomerForSave() {
     var name = getCustomerName();
     if (!name) return null;
-    if (!S.customerPickedFromList) return null;
     var selectedId = getSelectedCustomerId();
     var customers = getCustomers();
     if (selectedId) {
@@ -1057,6 +1095,17 @@
       return normalizeCustomerName(c && c.name) === normalizeCustomerName(name);
     });
     return existing || null;
+  }
+
+  /**
+   * Registered customer = selected from customer list.
+   * Manual typed customer remains unregistered (no customer master auto-create).
+   */
+  function ensureCustomerMasterForSave() {
+    var name = getCustomerName();
+    if (!name) return null;
+    if (!S.customerPickedFromList) return null;
+    return findLinkedCustomerForSave();
   }
 
   function loadCustomers(retainValue) {
@@ -1720,7 +1769,11 @@
     if (b) b.textContent = isEdit ? 'Update payment' : 'Save payment';
   }
 
-  function calcBillTotal() {
+  function getDiscountAmount() {
+    return Math.max(0, safeNum(S.discountAmount));
+  }
+
+  function calcGrossBillTotal() {
     var tbody = el('itemBody');
     if (!tbody) return 0;
     var total = 0;
@@ -1732,6 +1785,10 @@
     var bn = el('billNo') && el('billNo').value;
     total -= getPsTotal(bn);
     return total;
+  }
+
+  function calcBillTotal() {
+    return calcGrossBillTotal() - getDiscountAmount();
   }
 
   function openPaymentPopup() {
@@ -1764,6 +1821,94 @@
     var after = total - paid - amt;
     if (el('popBalance')) el('popBalance').textContent = after.toFixed(2);
     setPopBalanceStyle(after);
+  }
+
+  function setDiscountBalanceStyle(balanceAfter) {
+    var w = el('discountPopBalanceWrap');
+    if (w) w.style.color = balanceAfter <= 0.000001 ? '#28a745' : '#dc3545';
+  }
+
+  function openDiscountPopup() {
+    if (!validateBasic()) return;
+    var net = calcGrossBillTotal();
+    var paid = getPaid(el('billNo') && el('billNo').value);
+    if (el('discountPopNet')) el('discountPopNet').textContent = net.toFixed(2);
+    if (el('discountAmount')) el('discountAmount').value = getDiscountAmount().toFixed(2);
+    if (el('discountPopCurrent')) el('discountPopCurrent').textContent = getDiscountAmount().toFixed(2);
+    var bal = net - getDiscountAmount() - paid;
+    if (el('discountPopBalance')) el('discountPopBalance').textContent = bal.toFixed(2);
+    setDiscountBalanceStyle(bal);
+    var p = el('discountPopup');
+    if (p) { p.style.display = 'flex'; p.style.alignItems = 'center'; p.style.justifyContent = 'center'; }
+  }
+
+  function updateDiscountPreview() {
+    var net = calcGrossBillTotal();
+    var paid = getPaid(el('billNo') && el('billNo').value);
+    var d = Math.max(0, safeNum(el('discountAmount') && el('discountAmount').value));
+    if (d > net) d = net;
+    if (el('discountPopCurrent')) el('discountPopCurrent').textContent = d.toFixed(2);
+    var bal = net - d - paid;
+    if (el('discountPopBalance')) el('discountPopBalance').textContent = bal.toFixed(2);
+    setDiscountBalanceStyle(bal);
+  }
+
+  function saveDiscount() {
+    var net = calcGrossBillTotal();
+    var d = Math.max(0, safeNum(el('discountAmount') && el('discountAmount').value));
+    if (d > net) d = net;
+    S.discountAmount = d;
+    closeDiscountPopup();
+    updateInfoPanel();
+    showSuccess('Discount updated');
+  }
+
+  function closeDiscountPopup() {
+    var p = el('discountPopup');
+    if (p) p.style.display = 'none';
+  }
+
+  function openDiscountDetailPopup() {
+    var content = el('discountDetailContent');
+    var d = getDiscountAmount();
+    if (content) {
+      if (d <= 0.000001) {
+        content.innerHTML =
+          '<div class="empty-state" style="padding:8px 0 12px;">No discount added yet.</div>' +
+          '<div style="display:flex; justify-content:flex-end;"><button type="button" style="border:1px solid var(--border); background:#fff; border-radius:6px; padding:6px 12px; cursor:pointer;" onclick="closeDiscountDetailPopup();openDiscountPopup();">Add Discount</button></div>';
+      } else {
+        content.innerHTML =
+          '<div style="border:1px solid var(--border); border-radius:8px; padding:10px; font-size:13px; margin-bottom:10px;">' +
+            '<div style="display:flex; justify-content:space-between; font-weight:700;">' +
+              '<span>Discount Amount</span><span style="color:#0ea5e9;">' + fmtCur(d) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex; justify-content:flex-end; gap:8px;">' +
+            '<button type="button" onclick="editDiscountFromDetail()" style="border:1px solid var(--border); background:#fff; border-radius:6px; padding:6px 12px; cursor:pointer;">Edit</button>' +
+            '<button type="button" onclick="deleteDiscount()" style="border:1px solid #f1b8c0; color:#b42318; background:#fff5f7; border-radius:6px; padding:6px 12px; cursor:pointer;">Delete</button>' +
+          '</div>';
+      }
+    }
+    var p = el('discountDetailPopup');
+    if (p) { p.style.display = 'flex'; p.style.alignItems = 'center'; p.style.justifyContent = 'center'; }
+  }
+
+  function closeDiscountDetailPopup() {
+    var p = el('discountDetailPopup');
+    if (p) p.style.display = 'none';
+  }
+
+  function editDiscountFromDetail() {
+    closeDiscountDetailPopup();
+    openDiscountPopup();
+  }
+
+  function deleteDiscount() {
+    if (!confirm('Delete discount?')) return;
+    S.discountAmount = 0;
+    closeDiscountDetailPopup();
+    updateInfoPanel();
+    showSuccess('Discount deleted');
   }
 
   function savePayment() {
@@ -1985,7 +2130,7 @@
     var bn = el('billNo') && el('billNo').value;
     if (!bn) {
       setEl('panelOrderTotal', fmtCur(0)); setEl('panelPurchaseTotal', fmtCur(0));
-      setEl('panelBillTotal', fmtCur(0)); setEl('panelPaid', fmtCur(0)); setEl('panelBalance', fmtCur(0));
+      setEl('panelBillTotal', fmtCur(0)); setEl('panelDiscount', fmtCur(0)); setEl('panelPaid', fmtCur(0)); setEl('panelBalance', fmtCur(0));
       return;
     }
     var orderTotal = 0, purchaseTotal = 0;
@@ -1999,11 +2144,13 @@
     }
     purchaseTotal += getPsTotal(bn);
     var net = orderTotal - purchaseTotal;
+    var discount = getDiscountAmount();
     var paid = getPaid(bn);
-    var balance = net - paid;
+    var balance = (net - discount) - paid;
     setEl('panelOrderTotal', fmtCur(orderTotal));
     setEl('panelPurchaseTotal', fmtCur(purchaseTotal));
     setEl('panelBillTotal', fmtCur(net));
+    setEl('panelDiscount', fmtCur(discount));
     setEl('panelPaid', fmtCur(paid));
     setEl('panelBalance', fmtCur(balance));
     var balPan = el('panelBalance');
@@ -2177,7 +2324,7 @@
     if (!el('orderDate') || !el('orderDate').value) { showErr('Order date is required'); return false; }
     var tbody = el('itemBody');
     if (!tbody || !tbody.querySelectorAll('tr').length) { showErr('Please add at least one item'); return false; }
-    var isRegisteredCustomer = !!ensureCustomerMasterForSave();
+    var isRegisteredCustomer = !!findLinkedCustomerForSave();
     var paidNow = getPaid(el('billNo') && el('billNo').value);
     if (!isRegisteredCustomer) {
       var balanceNow = calcBillTotal() - paidNow;
@@ -2263,6 +2410,7 @@
       var narr = (el('orderNarration') && el('orderNarration').value) || '';
       var paid = getPaid(bn);
       var billTotal = calcBillTotal();
+      var discountAmount = getDiscountAmount();
       var custIdForBill = linkedCustomer && linkedCustomer.id != null ? String(linkedCustomer.id) : '';
       var tsSave = new Date().toISOString();
       var giBalSave = parseCurrentBalText(el('currentBal') && el('currentBal').value);
@@ -2276,6 +2424,7 @@
         customerId: custIdForBill,
         totalAmount: billTotal,
         amount: billTotal.toFixed(2),
+        discountAmount: discountAmount.toFixed(2),
         paid: paid.toFixed(2),
         balance: (billTotal - paid).toFixed(2),
         rows: rows,
@@ -2290,7 +2439,6 @@
       localStorage.setItem('bills', JSON.stringify(bills));
 
       // All Bill reads customerBalances. Keep writing for both registered and unregistered customers.
-      // Unregistered typed names still stay out of customer master because ensureCustomerMasterForSave() returns null.
       syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paid, linkedCustomer);
 
       // Orders
@@ -2309,6 +2457,7 @@
         pc: totalPc, grWt: totalRWt,
         orderTotal: orderTotal.toFixed(2),
         netAmount: billTotal.toFixed(2),
+        discountAmount: discountAmount.toFixed(2),
         advance: paid.toFixed(2),
         balance: (billTotal - paid).toFixed(2),
         status: S.editMode ? (S.currentOrderStatus || 'PENDING') : 'PENDING',
@@ -2410,6 +2559,7 @@
     S.editMode = false; S.editOrderId = null;
     S.customerPickedFromList = false;
     S.billNoClaimed = false; S.draftPaymentKey = 'DRAFT-' + Date.now();
+    S.discountAmount = 0;
     S.savedThisSession = false;
     clearGoldInvoiceDraftCache();
     try {
@@ -2507,6 +2657,7 @@
 
       if (el('billNo') && order.orderNo) el('billNo').value = String(order.orderNo);
       if (el('orderDate') && order.orderDate) el('orderDate').value = order.orderDate;
+      S.discountAmount = Math.max(0, safeNum(order.discountAmount));
 
       var tbody = el('itemBody');
       if (tbody) {
@@ -2592,8 +2743,10 @@
       });
     }
     var grand = calcBillTotal();
+    var discount = getDiscountAmount();
     var paid = getPaid(el('billNo') && el('billNo').value);
     el('iGrand').textContent = grand.toFixed(2);
+    if (el('iDiscount')) el('iDiscount').textContent = discount.toFixed(2);
     el('iPaid').textContent = paid.toFixed(2);
     el('iBalance').textContent = (grand - paid).toFixed(2);
     el('invoice').style.display = 'block';
@@ -2847,6 +3000,14 @@
     window.openPaymentPopup = openPaymentPopup;
     window.openPayment = openPaymentPopup;
     window.closePaymentPopup = closePaymentPopup;
+    window.openDiscountPopup = openDiscountPopup;
+    window.updateDiscountPreview = updateDiscountPreview;
+    window.saveDiscount = saveDiscount;
+    window.closeDiscountPopup = closeDiscountPopup;
+    window.openDiscountDetailPopup = openDiscountDetailPopup;
+    window.closeDiscountDetailPopup = closeDiscountDetailPopup;
+    window.editDiscountFromDetail = editDiscountFromDetail;
+    window.deleteDiscount = deleteDiscount;
     window.savePayment = savePayment;
     window.updatePaymentBalance = updatePaymentBalance;
     window.editPayment = editPayment;

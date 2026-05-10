@@ -6,8 +6,6 @@
   <title>Pending Items</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-
     *,
     *::before,
     *::after {
@@ -17,10 +15,16 @@
     }
 
     body {
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
+      font-weight: 700;
       background: #eef2f7;
       height: 100vh;
       overflow: hidden;
+    }
+
+    body * {
+      font-family: inherit !important;
+      font-weight: 700 !important;
     }
 
     .wrap {
@@ -101,7 +105,7 @@
       padding: 0 10px;
       border: 1px solid #dde3ec;
       border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-size: 13px;
       background: #fff;
       color: #1a1f2e;
@@ -125,7 +129,7 @@
       border: 1px solid #dde3ec;
       background: #fff;
       border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-size: 13px;
       font-weight: 600;
       color: #444c5c;
@@ -258,7 +262,7 @@
       padding: 0 28px 0 10px;
       border: 1px solid #cdd5e4;
       border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-size: 13px;
       font-weight: 500;
       color: #1a1f2e;
@@ -284,7 +288,7 @@
       border: 1px dashed #94a3b8;
       border-radius: 8px;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
     }
 
     .filter-bar .btn-clear-filters:hover {
@@ -442,7 +446,7 @@
       padding: 0 10px;
       font-size: 12px;
       font-weight: 600;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       border: 1px solid #cbd5e1;
       background: #fff;
       border-radius: 6px;
@@ -514,7 +518,7 @@
       border-radius: 6px;
       padding: 0 8px;
       font-size: 12px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
     }
 
     .custom-due-inline .btn-apply-due {
@@ -527,7 +531,7 @@
       background: #4f7ef8;
       color: #fff;
       cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
     }
 
     .custom-due-inline .btn-apply-due:hover {
@@ -552,7 +556,7 @@
       border-radius: 6px;
       padding: 0 6px;
       font-size: 12px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
     }
 
     .next-n-inline.active {
@@ -728,7 +732,7 @@
     }
 
     tbody tr:hover {
-      background: #f5f8ff !important;
+      background: #ffffff !important;
     }
 
     tbody tr.row-sel {
@@ -763,22 +767,38 @@
       border: 1px solid #86efac;
     }
 
-    /* Stage reflection: Pending Items */
+    /* Pending Items — more fade: lighter edge tint, wider white middle */
     .workflow-stage-pending tbody tr[data-order-id] {
-      background: linear-gradient(90deg, rgba(245, 158, 11, 0.12) 0%, rgba(255, 255, 255, 0.98) 35%) !important;
-      border-left: 4px solid #f59e0b;
-      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.14);
+      background: linear-gradient(
+        90deg,
+        rgba(234, 179, 8, 0.2) 0%,
+        rgba(245, 158, 11, 0.09) 8%,
+        rgba(245, 158, 11, 0.032) 22%,
+        rgba(255, 255, 255, 0.98) 32%,
+        #ffffff 50%,
+        rgba(255, 255, 255, 0.98) 68%,
+        rgba(245, 158, 11, 0.032) 78%,
+        rgba(245, 158, 11, 0.09) 92%,
+        rgba(234, 179, 8, 0.2) 100%
+      ) !important;
+      border-left: none;
+      border-right: none;
+      box-shadow: none;
       transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
       animation: workflowPendingFade .28s ease;
     }
     .workflow-stage-pending tbody tr[data-order-id]:hover {
-      background: linear-gradient(110deg, rgba(245, 158, 11, 0.2) 0%, rgba(255,255,255,0.97) 58%) !important;
-      box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.22), 0 6px 14px rgba(245, 158, 11, 0.14);
+      background: #ffffff !important;
+      box-shadow: none;
+    }
+
+    .workflow-stage-pending tbody tr[data-order-id]:hover td {
+      border-color: #d1d6de;
     }
     .workflow-stage-pending .badge-pending,
     .workflow-stage-pending .badge-selected,
     .workflow-stage-pending .badge-assigned {
-      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.15), 0 0 12px rgba(245, 158, 11, 0.18);
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.05), 0 0 6px rgba(245, 158, 11, 0.06);
     }
     @keyframes workflowPendingFade {
       from { opacity: .74; transform: translateY(3px); }
@@ -962,7 +982,7 @@
       padding: 0 12px 0 34px;
       border: 1.5px solid #e4e8f4;
       border-radius: 9px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-size: 13px;
       background: #f8f9fd;
       color: #1a1f2e;
@@ -1112,7 +1132,7 @@
       border: 1px solid #dde3ec;
       background: #fff;
       border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-size: 13px;
       font-weight: 600;
       color: #444c5c;
@@ -1128,7 +1148,7 @@
       border: none;
       background: #4f7ef8;
       border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-size: 13px;
       font-weight: 700;
       color: #fff;
@@ -1242,6 +1262,11 @@
       border-top: none;
       border-left: none;
       transform: rotate(45deg) translateY(-1px);
+    }
+
+    /* Ensure Calibri + bold win over any later component rules */
+    html {
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif !important;
     }
   </style>
 </head>

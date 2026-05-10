@@ -230,6 +230,47 @@
         return orderEveryLineFinalizedAtFullQuantity(order, itemProcess, orderId);
     }
 
+    /** Normalize due date to yyyy-mm-dd for calendar-day comparison (dd-mm-yyyy, ISO, or Date-parsable). */
+    function normalizeDueDateYMD(raw) {
+        var s = String(raw == null ? '' : raw).trim();
+        if (!s) return '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+        var m = s.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
+        if (m) return m[3] + '-' + m[2] + '-' + m[1];
+        var d = new Date(s);
+        if (!isNaN(d.getTime())) {
+            var y = d.getFullYear();
+            var mo = d.getMonth() + 1;
+            var da = d.getDate();
+            return y + '-' + (mo < 10 ? '0' : '') + mo + '-' + (da < 10 ? '0' : '') + da;
+        }
+        return '';
+    }
+
+    /**
+     * True when the local calendar day is strictly after the due date and the order
+     * still does not qualify for the Ready Orders list (not finalized READY_ORDER policy).
+     */
+    function orderIsPastDueAndNotReadyForReadyOrders(order, orders, itemProcess) {
+        if (!order || order.id == null) return false;
+        if (orderIsGoldInvoiceWorkshopExclude(order)) return false;
+        var ymd = normalizeDueDateYMD(order.dueDate != null ? order.dueDate : order.due_date);
+        if (!ymd) return false;
+        var p = ymd.split('-');
+        if (p.length !== 3) return false;
+        var dueStart = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10), 0, 0, 0, 0);
+        if (isNaN(dueStart.getTime())) return false;
+        var now = new Date();
+        var todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        if (todayStart.getTime() <= dueStart.getTime()) return false;
+        try {
+            if (isOrderReadyForReadyOrdersList(orders || [], itemProcess || [], order.id)) return false;
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
     /** Sum qty on itemProcess rows for this line where status is not READY / READY_ORDER. */
     function sumQtyForLineNonTerminal(itemProcess, orderId, itemIdx) {
         var oid = String(orderId);
@@ -398,6 +439,9 @@
         isOrderFullyReady: isOrderFullyReady,
         /** Ready Orders list / sync: finalized READY_ORDER only (Rules 1 + 4). */
         isOrderReadyForReadyOrdersList: isOrderReadyForReadyOrdersList,
+        /** Past due (day after due date) and not yet eligible for Ready Orders list — UI highlight. */
+        orderIsPastDueAndNotReadyForReadyOrders: orderIsPastDueAndNotReadyForReadyOrders,
+        normalizeDueDateYMD: normalizeDueDateYMD,
         orderHasQtyInNonFinalizedStatus: orderHasQtyInNonFinalizedStatus,
         orderEveryLineFinalizedAtFullQuantity: orderEveryLineFinalizedAtFullQuantity,
         /** Alias — same as isOrderReadyForReadyOrdersList (strict Ready Orders policy). */
@@ -407,6 +451,8 @@
         syncOrdersReadyFromProcess: syncOrdersReadyFromProcess,
         pruneItemProcessForOrder: pruneItemProcessForOrder,
         syncOrderLineAssignmentFromItemProcess: syncOrderLineAssignmentFromItemProcess,
+        /** True if the order line is assigned to workshop (flags or any itemProcess row for that index). */
+        orderLineIsWorkshopAssigned: orderLineIsWorkshopAssigned,
         sumQtyForLineNonTerminal: sumQtyForLineNonTerminal,
         orderLineItemDisplayName: orderLineItemDisplayName,
         getOrderMoveReadyBreakdown: getOrderMoveReadyBreakdown

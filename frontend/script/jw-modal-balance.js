@@ -83,10 +83,11 @@
         var parts = [];
 
         if (balRows.length === 0) {
-            var metal = obM + entrySum.m;
-            var chain = obC + entrySum.c;
-            var nag = obN + entrySum.n;
-            var maal = obMl + entrySum.ml;
+            /* Align with Jobworker Balance list: Metal/Chain/Nag/Maal = ledger entry sums (Details total row). */
+            var metal = entrySum.m;
+            var chain = entrySum.c;
+            var nag = entrySum.n;
+            var maal = entrySum.ml;
             parts.push(
                 '<tr>' +
                 '<td>' + escapeHtml(String(jw.jwId || '—')) + '</td>' +
