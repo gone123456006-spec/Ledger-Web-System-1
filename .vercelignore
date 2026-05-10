@@ -1,7 +1,6 @@
 BackEnd/
 node_modules/
 public/
-pages/
 *.log
 test_*.js
 test_*.html
