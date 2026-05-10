@@ -1,0 +1,11 @@
+BackEnd/
+node_modules/
+public/
+pages/
+*.log
+test_*.js
+test_*.html
+render.yaml
+README.md
+.env
+.env.*

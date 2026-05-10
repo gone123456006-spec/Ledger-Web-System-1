@@ -1,24 +1,23 @@
 {
   "cleanUrls": false,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/", "destination": "/frontend/index.html", "permanent": false },
+    { "source": "/index.html", "destination": "/frontend/index.html", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/", "destination": "/frontend/index.html" },
-    { "source": "/index.html", "destination": "/frontend/index.html" },
     { "source": "/login.html", "destination": "/frontend/login.html" },
+    { "source": "/style.css", "destination": "/frontend/style.css" },
+    { "source": "/script.js", "destination": "/frontend/script.js" },
+    { "source": "/auth.js", "destination": "/frontend/auth.js" },
     { "source": "/pages/:path*", "destination": "/frontend/pages/:path*" },
     { "source": "/script/:path*", "destination": "/frontend/script/:path*" },
     { "source": "/js/:path*", "destination": "/frontend/js/:path*" },
-    { "source": "/(.*\\.html)", "destination": "/frontend/$1" },
-    { "source": "/(.*\\.js)", "destination": "/frontend/$1" },
-    { "source": "/(.*\\.css)", "destination": "/frontend/$1" },
-    {
-      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot|otf|map|json))",
-      "destination": "/frontend/$1"
-    }
+    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" }
   ],
   "headers": [
     {
-      "source": "/(.*\\.html)",
+      "source": "/frontend/(.*)\\.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
         { "key": "Pragma", "value": "no-cache" },
@@ -26,13 +25,7 @@
       ]
     },
     {
-      "source": "/",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
-      ]
-    },
-    {
-      "source": "/(.*\\.(js|css))",
+      "source": "/frontend/(.*)\\.(js|css)",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache, max-age=0, must-revalidate" }
       ]
