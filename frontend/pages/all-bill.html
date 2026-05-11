@@ -115,6 +115,11 @@
       box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
     }
 
+    #billNoFilter {
+      min-width: 200px;
+      max-width: min(320px, 42vw);
+    }
+
     /* =========================
    TABLE (Customer Balance style)
 ========================= */
@@ -292,6 +297,18 @@
 
       <label>Customer</label>
       <input type="text" id="customerFilter" onkeyup="filterTable()" placeholder="Filter by customer...">
+
+      <label>Bill Number</label>
+      <select id="billNoFilter" onchange="filterTable()" title="Filter by bill / order number">
+        <option value="">All bills</option>
+      </select>
+
+      <label>Status</label>
+      <select id="statusFilter" onchange="filterTable()">
+        <option value="">All</option>
+        <option value="clear">Clear</option>
+        <option value="pending">Pending</option>
+      </select>
 
       <label>Search</label>
       <input type="text" id="searchBox" placeholder="Search..." onkeyup="searchTable()">
@@ -554,6 +571,36 @@
       return false;
     }
 
+    /** Rebuild Bill Number dropdown from balance rows (unique order/bill no). Preserves selection when still present. */
+    function populateBillNoDropdown(sortedBalances) {
+      const root = document.querySelector(".balance-wrap") || document.querySelector(".workspace") || document;
+      const sel = root.querySelector("#billNoFilter") || document.getElementById("billNoFilter");
+      if (!sel || sel.tagName !== "SELECT") return;
+      const prev = String(sel.value || "").trim();
+      const set = new Set();
+      (sortedBalances || []).forEach(function (b) {
+        if (!b) return;
+        const v = String(b.orderNo || b.billNo || "").trim();
+        if (v) set.add(v);
+      });
+      const list = Array.from(set).sort(function (a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+      });
+      sel.innerHTML = "";
+      const optAll = document.createElement("option");
+      optAll.value = "";
+      optAll.textContent = "All bills";
+      sel.appendChild(optAll);
+      list.forEach(function (bn) {
+        const o = document.createElement("option");
+        o.value = bn;
+        o.textContent = bn;
+        sel.appendChild(o);
+      });
+      if (prev && set.has(prev)) sel.value = prev;
+      else sel.value = "";
+    }
+
     /* =========================
        LOAD BALANCES
     ========================= */
@@ -569,17 +616,20 @@
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
       if (tbody) tbody.innerHTML = "";
 
-      if (balances.length === 0) {
-        updateFooter();
-        return;
-      }
-
       // Sort by date (newest first)
       const sortedBalances = [...balances].sort((a, b) => {
         const dateA = new Date(a.date || a.timestamp || 0);
         const dateB = new Date(b.date || b.timestamp || 0);
         return dateB - dateA;
       });
+
+      populateBillNoDropdown(sortedBalances);
+
+      if (balances.length === 0) {
+        updateFooter();
+        filterTable();
+        return;
+      }
 
       /** Customers whose master Current Balance is ~0 — their All Bill rows show Clear status. */
       const customersMasterZeroKeys = new Set();
@@ -711,6 +761,9 @@
             ? `<span style="background:#dcfce7;color:#166534;border:1px solid #86efac;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Clear</span>`
             : `<span style="background:#fef9c3;color:#854d0e;border:1px solid #fde047;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;">Pending</span>`;
 
+          row.dataset.billNo = String(billNoVal || "").trim();
+          row.dataset.statusKey = isClear ? "clear" : "pending";
+
           // Ready Order Total (panel order add); legacy rows with no line items use stored bill amount
           let readyOrderTotalAmt = netOrderSale;
           if ((!linkedItems || linkedItems.length === 0) && readyOrderTotalAmt === 0) {
@@ -759,6 +812,7 @@
       try { localStorage.setItem("customerBalances", JSON.stringify(sortedBalances)); } catch (e) { }
 
       updateFooter();
+      filterTable();
     }
 
     /* =========================
@@ -783,9 +837,13 @@
       const root = document.querySelector(".balance-wrap") || document.querySelector(".workspace") || document;
       const searchBox = root.querySelector("#searchBox") || document.getElementById("searchBox");
       const customerFilter = root.querySelector("#customerFilter") || document.getElementById("customerFilter");
+      const billNoFilter = root.querySelector("#billNoFilter") || document.getElementById("billNoFilter");
+      const statusFilter = root.querySelector("#statusFilter") || document.getElementById("statusFilter");
 
       const searchValue = searchBox ? searchBox.value.toLowerCase() : "";
       const customerValue = customerFilter ? customerFilter.value.toLowerCase() : "";
+      const billNoValue = billNoFilter ? billNoFilter.value.trim().toLowerCase() : "";
+      const statusValue = statusFilter ? String(statusFilter.value || "").trim().toLowerCase() : "";
 
       const rows = tbody.querySelectorAll("tr");
       let visibleCount = 0;
@@ -803,6 +861,16 @@
 
         if (customerValue && !customerCell.includes(customerValue)) {
           show = false;
+        }
+
+        const rowBill = (row.dataset.billNo || "").trim().toLowerCase();
+        if (billNoValue && rowBill !== billNoValue) {
+          show = false;
+        }
+
+        if (statusValue && statusValue !== "all") {
+          const rowStatus = (row.dataset.statusKey || "").toLowerCase();
+          if (rowStatus !== statusValue) show = false;
         }
 
         row.style.display = show ? "" : "none";

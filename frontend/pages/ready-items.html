@@ -120,10 +120,27 @@
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
+        /* Toolbar primary — crisp white on forest green (beats .btn { color !important }) */
+        .btn.btn-ready:not(:disabled) {
+            background: #0f5132 !important;
+            border-color: #0a3d26 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        .btn.btn-ready:not(:disabled):hover {
+            background: #157a4d !important;
+            border-color: #0f5c3a !important;
+            color: #ffffff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(15, 81, 50, 0.28);
+        }
+
+        /* Disabled — soft mint, dark label (readable “not ready yet”) */
         .btn-ready:disabled {
-            background: #a8e0b8;
-            border-color: #a8e0b8;
-            color: #fff !important;
+            background: #e8f5ec !important;
+            border-color: #c8e6c9 !important;
+            color: #2e593b !important;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -357,12 +374,23 @@
             background: #f8f9fb !important;
         }
 
-        tbody tr:hover {
-            background: #ffffff !important;
+        /* Row hover — mint like Ready Items row (#eaf7ed), not when checkbox-selected */
+        .workflow-stage-ready-items tbody tr:hover:not(.row-selected) {
+            background: #eaf7ed !important;
+            box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.22);
         }
 
-        tbody tr:hover td {
-            border-color: #d1d6de;
+        .workflow-stage-ready-items tbody tr:hover:not(.row-selected) td {
+            border-color: #c8e6c9;
+        }
+
+        .workflow-stage-ready-items tbody tr.row-selected:hover {
+            background: #e8f1ff !important;
+            box-shadow: inset 0 0 0 1px rgba(79, 126, 248, 0.18);
+        }
+
+        .workflow-stage-ready-items tbody tr.row-selected:hover td {
+            border-color: #93c5fd;
         }
 
         tbody tr.row-selected {
@@ -437,14 +465,7 @@
             transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
             animation: workflowReadyFade .28s ease;
         }
-        .workflow-stage-ready-items tbody tr[data-order-id]:hover {
-            background: #ffffff !important;
-            box-shadow: none;
-        }
-
-        .workflow-stage-ready-items tbody tr[data-order-id]:hover td {
-            border-color: #d1d6de;
-        }
+        /* Hover colours: see .workflow-stage-ready-items tbody tr:hover above */
         /* Ready item badge: flat shamrock tint (no gradient / shine) */
         .workflow-stage-ready-items .badge.ready-done {
             background: #b8e8d9 !important;
@@ -704,7 +725,7 @@
             font-family: Segoe UI, Arial, sans-serif;
             font-size: 13px;
             font-weight: 700;
-            color: #fff;
+            color: #ffffff !important;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -714,8 +735,43 @@
 
         .btn-confirm-ready:hover:not(:disabled) {
             background: #28a745;
+            color: #ffffff !important;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(52, 199, 89, 0.35);
+        }
+
+        #confirmReadyBtn.btn-confirm-ready:not(:disabled) {
+            background: #0f5132 !important;
+            border: 1px solid #0a3d26 !important;
+            color: #ffffff !important;
+        }
+
+        #confirmReadyBtn.btn-confirm-ready:hover:not(:disabled) {
+            background: #157a4d !important;
+            border-color: #0f5c3a !important;
+            color: #ffffff !important;
+        }
+
+        #confirmUnReadyBtn.btn-confirm-ready:hover:not(:disabled) {
+            background: #d32f2f !important;
+            color: #ffffff !important;
+        }
+
+        /* Move to Ready Orders — modal confirm: saving (teal) vs complete (bright green) */
+        #confirmReadyBtn.btn-confirm-ready.btn-confirm-ready--saving:disabled {
+            background: #0e7490 !important;
+            border: 1px solid #0c6380 !important;
+            color: #ffffff !important;
+            cursor: wait;
+            opacity: 1;
+        }
+
+        #confirmReadyBtn.btn-confirm-ready.btn-confirm-ready--done:disabled {
+            background: #16a34a !important;
+            border: 1px solid #15803d !important;
+            color: #ffffff !important;
+            cursor: default;
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
         }
 
         .btn-confirm-ready:disabled {
@@ -1195,8 +1251,7 @@
             <button type="button" class="btn" id="ipToggleSelectAllBtn" onclick="ipToggleSelectAllClick()" disabled
                 title="Select every visible row, or clear all selections">Select all</button>
             <button type="button" class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled
-                title=""
-                style="background:#0f5132;color:#fff;border-color:#0f5132;">
+                title="">
                 📦 Move to Ready Orders
             </button>
             <button class="btn btn-unready" id="markUnReadyBtn" onclick="openMarkUnReadyModal()" disabled>
@@ -1253,8 +1308,7 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-cancel-modal" onclick="closeMarkReadyModal()">Cancel</button>
-                <button class="btn-confirm-ready" id="confirmReadyBtn" onclick="confirmMarkReady()"
-                    style="background:#0f5132;border-color:#0f5132;">
+                <button class="btn-confirm-ready" id="confirmReadyBtn" onclick="confirmMarkReady()">
                     ✅ Confirm — Make Ready Order
                 </button>
             </div>
@@ -2288,6 +2342,12 @@
 
         function closeMarkReadyModal() {
             document.getElementById('markReadyModal').classList.remove('open');
+            const c = document.getElementById('confirmReadyBtn');
+            if (c) {
+                c.disabled = false;
+                c.textContent = '✅ Confirm — Make Ready Order';
+                c.classList.remove('btn-confirm-ready--saving', 'btn-confirm-ready--done');
+            }
         }
 
         /* ── CONFIRM MAKE READY ORDER ── */
@@ -2303,6 +2363,7 @@
                 return;
             }
 
+            btn.classList.add('btn-confirm-ready--saving');
             btn.disabled = true;
             btn.textContent = 'Saving…';
 
@@ -2330,40 +2391,48 @@
                     localStorage.setItem('orders', JSON.stringify(orders));
                     localStorage.setItem('itemProcess', JSON.stringify(itemProcess));
 
-                    closeMarkReadyModal();
-
                     const count = checked.length;
                     const newlyReadyOrders = orders.filter(o => o && o.id != null && o.status === 'READY' && !wasOrderReady[String(o.id)]);
                     const nNew = newlyReadyOrders.length;
-                    showIpToast(nNew > 0
-                        ? `✅ Finalized ${count} row${count > 1 ? 's' : ''}. ${nNew} order${nNew > 1 ? 's' : ''} moved to Ready Orders (all quantities complete).`
-                        : `✅ Finalized ${count} row${count > 1 ? 's' : ''}. No order moved yet — complete all line quantities first.`);
 
-                    tbody = null;
-                    loadProcessItems();
+                    btn.classList.remove('btn-confirm-ready--saving');
+                    btn.classList.add('btn-confirm-ready--done');
+                    btn.textContent = '✓ Complete';
 
-                    try { window.dispatchEvent(new Event('storage')); } catch (e) { }
-                    try { window.dispatchEvent(new CustomEvent('orderStatusChanged', { detail: { status: 'READY' } })); } catch (e) { }
+                    setTimeout(() => {
+                        closeMarkReadyModal();
 
-                    if (nNew > 0) {
-                        setTimeout(() => {
-                            if (confirm(`${nNew} order${nNew > 1 ? 's' : ''} ${nNew > 1 ? 'are' : 'is'} now complete and in Ready Orders. Open Ready Orders now?`)) {
-                                if (typeof loadPage === 'function') {
-                                    loadPage('pages/ready-orders.html');
-                                } else if (typeof window.loadPage === 'function') {
-                                    window.loadPage('pages/ready-orders.html');
-                                } else {
-                                    window.open('pages/ready-orders.html', '_blank');
+                        showIpToast(nNew > 0
+                            ? `✅ Finalized ${count} row${count > 1 ? 's' : ''}. ${nNew} order${nNew > 1 ? 's' : ''} moved to Ready Orders (all quantities complete).`
+                            : `✅ Finalized ${count} row${count > 1 ? 's' : ''}. No order moved yet — complete all line quantities first.`);
+
+                        tbody = null;
+                        loadProcessItems();
+
+                        try { window.dispatchEvent(new Event('storage')); } catch (e) { }
+                        try { window.dispatchEvent(new CustomEvent('orderStatusChanged', { detail: { status: 'READY' } })); } catch (e) { }
+
+                        if (nNew > 0) {
+                            setTimeout(() => {
+                                if (confirm(`${nNew} order${nNew > 1 ? 's' : ''} ${nNew > 1 ? 'are' : 'is'} now complete and in Ready Orders. Open Ready Orders now?`)) {
+                                    if (typeof loadPage === 'function') {
+                                        loadPage('pages/ready-orders.html');
+                                    } else if (typeof window.loadPage === 'function') {
+                                        window.loadPage('pages/ready-orders.html');
+                                    } else {
+                                        window.open('pages/ready-orders.html', '_blank');
+                                    }
                                 }
-                            }
-                        }, 400);
-                    }
+                            }, 400);
+                        }
+                    }, 480);
 
                 } catch (err) {
                     console.error('Mark Ready error:', err);
                     showIpToast('❌ Failed to mark ready. Please try again.');
+                    btn.classList.remove('btn-confirm-ready--saving', 'btn-confirm-ready--done');
                     btn.disabled = false;
-                    btn.textContent = '✅ Confirm — Mark Ready';
+                    btn.textContent = '✅ Confirm — Make Ready Order';
                 }
             }, 400);
         }

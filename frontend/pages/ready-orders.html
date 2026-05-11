@@ -297,12 +297,14 @@
       background: #f8f9fb !important;
     }
 
-    tbody tr:hover {
-      background: #ffffff !important;
+    /* Row hover — mint aligned with Ready Items (#eaf7ed) */
+    .workflow-stage-ready-orders tbody tr:hover {
+      background: #eaf7ed !important;
+      box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.2);
     }
 
-    tbody tr:hover td {
-      border-color: #d1d6de;
+    .workflow-stage-ready-orders tbody tr:hover td {
+      border-color: #c8e6c9;
     }
 
     tbody tr td:first-child {
@@ -360,12 +362,12 @@
       animation: workflowOrderFade .28s ease;
     }
     .workflow-stage-ready-orders tbody tr[data-order-id]:hover {
-      background: #ffffff !important;
-      box-shadow: none;
+      background: #eaf7ed !important;
+      box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.22);
     }
 
     .workflow-stage-ready-orders tbody tr[data-order-id]:hover td {
-      border-color: #d1d6de;
+      border-color: #c8e6c9;
     }
     .workflow-stage-ready-orders .badge.ready {
       background: linear-gradient(90deg, #dcfce7, #ecfdf5);

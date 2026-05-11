@@ -373,7 +373,8 @@
     }
 
     /* Keep table column alignment with header for Other rows (do not remove td columns). */
-    .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(5)):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)):not(:nth-child(18)) {
+    /* Cross-hatch only on disabled “Order details” cells — not Type, Order No., Item Name, Stamp, Pc, Ready Rate, Other, Total, delete. */
+    .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)):not(:nth-child(18)) {
       background-image:
         linear-gradient(25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%),
         linear-gradient(-25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%);
@@ -4344,6 +4345,34 @@
                 return;
               }
 
+              // Order No. (1): visible, readonly (job / bill no).
+              if (idx === 1) {
+                input.setAttribute("readonly", "readonly");
+                input.classList.add("order-detail-readonly");
+                input.tabIndex = 0;
+                input.style.visibility = "visible";
+                input.style.border = "";
+                input.style.borderRadius = "";
+                input.style.cursor = "default";
+                input.style.backgroundColor = "rgba(0,0,0,0.03)";
+                return;
+              }
+
+              // Item Name (2): editable for Other.
+              if (idx === 2) {
+                input.removeAttribute("readonly");
+                input.classList.remove("purchase-field-disabled", "order-detail-readonly");
+                input.placeholder = "Item Name";
+                input.title = "Item Name";
+                input.tabIndex = 0;
+                input.style.visibility = "visible";
+                input.style.border = "1px solid var(--border)";
+                input.style.borderRadius = "4px";
+                input.style.cursor = "";
+                input.style.backgroundColor = "";
+                return;
+              }
+
               // Keep Pc, Rate, Other editable + visible.
               if (idx === 4 || idx === 13 || idx === 15) {
                 input.removeAttribute("readonly");
@@ -4384,6 +4413,21 @@
               sel.removeAttribute("disabled");
               sel.style.visibility = "visible";
               sel.style.display = "";
+            }
+            // Stamp column (3): select — enable for Other (Item Name uses col 2 inputs above).
+            const stampTd = row.cells[3];
+            if (stampTd) {
+              const stampSel = stampTd.querySelector("select.stamp-select") || stampTd.querySelector("select");
+              if (stampSel) {
+                stampSel.removeAttribute("disabled");
+                stampSel.classList.remove("purchase-field-disabled");
+                stampSel.style.visibility = "visible";
+                stampSel.style.display = "";
+                stampSel.style.opacity = "1";
+                stampSel.style.cursor = "pointer";
+                stampSel.style.backgroundColor = "";
+                stampSel.tabIndex = 0;
+              }
             }
             syncOtherRowSimpleTotal(row);
             return;

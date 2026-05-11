@@ -514,7 +514,7 @@
 
           <div class="row">
             <label>Name <span class="required-star">*</span></label>
-            <input id="jwName" placeholder="Full name" required>
+            <input id="jwName" placeholder="Full name" required autofocus>
           </div>
 
           <div class="row">
@@ -987,6 +987,17 @@
         try { if (el.select && el.tagName === 'INPUT' && el.type !== 'date') el.select(); } catch (err) { }
       }
 
+      function focusJwNameField() {
+        var root = getFormRoot();
+        var el = root.querySelector('#jwName') || document.getElementById('jwName');
+        if (!el || el.disabled) return;
+        try {
+          el.focus({ preventScroll: false });
+        } catch (err) {
+          el.focus();
+        }
+      }
+
       function stationDropdownIsOpen() {
         var dd = document.getElementById('jwStationDropdown');
         return !!(dd && dd.style.display === 'block');
@@ -1089,13 +1100,14 @@
       window.saveAndNew = function () {
         if (save()) {
           resetFields();
-          var root = getFormRoot();
-          var nameEl = root.querySelector('#jwName');
-          if (nameEl) nameEl.focus();
+          focusJwNameField();
         }
       };
       window.resetForm = function () {
-        if (confirm('Reset all fields? All data will be cleared.')) resetFields();
+        if (confirm('Reset all fields? All data will be cleared.')) {
+          resetFields();
+          focusJwNameField();
+        }
       };
       window.closeForm = function () {
         resetFields();
@@ -1123,6 +1135,10 @@
         setDefaults();
       }
       loadStations();
+      requestAnimationFrame(function () {
+        focusJwNameField();
+        setTimeout(focusJwNameField, 80);
+      });
 
       // Refresh customer list if new customer was added in another tab
       window.addEventListener('storage', function (e) {

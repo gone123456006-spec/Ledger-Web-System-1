@@ -27,6 +27,8 @@
       --jw-details-modal-max-h: min(94vh, calc(100vh - 32px));
       /* Modal title bar + footer strip (neutral grey, not blue-tinted) */
       --jw-modal-chrome-bg: linear-gradient(180deg, #e6e8ee 0%, #d6d9e1 100%);
+      /* Ledger entry grid (DATE / Metal / …) — softer than slate-400 */
+      --lc-grid-border: #d1dae6;
     }
 
     * {
@@ -390,13 +392,13 @@
       box-shadow: none;
     }
 
-    /* Ledger grid: slightly stronger cell borders than default --border */
+    /* Ledger grid: light cell borders */
     .lc-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 15px;
       table-layout: fixed;
-      border: 1px solid #94a3b8;
+      border: 1px solid var(--lc-grid-border);
     }
 
     .lc-table-total {
@@ -409,7 +411,7 @@
       font-weight: 700;
       padding: 8px 12px;
       text-align: left;
-      border: 1px solid #94a3b8;
+      border: 1px solid var(--lc-grid-border);
       font-size: 12.5px;
       text-transform: uppercase;
       letter-spacing: .04em;
@@ -421,7 +423,7 @@
 
     .lc-table td {
       padding: 7px 12px;
-      border: 1px solid #94a3b8;
+      border: 1px solid var(--lc-grid-border);
       color: #1e293b;
       vertical-align: middle;
     }
