@@ -831,10 +831,65 @@
   var GOLD_INVOICE_DRAFT_SESSION_KEY = 'goldInvoiceDraftKey';
 
   /** Leave / refresh / SPA navigate without Save — remove draft payments, prefill, and persisted draft so next open is clean. */
+  function cleanupGoldInvoiceUnsavedPersistedRowsByBillNo(bn) {
+    var key = String(bn || '').trim();
+    if (!key) return;
+    try {
+      var balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
+      if (Array.isArray(balances)) {
+        var nextBal = balances.filter(function (b) {
+          if (!b) return true;
+          var bno = String(b.orderNo || b.billNo || '').trim();
+          var src = String(b.orderSource || '').trim().toLowerCase();
+          if (bno !== key) return true;
+          // Only wipe Gold Invoice rows for this unsaved bill key.
+          return src && src !== 'gold-invoice';
+        });
+        if (nextBal.length !== balances.length) {
+          localStorage.setItem('customerBalances', JSON.stringify(nextBal));
+        }
+      }
+    } catch (e1) { }
+    try {
+      var bills = JSON.parse(localStorage.getItem('bills') || '[]');
+      if (Array.isArray(bills)) {
+        var nextBills = bills.filter(function (b) {
+          if (!b) return true;
+          var bno = String(b.billNo || b.orderNo || '').trim();
+          var src = String(b.orderSource || '').trim().toLowerCase();
+          if (bno !== key) return true;
+          return src && src !== 'gold-invoice';
+        });
+        if (nextBills.length !== bills.length) {
+          localStorage.setItem('bills', JSON.stringify(nextBills));
+        }
+      }
+    } catch (e2) { }
+    try {
+      var orders = JSON.parse(localStorage.getItem('orders') || '[]');
+      if (Array.isArray(orders)) {
+        var nextOrders = orders.filter(function (o) {
+          if (!o) return true;
+          var ono = String(o.orderNo || o.billNo || '').trim();
+          var src = String(o.orderSource || '').trim().toLowerCase();
+          if (ono !== key) return true;
+          return src && src !== 'gold-invoice';
+        });
+        if (nextOrders.length !== orders.length) {
+          localStorage.setItem('orders', JSON.stringify(nextOrders));
+        }
+      }
+    } catch (e3) { }
+  }
+
   function wipeGoldInvoiceUnsavedSession() {
     if (S.savedThisSession) return;
     clearGoldInvoiceDraftCache();
     try {
+      var bnForCleanup = el('billNo') && String(el('billNo').value || '').trim();
+      if (!S.editMode && bnForCleanup) {
+        cleanupGoldInvoiceUnsavedPersistedRowsByBillNo(bnForCleanup);
+      }
       var draftKeys = {};
       if (S.draftPaymentKey) draftKeys[String(S.draftPaymentKey).trim()] = true;
       try {
@@ -2951,6 +3006,9 @@
     if (!editId) {
       if (el('orderDate') && !el('orderDate').value) el('orderDate').valueAsDate = new Date();
       if (el('billNo') && !el('billNo').value) el('billNo').value = peekBillNo();
+      if (el('billNo') && el('billNo').value) {
+        cleanupGoldInvoiceUnsavedPersistedRowsByBillNo(el('billNo').value);
+      }
     }
 
     var editLoaded = loadOrderForEdit();

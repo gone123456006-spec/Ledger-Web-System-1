@@ -852,6 +852,91 @@
       }
     }
 
+    .ratebook-list-popup-box {
+      max-width: min(1100px, 96vw);
+      width: min(1100px, 96vw);
+      max-height: 82vh;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ratebook-list-table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: auto;
+      max-height: 56vh;
+    }
+
+    .ratebook-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+      background: #fff;
+      font-size: 12px;
+    }
+
+    .ratebook-list-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: #334155;
+    }
+
+    .ratebook-list-table tbody td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: middle;
+      color: #1e293b;
+    }
+
+    .ratebook-list-table .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ratebook-row-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .ratebook-row-actions button {
+      font-size: 11px;
+      padding: 4px 8px;
+      min-width: 54px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .ratebook-row-actions .rb-edit-btn {
+      background: #eef4ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .ratebook-row-actions .rb-apply-btn {
+      background: #ecfdf5;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .ratebook-row-actions .rb-del-btn {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+
     .popup-box h3 {
       margin: 0 0 16px 0;
       font-size: 16px;
@@ -2103,6 +2188,39 @@
     </div>
   </div>
 
+  <!-- RATEBOOK LIST POPUP -->
+  <div id="new-order-ratebook-list-popup" class="popup-bg new-order-popup" style="display:none;"
+    onclick="if(event.target===this) (typeof closeRatebookListPopup==='function'&&closeRatebookListPopup())">
+    <div class="popup-box ratebook-list-popup-box" onclick="event.stopPropagation()">
+      <h3>Ratebook List</h3>
+      <div class="ratebook-list-table-wrap">
+        <table class="ratebook-list-table">
+          <thead>
+            <tr>
+              <th>Stamp</th>
+              <th class="num">Weight (g)</th>
+              <th class="num">Rate (₹)</th>
+              <th class="num">Amount (₹)</th>
+              <th>Delivery Date</th>
+              <th>Type</th>
+              <th>Narration</th>
+              <th style="text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="new-order-ratebook-list-body">
+            <tr>
+              <td colspan="8" class="empty-state">No rates for this order</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="popup-actions">
+        <button type="button" onclick="openRateBook()">+ Add New Rate</button>
+        <button type="button" onclick="closeRatebookListPopup()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- RATEBOOK POPUP -->
   <div id="new-order-ratebook-popup" class="popup-bg new-order-popup"
     onclick="if(event.target===this) (typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup:closeRatebookPopup)()">
@@ -2247,6 +2365,7 @@
         editMode: false,
         editOrderId: null,
         orderSaveLocked: false,
+        tempRateBook: [],
       };
 
       function newDraftPaymentKey() {
@@ -2370,7 +2489,7 @@
       }
 
       function hideOwnPopupsOnInit() {
-        ['new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup',
+        ['new-order-ratebook-list-popup', 'new-order-ratebook-popup', 'new-order-order-details-popup', 'new-order-payment-popup',
           'new-order-payments-detail-popup', 'new-order-purchase-sheet-popup', 'new-order-add-customer-popup',
           'ratebookPopup', 'orderDetailsPopup', 'paymentPopup', 'orderPopup', 'ratebookDetailsPopup'
         ].forEach(function (id) {
@@ -3649,23 +3768,163 @@
       // RATEBOOK MANAGEMENT
       // =====================================================
 
-      function openRateBook() {
+      function escRatebookCell(v) {
+        return String(v == null ? '' : v)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function getSavedRatebookRows() {
+        try {
+          const rows = JSON.parse(localStorage.getItem('rateBook') || '[]');
+          return Array.isArray(rows) ? rows : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function getTempRatebookRows() {
+        return Array.isArray(AppState.tempRateBook) ? AppState.tempRateBook : [];
+      }
+
+      function getRatebookRowsForBill(billNoValue) {
+        const bn = String(billNoValue || '').trim();
+        if (!bn) return [];
+        const saved = getSavedRatebookRows().filter(r => String(r && r.billNo || '').trim() === bn);
+        const temp = getTempRatebookRows().filter(r => String(r && r.billNo || '').trim() === bn);
+        return saved.concat(temp).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      }
+
+      function getRatebookRowsForCurrentBill() {
+        const billNo = AppState.elements.billNo && AppState.elements.billNo.value;
+        return getRatebookRowsForBill(billNo);
+      }
+
+      function getRatebookRowById(rateId) {
+        const id = String(rateId || '').trim();
+        if (!id) return null;
+        const rows = getRatebookRowsForCurrentBill();
+        return rows.find(function (r) { return String(r && r.id || '') === id; }) || null;
+      }
+
+      function discardTempRatebookForBill(billNoValue) {
+        const bn = String(billNoValue || '').trim();
+        if (!bn) return;
+        AppState.tempRateBook = getTempRatebookRows().filter(function (r) {
+          return String(r && r.billNo || '').trim() !== bn;
+        });
+      }
+
+      function commitTempRatebookForBill(fromBillNo, toBillNo) {
+        const from = String(fromBillNo || '').trim();
+        const to = String(toBillNo || '').trim();
+        if (!from || !to) return;
+        const tempRows = getTempRatebookRows().filter(function (r) {
+          return String(r && r.billNo || '').trim() === from;
+        });
+        if (tempRows.length === 0) return;
+
+        const saved = getSavedRatebookRows();
+        tempRows.forEach(function (r) {
+          const copy = Object.assign({}, r, {
+            id: Date.now() + Math.floor(Math.random() * 1000000),
+            billNo: to,
+            __temp: false
+          });
+          delete copy.__temp;
+          saved.push(copy);
+        });
+        localStorage.setItem('rateBook', JSON.stringify(saved));
+        discardTempRatebookForBill(from);
+      }
+
+      function renderRatebookListPopupTable() {
+        const body = getSearchRoot().querySelector('#new-order-ratebook-list-body') || document.getElementById('new-order-ratebook-list-body');
+        if (!body) return;
+        const rows = getRatebookRowsForCurrentBill();
+        if (rows.length === 0) {
+          body.innerHTML = '<tr><td colspan="8" class="empty-state">No rates for this order</td></tr>';
+          return;
+        }
+
+        let html = '';
+        rows.forEach(function (r) {
+          const delivery = r.delDate ? normalizeDateInputValue(r.delDate) : '';
+          const narration = (r.narration || '').trim();
+          html += `
+            <tr>
+              <td>${escRatebookCell(r.stamp || '—')}</td>
+              <td class="num">${safeNumber(r.weight).toFixed(3)}</td>
+              <td class="num">${safeNumber(r.rate).toFixed(2)}</td>
+              <td class="num">${safeNumber(r.amount).toFixed(2)}</td>
+              <td>${escRatebookCell(delivery || '—')}</td>
+              <td>${escRatebookCell(r.type || 'S')}</td>
+              <td title="${escRatebookCell(narration)}">${escRatebookCell(narration || '—')}</td>
+              <td>
+                <div class="ratebook-row-actions">
+                  <button type="button" class="rb-edit-btn" onclick="openRateBook('${escRatebookCell(String(r.id))}')">Edit</button>
+                  <button type="button" class="rb-apply-btn" onclick="applyRateToRow('${escRatebookCell(String(r.id))}')">Apply</button>
+                  <button type="button" class="rb-del-btn" onclick="deleteRate('${escRatebookCell(String(r.id))}')">Delete</button>
+                </div>
+              </td>
+            </tr>`;
+        });
+        body.innerHTML = html;
+      }
+
+      function openRatebookListPopup() {
+        if (!validateBeforeAction()) return;
+        const popup = getPopupEl('new-order-ratebook-list-popup');
+        if (!popup) return;
+        renderRatebookListPopupTable();
+        popup.style.display = 'flex';
+        popup.style.alignItems = 'center';
+        popup.style.justifyContent = 'center';
+      }
+
+      function closeRatebookListPopup() {
+        const popup = getPopupEl('new-order-ratebook-list-popup');
+        if (popup) popup.style.display = 'none';
+      }
+
+      function openRateBook(editRateId) {
         if (!validateBeforeAction()) return;
 
         const popup = getPopupEl('new-order-ratebook-popup');
         if (!popup) return;
+        closeRatebookListPopup();
 
         const setVal = (id, val) => {
           const el = getPopupEl(id.replace(/^#/, '')) || getSearchRoot().querySelector(id);
           if (el) el.value = val;
         };
-        setVal('#rbStamp', '18 CR');
-        setVal('#rbWeight', '');
-        setVal('#rbRate', '');
-        setVal('#rbAmount', '');
-        setVal('#rbDelDate', '');
-        setVal('#rbType', 'S');
-        setVal('#rbNarration', '');
+        if (editRateId) {
+          const rate = getRatebookRowById(editRateId);
+          if (rate) {
+            setVal('#rbStamp', rate.stamp || '18 CR');
+            setVal('#rbWeight', rate.weight != null ? Number(rate.weight).toFixed(3) : '');
+            setVal('#rbRate', rate.rate != null ? Number(rate.rate).toFixed(2) : '');
+            setVal('#rbAmount', rate.amount != null ? Number(rate.amount).toFixed(2) : '');
+            setVal('#rbDelDate', normalizeDateInputValue(rate.delDate || ''));
+            setVal('#rbType', rate.type || 'S');
+            setVal('#rbNarration', rate.narration || '');
+            popup.dataset.editRateId = String(rate.id);
+          } else {
+            popup.dataset.editRateId = '';
+          }
+        } else {
+          setVal('#rbStamp', '18 CR');
+          setVal('#rbWeight', '');
+          setVal('#rbRate', '');
+          setVal('#rbAmount', '');
+          setVal('#rbDelDate', '');
+          setVal('#rbType', 'S');
+          setVal('#rbNarration', '');
+          popup.dataset.editRateId = '';
+        }
 
         popup.style.display = 'flex';
         popup.style.alignItems = 'center';
@@ -3674,7 +3933,10 @@
 
       function closeRatebookPopup() {
         const popup = getPopupEl('new-order-ratebook-popup');
-        if (popup) popup.style.display = 'none';
+        if (popup) {
+          popup.style.display = 'none';
+          if (popup.dataset) popup.dataset.editRateId = '';
+        }
       }
 
       function newOrderCloseRatebookPopup() { closeRatebookPopup(); }
@@ -3713,6 +3975,7 @@
 
       function saveRatebookEntry() {
         try {
+          const popup = getPopupEl('new-order-ratebook-popup');
           const stampEl = getPopupEl('rbStamp') || getSearchRoot().querySelector('#rbStamp');
           const weightEl = getPopupEl('rbWeight') || getSearchRoot().querySelector('#rbWeight');
           const rateEl = getPopupEl('rbRate') || getSearchRoot().querySelector('#rbRate');
@@ -3740,8 +4003,10 @@
             return;
           }
 
-          const rateEntry = {
-            id: Date.now(),
+          const editRateId = popup && popup.dataset ? String(popup.dataset.editRateId || '').trim() : '';
+          const billNoValue = String(AppState.elements.billNo && AppState.elements.billNo.value || '').trim();
+          const nowIso = new Date().toISOString();
+          const payload = {
             stamp: stamp,
             weight: weight,
             rate: rate,
@@ -3749,19 +4014,69 @@
             delDate: delDate,
             type: type,
             narration: narration,
-            customer: getCustomerName(),
-            customerId: AppState.elements.custName.value,
-            billNo: AppState.elements.billNo.value,
-            date: new Date().toISOString().split('T')[0],
-            timestamp: new Date().toISOString()
+            timestamp: nowIso
           };
 
-          const rateBook = JSON.parse(localStorage.getItem('rateBook') || '[]');
-          rateBook.push(rateEntry);
-          localStorage.setItem('rateBook', JSON.stringify(rateBook));
+          const saveAsTemp = (!AppState.editMode && AppState.billNoClaimed !== true);
+          if (saveAsTemp) {
+            if (editRateId) {
+              let edited = false;
+              AppState.tempRateBook = getTempRatebookRows().map(function (r) {
+                if (String(r && r.id || '') !== editRateId) return r;
+                edited = true;
+                return Object.assign({}, r, payload);
+              });
+              if (!edited) {
+                AppState.tempRateBook.push(Object.assign({
+                  id: 'tmp-' + Date.now() + '-' + Math.floor(Math.random() * 100000),
+                  billNo: billNoValue,
+                  customer: getCustomerName(),
+                  customerId: AppState.elements.custName.value,
+                  date: new Date().toISOString().split('T')[0],
+                  __temp: true
+                }, payload));
+              }
+            } else {
+              AppState.tempRateBook.push(Object.assign({
+                id: 'tmp-' + Date.now() + '-' + Math.floor(Math.random() * 100000),
+                billNo: billNoValue,
+                customer: getCustomerName(),
+                customerId: AppState.elements.custName.value,
+                date: new Date().toISOString().split('T')[0],
+                __temp: true
+              }, payload));
+            }
+          } else {
+            const rateBook = getSavedRatebookRows();
+            if (editRateId) {
+              const idx = rateBook.findIndex(r => String(r && r.id || '') === editRateId);
+              if (idx >= 0) {
+                rateBook[idx] = Object.assign({}, rateBook[idx], payload);
+              } else {
+                rateBook.push(Object.assign({
+                  id: Date.now(),
+                  billNo: billNoValue,
+                  customer: getCustomerName(),
+                  customerId: AppState.elements.custName.value,
+                  date: new Date().toISOString().split('T')[0]
+                }, payload));
+              }
+            } else {
+              rateBook.push(Object.assign({
+                id: Date.now(),
+                billNo: billNoValue,
+                customer: getCustomerName(),
+                customerId: AppState.elements.custName.value,
+                date: new Date().toISOString().split('T')[0]
+              }, payload));
+            }
+            localStorage.setItem('rateBook', JSON.stringify(rateBook));
+          }
 
           closeRatebookPopup();
           updateRatebookPanel();
+          renderRatebookListPopupTable();
+          openRatebookListPopup();
           if (typeof showSaveIndicator === 'function') showSaveIndicator();
         } catch (e) {
           console.error('Error saving rate:', e);
@@ -3870,8 +4185,7 @@
       }
 
       function applyRateToRow(rateId) {
-        const rates = JSON.parse(localStorage.getItem('rateBook') || '[]');
-        const rate = rates.find(r => r.id === Number(rateId));
+        const rate = getRatebookRowById(rateId);
 
         if (!rate) {
           showError('Rate not found');
@@ -3908,12 +4222,23 @@
 
       function deleteRate(rateId) {
         if (!confirm('Delete this rate?')) return;
-
-        const rates = JSON.parse(localStorage.getItem('rateBook') || '[]');
-        const updated = rates.filter(r => String(r.id) !== String(rateId));
-        localStorage.setItem('rateBook', JSON.stringify(updated));
+        const id = String(rateId || '').trim();
+        let changed = false;
+        AppState.tempRateBook = getTempRatebookRows().filter(function (r) {
+          const keep = String(r && r.id || '') !== id;
+          if (!keep) changed = true;
+          return keep;
+        });
+        if (!changed) {
+          const rates = getSavedRatebookRows();
+          const updated = rates.filter(r => String(r && r.id || '') !== id);
+          if (updated.length !== rates.length) {
+            localStorage.setItem('rateBook', JSON.stringify(updated));
+          }
+        }
 
         updateRatebookPanel();
+        renderRatebookListPopupTable();
       }
 
       // =====================================================
@@ -3997,37 +4322,19 @@
         const listEl = getSearchRoot().querySelector('#ratebookList');
         if (!listEl) return;
 
-        const rates = JSON.parse(localStorage.getItem('rateBook') || '[]');
         const billNo = AppState.elements.billNo && AppState.elements.billNo.value;
-
-        const displayRates = rates
-          .filter(r => r.billNo === billNo)
-          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-        if (displayRates.length === 0) {
-          listEl.innerHTML = '<div class="empty-state">No rates for this order</div>';
-        } else {
-          let html = '';
-          displayRates.forEach(r => {
-            const time = new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            html += `
-            <div class="panel-item" style="cursor:pointer;" onclick="applyRateToRow(${r.id})" title="Click to apply">
-              <div class="panel-item-header">
-                <span>${formatCurrency(r.rate)}</span>
-                <span>${r.stamp || '—'}</span>
-                <button onclick="event.stopPropagation(); deleteRate(${r.id})"
-                        style="background:#ff3b30; color:#fff; border:none; padding:2px 6px;
-                               border-radius:4px; cursor:pointer; font-size:10px;">❌</button>
-              </div>
-              <div class="panel-item-detail">
-                <span>${(r.itemName || '—').substring(0, 25)}</span>
-                <span style="float:right; opacity:0.7;">${time}</span>
-              </div>
-            </div>
-          `;
-          });
-          listEl.innerHTML = html;
+        if (!billNo) {
+          listEl.innerHTML = '<div class="empty-state">Select customer and order number first.</div>';
+          return;
         }
+
+        const count = getRatebookRowsForCurrentBill().length;
+        listEl.innerHTML = `
+          <div class="panel-item" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+            <span>${count} rate(s) for this order</span>
+            <button type="button" class="panel-add-btn" onclick="openRatebookListPopup()">Open Ratebook List</button>
+          </div>
+        `;
       }
 
       // =====================================================
@@ -4196,6 +4503,7 @@
             }
             AppState.elements.billNo.value = claimed;
             AppState.billNoClaimed = true;
+            commitTempRatebookForBill(prevBn, claimed);
             try {
               const draftKey = String(AppState.draftPaymentKey || '').trim();
               if (draftKey) {
@@ -4217,6 +4525,10 @@
                 if (billInput) billInput.value = claimed;
               });
             }
+          }
+          if (AppState.editMode) {
+            const bnEdit = String(AppState.elements.billNo && AppState.elements.billNo.value || '').trim();
+            if (bnEdit) commitTempRatebookForBill(bnEdit, bnEdit);
           }
 
           const billTotal = calculateBillTotal();
@@ -4842,6 +5154,9 @@
       }
 
       function clearOrderFormAndState() {
+        const oldBillNo = AppState.elements.billNo ? String(AppState.elements.billNo.value || '').trim() : '';
+        if (oldBillNo) discardTempRatebookForBill(oldBillNo);
+        AppState.tempRateBook = [];
         if (AppState.elements.custName) AppState.elements.custName.value = '';
         if (AppState.elements.billNo) AppState.elements.billNo.value = peekNextBillNo();
         AppState.billNoClaimed = false;
@@ -5001,6 +5316,7 @@
         var _storageHandler = null;
         var _visibilityHandler = null;
         var _focusHandler = null;
+        var _pagehideHandler = null;
 
         function attachInitListeners() {
           _storageHandler = function (e) {
@@ -5037,6 +5353,18 @@
             ledgerNavListen(window, 'focus', _focusHandler);
           } else {
             window.addEventListener('focus', _focusHandler);
+          }
+
+          _pagehideHandler = function () {
+            const bn = AppState.elements.billNo ? String(AppState.elements.billNo.value || '').trim() : '';
+            if (bn && !AppState.editMode && AppState.billNoClaimed !== true) {
+              discardTempRatebookForBill(bn);
+            }
+          };
+          if (typeof ledgerNavListen === 'function') {
+            ledgerNavListen(window, 'pagehide', _pagehideHandler);
+          } else {
+            window.addEventListener('pagehide', _pagehideHandler);
           }
         }
 
@@ -5165,6 +5493,8 @@
         window.newOrderClosePurchaseSheetPopup = newOrderClosePurchaseSheetPopup;
         window.addPurchaseSheetRow = addPurchaseSheetRow;
         window.savePurchaseSheet = savePurchaseSheet;
+        window.openRatebookListPopup = openRatebookListPopup;
+        window.closeRatebookListPopup = closeRatebookListPopup;
         window.openRateBook = openRateBook;
         window.closeRatebookPopup = closeRatebookPopup;
         window.newOrderCloseRatebookPopup = newOrderCloseRatebookPopup;
@@ -5191,6 +5521,13 @@
 
         window.__currentPageCleanup = function () {
           try {
+            const bn = AppState.elements.billNo ? String(AppState.elements.billNo.value || '').trim() : '';
+            if (bn && !AppState.editMode && AppState.billNoClaimed !== true) {
+              discardTempRatebookForBill(bn);
+            }
+            AppState.tempRateBook = [];
+          } catch (eRb) { }
+          try {
             if (_storageHandler) window.removeEventListener('storage', _storageHandler);
           } catch (e) { }
           try {
@@ -5199,9 +5536,13 @@
           try {
             if (_focusHandler) window.removeEventListener('focus', _focusHandler);
           } catch (e) { }
+          try {
+            if (_pagehideHandler) window.removeEventListener('pagehide', _pagehideHandler);
+          } catch (e) { }
           _storageHandler = null;
           _visibilityHandler = null;
           _focusHandler = null;
+          _pagehideHandler = null;
           var globals = [
             'addRow', 'addRowNewOrder', 'removeRow', 'calculateRow', 'handleTypeChange',
             'openCustomer', 'openPayment', 'closePaymentPopup', 'newOrderClosePaymentPopup',
@@ -5209,7 +5550,8 @@
             'closeNewOrderPaymentsDetailPopup', 'openPaymentDetailTableEdit',
             'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'openPurchaseSheet',
             'closePurchaseSheetPopup', 'newOrderClosePurchaseSheetPopup', 'addPurchaseSheetRow',
-            'savePurchaseSheet', 'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup',
+            'savePurchaseSheet', 'openRatebookListPopup', 'closeRatebookListPopup',
+            'openRateBook', 'closeRatebookPopup', 'newOrderCloseRatebookPopup',
             'newOrderSaveRatebookEntry', 'openOrderDetailsPopup', 'closeOrderDetailsPopup',
             'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup',
             'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount',
