@@ -66,9 +66,9 @@
     </nav>
 
 
-    <div class="app-container sidebar-hidden" id="appContainer">
+    <div class="app-container" id="appContainer">
 
-        <main class="workspace" id="workspace"></main>
+        <main class="workspace" id="workspace" tabindex="-1"></main>
 
         <!-- side bar  -->
         <aside class="sidebar">
@@ -148,6 +148,9 @@
            OPEN STATION FORM
         ========================= */
         function openStation() {
+            try {
+                if (window.ledgerSetSidebarHidden) window.ledgerSetSidebarHidden(true);
+            } catch (e) { }
             document.getElementById("workspace").innerHTML = `
     <div class="station-window">
         <div class="station-titlebar">Station</div>
@@ -337,6 +340,9 @@
            LIST STATIONS
         ========================= */
         function listStations() {
+            try {
+                if (window.ledgerSetSidebarHidden) window.ledgerSetSidebarHidden(true);
+            } catch (e) { }
             const stations = JSON.parse(localStorage.getItem("stations") || "[]");
             let html = `
             <div style="padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin: 10px;">
@@ -427,21 +433,6 @@
         }
 
 
-    </script>
-    <script>
-        (function () {
-            function toggleLedgerSidebar() {
-                var app = document.getElementById("appContainer");
-                if (!app) return;
-                app.classList.toggle("sidebar-hidden");
-            }
-            document.addEventListener("keydown", function (e) {
-                if (e.ctrlKey && !e.altKey && !e.shiftKey && (e.key === "m" || e.key === "M")) {
-                    e.preventDefault();
-                    toggleLedgerSidebar();
-                }
-            });
-        })();
     </script>
     <script src="js/form-persistence.js"></script>
     <script src="script.js"></script>

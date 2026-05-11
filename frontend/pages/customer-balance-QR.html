@@ -1257,6 +1257,8 @@
             name: "",
             station: "",
             cid: "",
+            /** When set, statement + saved rows are scoped to this bill/order only (not merged by customer name). */
+            statementBillNo: "",
             /** null = not loaded yet (so we can merge from customers[]); number after load */
             openingBalance: null,
             openingBalanceType: "Dr",
@@ -1359,7 +1361,16 @@
             }
         }
 
+        function activeStatementBillNo() {
+            return String(customerData.statementBillNo || '').trim();
+        }
+
         function stmtStorageKey() {
+            const bill = activeStatementBillNo();
+            if (bill) {
+                const safe = normKey(bill).replace(/[^a-z0-9_.\/-]/g, '_');
+                return 'stmt_bill_' + safe;
+            }
             return 'stmt_' + (customerData.lfNo || customerData.name);
         }
 
@@ -2046,6 +2057,11 @@
         /** Match customerBalances / bills row to current customer (customerId, cid, or customer name). */
         function matchCustomerBalanceOrBillRow(b) {
             if (!b) return false;
+            const billKey = activeStatementBillNo();
+            if (billKey) {
+                const ref = String(b.orderNo || b.billNo || '').trim();
+                if (!ref || normKey(ref) !== normKey(billKey)) return false;
+            }
             const idRaw = customerData.id != null ? String(customerData.id) : '';
             const idVal = idRaw && !idRaw.startsWith('idx-') ? idRaw : '';
             if (idVal && b.customerId != null && String(b.customerId) === idVal) return true;
@@ -2065,6 +2081,7 @@
                 s.curbal = String(parseFloat(customerData.currentBalance) || 0);
                 s.opType = customerData.openingBalanceType || 'Dr';
                 s.curType = customerData.currentBalanceType || 'Dr';
+                if (activeStatementBillNo()) s.billNo = activeStatementBillNo();
                 sessionStorage.setItem('stmtCustomer', JSON.stringify(s));
             } catch (e) { }
         }
@@ -2083,6 +2100,11 @@
         /** Fallback when customerId/cid mismatch: same display name as current statement. */
         function matchCustomerBalanceOrBillRowLoose(b) {
             if (!b) return false;
+            const billKey = activeStatementBillNo();
+            if (billKey) {
+                const ref = String(b.orderNo || b.billNo || '').trim();
+                if (!ref || normKey(ref) !== normKey(billKey)) return false;
+            }
             const tn = customerData.name ? normKey(customerData.name) : '';
             return !!(tn && b.customer && normKey(b.customer) === tn);
         }
@@ -2126,9 +2148,12 @@
                 const s = String(suffix || '').trim();
                 if (s.length) keys.add('stmt_' + s);
             };
-            add(customerData.lfNo || customerData.name);
-            add(customerData.name);
-            add(customerData.lfNo);
+            keys.add(stmtStorageKey());
+            if (!activeStatementBillNo()) {
+                add(customerData.lfNo || customerData.name);
+                add(customerData.name);
+                add(customerData.lfNo);
+            }
             keys.forEach(k => {
                 try {
                     localStorage.setItem(k, empty);
@@ -2189,8 +2214,7 @@
             } catch (e) { }
 
             try {
-                const key = 'stmt_' + (customerData.lfNo || customerData.name);
-                localStorage.setItem(key, JSON.stringify(transactions));
+                localStorage.setItem(stmtStorageKey(), JSON.stringify(transactions));
             } catch (e) { }
 
             // Statement closing = same math as on-screen running balance (opening base + row deltas).
@@ -2214,111 +2238,134 @@
                 customerData.openingBalanceType = 'Dr';
             }
 
-            // Update in 'customers' list (also persist statementBillAmountCleared + zeros when in cleared mode)
-            try {
-                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
-                let updated = false;
-                customers.forEach((c, idx) => {
-                    if (!matchCustomerRecord(c, idx)) return;
-                    if (customerData.statementBillAmountCleared) {
-                        applyClearedStateToCustomerRow(c);
-                    } else {
-                        if (zeroOpeningAfterPayoff) {
-                            c.openingBalance = 0;
-                            c.openingBalanceType = 'Dr';
-                            c.masterOpeningBalance = 0;
-                            c.masterOpeningBalanceType = 'Dr';
-                        } else if (preOpeningAbsorb.merged) {
-                            const ob = Number(customerData.openingBalance) || 0;
-                            c.openingBalance = ob;
-                            c.openingBalanceType = customerData.openingBalanceType || 'Dr';
-                            c.masterOpeningBalance = ob;
-                            c.masterOpeningBalanceType = c.openingBalanceType;
-                        } else if (c.masterOpeningBalance != null && c.masterOpeningBalance !== '') {
-                            c.openingBalance = Number(c.masterOpeningBalance);
-                            if (c.masterOpeningBalanceType) c.openingBalanceType = c.masterOpeningBalanceType;
-                        }
-                        c.currentBalance = netBalance;
-                        c.currentBalanceType = netType;
+            // Per-bill statement: persist closing onto customerBalances for that bill only — do not merge into customers[] master totals.
+            if (activeStatementBillNo()) {
+                try {
+                    const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
+                    let balChanged = false;
+                    const v = Number(stmtClosing) || 0;
+                    balances.forEach(b => {
+                        if (!matchCustomerBalanceOrBillRow(b)) return;
+                        b.finalBalanceAmount = v.toFixed(2);
+                        b.computedBalAmt = v.toFixed(2);
+                        balChanged = true;
+                    });
+                    if (balChanged) {
+                        localStorage.setItem('customerBalances', JSON.stringify(balances));
+                        try {
+                            window.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                            if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                            if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
+                        } catch (eEv) { }
                     }
-                    updated = true;
-                });
-                if (!updated && customerData.statementBillAmountCleared) {
-                    const nm = normKey(customerData.name);
-                    if (nm) {
-                        customers.forEach(c => {
-                            if (!c || !c.name || normKey(c.name) !== nm) return;
+                } catch (eBal) { }
+            } else {
+                // Update in 'customers' list (also persist statementBillAmountCleared + zeros when in cleared mode)
+                try {
+                    const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                    let updated = false;
+                    customers.forEach((c, idx) => {
+                        if (!matchCustomerRecord(c, idx)) return;
+                        if (customerData.statementBillAmountCleared) {
                             applyClearedStateToCustomerRow(c);
-                            updated = true;
-                        });
-                    }
-                }
-                if (updated) {
-                    localStorage.setItem('customers', JSON.stringify(customers));
-                    if (customerData.statementBillAmountCleared || closingZero || preOpeningAbsorb.merged) syncStmtSessionFromCustomerData();
-                    try {
-                        const ev = new CustomEvent("customersUpdated");
-                        window.dispatchEvent(ev);
-                        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
-                        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
-                    } catch (e) { }
-                } else if (preOpeningAbsorb.merged) {
-                    try {
-                        const customers2 = JSON.parse(localStorage.getItem('customers') || '[]');
-                        let touched = false;
-                        customers2.forEach((c, idx) => {
-                            if (!matchCustomerRecord(c, idx)) return;
-                            const ob = Number(customerData.openingBalance) || 0;
-                            c.openingBalance = ob;
-                            c.openingBalanceType = customerData.openingBalanceType || 'Dr';
-                            c.masterOpeningBalance = ob;
-                            c.masterOpeningBalanceType = c.openingBalanceType;
+                        } else {
+                            if (zeroOpeningAfterPayoff) {
+                                c.openingBalance = 0;
+                                c.openingBalanceType = 'Dr';
+                                c.masterOpeningBalance = 0;
+                                c.masterOpeningBalanceType = 'Dr';
+                            } else if (preOpeningAbsorb.merged) {
+                                const ob = Number(customerData.openingBalance) || 0;
+                                c.openingBalance = ob;
+                                c.openingBalanceType = customerData.openingBalanceType || 'Dr';
+                                c.masterOpeningBalance = ob;
+                                c.masterOpeningBalanceType = c.openingBalanceType;
+                            } else if (c.masterOpeningBalance != null && c.masterOpeningBalance !== '') {
+                                c.openingBalance = Number(c.masterOpeningBalance);
+                                if (c.masterOpeningBalanceType) c.openingBalanceType = c.masterOpeningBalanceType;
+                            }
                             c.currentBalance = netBalance;
                             c.currentBalanceType = netType;
-                            touched = true;
-                        });
-                        if (!touched) {
-                            const nm = normKey(customerData.name);
-                            if (nm) {
-                                customers2.forEach(c => {
-                                    if (!c || !c.name || normKey(c.name) !== nm) return;
-                                    const ob = Number(customerData.openingBalance) || 0;
-                                    c.openingBalance = ob;
-                                    c.openingBalanceType = customerData.openingBalanceType || 'Dr';
-                                    c.masterOpeningBalance = ob;
-                                    c.masterOpeningBalanceType = c.openingBalanceType;
-                                    c.currentBalance = netBalance;
-                                    c.currentBalanceType = netType;
-                                    touched = true;
-                                });
-                            }
-                        }
-                        if (touched) localStorage.setItem('customers', JSON.stringify(customers2));
-                        syncStmtSessionFromCustomerData();
-                    } catch (eSync) { }
-                }
-            } catch (e) { }
-
-            // Update in 'jewellers' list (in case it's a jeweller)
-            try {
-                const jewellers = JSON.parse(localStorage.getItem('jewellers') || '[]');
-                const norm = s => (s || '').trim().toLowerCase();
-                let updated = false;
-                jewellers.forEach(j => {
-                    const matchByName = norm(j.name) === norm(customerData.name);
-                    if (matchByName) {
-                        if (customerData.statementBillAmountCleared) {
-                            j.currentBalance = 0;
-                            j.currentBalanceType = 'Dr';
-                        } else {
-                            j.currentBalance = netBalance;
-                            j.currentBalanceType = netType;
                         }
                         updated = true;
+                    });
+                    if (!updated && customerData.statementBillAmountCleared) {
+                        const nm = normKey(customerData.name);
+                        if (nm) {
+                            customers.forEach(c => {
+                                if (!c || !c.name || normKey(c.name) !== nm) return;
+                                applyClearedStateToCustomerRow(c);
+                                updated = true;
+                            });
+                        }
                     }
-                });
-                if (updated) localStorage.setItem('jewellers', JSON.stringify(jewellers));
-            } catch (e) { }
+                    if (updated) {
+                        localStorage.setItem('customers', JSON.stringify(customers));
+                        if (customerData.statementBillAmountCleared || closingZero || preOpeningAbsorb.merged) syncStmtSessionFromCustomerData();
+                        try {
+                            const ev = new CustomEvent("customersUpdated");
+                            window.dispatchEvent(ev);
+                            if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
+                            if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
+                        } catch (e) { }
+                    } else if (preOpeningAbsorb.merged) {
+                        try {
+                            const customers2 = JSON.parse(localStorage.getItem('customers') || '[]');
+                            let touched = false;
+                            customers2.forEach((c, idx) => {
+                                if (!matchCustomerRecord(c, idx)) return;
+                                const ob = Number(customerData.openingBalance) || 0;
+                                c.openingBalance = ob;
+                                c.openingBalanceType = customerData.openingBalanceType || 'Dr';
+                                c.masterOpeningBalance = ob;
+                                c.masterOpeningBalanceType = c.openingBalanceType;
+                                c.currentBalance = netBalance;
+                                c.currentBalanceType = netType;
+                                touched = true;
+                            });
+                            if (!touched) {
+                                const nm = normKey(customerData.name);
+                                if (nm) {
+                                    customers2.forEach(c => {
+                                        if (!c || !c.name || normKey(c.name) !== nm) return;
+                                        const ob = Number(customerData.openingBalance) || 0;
+                                        c.openingBalance = ob;
+                                        c.openingBalanceType = customerData.openingBalanceType || 'Dr';
+                                        c.masterOpeningBalance = ob;
+                                        c.masterOpeningBalanceType = c.openingBalanceType;
+                                        c.currentBalance = netBalance;
+                                        c.currentBalanceType = netType;
+                                        touched = true;
+                                    });
+                                }
+                            }
+                            if (touched) localStorage.setItem('customers', JSON.stringify(customers2));
+                            syncStmtSessionFromCustomerData();
+                        } catch (eSync) { }
+                    }
+                } catch (e) { }
+
+                // Update in 'jewellers' list (in case it's a jeweller)
+                try {
+                    const jewellers = JSON.parse(localStorage.getItem('jewellers') || '[]');
+                    const norm = s => (s || '').trim().toLowerCase();
+                    let updated = false;
+                    jewellers.forEach(j => {
+                        const matchByName = norm(j.name) === norm(customerData.name);
+                        if (matchByName) {
+                            if (customerData.statementBillAmountCleared) {
+                                j.currentBalance = 0;
+                                j.currentBalanceType = 'Dr';
+                            } else {
+                                j.currentBalance = netBalance;
+                                j.currentBalanceType = netType;
+                            }
+                            updated = true;
+                        }
+                    });
+                    if (updated) localStorage.setItem('jewellers', JSON.stringify(jewellers));
+                } catch (e) { }
+            }
         }
         function fmtDate(str) {
             if (!str) return "—";
@@ -2446,15 +2493,11 @@
         function getCustomerBillsSumFromBalances() {
             try {
                 const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-                const norm = (s) => (s || "").trim().toLowerCase();
-                const nameNorm = norm(customerData.name);
-                const cidNorm = customerData.cid ? norm(customerData.cid) : "";
                 return balances
                     .filter(b => {
                         if (!b) return false;
-                        const sameCustomer = (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm));
                         const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
-                        return sameCustomer && hasBillRef;
+                        return hasBillRef && matchCustomerBalanceOrBillRow(b);
                     })
                     .reduce((sum, b) => {
                         if (b.computedBalAmt != null && b.computedBalAmt !== "") return sum + (parseFloat(b.computedBalAmt) || 0);
@@ -2471,6 +2514,8 @@
         /** Distinct bill/order numbers for this customer (same rows as bill total), for statement narration. */
         function getCustomerBillOrderNarrationForSummary() {
             try {
+                const billScope = activeStatementBillNo();
+                if (billScope) return "Bill No. - " + billScope;
                 const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
                 const norm = (s) => (s || "").trim().toLowerCase();
                 const nameNorm = norm(customerData.name);
@@ -2481,18 +2526,30 @@
                     const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
                     return sameCustomer && hasBillRef;
                 });
-                const seen = new Set();
-                const nums = [];
+                // Customer Statement summary should show only ONE Bill No (latest),
+                // so the list behaves like "new order" (single reference shown in statement row).
+                function pickBillRowDate(b) {
+                    const d = String(b && (b.billDate || b.date || b.onDate || "")) || "";
+                    const t = String(b && (b.timestamp || b.createdAt || "")) || "";
+                    // Prefer explicit yyyy-mm-dd date; else fall back to timestamp; else 0.
+                    const dt = parseDateOnly(d);
+                    if (dt && !isNaN(dt.getTime())) return dt.getTime();
+                    const ts = Date.parse(t);
+                    return Number.isFinite(ts) ? ts : 0;
+                }
+                let best = null;
+                let bestTs = -1;
                 for (const b of rows) {
                     const num = String(b.orderNo || b.billNo || "").trim();
                     if (!num || num === "—") continue;
-                    const k = norm(num);
-                    if (seen.has(k)) continue;
-                    seen.add(k);
-                    nums.push(num);
+                    const ts = pickBillRowDate(b);
+                    if (ts >= bestTs) {
+                        bestTs = ts;
+                        best = num;
+                    }
                 }
-                return nums.length
-                    ? "Bill No. - " + nums.join(", ")
+                return best
+                    ? "Bill No. - " + best
                     : "Bill No. - (Ready Order)";
             } catch (e) {
                 return "Bill No. -";
@@ -3230,7 +3287,10 @@
                 el.innerHTML = fmt(absAmt) + ' <span class="' + tagClass + '">' + tag + '</span>';
             })();
             document.getElementById('dispOpDate').textContent = fmtDateLabel(customerData.openingDate);
-            document.getElementById('toolbarSubtitle').textContent = (customerData.name || '') + (customerData.station ? ' · ' + customerData.station : '');
+            document.getElementById('toolbarSubtitle').textContent =
+                (customerData.name || '') +
+                (customerData.station ? ' · ' + customerData.station : '') +
+                (activeStatementBillNo() ? ' · Bill ' + activeStatementBillNo() : '');
 
             const intSec = document.getElementById('interestSection');
             if (intSec && intSec.style.display === 'block') {
@@ -3636,7 +3696,11 @@
 
         // ─── CLEAR BILL AMOUNT (customer-level settlement only; bill status Cleared; All Bill Balance column frozen, not recalculated) ───
         function clearBillAmount() {
-            if (!confirm('Clear bill amount for this customer? Customer Balance and Current Balance become ₹0. Each bill will be marked status Cleared. Original bill amounts in All Bill are not changed.')) return;
+            const billOnly = activeStatementBillNo();
+            const msg = billOnly
+                ? ('Clear bill amount for ' + billOnly + ' only? This bill\'s balance rows become ₹0. Other bills for the same customer are not changed.')
+                : 'Clear bill amount for this customer? Customer Balance and Current Balance become ₹0. Each bill will be marked status Cleared. Original bill amounts in All Bill are not changed.';
+            if (!confirm(msg)) return;
 
             try {
                 rowInterestMap = {};
@@ -3674,7 +3738,7 @@
                 customerData.currentBalance = 0;
                 customerData.currentBalanceType = 'Dr';
 
-                persistCustomerClearedMasterRecord();
+                if (!billOnly) persistCustomerClearedMasterRecord();
 
                 try {
                     const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
@@ -3925,6 +3989,7 @@
                         if (fromSession.name) customerData.name = fromSession.name.trim();
                         if (fromSession.lfno) customerData.lfNo = fromSession.lfno.trim();
                         if (fromSession.station) customerData.station = fromSession.station.trim();
+                        if (fromSession.billNo) customerData.statementBillNo = String(fromSession.billNo).trim();
                         if (fromSession && Object.prototype.hasOwnProperty.call(fromSession, 'opbal')) {
                             const ob = parseFloat(fromSession.opbal);
                             customerData.openingBalance = Number.isFinite(ob) ? ob : 0;
@@ -3948,6 +4013,7 @@
             if (p.get('optype')) customerData.openingBalanceType = p.get('optype');
             if (p.get('curbal')) customerData.currentBalance = parseFloat(p.get('curbal')) || 0;
             if (p.get('curtype')) customerData.currentBalanceType = p.get('curtype');
+            if (p.get('billNo')) customerData.statementBillNo = String(p.get('billNo')).trim();
             if (p.get('opdate')) customerData.openingDate = p.get('opdate');
             // Always apply name/station/lfno from URL params if present (override sessionStorage if URL has them)
             if (p.get('name')) customerData.name = decodeURIComponent(p.get('name')).trim() || customerData.name;
@@ -3957,7 +4023,7 @@
             // ── Priority 3: localStorage customers[] lookup by id (fills openingDate & any remaining gaps)
             const id = paramId || (fromSession && fromSession.id ? String(fromSession.id) : '');
             if (id) customerData.id = id;
-            if (id) {
+            if (id && !activeStatementBillNo()) {
                 try {
                     const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                     const cust = customers.find(c => String(c.id) === String(id)) ||
@@ -3988,9 +4054,23 @@
                         if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
+            } else if (id && activeStatementBillNo()) {
+                try {
+                    const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                    const cust = customers.find(c => String(c.id) === String(id)) ||
+                        (id.startsWith('idx-') ? customers[parseInt(id.replace('idx-', ''), 10)] : null);
+                    if (cust) {
+                        if (cust.cid) customerData.cid = String(cust.cid || '');
+                        if (!customerData.name) customerData.name = (cust.name || '').trim();
+                        if (!customerData.station) customerData.station = (cust.station || '').trim();
+                        if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
+                        if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
+                        if (!customerData.id) customerData.id = cust.id;
+                    }
+                } catch (e) { }
             }
 
-            if (!id && customerData.name) {
+            if (!id && customerData.name && !activeStatementBillNo()) {
                 try {
                     const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                     const norm = s => (s || '').trim().toLowerCase();
@@ -4016,6 +4096,16 @@
                         if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
+            } else if (!id && customerData.name && activeStatementBillNo()) {
+                try {
+                    const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                    const norm = s => (s || '').trim().toLowerCase();
+                    const cust = customers.find(c => norm(c.name) === norm(customerData.name));
+                    if (cust) {
+                        if (cust.cid) customerData.cid = String(cust.cid || '');
+                        if (!customerData.id) customerData.id = cust.id;
+                    }
+                } catch (e) { }
             }
 
             if (customerData.openingBalance == null || customerData.openingBalance === '') {
@@ -4023,7 +4113,7 @@
             }
 
             // ── Step 4: Load saved transactions for this customer from localStorage
-            const stmtKey = 'stmt_' + (customerData.lfNo || customerData.name);
+            const stmtKey = stmtStorageKey();
             try {
                 const saved = localStorage.getItem(stmtKey);
                 if (saved) {

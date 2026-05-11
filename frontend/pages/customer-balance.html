@@ -357,7 +357,7 @@
   <div class="customer-balance-wrap">
     <div class="ledger-page-titlebar">Customer Balance</div>
     <div class="balance-toolbar">
-      <span class="toolbar-subtitle">One row per customer — balance from Add Customer / Transfers</span>
+      <span class="toolbar-subtitle">One row per bill — balance is isolated by Bill / Order No (same customer name is not merged)</span>
       <button type="button" class="btn" onclick="loadTable()">🔄 Refresh</button>
       <label for="customerBalanceSearch">Search</label>
       <input id="customerBalanceSearch" type="text" placeholder="Name, phone, mobile…" onkeyup="filterRows()">
@@ -386,24 +386,24 @@
             <th class="center" style="width:8%;">Serial No.</th>
             <th class="center" style="width:7%;">Marks</th>
             <th style="width:8%;">LF No.</th>
-            <th style="width:12%;">Name</th>
-            <th style="width:14%;">Relation and Name</th>
-            <th style="width:12%;">Station</th>
-            <th style="width:11%;">Phone no.</th>
-            <th style="width:11%;">Mobile</th>
-            <th class="right" style="width:27%;">Balance</th>
+            <th style="width:12%;">Bill No.</th>
+            <th style="width:10%;">Name</th>
+            <th style="width:12%;">Relation and Name</th>
+            <th style="width:10%;">Station</th>
+            <th style="width:9%;">Phone no.</th>
+            <th style="width:9%;">Mobile</th>
+            <th class="right" style="width:22%;">Balance</th>
           </tr>
         </thead>
         <tbody id="customerBalanceTableBody"></tbody>
       </table>
     </div>
 
-    <div class="footer" id="customerBalanceFooter">Customer Balance — one row per customer. Add customers in Add
-      Customer; balances update when you use Transfers in Ready Order.</div>
+    <div class="footer" id="customerBalanceFooter">Customer Balance — one row per bill. Same customer name with different bills is not merged.</div>
   </div>
 
   <script>
-    // CUSTOMER BALANCE: Uses "customers" list — one row per customer. Balance from Add Customer / Transfers.
+    // CUSTOMER BALANCE: One row per bill (customerBalances). Same customer name, different bills = separate rows.
     // When a bill is transferred from Ready Order with Rate Diff, Amount column shows Amount − Rate Diff in green.
     const CUSTOMERS_KEY = "customers";
     const BALANCES_KEY = "customerBalances";
@@ -661,6 +661,30 @@
       return true;
     }
 
+    function pickBalanceRowTime(b) {
+      if (!b) return 0;
+      var t = Date.parse(b.timestamp || b.createdAt || "");
+      if (Number.isFinite(t)) return t;
+      var d = String(b.date || b.billDate || "").trim();
+      var p = Date.parse(d);
+      return Number.isFinite(p) ? p : 0;
+    }
+
+    function resolveCustomerRowForBalance(b, customers, norm) {
+      if (!b) return {};
+      var c = null;
+      if (b.customerId != null && String(b.customerId).trim() !== "") {
+        c = customers.find(function (x) { return String(x.id) === String(b.customerId); }) || null;
+      }
+      if (!c && b.cid) c = customers.find(function (x) { return x.cid && norm(x.cid) === norm(b.cid); }) || null;
+      if (!c && b.customer) c = customers.find(function (x) { return norm(x.name) === norm(b.customer); }) || null;
+      return c || {};
+    }
+
+    function pickBillKeyFromBalance(b) {
+      return String((b && (b.orderNo || b.billNo)) || "").trim();
+    }
+
     function loadTable() {
       tbody = null;
       footer = null;
@@ -673,82 +697,50 @@
       const customers = getCustomers();
       const norm = (s) => (s || "").trim().toLowerCase();
 
-      // One row per customer from Add Customer list — data saves and shows here
-      const rows = customers.map((c) => {
-        const name = (c.name || "").trim();
-        // Match by strong id first, then cid, then name.
-        const customerEntries = balances.filter((b) => {
-          const byCustomerId =
-            c.id != null &&
-            b.customerId != null &&
-            String(c.id).trim() !== "" &&
-            String(b.customerId).trim() !== "" &&
-            String(c.id) === String(b.customerId);
-          const byCid = c.cid && b.cid && norm(b.cid) === norm(c.cid);
-          const byName = norm(b.customer) === norm(name);
-          // Sum only bill-linked rows in Customer Balance table (prevents opening/current-only records from being counted).
-          const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
-          return (byCustomerId || byCid || byName) && hasBillRef;
-        });
+      const skipUnregisteredBalanceRow = (b) => {
+        if (!b) return true;
+        const id = String(b.customerId || "").trim();
+        const cid = String(b.cid || "").trim();
+        return id.startsWith("__unregistered__") || cid.startsWith("__unregistered__");
+      };
 
-        // Customer Balance follows Add Customer **Current Balance** when it is set (master source of truth).
-        // If Current Balance is empty, fall back to the same All Bill per-bill balance sum, then Opening.
-        let displayAmount = 0;
-        let displayType = "Dr";
-        const currentRaw = c.currentBalance;
-        const currentNum = Number(currentRaw);
-        const curType = String(c.currentBalanceType || "Dr").toLowerCase();
-        const hasCurrentBalance = currentRaw != null && String(currentRaw).trim() !== "" && Number.isFinite(currentNum);
+      const isUnregisteredCustomer = (c) => {
+        if (!c || !c.id) return false;
+        const id = c.id != null ? String(c.id).trim() : "";
+        if (id.startsWith("__unregistered__")) return true;
+        if (c.unregistered === true || c.isUnregistered === true) return true;
+        const cid = c.cid != null ? String(c.cid).trim() : "";
+        if (cid.startsWith("__unregistered__")) return true;
+        return false;
+      };
 
-        const rawOpening = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "")
-          ? c.masterOpeningBalance
-          : c.openingBalance;
+      const byBill = new Map();
+      balances.forEach(function (b) {
+        if (!b || skipUnregisteredBalanceRow(b)) return;
+        const billNo = pickBillKeyFromBalance(b);
+        if (!billNo) return;
+        const k = billNo.toLowerCase();
+        const prev = byBill.get(k);
+        if (!prev || pickBalanceRowTime(b) >= pickBalanceRowTime(prev)) byBill.set(k, b);
+      });
+
+      const rows = [];
+      byBill.forEach(function (b) {
+        const billNo = pickBillKeyFromBalance(b);
+        const c = resolveCustomerRowForBalance(b, customers, norm);
+        if (c && c.id != null && isUnregisteredCustomer(c)) return;
+        const name = (b.customer || c.name || "").trim() || "—";
+        const stored = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ""
+          ? parseFloat(b.finalBalanceAmount) : null;
+        const v = (stored != null && Number.isFinite(stored)) ? stored : allBillComputeRowBalance(b);
+        const displayAmount = Math.abs(Number(v) || 0);
+        const displayType = (Number(v) || 0) < 0 ? "Cr" : "Dr";
         const rawOpeningType = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "")
           ? (c.masterOpeningBalanceType || c.openingBalanceType || "Dr")
           : (c.openingBalanceType || "Dr");
-        const hasOpening = rawOpening != null && String(rawOpening).trim() !== "" && Number.isFinite(Number(rawOpening));
-
-        // Priority: `currentBalance` from customer master is the source of truth.
-        // It is updated automatically on every bill save (Ready Extra / Gold Invoice) to sum(finalBalanceAmount).
-        // A manual change to `currentBalance` in the Customer Statement / Add Customer form is always respected.
-        // Fallback: sum of `finalBalanceAmount` from bill entries (same value as All Bill Balance column).
-        var sumBillDue = 0;
-        var anyBillDue = false;
-        if (customerEntries.length > 0) {
-          customerEntries.forEach(function (b) {
-            var stored = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ""
-              ? parseFloat(b.finalBalanceAmount) : null;
-            var v = (stored != null && Number.isFinite(stored)) ? stored : allBillComputeRowBalance(b);
-            if (Number.isFinite(v)) {
-              sumBillDue += v;
-              anyBillDue = true;
-            }
-          });
-        }
-        if (hasCurrentBalance) {
-          // Manual currentBalance change or auto-set by bill save — always respect this.
-          displayAmount = Math.abs(currentNum);
-          displayType = curType === "cr" ? "Cr" : "Dr";
-        } else if (anyBillDue) {
-          // No currentBalance set: use sum of per-bill finalBalanceAmount (same as All Bill).
-          displayAmount = Math.abs(sumBillDue);
-          displayType = sumBillDue < 0 ? "Cr" : "Dr";
-        } else if (hasOpening) {
-          displayAmount = Math.abs(Number(rawOpening));
-          displayType = String(rawOpeningType).trim().toLowerCase() === "cr" ? "Cr" : "Dr";
-        } else {
-          displayAmount = 0;
-          displayType = "Dr";
-        }
-
-        let originalOpBal = 0;
-        if (rawOpening != null && String(rawOpening).trim() !== "" && Number.isFinite(Number(rawOpening))) {
-          const opAbs = Math.abs(Number(rawOpening));
-          originalOpBal = String(rawOpeningType).trim().toLowerCase() === "cr" ? -opAbs : opAbs;
-        }
-
-        return {
-          name,
+        rows.push({
+          billNo: billNo,
+          name: name,
           lfno: c.lfno || "—",
           relation: c.relation || "—",
           relationName: c.relationName || "—",
@@ -757,21 +749,23 @@
           mobile: c.mobile || "—",
           amount: displayAmount,
           balanceType: displayType,
-          originalOpBal,
+          originalOpBal: 0,
           amountMinusRateDiff: null,
-          mark: c.mark || "—",
+          mark: b.mark || "—",
           id: c.id != null ? c.id : null,
           originalOpType: rawOpeningType || "Dr",
           currentBal: displayAmount,
           currentBalType: displayType
-        };
+        });
       });
 
-      const sorted = [...rows].sort((a, b) => ((a.name || "").toLowerCase() > (b.name || "").toLowerCase() ? 1 : -1));
+      const sorted = rows.slice().sort(function (a, b) {
+        return String(a.billNo || "").localeCompare(String(b.billNo || ""), undefined, { sensitivity: "base" });
+      });
 
       if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No customers yet. Add customers in <strong>Add Customer</strong>. Balances update when you use <strong>Transfers</strong> in Ready Order.</td></tr>';
-        if (footer) footer.textContent = "Customer Balance — add customers in Add Customer; use Transfers in Ready Order to update balances.";
+        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No bill balances yet. Finalize bills (Ready Order / All Bill) so each Bill / Order No appears as its own row.</td></tr>';
+        if (footer) footer.textContent = "Customer Balance — no bill-linked rows in customerBalances.";
         return;
       }
 
@@ -780,29 +774,33 @@
         const sn = i + 1;
         const markVal = r.mark || "—";
         const isChecked = markVal !== "—" && markVal !== "" && markVal;
-        const id = (r.id != null ? String(r.id) : "idx-" + i).replace(/"/g, "&quot;");
+        const masterId = (r.id != null ? String(r.id) : "").replace(/"/g, "&quot;");
         const relName = (r.relation + " " + (r.relationName || "")).trim() || "—";
         const tr = document.createElement("tr");
         tr.dataset.customerId = r.id != null ? r.id : i;
-        tr.dataset.amount = r.amount;   // current / due balance for filter
-        tr.dataset.marked = r.mark && r.mark !== '—' ? '1' : '0';
+        tr.dataset.billNo = (r.billNo || "").toLowerCase();
+        tr.dataset.amount = r.amount;
+        tr.dataset.marked = r.mark && r.mark !== "—" ? "1" : "0";
         tr.dataset.station = (r.station || "—").trim().toLowerCase();
-        const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType === 'Dr' ? '#d93025' : '#1a73e8'}">${r.balanceType}</span>` : '';
+        const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType === "Dr" ? "#d93025" : "#1a73e8"}">${r.balanceType}</span>` : "";
         const amountCell = r.amountMinusRateDiff != null
-          ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + '</span>' + drCrTag
+          ? '<span class="amount-rate-diff">₹ ' + formatAmount(r.amountMinusRateDiff) + "</span>" + drCrTag
           : formatAmount(r.amount) + drCrTag;
-        const safeName = encodeURIComponent(r.name || '');
-        const safeLfno = encodeURIComponent(r.lfno || '');
-        const safeStation = encodeURIComponent(r.station || '');
-        const safeOpBal = encodeURIComponent(r.originalOpBal != null ? r.originalOpBal : 0);
-        const safeOpType = encodeURIComponent(r.originalOpType || 'Dr');
+        const safeName = encodeURIComponent(r.name || "");
+        const safeLfno = encodeURIComponent(r.lfno || "");
+        const safeStation = encodeURIComponent(r.station || "");
+        const safeOpBal = encodeURIComponent(0);
+        const safeOpType = encodeURIComponent("Dr");
         const safeCurBal = encodeURIComponent(r.currentBal != null ? r.currentBal : 0);
-        const safeCurType = encodeURIComponent(r.currentBalType || 'Dr');
+        const safeCurType = encodeURIComponent(r.currentBalType || "Dr");
+        const safeBill = encodeURIComponent(r.billNo || "");
+        const encBillAttr = encodeURIComponent(r.billNo || "").replace(/'/g, "%27");
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
-          '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-customer-id="' + id + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
+          '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-bill-no="' + encBillAttr + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
           "<td>" + (r.lfno || "—") + "</td>" +
-          `<td><a href="#" onclick="openCustomerStatement('${id}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}','${safeOpType}','${safeCurBal}','${safeCurType}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
+          "<td><strong>" + String(r.billNo || "—").replace(/</g, "&lt;").replace(/"/g, "&quot;") + "</strong></td>" +
+          `<td><a href="#" onclick="openCustomerStatement('${masterId}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}','${safeOpType}','${safeCurBal}','${safeCurType}','${safeBill}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
           "<td>" + relName + "</td>" +
           "<td>" + (r.station || "—") + "</td>" +
           "<td>" + (r.phone || "—") + "</td>" +
@@ -826,17 +824,25 @@
 
       filterRows(); // apply any active filters
 
-      if (footer) footer.textContent = "Customer Balance — " + sorted.length + " customers. Amount = balance (updated by Transfers in Ready Order).";
+      if (footer) footer.textContent = "Customer Balance — " + sorted.length + " bills (one row per Bill / Order No).";
     }
 
     function saveMarkCheckbox(checkbox) {
-      const idStr = checkbox.getAttribute("data-customer-id");
-      const customers = getCustomers();
-      let idx = customers.findIndex((c) => String(c.id) === idStr);
-      if (idx < 0 && idStr.indexOf("idx-") === 0) idx = parseInt(idStr.replace("idx-", ""), 10);
-      if (idx < 0 || idx >= customers.length) return;
-      customers[idx].mark = checkbox.checked ? "✓" : "—";
-      saveCustomers(customers);
+      const enc = checkbox.getAttribute("data-bill-no");
+      const billNo = enc ? decodeURIComponent(enc) : "";
+      if (!billNo) return;
+      const balances = getCustomerBalances();
+      const idx = balances.findIndex(function (b) {
+        return b && String(b.orderNo || b.billNo || "").trim() === billNo;
+      });
+      if (idx < 0) return;
+      balances[idx].mark = checkbox.checked ? "✓" : "—";
+      localStorage.setItem(BALANCES_KEY, JSON.stringify(balances));
+      try {
+        window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      } catch (e) { }
     }
 
     let activeFilter = 'nonzero';   // 'nonzero' (default) | 'all' | 'marked' | 'zero'
@@ -890,52 +896,67 @@
       });
       if (footer) {
         const total = rows.length;
-        const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All Customers)' : '';
-        if (!q && activeFilter === 'nonzero') footer.textContent = "Customer Balance — " + visible + " customers (zero balance hidden)";
-        else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " customers" + filterLabel + ".";
+        const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All bills)' : '';
+        if (!q && activeFilter === 'nonzero') footer.textContent = "Customer Balance — " + visible + " bills (zero balance hidden)";
+        else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " bills" + filterLabel + ".";
       }
     }
 
     function markAll() {
       if (!tbody) return;
-      const customers = getCustomers();
+      const balances = getCustomerBalances();
       tbody.querySelectorAll('tr').forEach(row => {
         if (row.style.display === 'none') return;
         const cb = row.querySelector('.mark-checkbox');
         if (!cb || cb.checked) return;
         cb.checked = true;
-        // Save to localStorage
-        const idStr = cb.getAttribute('data-customer-id');
-        let idx = customers.findIndex(c => String(c.id) === idStr);
-        if (idx < 0 && idStr && idStr.indexOf('idx-') === 0) idx = parseInt(idStr.replace('idx-', ''), 10);
-        if (idx >= 0 && idx < customers.length) {
-          customers[idx].mark = '\u2713';
-          row.dataset.marked = '1';
+        const enc = cb.getAttribute("data-bill-no");
+        const billNo = enc ? decodeURIComponent(enc) : "";
+        if (!billNo) return;
+        const idx = balances.findIndex(function (b) {
+          return b && String(b.orderNo || b.billNo || "").trim() === billNo;
+        });
+        if (idx >= 0) {
+          balances[idx].mark = "\u2713";
+          row.dataset.marked = "1";
         }
       });
-      saveCustomers(customers);
+      localStorage.setItem(BALANCES_KEY, JSON.stringify(balances));
+      try {
+        window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      } catch (e) { }
     }
 
     function unmarkAll() {
       if (!tbody) return;
-      const customers = getCustomers();
+      const balances = getCustomerBalances();
       tbody.querySelectorAll('tr').forEach(row => {
         if (row.style.display === 'none') return;
         const cb = row.querySelector('.mark-checkbox');
         if (!cb || !cb.checked) return;
         cb.checked = false;
-        const idStr = cb.getAttribute('data-customer-id');
-        let idx = customers.findIndex(c => String(c.id) === idStr);
-        if (idx < 0 && idStr && idStr.indexOf('idx-') === 0) idx = parseInt(idStr.replace('idx-', ''), 10);
-        if (idx >= 0 && idx < customers.length) {
-          customers[idx].mark = '\u2014';
-          row.dataset.marked = '0';
+        const enc = cb.getAttribute("data-bill-no");
+        const billNo = enc ? decodeURIComponent(enc) : "";
+        if (!billNo) return;
+        const idx = balances.findIndex(function (b) {
+          return b && String(b.orderNo || b.billNo || "").trim() === billNo;
+        });
+        if (idx >= 0) {
+          balances[idx].mark = "\u2014";
+          row.dataset.marked = "0";
         }
       });
-      saveCustomers(customers);
+      localStorage.setItem(BALANCES_KEY, JSON.stringify(balances));
+      try {
+        window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+      } catch (e) { }
     }
 
-    function openCustomerStatement(id, name, lfno, station, opbal, opType, curbal, curType) {
+    function openCustomerStatement(id, name, lfno, station, opbal, opType, curbal, curType, billNo) {
       // Decode the encoded params back to plain strings
       const plainName = name ? decodeURIComponent(name) : '';
       const plainLfno = lfno ? decodeURIComponent(lfno) : '';
@@ -944,11 +965,13 @@
       const plainOpType = opType ? decodeURIComponent(opType) : 'Dr';
       const plainCurbal = curbal ? decodeURIComponent(curbal) : '0';
       const plainCurType = curType ? decodeURIComponent(curType) : 'Dr';
+      const plainBill = billNo ? decodeURIComponent(billNo) : '';
 
       // Save to sessionStorage so QR page can always read it — even inside iframe
       try {
         sessionStorage.setItem('stmtCustomer', JSON.stringify({
-          id, name: plainName, lfno: plainLfno, station: plainStation, opbal: plainOpbal, opType: plainOpType, curbal: plainCurbal, curType: plainCurType
+          id, name: plainName, lfno: plainLfno, station: plainStation, opbal: plainOpbal, opType: plainOpType, curbal: plainCurbal, curType: plainCurType,
+          billNo: plainBill
         }));
       } catch (e) { }
 
@@ -962,6 +985,7 @@
       if (plainOpType) params.set('optype', plainOpType);
       if (plainCurbal) params.set('curbal', plainCurbal);
       if (plainCurType) params.set('curtype', plainCurType);
+      if (plainBill) params.set('billNo', plainBill);
       const qs = params.toString();
 
       if (window.parent && window.parent.loadPage) {

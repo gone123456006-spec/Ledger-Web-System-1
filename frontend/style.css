@@ -139,7 +139,7 @@ ul, li{
     transition:width .2s ease,opacity .15s ease,padding .2s ease,border-width .2s ease;
 }
 
-/* Dashboard: sidebar hidden by default; press Ctrl+M to show/hide (see index.html). */
+/* Sidebar hidden via .sidebar-hidden (auto when opening a module; Ctrl+M / Alt+Shift+L toggle — see script.js). */
 .app-container.sidebar-hidden .sidebar{
     width:0 !important;
     min-width:0;

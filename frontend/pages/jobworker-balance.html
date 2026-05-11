@@ -22,6 +22,11 @@
         linear-gradient(140deg, transparent 0 70%, rgba(255,255,255,0.05) 70% 73%, transparent 73%),
         linear-gradient(140deg, transparent 0 74%, rgba(255, 160, 0, 0.05) 74% 82%, transparent 82%),
         linear-gradient(145deg, rgba(255,255,255,0.05) 0 45%, rgba(0,0,0,0.006) 45% 100%);
+      /* JobWorker Details: large panel — similar footprint to main dashboard workspace */
+      --jw-details-modal-width: min(1600px, calc(100vw - 32px));
+      --jw-details-modal-max-h: min(94vh, calc(100vh - 32px));
+      /* Modal title bar + footer strip (neutral grey, not blue-tinted) */
+      --jw-modal-chrome-bg: linear-gradient(180deg, #e6e8ee 0%, #d6d9e1 100%);
     }
 
     * {
@@ -244,16 +249,17 @@
 
     .lc-modal {
       background: #fff;
-      width: 100vw;
-      min-height: 100vh;
-      height: 100vh;
-      max-height: 100vh;
-      border-radius: 0;
-      box-shadow: none;
+      width: var(--jw-details-modal-width);
+      max-width: 100%;
+      height: var(--jw-details-modal-max-h);
+      max-height: var(--jw-details-modal-max-h);
+      min-height: 0;
+      border-radius: var(--radius);
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.22);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      border: none;
+      border: 1px solid var(--border);
       animation: jwPop 0.2s ease;
     }
 
@@ -269,14 +275,15 @@
       }
     }
 
-    /* header */
+    /* header: title centred; close sits top-right without shifting title */
     .lc-hdr {
-      background: #f0f4ff;
-      border-bottom: 2px solid var(--border);
-      padding: 12px 20px;
+      position: relative;
+      background: var(--jw-modal-chrome-bg);
+      border-bottom: 2px solid #c5cad3;
+      padding: 12px 48px 12px 20px;
       display: flex;
       align-items: center;
-      gap: 32px;
+      justify-content: center;
       flex-shrink: 0;
     }
 
@@ -284,13 +291,8 @@
       font-weight: 700;
       font-size: 15px;
       color: #1e293b;
-      margin-right: auto;
-    }
-
-    .lc-hdr-field {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      text-align: center;
+      margin: 0;
     }
 
     .lc-hdr-label {
@@ -307,8 +309,46 @@
       color: #1e293b;
     }
 
+    /* Worker info: vertical block above the ledger table */
+    .lc-worker-meta {
+      flex-shrink: 0;
+      padding: 14px 20px 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .lc-worker-meta-row {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px;
+      line-height: 1.45;
+    }
+
+    .lc-worker-meta-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.01em;
+      flex-shrink: 0;
+    }
+
+    .lc-worker-meta-row .lc-hdr-val {
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
     .lc-close {
-      margin-left: 24px;
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 0;
       width: 30px;
       height: 30px;
       border: 1px solid var(--border);
@@ -329,49 +369,47 @@
       border-color: #fca5a5;
     }
 
-    /* Ledger: scroll entries only; Total row fixed at bottom of this block */
+    /* Ledger: body fills modal (like dashboard workspace); table scrolls inside */
     .lc-body {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
       display: flex;
       flex-direction: column;
     }
 
     .lc-table-scroll {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
       overflow: auto;
     }
 
     .lc-total-wrap {
       flex-shrink: 0;
-      background: #f0fdf4;
-      border-top: 2px solid #a7f3d0;
-      box-shadow: 0 -4px 14px rgba(15, 23, 42, 0.08);
+      background: #ecfdf5;
+      border-top: none;
+      box-shadow: none;
     }
 
+    /* Ledger grid: slightly stronger cell borders than default --border */
     .lc-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 15px;
       table-layout: fixed;
+      border: 1px solid #94a3b8;
     }
 
     .lc-table-total {
       margin: 0;
     }
 
-    .lc-table-total .tot-row td {
-      border-top: none;
-    }
-
     .lc-table th {
       background: #f1f5f9;
       color: #64748b;
-      font-weight: 600;
-      padding: 10px 12px;
+      font-weight: 700;
+      padding: 8px 12px;
       text-align: left;
-      border: 1px solid var(--border);
+      border: 1px solid #94a3b8;
       font-size: 12.5px;
       text-transform: uppercase;
       letter-spacing: .04em;
@@ -382,8 +420,8 @@
     }
 
     .lc-table td {
-      padding: 9px 12px;
-      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border: 1px solid #94a3b8;
       color: #1e293b;
       vertical-align: middle;
     }
@@ -422,7 +460,7 @@
     }
 
     .lc-table .tot-row td {
-      background: #f0fdf4;
+      background: #ecfdf5;
       font-weight: 700;
       font-size: 15px;
     }
@@ -442,11 +480,11 @@
       font-size: 14px;
     }
 
-    /* footer stats — readable but not oversized */
+    /* footer stats — same grey chrome as modal header */
     .lc-footer {
-      border-top: 2px solid var(--border);
+      border-top: 2px solid #c5cad3;
       padding: 14px 20px;
-      background: #f8fafc;
+      background: var(--jw-modal-chrome-bg);
       display: flex;
       align-items: center;
       gap: 16px 22px;
@@ -545,8 +583,8 @@
       box-sizing: border-box;
       border: none;
       background: #fafbfc;
-      padding: 10px 12px;
-      min-height: 46px;
+      padding: 6px 12px;
+      min-height: 36px;
       font-size: 15px;
       line-height: 1.4;
       font-family: inherit;
@@ -557,12 +595,12 @@
 
     .lc-input:focus {
       background: #fff;
-      outline: 2px solid var(--primary);
+      outline: 3px solid var(--primary);
       outline-offset: -2px;
     }
 
     .lc-input:focus-visible {
-      outline: 2px solid var(--primary);
+      outline: 3px solid var(--primary);
       outline-offset: -2px;
     }
 
@@ -672,19 +710,27 @@
   <!-- LEDGER CARD MODAL -->
   <div class="lc-overlay" id="lcOverlay">
     <div class="lc-modal">
-      <!-- Header: JW Details -->
+      <!-- Header: title + close -->
       <div class="lc-hdr">
         <span class="lc-hdr-title">JobWorker Details</span>
-        <div class="lc-hdr-field"><span class="lc-hdr-label">LF No</span><span class="lc-hdr-val" id="lcLfNo">—</span>
-        </div>
-        <div class="lc-hdr-field"><span class="lc-hdr-label">Name</span><span class="lc-hdr-val" id="lcName">—</span>
-        </div>
-        <div class="lc-hdr-field"><span class="lc-hdr-label">Station</span><span class="lc-hdr-val"
-            id="lcStation">—</span></div>
-        <button class="lc-close" onclick="lcClose()">&#x2715;</button>
+        <button type="button" class="lc-close" onclick="lcClose()" aria-label="Close">&#x2715;</button>
       </div>
       <!-- Entries scroll; Total row pinned to bottom of this block -->
       <div class="lc-body">
+        <div class="lc-worker-meta">
+          <div class="lc-worker-meta-row">
+            <span class="lc-worker-meta-label">Name :</span>
+            <span class="lc-hdr-val" id="lcName">—</span>
+          </div>
+          <div class="lc-worker-meta-row">
+            <span class="lc-worker-meta-label">Station :</span>
+            <span class="lc-hdr-val" id="lcStation">—</span>
+          </div>
+          <div class="lc-worker-meta-row">
+            <span class="lc-worker-meta-label">LF NO. :</span>
+            <span class="lc-hdr-val" id="lcLfNo">—</span>
+          </div>
+        </div>
         <div class="lc-table-scroll">
           <table class="lc-table lc-table-entries">
             <colgroup>
@@ -1211,6 +1257,20 @@
         document.getElementById('lcOverlay').classList.remove('open');
       };
 
+      /* Esc closes JobWorker Details modal (same as ×) when overlay is open */
+      (function initLcOverlayEscape() {
+        if (window.__lcOverlayEscapeBound) return;
+        window.__lcOverlayEscapeBound = true;
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape') return;
+          var ov = document.getElementById('lcOverlay');
+          if (!ov || !ov.classList.contains('open')) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof window.lcClose === 'function') window.lcClose();
+        }, true);
+      })();
+
       window.lcUpdateNet = function () {
         var tbody = document.getElementById('lcEntriesBody');
         if (!tbody) return;
@@ -1282,18 +1342,15 @@
       };
 
       window.lcClearAccount = function () {
-        if (!confirm('Clear all entries for this job worker? This cannot be undone.')) return;
+        if (!confirm('Remove all entry rows and leave one empty row? Click Save And Close to update stored data.')) return;
         var tbody = document.getElementById('lcEntriesBody');
-        var rows = tbody.querySelectorAll('.lc-entry-row');
-        rows.forEach(function (tr) {
-          var inputs = tr.querySelectorAll('input');
-          if (inputs[1]) inputs[1].value = '';
-          if (inputs[2]) inputs[2].value = '';
-          if (inputs[3]) inputs[3].value = '';
-          if (inputs[4]) inputs[4].value = '';
-          if (inputs[5]) inputs[5].value = '';
-        });
+        if (!tbody) return;
+        var today = new Date().toISOString().slice(0, 10);
+        tbody.innerHTML = lcBuildRowHtml({ date: today }, true);
         lcComputeTotals();
+        setTimeout(function () {
+          lcFocusCell(tbody, 0, 0);
+        }, 0);
       };
 
       window.lcPrint = function () { window.print(); };

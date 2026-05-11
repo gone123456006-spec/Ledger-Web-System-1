@@ -3049,7 +3049,8 @@
     ===================== */
     (function () {
       var container = document.querySelector(".workspace");
-      var inWorkspace = container && container.getAttribute("data-page") === "ready-extra-order";
+      var pageAttr = (container && container.getAttribute("data-page")) || "";
+      var inWorkspace = /^ready[- ]extra[- ]order$/i.test(String(pageAttr).trim());
       if (!inWorkspace) {
         container = document.querySelector("#orderApp") || document.body;
       }
@@ -3301,6 +3302,7 @@
         if (tbl) tbl.classList.toggle("ready-order-bill-hide-mid", billMidColumnsHidden);
 
         var app = root.querySelector("#orderApp");
+        if (!app && root && root.id === "orderApp") app = root;
         if (app) app.setAttribute("data-bill-mode", billMidColumnsHidden ? "1" : "0");
 
         var pageHeading = root.querySelector(".order-title");
@@ -3369,6 +3371,20 @@
         try {
           if (typeof updateBillButtonState === "function") updateBillButtonState();
         } catch (eBillSt) { }
+      }
+
+      /** True in Bill / invoice view: use for purchase routing (flag + DOM so toolbar Paid quick-add never misses). */
+      function isRexBillViewActive() {
+        if (billMidColumnsHidden) return true;
+        try {
+          var root = typeof getSearchRoot === "function" ? getSearchRoot() : document;
+          var app = root && root.querySelector ? root.querySelector("#orderApp") : null;
+          if (!app && root && root.id === "orderApp") app = root;
+          if (app && app.getAttribute("data-bill-mode") === "1") return true;
+          var wrap = root && root.querySelector ? root.querySelector("#panelPurchaseSaleDetailWrap") : null;
+          if (wrap && wrap.getAttribute("data-bill-mode") === "1") return true;
+        } catch (eBv) { /* ignore */ }
+        return false;
       }
 
       function onHideUnhideColumnsClick() {
@@ -8046,11 +8062,12 @@
         var reUiQuick =
           pSave && pSave.getAttribute("data-purchase-re-ui") === "quick";
         var toolbarAdvanceAddAttr = pSave && pSave.getAttribute("data-purchase-new-order-ui") === "toolbar-add";
-        if (billMidColumnsHidden && toolbarAdvanceAddAttr) {
+        // Safety: in Bill view, toolbar Purchase must always target Paid quick-add, never Advance.
+        if (isRexBillViewActive() && toolbarAdvanceAddAttr) {
           effectiveSource = "ready-extra";
           reUiQuick = true;
+          toolbarAdvanceAddAttr = false;
         }
-
         if (effectiveSource === "ready-extra") {
           var tbRe = getPurchaseSheetTbody();
           if (reUiQuick) {
@@ -8336,13 +8353,20 @@
               e.preventDefault();
               e.stopPropagation();
               var newOrderUi = btn.getAttribute("data-purchase-new-order-ui");
-              // Bill / invoice preview: toolbar Purchase must stay quick Paid entry (same class as panel — check FIRST).
-              if (billMidColumnsHidden && newOrderUi === "toolbar-add") {
+              var billView = isRexBillViewActive();
+              var fromToolbarActions = !!(btn.closest && btn.closest(".actions"));
+              // Bill view: toolbar Purchase lives under .actions — always Paid quick-add (not Advance).
+              if (billView && fromToolbarActions && btn.classList.contains("panel-open-purchase-sheet-btn--adv-purchase")) {
+                openPurchaseSheet("ready-extra", "quick");
+                return;
+              }
+              // Bill / invoice preview: toolbar Purchase must stay quick Paid entry (attr fallback).
+              if (billView && newOrderUi === "toolbar-add") {
                 openPurchaseSheet("ready-extra", "quick");
                 return;
               }
               // Panel "Advance purchase minus" only (data-purchase-new-order-ui="full"), not toolbar Purchase.
-              if (billMidColumnsHidden && btn.classList.contains("panel-open-purchase-sheet-btn--adv-purchase") && newOrderUi === "full") {
+              if (billView && btn.classList.contains("panel-open-purchase-sheet-btn--adv-purchase") && newOrderUi === "full") {
                 openPurchaseSheet("new-order", "full", "full", { readonlyBillView: true });
                 return;
               }
@@ -8365,9 +8389,16 @@
           return;
         }
         opts = opts || {};
+        var billViewOpen = isRexBillViewActive();
+        // Safety: Bill view + toolbar Purchase should never open Advance UI.
+        if (billViewOpen && source === "new-order" && String(newOrderUi || "").trim() === "toolbar-add") {
+          source = "ready-extra";
+          readyExtraUi = "quick";
+          newOrderUi = "full";
+        }
         /* Bill mode: any full Advance (New Order) purchase sheet must be read-only — not only panel clicks. */
         var noUiStr = String(newOrderUi == null ? "" : newOrderUi).trim();
-        if (billMidColumnsHidden && source === "new-order" && noUiStr !== "toolbar-add") {
+        if (billViewOpen && source === "new-order" && noUiStr !== "toolbar-add") {
           opts.readonlyBillView = true;
         }
         var readonlyBillView = !!opts.readonlyBillView;
@@ -8413,7 +8444,7 @@
           } else if (activePurchaseSheetSource === "new-order") {
             hintEl.innerHTML = "Full list for <strong>Advance purchase minus</strong> (New Order sheet). <strong>Save</strong> replaces those lines only — it does not change <strong>Paid purchase minus</strong> (Ready / Extra sheet). Lines added from the toolbar <strong>Purchase</strong> button are included here.";
           } else if (purchaseSheetReadyExtraUiMode === "quickEntry") {
-            if (billMidColumnsHidden) {
+            if (billViewOpen) {
               hintEl.innerHTML = "After <strong>Bill</strong> — toolbar <strong>Purchase</strong> only appends to <strong>Paid purchase minus</strong>. These lines do <strong>not</strong> update Advance purchase minus. Use <strong>Add to Paid purchase</strong>. Full Paid list: <strong>Paid Purchase minus</strong> in the panel.";
             } else {
               hintEl.innerHTML = "Quick entry — <strong>no saved list</strong> here. Add rows and <strong>Add to Paid purchase</strong> to <strong>append</strong> to Paid purchase. View or edit the full list under <strong>Paid Purchase minus</strong> in Payment Summary.";

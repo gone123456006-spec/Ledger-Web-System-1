@@ -6,6 +6,168 @@ const ITEM_MODULE_ENABLED = false; // Disable Add Item / Item Sheet without dele
 const AGENTS_MODULE_ENABLED = false; // Disable Agents section without deleting code
 const LOAN_DAYBOOK_MODULE_ENABLED = false; // Disable New Loan / Pending Loans / Day Book
 
+/** Show or hide the left sidebar (#appContainer.sidebar-hidden). */
+function ledgerSetSidebarHidden(hidden) {
+    const app = document.getElementById("appContainer");
+    if (!app) return;
+    const sidebar = document.querySelector("aside.sidebar");
+    if (hidden) {
+        try {
+            if (sidebar && document.activeElement && sidebar.contains(document.activeElement)) {
+                const ws = document.getElementById("workspace");
+                if (ws && typeof ws.focus === "function") ws.focus({ preventScroll: true });
+            }
+        } catch (e) { }
+        app.classList.add("sidebar-hidden");
+    } else {
+        app.classList.remove("sidebar-hidden");
+    }
+}
+window.ledgerSetSidebarHidden = ledgerSetSidebarHidden;
+
+function ledgerToggleSidebar() {
+    const app = document.getElementById("appContainer");
+    if (!app) return;
+    ledgerSetSidebarHidden(!app.classList.contains("sidebar-hidden"));
+}
+window.ledgerToggleSidebar = ledgerToggleSidebar;
+
+function ledgerIsTypingTarget(el) {
+    if (!el || !el.tagName) return false;
+    const t = String(el.tagName).toUpperCase();
+    if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") return true;
+    try {
+        if (el.isContentEditable) return true;
+    } catch (e) { }
+    return false;
+}
+
+function ledgerSidebarButtonChainVisible(btn) {
+    for (let n = btn; n && n !== document.body; n = n.parentElement) {
+        const s = window.getComputedStyle(n);
+        if (s.display === "none" || s.visibility === "hidden") return false;
+    }
+    return true;
+}
+
+/** Visible, focusable sidebar buttons in DOM order (main column + open flyouts). */
+function ledgerVisibleSidebarButtons() {
+    const sidebar = document.querySelector("aside.sidebar");
+    const app = document.getElementById("appContainer");
+    if (!sidebar || (app && app.classList.contains("sidebar-hidden"))) return [];
+    return Array.from(sidebar.querySelectorAll("button")).filter((btn) => {
+        if (btn.disabled) return false;
+        if (!ledgerSidebarButtonChainVisible(btn)) return false;
+        const r = btn.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+    });
+}
+
+function ledgerFocusFirstSidebarButton() {
+    const list = ledgerVisibleSidebarButtons();
+    if (list.length) {
+        try {
+            list[0].focus({ preventScroll: true });
+        } catch (e) { }
+    }
+}
+window.ledgerFocusFirstSidebarButton = ledgerFocusFirstSidebarButton;
+
+function ledgerOpenFlyoutForSidebarTrigger(btn) {
+    if (!btn || btn.tagName !== "BUTTON") return false;
+    const block = btn.closest(
+        ".sidebar-gold-order, .sidebar-direct-bill, .sidebar-jobworker-book, .sidebar-add-item, .sidebar-agents-order"
+    );
+    if (!block) return false;
+    try {
+        block.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+    } catch (e) { return false; }
+    requestAnimationFrame(function () {
+        const sub =
+            block.querySelector(".sidebar-gold-submenu") ||
+            block.querySelector(".sidebar-direct-bill-submenu") ||
+            block.querySelector(".sidebar-jobworker-submenu") ||
+            block.querySelector(".sidebar-add-item-submenu") ||
+            block.querySelector(".sidebar-agents-submenu");
+        const first = sub && sub.querySelector("button");
+        if (first && ledgerSidebarButtonChainVisible(first)) {
+            try {
+                first.focus({ preventScroll: true });
+            } catch (e2) { }
+        }
+    });
+    return true;
+}
+
+/** Ctrl+M or Alt+Shift+L toggles sidebar; arrows rove focus; Enter/Space opens hover flyouts. */
+function initSidebarKeyboard() {
+    if (window.__ledgerSidebarKeyboardInited) return;
+    window.__ledgerSidebarKeyboardInited = true;
+
+    document.addEventListener("keydown", function (e) {
+        const typing = ledgerIsTypingTarget(e.target);
+
+        const ctrlM =
+            e.ctrlKey && !e.altKey && !e.shiftKey && (e.key === "m" || e.key === "M");
+        const altShiftL =
+            e.altKey && e.shiftKey && !e.ctrlKey && (e.key === "l" || e.key === "L");
+        if (ctrlM || altShiftL) {
+            if (altShiftL && typing) return;
+            e.preventDefault();
+            ledgerToggleSidebar();
+            return;
+        }
+
+        const ae = document.activeElement;
+        const inSidebar = ae && ae.closest && ae.closest("aside.sidebar");
+        if (!inSidebar || typing) return;
+
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            const list = ledgerVisibleSidebarButtons();
+            if (!list.length) return;
+            e.preventDefault();
+            let i = list.indexOf(ae);
+            if (i < 0) {
+                i = e.key === "ArrowDown" ? 0 : list.length - 1;
+            } else if (list.length === 1) {
+                try {
+                    list[0].focus({ preventScroll: true });
+                } catch (err) { }
+                return;
+            } else if (e.key === "ArrowDown") {
+                i = (i + 1) % list.length;
+            } else {
+                i = (i - 1 + list.length) % list.length;
+            }
+            try {
+                list[i].focus({ preventScroll: true });
+            } catch (err) { }
+            return;
+        }
+
+        if (e.key === "Enter" || e.key === " ") {
+            if (e.repeat) return;
+            if (!ae || String(ae.tagName).toUpperCase() !== "BUTTON") return;
+            const visibleBtns = ledgerVisibleSidebarButtons();
+            if (visibleBtns.indexOf(ae) < 0) return;
+            if (
+                ae.matches &&
+                ae.matches(
+                    ".gold-order-trigger, .direct-bill-trigger, .jobworker-book-trigger, .add-item-trigger, .agents-order-trigger"
+                )
+            ) {
+                e.preventDefault();
+                ledgerOpenFlyoutForSidebarTrigger(ae);
+                return;
+            }
+            e.preventDefault();
+            try {
+                ae.click();
+            } catch (err) { }
+        }
+    });
+}
+
 function initGoldOrderSubmenu() {
     const block = document.querySelector(".sidebar-gold-order");
     const trigger = document.querySelector(".gold-order-trigger");
@@ -164,12 +326,21 @@ function initAddItemSubmenu() {
     submenu.addEventListener("mouseleave", scheduleHide);
 }
 
-// Global Esc → go to dashboard (any page inside the app)
+// Global Esc: if sidebar is hidden, show it; otherwise go to dashboard
 function initEscToDashboard() {
     if (window.__escToDashboardInited) return;
     window.__escToDashboardInited = true;
     document.addEventListener("keydown", function (e) {
         if (e.key !== "Escape") return;
+        const app = document.getElementById("appContainer");
+        if (app && app.classList.contains("sidebar-hidden")) {
+            e.preventDefault();
+            ledgerSetSidebarHidden(false);
+            requestAnimationFrame(function () {
+                ledgerFocusFirstSidebarButton();
+            });
+            return;
+        }
         const workspace = document.querySelector(".workspace");
         if (!workspace) return;
         if (typeof loadPage === "function") loadPage("dashboard.html");
@@ -188,6 +359,7 @@ function initSidebarButtons() {
     }
 
     initEscToDashboard();
+    initSidebarKeyboard();
     initGoldOrderSubmenu();
     initJobworkerBookSubmenu();
     initDirectBillSubmenu();
@@ -495,16 +667,19 @@ function loadPage(pageUrl) {
     // Dashboard home: no fetch, show simple home view
     const isDashboard = /dashboard\.html$/i.test(String(pageUrl).trim());
     if (isDashboard) {
+        ledgerSetSidebarHidden(false);
         workspace.innerHTML = `
             <div style="padding:40px; font-size:16px; color:#6b7280;">
                 <h2 style="margin:0 0 12px 0; font-weight:600; color:#6b7280;">Dashboard</h2>
-                <p style="margin:0; opacity:0.85;">Use the sidebar to open a page. Press <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Esc</kbd> anytime to return here.</p>
+                <p style="margin:0; opacity:0.85;">The sidebar hides when you open a module. <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Esc</kbd> shows it again and focuses the menu; with the sidebar visible, Esc returns here. Toggle: <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Ctrl+M</kbd> or <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Alt+Shift+L</kbd>. In the sidebar use <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">↑</kbd> <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">↓</kbd> and <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Tab</kbd>; <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Enter</kbd> / <kbd style="padding:2px 6px; background:#e6f0ff; border-radius:4px;">Space</kbd> opens flyouts (Direct Bill, Gold Order Book, Job Worker Book).</p>
             </div>
         `;
         workspace.removeAttribute("data-page");
         setActiveSidebar(null);
         return;
     }
+
+    ledgerSetSidebarHidden(true);
 
     // Normalize/encode URL (handles spaces like "ready extra order.html")
     let fetchUrl = pageUrl;
