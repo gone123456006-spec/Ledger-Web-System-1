@@ -701,7 +701,15 @@
         if (!b) return true;
         const id = String(b.customerId || "").trim();
         const cid = String(b.cid || "").trim();
-        return id.startsWith("__unregistered__") || cid.startsWith("__unregistered__");
+        if (id.startsWith("__unregistered__") || cid.startsWith("__unregistered__")) return true;
+        // Gold Invoice: only list-selected customers appear on Customer Balance.
+        if (b.orderSource === "gold-invoice") {
+          if (b.goldInvoiceRegisteredCustomer === true) { /* show */ }
+          else if (b.goldInvoiceRegisteredCustomer === false) return true;
+          else if (!String(b.customerId || "").trim()) return true;
+        }
+        if (b.orderSource !== "gold-invoice" && String(b.readyMetal || "").trim() === "Gold" && !id) return true;
+        return false;
       };
 
       const isUnregisteredCustomer = (c) => {

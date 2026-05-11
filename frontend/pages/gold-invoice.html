@@ -466,7 +466,7 @@
   <div class="ledger-page-titlebar order-page-titlebar-grid">
     <span class="order-page-titlebar-heading">Gold Invoice</span>
     <div class="order-title-meta">
-      <span class="save-indicator" id="saveIndicatorBadge">✓ Auto-saved</span>
+      <span class="save-indicator" id="saveIndicatorBadge">Not stored until Save Bill</span>
     </div>
   </div>
 
@@ -549,7 +549,7 @@
             <p class="order-narration-hint">Optional notes for this order.</p>
             <label for="orderNarration" class="visually-hidden">Order narration</label>
             <textarea id="orderNarration" class="order-narration-textarea" maxlength="8000"
-              placeholder="Write narration or any notes…" oninput="scheduleAutoSave()"></textarea>
+              placeholder="Write narration or any notes…"></textarea>
           </div>
         </div>
       </div>
@@ -1310,13 +1310,12 @@
     }, 10);
     if (!skipThrottle) tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     updateInfoPanel();
-    scheduleAutoSave();
   }
 
   function removeRow(btn) {
     if (!confirm('Remove this row?')) return;
     var row = btn.closest('tr');
-    if (row) { row.remove(); updateInfoPanel(); scheduleAutoSave(); }
+    if (row) { row.remove(); updateInfoPanel(); }
   }
 
   function getGoldInvoiceRowType(row) {
@@ -1439,7 +1438,6 @@
       if (getGoldInvoiceRowType(row) === 'Other') {
         syncGoldInvoiceOtherTotal(row);
         updateInfoPanel();
-        scheduleAutoSave();
         return;
       }
       // Col indices: 0=type, 1=item, 2=stamp, 3=pc, 4=R.Metal, 5=Neg, 6=R.Wt, 7=rate, 8=making%, 9=other, 10=total, 11=del
@@ -1456,7 +1454,6 @@
       var total = base + labor + other;
       if (row.cells[10].children[0]) row.cells[10].children[0].value = total.toFixed(2);
       updateInfoPanel();
-      scheduleAutoSave();
     } catch(e) {}
   }
 
@@ -1471,7 +1468,6 @@
       }
     }
     updateInfoPanel();
-    scheduleAutoSave();
   }
 
   // =====================================================
@@ -1501,7 +1497,6 @@
     if (sample) row.dataset.sample = sample; else delete row.dataset.sample;
     closeOrderDetailsPopup();
     updateInfoPanel();
-    scheduleAutoSave();
   }
 
   function closeOrderDetailsPopup() {
@@ -2197,22 +2192,26 @@
   // =====================================================
   // ALL BILL (customerBalances — same list as New Order / Ready Extra)
   // =====================================================
-  /** Upsert one row in customerBalances so All Bill shows this Gold Invoice after Save.
+  /** Upsert customerBalances (All Bill / Customer Balance) — called only from Save Bill, not from customer pick or row edits.
    *  @param linkedCustomerOverride  Customer row from ensureCustomerMasterForSave() (typed name).
    *         When set, avoids wrong customerId when list selection is stale but Name field was edited manually. */
   function syncGoldInvoiceCustomerBalance(bn, billTotal, rows, narr, totalPc, totalRMetal, totalNeg, totalRWt, paidTotal, linkedCustomerOverride) {
     var name = getCustomerName();
-    var cust = linkedCustomerOverride || getLinkedCustomerByName();
+    // Only list-selected customers link to master / customerId; manual name must not match master by accident.
+    var cust = linkedCustomerOverride || null;
     var cidStr = cust && cust.cid != null && String(cust.cid).trim() !== '' ? String(cust.cid) : '—';
 
     var orderDateVal = (el('orderDate') && el('orderDate').value) || today();
     var ts = new Date().toISOString();
     var paidN = safeNum(paidTotal);
     var finalBal = safeNum(billTotal) - paidN;
+    var registeredGI = !!linkedCustomerOverride;
 
     var balanceEntry = {
       orderNo: bn,
       billNo: bn,
+      orderSource: 'gold-invoice',
+      goldInvoiceRegisteredCustomer: registeredGI,
       customer: name,
       amount: safeNum(billTotal).toFixed(2),
       netAmount: safeNum(billTotal).toFixed(2),
@@ -2234,9 +2233,20 @@
       relationName: (cust && cust.relationName) || '—',
       lfno: (cust && cust.lfno) || (el('lfNo') && el('lfNo').value) || '—',
       cid: cidStr,
-      customerId: cust && cust.id != null ? String(cust.id) : String(getSelectedCustomerId() || '')
+      customerId: cust && cust.id != null ? String(cust.id) : ''
     };
-    balanceEntry.amountMinusRateDiff = finalBal.toFixed(2);
+    if (!registeredGI) {
+      balanceEntry.finalBalanceAmount = '0.00';
+      balanceEntry.amountMinusRateDiff = '0.00';
+      balanceEntry.payment = 'Clear';
+      balanceEntry.status = 'Cleared';
+    } else {
+      balanceEntry.amountMinusRateDiff = finalBal.toFixed(2);
+      if (Math.abs(finalBal) <= 0.000001) {
+        balanceEntry.payment = 'Clear';
+        balanceEntry.status = 'Cleared';
+      }
+    }
 
     var customerBalances;
     try { customerBalances = JSON.parse(localStorage.getItem('customerBalances') || '[]'); } catch (e) { customerBalances = []; }
@@ -2250,57 +2260,53 @@
     customerBalances.push(balanceEntry);
     try { localStorage.setItem('customerBalances', JSON.stringify(customerBalances)); } catch (e2) { }
 
-    // Update currentBalance on the customer master = sum of finalBalanceAmount across all bills.
-    // This keeps Customer Balance in sync with All Bill without including opening balance.
+    // Update currentBalance on the customer master = sum of finalBalanceAmount across bills (list-selected only).
     // A manual edit to currentBalance via Customer Statement will be overwritten on the next bill save —
     // that is by design so the manual value is "current until the next bill is saved".
-    try {
-      var customers;
-      try { customers = JSON.parse(localStorage.getItem('customers') || '[]'); } catch (e) { customers = []; }
-      var custNormGI = (name || '').trim().toLowerCase();
-      var custIdGI = cust && cust.id != null ? String(cust.id) : '';
-      var custIdxGI = -1;
-      for (var ci = 0; ci < customers.length; ci++) {
-        var cc = customers[ci];
-        if (!cc) continue;
-        var byId = custIdGI && cc.id != null && String(cc.id) === custIdGI;
-        var byName = (cc.name || '').trim().toLowerCase() === custNormGI;
-        if (byId || byName) { custIdxGI = ci; break; }
-      }
-      if (custIdxGI >= 0) {
-        var freshBalances;
-        try { freshBalances = JSON.parse(localStorage.getItem('customerBalances') || '[]'); } catch (e) { freshBalances = customerBalances; }
-        var runningGI = 0;
-        freshBalances.forEach(function (b) {
-          if (!b) return;
-          var matchId = custIdGI && b.customerId && String(b.customerId) === custIdGI;
-          var matchName = (b.customer || '').trim().toLowerCase() === custNormGI;
-          if (!matchId && !matchName) return;
-          var fba = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ''
-            ? parseFloat(b.finalBalanceAmount) : null;
-          if (fba != null && Number.isFinite(fba)) { runningGI += fba; return; }
-          // Legacy fallback
-          var bno = b.orderNo || b.billNo || '';
-          var bAmt = parseFloat(b.amount || b.netAmount || 0);
+    if (linkedCustomerOverride) {
+      try {
+        var customers;
+        try { customers = JSON.parse(localStorage.getItem('customers') || '[]'); } catch (e) { customers = []; }
+        var custIdGI = linkedCustomerOverride.id != null ? String(linkedCustomerOverride.id) : '';
+        var custIdxGI = -1;
+        for (var ci = 0; ci < customers.length; ci++) {
+          var cc = customers[ci];
+          if (!cc) continue;
+          if (custIdGI && cc.id != null && String(cc.id) === custIdGI) { custIdxGI = ci; break; }
+        }
+        if (custIdxGI >= 0) {
+          var freshBalances;
+          try { freshBalances = JSON.parse(localStorage.getItem('customerBalances') || '[]'); } catch (e) { freshBalances = customerBalances; }
+          var runningGI = 0;
+          freshBalances.forEach(function (b) {
+            if (!b) return;
+            var matchId = custIdGI && b.customerId && String(b.customerId) === custIdGI;
+            if (!matchId) return;
+            var fba = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ''
+              ? parseFloat(b.finalBalanceAmount) : null;
+            if (fba != null && Number.isFinite(fba)) { runningGI += fba; return; }
+            var bno = b.orderNo || b.billNo || '';
+            var bAmt = parseFloat(b.amount || b.netAmount || 0);
+            try {
+              var pmts = JSON.parse(localStorage.getItem('payments') || '[]');
+              var bPaid = pmts.filter(function (p) { return p && String(p.billNo || '').trim() === bno; })
+                .reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+              runningGI += bAmt - bPaid;
+            } catch (e) { runningGI += bAmt; }
+          });
+          customers[custIdxGI].currentBalance = Math.abs(runningGI);
+          customers[custIdxGI].currentBalanceType = runningGI >= 0 ? 'Dr' : 'Cr';
+          customers[custIdxGI].timestamp = new Date().toISOString();
+          try { localStorage.setItem('customers', JSON.stringify(customers)); } catch (e) { }
           try {
-            var pmts = JSON.parse(localStorage.getItem('payments') || '[]');
-            var bPaid = pmts.filter(function (p) { return p && String(p.billNo || '').trim() === bno; })
-              .reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
-            runningGI += bAmt - bPaid;
-          } catch (e) { runningGI += bAmt; }
-        });
-        customers[custIdxGI].currentBalance = Math.abs(runningGI);
-        customers[custIdxGI].currentBalanceType = runningGI >= 0 ? 'Dr' : 'Cr';
-        customers[custIdxGI].timestamp = new Date().toISOString();
-        try { localStorage.setItem('customers', JSON.stringify(customers)); } catch (e) { }
-        try {
-          var cEv = new CustomEvent('customersUpdated');
-          window.dispatchEvent(cEv);
-          if (window.parent && window.parent !== window) window.parent.dispatchEvent(cEv);
-          if (window.top && window.top !== window) window.top.dispatchEvent(cEv);
-        } catch (e) { }
-      }
-    } catch (e4) { console.error('Gold Invoice: failed to update customer currentBalance', e4); }
+            var cEv = new CustomEvent('customersUpdated');
+            window.dispatchEvent(cEv);
+            if (window.parent && window.parent !== window) window.parent.dispatchEvent(cEv);
+            if (window.top && window.top !== window) window.top.dispatchEvent(cEv);
+          } catch (e) { }
+        }
+      } catch (e4) { console.error('Gold Invoice: failed to update customer currentBalance', e4); }
+    }
 
     try {
       var ev = new CustomEvent('customerBalancesUpdated');
@@ -2324,7 +2330,7 @@
     if (!el('orderDate') || !el('orderDate').value) { showErr('Order date is required'); return false; }
     var tbody = el('itemBody');
     if (!tbody || !tbody.querySelectorAll('tr').length) { showErr('Please add at least one item'); return false; }
-    var isRegisteredCustomer = !!findLinkedCustomerForSave();
+    var isRegisteredCustomer = !!ensureCustomerMasterForSave();
     var paidNow = getPaid(el('billNo') && el('billNo').value);
     if (!isRegisteredCustomer) {
       var balanceNow = calcBillTotal() - paidNow;
@@ -2420,6 +2426,8 @@
       var billData = {
         date: el('orderDate').value,
         billNo: bn,
+        orderSource: 'gold-invoice',
+        goldInvoiceRegisteredCustomer: !!linkedCustomer,
         customer: getCustomerName(),
         customerId: custIdForBill,
         totalAmount: billTotal,
@@ -2501,10 +2509,9 @@
     saveOrder({ afterSave: function() { resetForm(true); } });
   }
 
+  /** Intentionally no-op: bill/order/balances persist only via Save Bill (no draft auto-save on field change). */
   function scheduleAutoSave() {
-    // Gold Invoice requirement: do not keep unsaved draft data.
     if (S.autoSaveTimer) clearTimeout(S.autoSaveTimer);
-    S.savedThisSession = false;
     clearGoldInvoiceDraftCache();
   }
 
@@ -2575,10 +2582,7 @@
     if (S.orderSaveLocked) return;
     var hasData = String(getCustomerName() || '').trim() ||
       (el('itemBody') && el('itemBody').querySelectorAll('tr').length > 0);
-    if (hasData) {
-      if (validateOrder()) { saveOrder({ afterSave: goToDashboard }); return; }
-      if (!confirm('Close without saving? Unsaved changes will be lost.')) return;
-    }
+    if (hasData && !confirm('Close without saving? Use Save Bill to store this invoice. Unsaved changes will be lost.')) return;
     wipeGoldInvoiceUnsavedSession();
     goToDashboard();
   }

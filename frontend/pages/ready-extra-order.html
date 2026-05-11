@@ -5924,8 +5924,13 @@
 
           const customers = JSON.parse(localStorage.getItem("customers") || "[]");
           const targetCustomerName = getCustomerName();
+          const billsPeekTr = JSON.parse(localStorage.getItem("bills") || "[]");
+          const billPeekTr = billsPeekTr.find(b => b && (b.billNo === billNo.value || b.orderNo === billNo.value));
+          const custValTr = String(custName && custName.value ? custName.value : "");
+          const goldUnregTransfer = custValTr.indexOf("__unregistered__") === 0 ||
+            (billPeekTr && isGoldInvoiceUnregisteredBill(billPeekTr));
           let targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
-          if (!targetCust && targetCustomerName) {
+          if (!targetCust && targetCustomerName && !goldUnregTransfer) {
             targetCust = {
               cid: cid || "—",
               name: targetCustomerName,
@@ -6218,17 +6223,31 @@
         // Save to bills (for invoice/payment)
         const bills = JSON.parse(localStorage.getItem("bills") || "[]");
         const existingBillIndex = bills.findIndex(b => b.billNo === billNo.value);
+        const existingBillPeek = existingBillIndex >= 0 ? bills[existingBillIndex] : null;
+        const custValStrGi = String(custName && custName.value ? custName.value : "");
+        const goldInvoiceUnregisteredSave = !targetCustOverride && (
+          custValStrGi.indexOf("__unregistered__") === 0 ||
+          (existingBillPeek && isGoldInvoiceUnregisteredBill(existingBillPeek)) ||
+          (existingOrder && existingOrder.orderSource === "gold-invoice" && !String(existingOrder.customerId || "").trim())
+        );
         const billData = {
           date: orderDate.value,
           billDate: billDate && billDate.value ? billDate.value : "",
           billNo: billNo.value,
           sgjBillNo: window.sgjBillNo ? window.sgjBillNo.value : "",
           customer: getCustomerName(),
-          customerId: custName.value,
+          customerId: goldInvoiceUnregisteredSave ? "" : custName.value,
           totalAmount: billTotal,
           rows,
           hideBillMidColumns: billMidColumnsHidden
         };
+        if (goldInvoiceUnregisteredSave) {
+          billData.orderSource = "gold-invoice";
+          billData.goldInvoiceRegisteredCustomer = false;
+        } else if (existingBillPeek && String(existingBillPeek.orderSource || "").trim() === "gold-invoice") {
+          billData.orderSource = "gold-invoice";
+          billData.goldInvoiceRegisteredCustomer = existingBillPeek.goldInvoiceRegisteredCustomer === true;
+        }
 
         if (existingBillIndex >= 0) {
           bills[existingBillIndex] = billData;
@@ -6385,7 +6404,7 @@
         const newBillData = {
           billNo: billNo.value,
           customer: targetCustOverride ? targetCustOverride.name : getCustomerName(),
-          customerId: targetCustOverride ? targetCustOverride.id : custName.value,
+          customerId: goldInvoiceUnregisteredSave ? "" : (targetCustOverride ? targetCustOverride.id : custName.value),
           date: orderDate.value,
           billDate: billDate && billDate.value ? billDate.value : "",
           dueDate: dueDate.value || "",
@@ -6407,6 +6426,13 @@
             return el ? String(el.value || "") : "";
           })()
         };
+        if (goldInvoiceUnregisteredSave) {
+          newBillData.orderSource = "gold-invoice";
+          newBillData.goldInvoiceRegisteredCustomer = false;
+        } else if (existingBill && String(existingBill.orderSource || "").trim() === "gold-invoice") {
+          newBillData.orderSource = "gold-invoice";
+          newBillData.goldInvoiceRegisteredCustomer = existingBill.goldInvoiceRegisteredCustomer === true;
+        }
 
         if (billIndex >= 0) {
           allBills[billIndex] = newBillData;
@@ -6431,7 +6457,8 @@
         // Get customer details for transfer
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
         const targetCustomerName = targetCustOverride ? targetCustOverride.name : getCustomerName();
-        const targetCust = targetCustOverride || customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+        let targetCust = targetCustOverride || customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+        if (goldInvoiceUnregisteredSave && !targetCustOverride) targetCust = null;
 
         const rateBookDiffStoredSave = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";
         let rateDiffResultSave = 0;
@@ -6472,13 +6499,29 @@
         };
         if (finalBalanceAmount != null) balanceEntry.amountMinusRateDiff = parseFloat(finalBalanceAmount).toFixed(2);
         delete balanceEntry.rate;
+        if (goldInvoiceUnregisteredSave) {
+          balanceEntry.orderSource = "gold-invoice";
+          balanceEntry.goldInvoiceRegisteredCustomer = false;
+          balanceEntry.customerId = "";
+          balanceEntry.finalBalanceAmount = "0.00";
+          balanceEntry.balance = "0.00";
+          balanceEntry.amountMinusRateDiff = "0.00";
+          balanceEntry.payment = "Clear";
+          balanceEntry.status = "Cleared";
+        } else if (oldEntry && String(oldEntry.orderSource || "").trim() === "gold-invoice") {
+          balanceEntry.orderSource = "gold-invoice";
+          balanceEntry.goldInvoiceRegisteredCustomer = oldEntry.goldInvoiceRegisteredCustomer === true;
+          if (balanceEntry.goldInvoiceRegisteredCustomer && targetCust && targetCust.id != null) {
+            balanceEntry.customerId = String(targetCust.id);
+          }
+        }
 
         customerBalances.push(balanceEntry);
         localStorage.setItem("customerBalances", JSON.stringify(customerBalances));
 
         // 3. APPLY NEW TRANSFER TO CUSTOMER
         let custToUpdate = targetCust;
-        if (!custToUpdate && targetCustomerName) {
+        if (!custToUpdate && targetCustomerName && !goldInvoiceUnregisteredSave) {
           // Create new customer if not found
           custToUpdate = {
             cid: balanceEntry.cid || "—",
@@ -6939,6 +6982,25 @@
         // It will be removed in saveOrder function after saving
       }
 
+      function isGoldInvoiceUnregisteredBill(b) {
+        if (!b) return false;
+        if (b.goldInvoiceRegisteredCustomer === true) return false;
+        if (String(b.orderSource || "").trim() === "gold-invoice") {
+          if (b.goldInvoiceRegisteredCustomer === false) return true;
+          return !String(b.customerId || "").trim();
+        }
+        try {
+          var billKey = String(b.billNo || b.orderNo || "").trim();
+          if (!billKey) return false;
+          var orders = JSON.parse(localStorage.getItem("orders") || "[]");
+          var o = orders.find(function (x) {
+            return x && String(x.orderNo || x.billNo || "").trim() === billKey;
+          });
+          if (o && o.orderSource === "gold-invoice" && !String(o.customerId || "").trim()) return true;
+        } catch (eGi) {}
+        return false;
+      }
+
       function loadBill(i) {
         if (!custName || !orderDate || !billNo || !itemBody) {
           if (!initElements()) {
@@ -7022,13 +7084,19 @@
           try { be = JSON.parse(localStorage.getItem("editBalanceEntry") || "null"); } catch (eBe) { be = null; }
           var sameBill = be && String(be.orderNo || be.billNo || "").trim() === String(b.billNo || b.orderNo || "").trim();
           var src = sameBill ? be : null;
-          if (currentBal && src && src.currentBalance != null && String(src.currentBalance).trim() !== "") {
+          if (isGoldInvoiceUnregisteredBill(b)) {
+            if (currentBal) currentBal.value = "0.00 Dr";
+          } else if (currentBal && src && src.currentBalance != null && String(src.currentBalance).trim() !== "") {
             var cbType = String(src.currentBalanceType || "Dr").trim();
             currentBal.value = String(src.currentBalance) + (cbType ? (" " + cbType) : "");
           }
           if (relation && src && src.relation != null) relation.value = String(src.relation || "");
           if (station && src && src.station != null) station.value = String(src.station || "");
           if (lfNo && src) lfNo.value = String(src.lfNo || src.lfno || "");
+        }
+
+        if (isGoldInvoiceUnregisteredBill(b) && currentBal) {
+          currentBal.value = "0.00 Dr";
         }
 
         const billRows = b.rows || b.items || [];

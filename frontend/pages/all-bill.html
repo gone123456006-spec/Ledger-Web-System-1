@@ -540,6 +540,20 @@
       return dynamicSum;
     }
 
+    /** Gold Invoice manual customer: never show pending balance; always Clear + ₹0 in All Bill. */
+    function isGoldInvoiceUnregisteredBalance(balance) {
+      if (!balance) return false;
+      if (balance.goldInvoiceRegisteredCustomer === true) return false;
+      if (balance.orderSource === "gold-invoice") {
+        if (balance.goldInvoiceRegisteredCustomer === false) return true;
+        return !String(balance.customerId || "").trim();
+      }
+      if (String(balance.readyMetal || "").trim() === "Gold" && !String(balance.customerId || "").trim()) {
+        return true;
+      }
+      return false;
+    }
+
     /* =========================
        LOAD BALANCES
     ========================= */
@@ -669,6 +683,9 @@
 
           // Pending balance (Ready Extra panel "Pending balance Net Total Amount") — always use live calc for Balance column
           let balAmt = billNetBeforePayments - advanceAmt - paidAmt - Math.abs(rateDiffResult);
+          if (isGoldInvoiceUnregisteredBalance(balance)) {
+            balAmt = 0;
+          }
           const balStatus = String(balance.status || "").trim().toLowerCase();
           const linkedStatus = String((linkedOrder && linkedOrder.status) || "").trim().toLowerCase();
           if (balStatus === "cleared" || linkedStatus === "cleared") {
