@@ -41,7 +41,7 @@
       width: 100%;
       min-height: 100%;
       margin: 0;
-      padding: 24px 32px 100px;
+      padding: 24px 32px 40px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -81,6 +81,69 @@
       max-width: 800px;
       align-self: center;
       margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    /* Same header treatment as the Station modal (#stationPopupOverlay) */
+    .ledger-page-shell.customer-add-shell > .ledger-page-titlebar:first-child {
+      position: relative;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      text-align: center;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+      margin: 0;
+      flex-shrink: 0;
+    }
+
+    .ledger-page-titlebar-label {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .ledger-page-titlebar-close {
+      display: none;
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: #5f6368;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ledger-page-titlebar-close:hover {
+      background: #e8eaed;
+      color: #1a1a1a;
+    }
+
+    body.popup-mode .ledger-page-shell.customer-add-shell > .ledger-page-titlebar:first-child {
+      padding-left: 12px;
+      padding-right: 48px;
+    }
+
+    body.popup-mode .ledger-page-titlebar-close {
+      display: flex;
     }
 
     .ledger-page-shell.customer-add-shell .erp-form {
@@ -224,18 +287,46 @@
 
     /* Popup mode overrides for a more compact look */
     body.popup-mode {
-      background: #fff;
-      min-height: auto;
+      background: #fff !important;
+      min-height: 0 !important;
+      height: auto !important;
+      overflow-x: hidden;
+      overflow-y: hidden;
+    }
+    html.popup-mode {
+      background: #fff !important;
+      overflow: hidden;
+      min-height: 0 !important;
+      height: auto !important;
     }
     body.popup-mode .page {
       padding: 0;
+      min-height: 0 !important;
+      background: #fff !important;
+      overflow: visible;
+      align-items: stretch;
+    }
+    body.popup-mode .customer-add-shell {
+      margin-bottom: 0;
+      max-width: none;
+      width: 100%;
+      align-self: stretch;
+    }
+    body.popup-mode .form-left,
+    body.popup-mode .form-right {
+      background: #fff;
+      min-width: 0;
     }
     body.popup-mode .erp-form {
-      padding: 10px 15px;
-      gap: 5px 25px;
-      border-radius: 4px;
+      max-width: none;
+      width: 100%;
+      align-self: stretch;
+      padding: 8px 10px 12px;
+      gap: 8px 14px;
+      border-radius: 0;
       box-shadow: none;
       border: none;
+      background: #fff !important;
     }
     body.popup-mode h4 {
       margin: 5px 0 !important;
@@ -248,11 +339,30 @@
       font-size: 11px;
       margin-bottom: 2px;
     }
-    body.popup-mode input, 
-    body.popup-mode select, 
+    body.popup-mode input,
+    body.popup-mode select,
     body.popup-mode textarea {
-      padding: 6px 8px;
-      font-size: 13px;
+      padding: 8px 12px;
+      font-size: 14px;
+    }
+    body.popup-mode .erp-form input:not([type="date"]):not([type="checkbox"]):not([type="radio"]),
+    body.popup-mode .erp-form select,
+    body.popup-mode .date-wrap input {
+      min-height: 42px;
+      box-sizing: border-box;
+    }
+    body.popup-mode .erp-form textarea {
+      min-height: 56px;
+      resize: none;
+    }
+    body.popup-mode .row select#relation {
+      width: 88px;
+      min-height: 42px;
+      height: 42px;
+    }
+    body.popup-mode select#openingBalanceType {
+      min-height: 42px;
+      height: 42px;
     }
     body.popup-mode .form-section {
       margin-bottom: 5px;
@@ -266,20 +376,20 @@
       padding: 5px;
     }
 
+    .ledger-page-shell.customer-add-shell > .form-actions {
+      border-radius: 0 0 12px 12px;
+    }
+
     .form-actions {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(8px);
+      position: static;
+      background: #fff;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 12px;
       padding: 16px 20px;
-      z-index: 100;
-      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+      flex-shrink: 0;
     }
 
     .form-actions button {
@@ -339,6 +449,13 @@
     #customerListSection > .ledger-page-titlebar:first-child {
       margin: -20px -20px 16px -20px;
       border-radius: 16px 16px 0 0;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      text-align: center;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
     }
 
     #customerListSection .list-header {
@@ -596,7 +713,8 @@
       min-width: 0;
     }
 
-    select#station {
+    select#station,
+    .station-select-wrap select {
       width: 100%;
       height: 42px;
       padding: 8px 32px 8px 12px;
@@ -608,11 +726,13 @@
       color: var(--text);
     }
 
-    select#station:invalid {
+    select#station:invalid,
+    .station-select-wrap select:invalid {
       color: #757575;
     }
 
-    .row .station-select-wrap select#station {
+    .row .station-select-wrap select#station,
+    .row .station-select-wrap select#type {
       width: 100%;
       flex: 1;
       min-width: 0;
@@ -665,7 +785,11 @@
 <body>
   <div class="page">
     <div class="ledger-page-shell customer-add-shell">
-      <div class="ledger-page-titlebar">Add Customer</div>
+      <div class="ledger-page-titlebar">
+        <span class="ledger-page-titlebar-label">Add Customer</span>
+        <button type="button" class="ledger-page-titlebar-close" id="ledgerCustomerTitleClose" aria-label="Close"
+          title="Close">&times;</button>
+      </div>
       <form id="customerForm" class="erp-form">
       <div class="form-left">
         <h4>Personal Details</h4>
@@ -691,9 +815,13 @@
         </div>
         <div class="field">
           <label for="type">Type</label>
-          <select id="type">
-            <option value="Customer">Customer</option>
-          </select>
+          <div class="row">
+            <div class="station-select-wrap">
+              <select id="type">
+                <option value="Customer">Customer</option>
+              </select>
+            </div>
+          </div>
         </div>
         <div class="field">
           <label for="lfno">LF No</label>
@@ -772,6 +900,12 @@
         </div>
       </div>
     </form>
+    <div class="form-actions">
+      <button type="button" class="primary" onclick="submitForm(event)">Save & Close</button>
+      <button type="button" onclick="saveAndNew(event)">Save & New</button>
+      <button type="button" onclick="resetForm()">Reset</button>
+      <button type="button" onclick="openList()">Customer List</button>
+    </div>
     </div>
 
     <div id="customerListSection">
@@ -808,13 +942,6 @@
         </table>
       </div>
     </div>
-  </div>
-
-  <div class="form-actions">
-    <button type="button" class="primary" onclick="submitForm(event)">Save & Close</button>
-    <button type="button" onclick="saveAndNew(event)">Save & New</button>
-    <button type="button" onclick="resetForm()">Reset</button>
-    <button type="button" onclick="openList()">Customer List</button>
   </div>
 
   <!-- Station Popup -->
@@ -1130,17 +1257,19 @@
 
       const urlParams = new URL(window.location.href).searchParams;
       if (urlParams.get('popup') === '1') {
+        document.documentElement.classList.add('popup-mode');
         document.body.classList.add('popup-mode');
 
         const page = document.querySelector('.page');
         if (page) {
-          page.style.padding = '5px 15px';
+          page.style.padding = '0';
           page.style.boxShadow = 'none';
           page.style.border = 'none';
-          page.style.background = 'transparent';
+          page.style.background = '#ffffff';
           page.style.maxWidth = '100%';
         }
-        document.body.style.background = 'transparent';
+        document.body.style.background = '#ffffff';
+        document.documentElement.style.background = '#ffffff';
 
         const actions = document.querySelector('.form-actions');
         if (actions) {
@@ -1151,6 +1280,45 @@
             }
           });
         }
+
+        const titleClose = document.getElementById('ledgerCustomerTitleClose');
+        if (titleClose) {
+          titleClose.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            try {
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'ledger-customer-popup-close' }, '*');
+              }
+            } catch (err) { /* ignore */ }
+          });
+        }
+
+        function reportLedgerCustomerPopupHeight() {
+          try {
+            if (!document.body.classList.contains('popup-mode')) return;
+            if (!window.parent || window.parent === window) return;
+            const docEl = document.documentElement;
+            const bodyEl = document.body;
+            const h = Math.ceil(Math.max(
+              docEl.scrollHeight,
+              bodyEl ? bodyEl.scrollHeight : 0,
+              docEl.getBoundingClientRect().height
+            ));
+            window.parent.postMessage(
+              { type: 'ledger-customer-popup-height', height: h },
+              '*'
+            );
+          } catch (e) { /* ignore */ }
+        }
+        function scheduleLedgerCustomerPopupHeightReports() {
+          reportLedgerCustomerPopupHeight();
+          requestAnimationFrame(reportLedgerCustomerPopupHeight);
+          setTimeout(reportLedgerCustomerPopupHeight, 80);
+          setTimeout(reportLedgerCustomerPopupHeight, 400);
+          window.addEventListener('load', reportLedgerCustomerPopupHeight);
+        }
+        scheduleLedgerCustomerPopupHeightReports();
+        window.reportLedgerCustomerPopupHeight = reportLedgerCustomerPopupHeight;
       }
     }
 
@@ -1488,7 +1656,7 @@
       const listSection = $("customerListSection");
       const actionButtons = document.querySelector(".form-actions");
       const pageContainer = document.querySelector(".page");
-      if (pageContainer) pageContainer.style.padding = "24px 32px 100px";
+      if (pageContainer) pageContainer.style.padding = "24px 32px 40px";
       if (addShell) addShell.style.display = "";
       if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
       if (listSection) {
@@ -1685,7 +1853,7 @@
       const pageContainer = document.querySelector(".page");
       // openList() hides .customer-add-shell and zeroes .page padding; restore those here
       // so the edit form is actually visible after clicking Edit from the list.
-      if (pageContainer) pageContainer.style.padding = "24px 32px 100px";
+      if (pageContainer) pageContainer.style.padding = "24px 32px 40px";
       if (addShell) addShell.style.display = "";
       if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
       if (listSection) {
