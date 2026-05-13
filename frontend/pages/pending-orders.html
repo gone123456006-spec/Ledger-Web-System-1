@@ -1158,10 +1158,28 @@
       return null;
     }
 
+    function _customerNameMatchKey(name) {
+      return (name || "").toString().trim().toLowerCase();
+    }
+    function _countCustomersByNormalizedName(customers) {
+      const m = new Map();
+      (customers || []).forEach(function (c) {
+        if (!c) return;
+        const k = _customerNameMatchKey(c.name || c.customerName || "");
+        if (!k) return;
+        m.set(k, (m.get(k) || 0) + 1);
+      });
+      return m;
+    }
     function getCustomerData(customerName) {
       if (!customerName) return null;
       try {
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        const key = _customerNameMatchKey(customerName);
+        if (!key) return null;
+        if ((_countCustomersByNormalizedName(customers).get(key) || 0) > 1) {
+          return null;
+        }
         let customer = customers.find(c =>
           c && (c.name === customerName || c.customerName === customerName)
         );

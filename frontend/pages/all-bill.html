@@ -499,8 +499,9 @@
 
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
       const customerEntries = balances.filter((b) =>
-        norm(b.customer) === norm(customerName) ||
-        (c && c.cid && b.cid && norm(b.cid) === norm(c.cid))
+        (norm(b.customer) === norm(customerName) ||
+          (c && c.cid && b.cid && norm(b.cid) === norm(c.cid))) &&
+        b.orderSource !== "customer-register"
       );
 
       let dynamicSum = openingBal;
@@ -616,8 +617,8 @@
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
       if (tbody) tbody.innerHTML = "";
 
-      // Sort by date (newest first)
-      const sortedBalances = [...balances].sort((a, b) => {
+      // Sort by date (newest first). Exclude Add-Customer-only rows (Customer Balance only).
+      const sortedBalances = [...balances].filter((b) => b && b.orderSource !== "customer-register").sort((a, b) => {
         const dateA = new Date(a.date || a.timestamp || 0);
         const dateB = new Date(b.date || b.timestamp || 0);
         return dateB - dateA;
@@ -625,7 +626,7 @@
 
       populateBillNoDropdown(sortedBalances);
 
-      if (balances.length === 0) {
+      if (sortedBalances.length === 0) {
         updateFooter();
         filterTable();
         return;
@@ -636,6 +637,14 @@
       try {
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
         const norm = (s) => (s || "").trim().toLowerCase();
+        const nameFreq = new Map();
+        (customers || []).forEach((c) => {
+          if (!c) return;
+          const nm = (c.name || "").trim();
+          if (!nm) return;
+          const k = norm(nm);
+          nameFreq.set(k, (nameFreq.get(k) || 0) + 1);
+        });
         (customers || []).forEach((c) => {
           if (!c) return;
           const cur = c.currentBalance;
@@ -644,7 +653,10 @@
           if (Math.abs(n) > 0.000001) return;
           if (c.id != null && String(c.id).trim() !== "") customersMasterZeroKeys.add("id:" + String(c.id).trim());
           const nm = (c.name || "").trim();
-          if (nm) customersMasterZeroKeys.add("name:" + norm(nm));
+          if (nm) {
+            const k = norm(nm);
+            if ((nameFreq.get(k) || 0) === 1) customersMasterZeroKeys.add("name:" + k);
+          }
           const cid = (c.cid || "").trim();
           if (cid) customersMasterZeroKeys.add("cid:" + norm(cid));
         });

@@ -2534,6 +2534,18 @@
       // CUSTOMER MANAGEMENT
       // =====================================================
 
+      function _newOrderCustomerNameDupCounts(customers) {
+        const norm = (s) => (s || '').trim().toLowerCase();
+        const m = new Map();
+        (customers || []).forEach(function (c) {
+          if (!c || !c.name) return;
+          const k = norm(c.name);
+          if (!k) return;
+          m.set(k, (m.get(k) || 0) + 1);
+        });
+        return m;
+      }
+
       function loadCustomers() {
         if (!AppState.elements.custName) return;
 
@@ -2567,8 +2579,10 @@
           if (matchById) select.value = matchById.value;
         } else if (prevText) {
           const lower = prevText.toLowerCase();
-          const matchByName = Array.from(select.options).find(opt => (opt.textContent || '').trim().toLowerCase() === lower);
-          if (matchByName) select.value = matchByName.value;
+          const byName = Array.from(select.options).filter(function (opt) {
+            return (opt.textContent || '').trim().toLowerCase() === lower;
+          });
+          if (byName.length === 1) select.value = byName[0].value;
         }
 
         select.onchange = handleCustomerChange;
@@ -4919,14 +4933,18 @@
           const customerIdRaw = order.customerId != null && order.customerId !== '' ? order.customerId : null;
 
           const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+          const nameDup = _newOrderCustomerNameDupCounts(customers);
           let customer = null;
           if (customerIdRaw != null && customerIdRaw !== '') {
             customer = customers.find(c => c.id == customerIdRaw || String(c.id) === String(customerIdRaw));
           }
           if (!customer && customerName) {
-            customer = customers.find(c =>
-              (c.name || '').toString().trim().toLowerCase() === customerName.toLowerCase()
-            );
+            const nk = (customerName || '').trim().toLowerCase();
+            if (nk && (nameDup.get(nk) || 0) <= 1) {
+              customer = customers.find(c =>
+                (c.name || '').toString().trim().toLowerCase() === nk
+              );
+            }
           }
 
           const currentBalVal = (order.customerOpeningBalance != null ? order.customerOpeningBalance :
@@ -4947,14 +4965,20 @@
 
             const idToSelect = String(customerIdRaw || (customer && customer.id) || '');
             const nameToShow = customerName || (customer && customer.name) || '';
+            const customersList = JSON.parse(localStorage.getItem('customers') || '[]');
+            const nameDup = _newOrderCustomerNameDupCounts(customersList);
 
             let option = null;
             if (idToSelect) {
               option = Array.from(select.options).find(opt => String(opt.value) === idToSelect);
             } else if (nameToShow) {
-              option = Array.from(select.options).find(opt =>
-                ((opt.textContent || '').trim().toLowerCase() === nameToShow.toLowerCase())
-              );
+              const lower = nameToShow.toLowerCase();
+              if ((nameDup.get(lower) || 0) <= 1) {
+                const same = Array.from(select.options).filter(opt =>
+                  ((opt.textContent || '').trim().toLowerCase() === lower)
+                );
+                if (same.length === 1) option = same[0];
+              }
             }
             if (!option && (idToSelect || nameToShow)) {
               option = document.createElement('option');

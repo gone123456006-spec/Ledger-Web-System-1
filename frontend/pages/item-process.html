@@ -1295,8 +1295,8 @@
         let footer = null;
         let ipToastTimer = null;
         let _ipCurrentMarkCb = null;
-        /** After JW entry save + reload, re-check this row's selection checkbox */
-        let _ipPreserveRowSelAfterJwEntry = null;
+        /** After table reload, re-check every row that was selected before reload (e.g. JW entry save). */
+        let _ipPreserveRowSelectionsAfterReload = null;
 
         /* ── HELPERS ── */
         function ipGetRoot() {
@@ -1364,19 +1364,28 @@
         }
 
         function ipApplyPreservedRowSelAfterJwEntryLoad() {
-            const p = _ipPreserveRowSelAfterJwEntry;
-            if (!p || !tbody) return;
-            _ipPreserveRowSelAfterJwEntry = null;
-            const wantOid = String(p.orderId || '');
-            const wantIdx = String(p.itemIdx != null ? p.itemIdx : '');
-            const rowCb = [...tbody.querySelectorAll('.ip-row-cb')].find(function (el) {
-                return String(el.dataset.orderId || '') === wantOid &&
-                    String(el.dataset.itemIdx || '') === wantIdx;
-            });
-            if (rowCb && !rowCb.disabled) {
-                rowCb.checked = true;
-                ipOnCbChange(rowCb);
+            const list = _ipPreserveRowSelectionsAfterReload;
+            if (!tbody) {
+                _ipPreserveRowSelectionsAfterReload = null;
+                return;
             }
+            if (!list || !list.length) {
+                _ipPreserveRowSelectionsAfterReload = null;
+                return;
+            }
+            _ipPreserveRowSelectionsAfterReload = null;
+            list.forEach(function (p) {
+                const wantOid = String(p.orderId || '');
+                const wantIdx = String(p.itemIdx != null ? p.itemIdx : '');
+                const rowCb = [...tbody.querySelectorAll('.ip-row-cb')].find(function (el) {
+                    return String(el.dataset.orderId || '') === wantOid &&
+                        String(el.dataset.itemIdx || '') === wantIdx;
+                });
+                if (rowCb && !rowCb.disabled) {
+                    rowCb.checked = true;
+                    ipOnCbChange(rowCb);
+                }
+            });
         }
 
         function onIpMarkCbChange(cb, event) {
@@ -1398,11 +1407,20 @@
 
         function onItemProcessMessage(event) {
             if (event && event.data && event.data.type === 'jwEntrySaved') {
+                let preserveList = [];
+                try {
+                    [...document.querySelectorAll('.ip-row-cb:checked')].forEach(function (el) {
+                        preserveList.push({
+                            orderId: String(el.dataset.orderId || ''),
+                            itemIdx: String(el.dataset.itemIdx != null ? el.dataset.itemIdx : '')
+                        });
+                    });
+                } catch (eList) { }
+
                 const markCb = _ipCurrentMarkCb;
-                let preserve = null;
                 try {
                     if (markCb) {
-                        preserve = {
+                        const preserve = {
                             orderId: String(markCb.dataset.orderId || ''),
                             itemIdx: String(markCb.dataset.itemIdx != null ? markCb.dataset.itemIdx : '')
                         };
@@ -1423,10 +1441,12 @@
                     }
                 } catch (eSaveMark) { }
                 _ipCurrentMarkCb = null;
-                document.querySelectorAll('.mark-cb:checked').forEach(function (cb) { cb.checked = false; });
+                try {
+                    if (markCb) markCb.checked = false;
+                } catch (eMc) { }
                 closeIpEntryPopup();
                 showIpToast('✅ Job worker entry saved');
-                _ipPreserveRowSelAfterJwEntry = preserve;
+                _ipPreserveRowSelectionsAfterReload = preserveList;
                 setTimeout(function () { tbody = null; loadProcessItems(); }, 150);
                 return;
             }
@@ -1824,7 +1844,7 @@
                 ipApplyPreservedRowSelAfterJwEntryLoad();
             } catch (e) {
                 console.error('Error loading process items:', e);
-                _ipPreserveRowSelAfterJwEntry = null;
+                _ipPreserveRowSelectionsAfterReload = null;
                 tbody.innerHTML = `<tr><td colspan="16" class="empty-state">Error loading data.</td></tr>`;
                 if (footer) footer.textContent = 'Error';
                 populateIpFieldFilterDropdowns([]);

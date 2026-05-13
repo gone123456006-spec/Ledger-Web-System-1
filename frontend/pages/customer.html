@@ -1185,6 +1185,93 @@
 
     function num(v) { return Number(v) || 0; }
 
+    const CUSTOMER_REGISTER_ORDER_SOURCE = "customer-register";
+
+    function customerRegisterBalanceKey(customerId) {
+      return "CUSTREG-" + String(customerId);
+    }
+
+    /** Keeps Customer Balance in sync: one hidden-key row per customer until a real bill exists. */
+    function syncCustomerRegisterBalanceRow(savedCustomer) {
+      try {
+        const id = savedCustomer && savedCustomer.id;
+        if (id == null || String(id).trim() === "") return;
+        const BAL_KEY = "customerBalances";
+        let balances = JSON.parse(localStorage.getItem(BAL_KEY) || "[]");
+        if (!Array.isArray(balances)) balances = [];
+        const sid = String(id);
+        const regKey = customerRegisterBalanceKey(id);
+
+        const hasRealBillRow = balances.some(function (b) {
+          if (!b || String(b.customerId || "").trim() !== sid) return false;
+          if (b.orderSource === CUSTOMER_REGISTER_ORDER_SOURCE) return false;
+          return !!String(b.orderNo || b.billNo || "").trim();
+        });
+
+        balances = balances.filter(function (b) {
+          if (!b) return false;
+          if (b.orderSource !== CUSTOMER_REGISTER_ORDER_SOURCE) return true;
+          return String(b.customerId || "").trim() !== sid;
+        });
+
+        if (hasRealBillRow) {
+          localStorage.setItem(BAL_KEY, JSON.stringify(balances));
+          try {
+            window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+            if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+            if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+          } catch (e) { }
+          return;
+        }
+
+        const hasMaster = savedCustomer.masterOpeningBalance != null && String(savedCustomer.masterOpeningBalance).trim() !== "";
+        const rawOp = hasMaster ? savedCustomer.masterOpeningBalance : savedCustomer.openingBalance;
+        const opAmt = Number(rawOp) || 0;
+        const opTypeStr = hasMaster
+          ? (savedCustomer.masterOpeningBalanceType || savedCustomer.openingBalanceType || "Dr")
+          : (savedCustomer.openingBalanceType || "Dr");
+        const isCr = String(opTypeStr || "Dr").trim().toLowerCase() === "cr";
+        const signed = isCr ? -Math.abs(opAmt) : Math.abs(opAmt);
+        const magStr = Math.abs(signed).toFixed(2);
+        const dateStr = savedCustomer.openingDate || new Date().toISOString().split("T")[0];
+        const ts = new Date().toISOString();
+
+        balances.push({
+          orderNo: regKey,
+          billNo: regKey,
+          orderSource: CUSTOMER_REGISTER_ORDER_SOURCE,
+          customer: (savedCustomer.name || "").trim(),
+          customerId: sid,
+          cid: (savedCustomer.cid || "").trim(),
+          amount: magStr,
+          netAmount: magStr,
+          finalBalanceAmount: signed.toFixed(2),
+          date: dateStr,
+          timestamp: ts,
+          phone: (savedCustomer.phone || "").trim() || "—",
+          mobile: (savedCustomer.mobile || savedCustomer.phone || "").trim() || "—",
+          station: (savedCustomer.station || "").trim() || "—",
+          relation: (savedCustomer.relation || "").trim() || "—",
+          relationName: (savedCustomer.relationName || "").trim() || "—",
+          lfno: (savedCustomer.lfno || "").trim() || "—",
+          mark: "—",
+          payment: "Pending",
+          narration: "Customer register",
+          transferred: false,
+          neg: 0
+        });
+
+        localStorage.setItem(BAL_KEY, JSON.stringify(balances));
+        try {
+          window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+          if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+          if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        } catch (e) { }
+      } catch (err) {
+        console.warn("syncCustomerRegisterBalanceRow", err);
+      }
+    }
+
     function validateForm() {
       if (!fields.name.value.trim()) { alert("Customer name is required"); fields.name.focus(); return false; }
       const stationSave = getStationForSave();
@@ -1299,6 +1386,13 @@
         localStorage.removeItem(EDIT_KEY);
       } else customers.push(data);
       localStorage.setItem(STORE_KEY, JSON.stringify(customers));
+      const savedRecord = customers.find(c => c.id === id);
+      if (savedRecord) syncCustomerRegisterBalanceRow(savedRecord);
+      try {
+        window.dispatchEvent(new CustomEvent("customersUpdated"));
+        if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customersUpdated"));
+        if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customersUpdated"));
+      } catch (e) { }
       alert("Customer saved successfully");
     }
 
@@ -1535,13 +1629,40 @@
       const norm = n => (n || "").toLowerCase().trim();
       const orders = JSON.parse(localStorage.getItem("orders") || "[]");
       const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
-      const hasOrder = orders.some(o => norm(o.customer || o.customerName) === norm(name) || String(o.customerId) === String(id));
-      const hasBalance = balances.some(b => norm(b.customer) === norm(name));
+      const sameNameCount = customers.filter(c => norm(c.name) === norm(name)).length;
+      const hasOrder = orders.some(o => {
+        if (String(o.customerId) === String(id)) return true;
+        if (sameNameCount <= 1 && norm(o.customer || o.customerName) === norm(name)) return true;
+        return false;
+      });
+      const hasBalance = balances.some(b => {
+        if (!b || b.orderSource === CUSTOMER_REGISTER_ORDER_SOURCE) return false;
+        if (String(b.customerId || "") === String(id)) return true;
+        if (sameNameCount <= 1) return norm(b.customer) === norm(name);
+        return false;
+      });
       if (hasOrder || hasBalance) {
         alert("Cannot delete. This customer has orders or balance entries (New Order → Orders → Pending/Ready → All Bill → Customer Balance). Remove or transfer them first.");
         return;
       }
       if (!confirm("Delete this customer?")) return;
+      try {
+        let bal = JSON.parse(localStorage.getItem("customerBalances") || "[]");
+        const rk = customerRegisterBalanceKey(id);
+        bal = bal.filter(b => {
+          if (!b) return false;
+          const k = String(b.orderNo || b.billNo || "").trim();
+          if (k === rk) return false;
+          if (b.orderSource === CUSTOMER_REGISTER_ORDER_SOURCE && String(b.customerId || "") === String(id)) return false;
+          return true;
+        });
+        localStorage.setItem("customerBalances", JSON.stringify(bal));
+        try {
+          window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+          if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+          if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+        } catch (e) { }
+      } catch (e2) { }
       const next = customers.filter(c => c.id !== id);
       localStorage.setItem(STORE_KEY, JSON.stringify(next));
       renderCustomerList();

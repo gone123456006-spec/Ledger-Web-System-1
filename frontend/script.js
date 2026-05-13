@@ -32,6 +32,23 @@ function ledgerToggleSidebar() {
 }
 window.ledgerToggleSidebar = ledgerToggleSidebar;
 
+/** Master menu: show left sidebar only (does not open Dashboard). */
+function ledgerEscShowSidebarOnly() {
+    try {
+        ledgerSetSidebarHidden(false);
+    } catch (e) { }
+    try {
+        const bar = document.querySelector("nav.menu-bar");
+        if (bar) bar.classList.remove("menu-esc-dismiss");
+    } catch (e2) { }
+    requestAnimationFrame(function () {
+        try {
+            ledgerFocusFirstSidebarButton();
+        } catch (e3) { }
+    });
+}
+window.ledgerEscShowSidebarOnly = ledgerEscShowSidebarOnly;
+
 function ledgerIsTypingTarget(el) {
     if (!el || !el.tagName) return false;
     const t = String(el.tagName).toUpperCase();

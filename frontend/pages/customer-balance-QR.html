@@ -2032,6 +2032,24 @@
         function normKey(s) {
             return String(s || '').trim().toLowerCase();
         }
+        function stmtCustomerNameDupMap() {
+            try {
+                const customers = JSON.parse(localStorage.getItem('customers') || '[]');
+                const m = new Map();
+                customers.forEach(function (c) {
+                    if (!c || !c.name) return;
+                    const k = normKey(c.name);
+                    if (!k) return;
+                    m.set(k, (m.get(k) || 0) + 1);
+                });
+                return m;
+            } catch (e) {
+                return new Map();
+            }
+        }
+        function stmtNameHasDuplicates(name) {
+            return (stmtCustomerNameDupMap().get(normKey(name)) || 0) > 1;
+        }
         /** Cid stored as "—" must not be used for cross-row matching (false matches). */
         function isPlaceholderCid(cid) {
             const t = normKey(cid);
@@ -2050,7 +2068,8 @@
             if (idVal || (idRaw && idRaw.startsWith('idx-'))) return false;
             const tn = customerData.name ? normKey(customerData.name) : '';
             const tc = customerData.cid ? String(customerData.cid).trim() : '';
-            const byName = tn && c.name && normKey(c.name) === tn;
+            const nameDup = stmtNameHasDuplicates(customerData.name);
+            const byName = tn && c.name && normKey(c.name) === tn && !nameDup;
             const byCid = tc && !isPlaceholderCid(tc) && c.cid && !isPlaceholderCid(c.cid) && normKey(c.cid) === normKey(tc);
             return !!(byCid || byName);
         }
@@ -2067,7 +2086,8 @@
             if (idVal && b.customerId != null && String(b.customerId) === idVal) return true;
             const tn = customerData.name ? normKey(customerData.name) : '';
             const tc = customerData.cid ? String(customerData.cid).trim() : '';
-            const byName = tn && b.customer && normKey(b.customer) === tn;
+            const nameDup = stmtNameHasDuplicates(customerData.name);
+            const byName = tn && b.customer && normKey(b.customer) === tn && !nameDup;
             const byCid = tc && !isPlaceholderCid(tc) && b.cid && !isPlaceholderCid(b.cid) && normKey(b.cid) === normKey(tc);
             return !!(byName || byCid);
         }
@@ -2106,7 +2126,8 @@
                 if (!ref || normKey(ref) !== normKey(billKey)) return false;
             }
             const tn = customerData.name ? normKey(customerData.name) : '';
-            return !!(tn && b.customer && normKey(b.customer) === tn);
+            const nameDup = stmtNameHasDuplicates(customerData.name);
+            return !!(tn && b.customer && normKey(b.customer) === tn && !nameDup);
         }
         /** Write cleared master record: strict match first, then exact name match on all customers. */
         function persistCustomerClearedMasterRecord() {
@@ -2120,7 +2141,7 @@
                 });
                 if (!changed) {
                     const nm = normKey(customerData.name);
-                    if (nm) {
+                    if (nm && !stmtNameHasDuplicates(customerData.name)) {
                         customers.forEach(c => {
                             if (!c || !c.name) return;
                             if (normKey(c.name) !== nm) return;
@@ -2291,7 +2312,7 @@
                     });
                     if (!updated && customerData.statementBillAmountCleared) {
                         const nm = normKey(customerData.name);
-                        if (nm) {
+                        if (nm && !stmtNameHasDuplicates(customerData.name)) {
                             customers.forEach(c => {
                                 if (!c || !c.name || normKey(c.name) !== nm) return;
                                 applyClearedStateToCustomerRow(c);
@@ -2325,7 +2346,7 @@
                             });
                             if (!touched) {
                                 const nm = normKey(customerData.name);
-                                if (nm) {
+                                if (nm && !stmtNameHasDuplicates(customerData.name)) {
                                     customers2.forEach(c => {
                                         if (!c || !c.name || normKey(c.name) !== nm) return;
                                         const ob = Number(customerData.openingBalance) || 0;
@@ -2349,9 +2370,17 @@
                 try {
                     const jewellers = JSON.parse(localStorage.getItem('jewellers') || '[]');
                     const norm = s => (s || '').trim().toLowerCase();
+                    const jewellerNameCounts = new Map();
+                    jewellers.forEach(function (j) {
+                        if (!j || !j.name) return;
+                        const jn = norm(j.name);
+                        if (!jn) return;
+                        jewellerNameCounts.set(jn, (jewellerNameCounts.get(jn) || 0) + 1);
+                    });
                     let updated = false;
                     jewellers.forEach(j => {
-                        const matchByName = norm(j.name) === norm(customerData.name);
+                        const jn = norm(j.name);
+                        const matchByName = jn && (jewellerNameCounts.get(jn) || 0) === 1 && norm(j.name) === norm(customerData.name);
                         if (matchByName) {
                             if (customerData.statementBillAmountCleared) {
                                 j.currentBalance = 0;
@@ -2496,6 +2525,8 @@
                 return balances
                     .filter(b => {
                         if (!b) return false;
+                        // Add-Customer-only rows (CUSTREG-*) — All Bill / balance ledger only; not part of statement narration or bill-sum row.
+                        if (b.orderSource === "customer-register") return false;
                         const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
                         return hasBillRef && matchCustomerBalanceOrBillRow(b);
                     })
@@ -2520,9 +2551,16 @@
                 const norm = (s) => (s || "").trim().toLowerCase();
                 const nameNorm = norm(customerData.name);
                 const cidNorm = customerData.cid ? norm(customerData.cid) : "";
+                const idNorm = customerData.id != null ? String(customerData.id).trim() : "";
+                const nameDupNarr = stmtNameHasDuplicates(customerData.name);
                 const rows = balances.filter(b => {
                     if (!b) return false;
-                    const sameCustomer = (norm(b.customer) === nameNorm || (cidNorm && b.cid && norm(b.cid) === cidNorm));
+                    if (b.orderSource === "customer-register") return false;
+                    const sameCustomer = (
+                        (!nameDupNarr && nameNorm && norm(b.customer) === nameNorm) ||
+                        (cidNorm && b.cid && norm(b.cid) === cidNorm) ||
+                        (idNorm && b.customerId != null && String(b.customerId).trim() === idNorm)
+                    );
                     const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
                     return sameCustomer && hasBillRef;
                 });
@@ -2568,13 +2606,42 @@
         function openStatementBillInvoice(billNo) {
             const ref = String(billNo || '').trim();
             if (!ref) return;
+            const custRegMatch = /^custreg-(\d+)$/i.exec(ref);
+            if (custRegMatch) {
+                const custId = custRegMatch[1];
+                try {
+                    localStorage.setItem("editCustomerId", custId);
+                    localStorage.removeItem("editJewellerId");
+                    localStorage.removeItem("editAgentId");
+                } catch (e) { }
+                if (typeof loadPage === "function") {
+                    loadPage("pages/customer.html");
+                    return;
+                }
+                if (window.parent && window.parent !== window && typeof window.parent.loadPage === "function") {
+                    window.parent.loadPage("pages/customer.html");
+                    return;
+                }
+                if (window.top && window.top !== window && typeof window.top.loadPage === "function") {
+                    window.top.loadPage("pages/customer.html");
+                    return;
+                }
+                window.location.href = "customer.html";
+                return;
+            }
             try {
                 const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
                 const norm = (s) => (s || '').trim().toLowerCase();
                 const nameNorm = norm(customerData.name);
                 const cidNorm = customerData.cid ? norm(customerData.cid) : "";
                 const refNorm = norm(ref);
-                const sameCustomer = (b) => norm(b && b.customer) === nameNorm || (cidNorm && b && b.cid && norm(b.cid) === cidNorm);
+                const nameDupStmt = stmtNameHasDuplicates(customerData.name);
+                const idStmt = customerData.id != null && String(customerData.id).trim() !== ''
+                  ? String(customerData.id).trim() : '';
+                const sameCustomer = (b) =>
+                  (idStmt && b.customerId != null && String(b.customerId).trim() === idStmt) ||
+                  (cidNorm && b && b.cid && norm(b.cid) === cidNorm) ||
+                  (!nameDupStmt && norm(b && b.customer) === nameNorm);
                 const sameBill = (b) => {
                     const orderNo = norm(b && b.orderNo);
                     const billNoVal = norm(b && b.billNo);
@@ -2694,7 +2761,8 @@
                     cust = customers.find((c) => String(c.id) === String(customerData.id));
                 }
                 if (!cust && customerData.name) {
-                    cust = customers.find((c) => norm(c.name) === norm(customerData.name));
+                    const matches = customers.filter((c) => norm(c.name) === norm(customerData.name));
+                    if (matches.length === 1) cust = matches[0];
                 }
                 if (!cust) return { relation: '', relationName: '' };
                 return {
@@ -4043,10 +4111,8 @@
                         if (!cust.statementBillAmountCleared) {
                             const mOp = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
                             const mOpT = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
-                            if (customerData.openingBalance == null || customerData.openingBalance === '') {
-                                customerData.openingBalance = parseFloat(mOp) || 0;
-                                if (mOpT) customerData.openingBalanceType = mOpT;
-                            }
+                            customerData.openingBalance = parseFloat(mOp) || 0;
+                            if (mOpT) customerData.openingBalanceType = mOpT;
                             if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
                             if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
                         }
@@ -4066,6 +4132,12 @@
                         if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
                         if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
                         if (!customerData.id) customerData.id = cust.id;
+                        if (!cust.statementBillAmountCleared) {
+                            const mOp = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
+                            const mOpT = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
+                            customerData.openingBalance = parseFloat(mOp) || 0;
+                            if (mOpT) customerData.openingBalanceType = mOpT;
+                        }
                     }
                 } catch (e) { }
             }
@@ -4074,8 +4146,9 @@
                 try {
                     const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                     const norm = s => (s || '').trim().toLowerCase();
-                    const cust = customers.find(c => norm(c.name) === norm(customerData.name));
-                    if (cust) {
+                    const matches = customers.filter(c => norm(c.name) === norm(customerData.name));
+                    if (matches.length === 1) {
+                        const cust = matches[0];
                         if (cust.cid) customerData.cid = String(cust.cid || '');
                         if (cust.statementBillAmountCleared) {
                             customerData.statementBillAmountCleared = true;
@@ -4086,10 +4159,8 @@
                         } else {
                             const mOpN = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
                             const mOpTN = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
-                            if (customerData.openingBalance == null || customerData.openingBalance === '') {
-                                customerData.openingBalance = parseFloat(mOpN) || 0;
-                                if (mOpTN) customerData.openingBalanceType = mOpTN;
-                            }
+                            customerData.openingBalance = parseFloat(mOpN) || 0;
+                            if (mOpTN) customerData.openingBalanceType = mOpTN;
                             if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
                             if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
                         }
@@ -4100,8 +4171,9 @@
                 try {
                     const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                     const norm = s => (s || '').trim().toLowerCase();
-                    const cust = customers.find(c => norm(c.name) === norm(customerData.name));
-                    if (cust) {
+                    const matches = customers.filter(c => norm(c.name) === norm(customerData.name));
+                    if (matches.length === 1) {
+                        const cust = matches[0];
                         if (cust.cid) customerData.cid = String(cust.cid || '');
                         if (!customerData.id) customerData.id = cust.id;
                     }

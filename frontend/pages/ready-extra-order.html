@@ -4006,16 +4006,19 @@
 
       function setCustomerName(name) {
         if (!custName) return;
-
-        // Find customer by name and select it
-        const options = custName.options;
-        for (let i = 0; i < options.length; i++) {
-          if (options[i].textContent === name) {
-            custName.value = options[i].value;
+        try {
+          const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+          const norm = (s) => (s || "").trim().toLowerCase();
+          const nk = norm(name);
+          const matches = customers.filter(c => c && c.name && norm(c.name) === nk);
+          if (matches.length !== 1) return;
+          const idStr = String(matches[0].id);
+          const opt = Array.from(custName.options).find(o => String(o.value) === idStr);
+          if (opt) {
+            custName.value = opt.value;
             custName.dispatchEvent(new Event('change'));
-            break;
           }
-        }
+        } catch (e) { }
       }
 
       function getCustomerName() {
@@ -5973,7 +5976,15 @@
           const custValTr = String(custName && custName.value ? custName.value : "");
           const goldUnregTransfer = custValTr.indexOf("__unregistered__") === 0 ||
             (billPeekTr && isGoldInvoiceUnregisteredBill(billPeekTr));
-          let targetCust = customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+          let targetCust = null;
+          if (custValTr && custValTr.indexOf("__unregistered__") !== 0) {
+            targetCust = customers.find(c => c && String(c.id) === custValTr);
+          }
+          if (!targetCust && targetCustomerName) {
+            const nm = targetCustomerName.toLowerCase().trim();
+            const same = customers.filter(c => c.name && c.name.toLowerCase().trim() === nm);
+            if (same.length === 1) targetCust = same[0];
+          }
           if (!targetCust && targetCustomerName && !goldUnregTransfer) {
             targetCust = {
               cid: cid || "—",
@@ -6501,7 +6512,16 @@
         // Get customer details for transfer
         const customers = JSON.parse(localStorage.getItem("customers") || "[]");
         const targetCustomerName = targetCustOverride ? targetCustOverride.name : getCustomerName();
-        let targetCust = targetCustOverride || customers.find(c => c.name && c.name.toLowerCase().trim() === targetCustomerName.toLowerCase().trim());
+        const custIdSave = String(custName && custName.value ? custName.value : "");
+        let targetCust = targetCustOverride || null;
+        if (!targetCust && custIdSave && custIdSave.indexOf("__unregistered__") !== 0) {
+          targetCust = customers.find(c => c && String(c.id) === custIdSave);
+        }
+        if (!targetCust && !targetCustOverride && targetCustomerName) {
+          const nm = targetCustomerName.toLowerCase().trim();
+          const same = customers.filter(c => c.name && c.name.toLowerCase().trim() === nm);
+          if (same.length === 1) targetCust = same[0];
+        }
         if (goldInvoiceUnregisteredSave && !targetCustOverride) targetCust = null;
 
         const rateBookDiffStoredSave = (billNo && billNo.value) ? (localStorage.getItem("rateBookDiffSummary_" + billNo.value) || "") : "";

@@ -85,6 +85,17 @@ ul, li{
     background:#bad5ff;
 }
 
+.submenu li.submenu-esc-item{
+    margin-top:4px;
+    border-top:1px solid #d9e6fc;
+    padding-top:10px;
+    font-weight:600;
+    color:#174ea6;
+}
+.submenu li.submenu-esc-item:hover{
+    background:#cfe0ff;
+}
+
 .submenu.right{
     top:0;
     left:calc(100% - 1px);

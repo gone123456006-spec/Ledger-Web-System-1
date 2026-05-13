@@ -367,7 +367,8 @@
       </select>
 
       <div class="filter-sep"></div>
-      <button type="button" class="filter-btn active" id="filterNonzero" onclick="setFilter('nonzero')">With
+      <button type="button" class="filter-btn active" id="filterAll" onclick="setFilter('all')">All</button>
+      <button type="button" class="filter-btn" id="filterNonzero" onclick="setFilter('nonzero')">With
         Balance</button>
       <button type="button" class="filter-btn" id="filterZero" onclick="setFilter('zero')">Zero Balance</button>
 
@@ -438,6 +439,40 @@
         return JSON.parse(localStorage.getItem(BALANCES_KEY) || "[]");
       } catch (e) {
         return [];
+      }
+    }
+
+    function stripObsoleteCustomerRegisterRows(balances) {
+      if (!balances || !balances.length) return balances;
+      try {
+        const idsWithReal = new Set();
+        balances.forEach(function (b) {
+          if (!b || b.orderSource === "customer-register") return;
+          var id = String(b.customerId || "").trim();
+          if (id) idsWithReal.add(id);
+        });
+        var changed = false;
+        var next = balances.filter(function (b) {
+          if (!b) return false;
+          if (b.orderSource !== "customer-register") return true;
+          var id = String(b.customerId || "").trim();
+          if (idsWithReal.has(id)) {
+            changed = true;
+            return false;
+          }
+          return true;
+        });
+        if (changed) {
+          localStorage.setItem(BALANCES_KEY, JSON.stringify(next));
+          try {
+            window.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+            if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+            if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
+          } catch (e) { }
+        }
+        return changed ? next : balances;
+      } catch (e2) {
+        return balances;
       }
     }
 
@@ -670,15 +705,39 @@
       return Number.isFinite(p) ? p : 0;
     }
 
-    function resolveCustomerRowForBalance(b, customers, norm) {
+    function resolveCustomerRowForBalance(b, customers, norm, nameCounts) {
       if (!b) return {};
       var c = null;
       if (b.customerId != null && String(b.customerId).trim() !== "") {
         c = customers.find(function (x) { return String(x.id) === String(b.customerId); }) || null;
       }
       if (!c && b.cid) c = customers.find(function (x) { return x.cid && norm(x.cid) === norm(b.cid); }) || null;
-      if (!c && b.customer) c = customers.find(function (x) { return norm(x.name) === norm(b.customer); }) || null;
+      // If multiple customers share the same name, NEVER resolve by name (prevents mixing balances).
+      if (!c && b.customer) {
+        var key = norm(b.customer);
+        var dup = nameCounts && nameCounts.get ? (nameCounts.get(key) || 0) : 0;
+        if (dup <= 1) {
+          c = customers.find(function (x) { return norm(x.name) === key; }) || null;
+        }
+      }
       return c || {};
+    }
+
+    /**
+     * customers[] may carry statement‑synced currentBalance / currentBalanceType (e.g. from Customer Statement).
+     * For Add Customer register rows (no real bill), show that in the Balance column when present.
+     */
+    function customerMasterCurrentBalanceDisplay(c) {
+      if (!c || c.currentBalance == null || String(c.currentBalance).trim() === "") return null;
+      const n = Number(c.currentBalance);
+      if (!Number.isFinite(n)) return null;
+      const tRaw = c.currentBalanceType != null && String(c.currentBalanceType).trim() !== ""
+        ? String(c.currentBalanceType).trim() : (n < 0 ? "Cr" : "Dr");
+      const isCr = tRaw.toLowerCase() === "cr";
+      return {
+        displayAmount: Math.abs(n),
+        displayType: isCr ? "Cr" : "Dr"
+      };
     }
 
     function pickBillKeyFromBalance(b) {
@@ -693,9 +752,20 @@
         return;
       }
       syncBalancesFromBills();
-      const balances = getCustomerBalances();
+      let balances = getCustomerBalances();
+      balances = stripObsoleteCustomerRegisterRows(balances);
       const customers = getCustomers();
       const norm = (s) => (s || "").trim().toLowerCase();
+      const nameCounts = (function () {
+        const m = new Map();
+        (customers || []).forEach(function (c) {
+          if (!c || !c.name) return;
+          const k = norm(c.name);
+          if (!k) return;
+          m.set(k, (m.get(k) || 0) + 1);
+        });
+        return m;
+      })();
 
       const skipUnregisteredBalanceRow = (b) => {
         if (!b) return true;
@@ -735,26 +805,38 @@
       const rows = [];
       byBill.forEach(function (b) {
         const billNo = pickBillKeyFromBalance(b);
-        const c = resolveCustomerRowForBalance(b, customers, norm);
+        const c = resolveCustomerRowForBalance(b, customers, norm, nameCounts);
         if (c && c.id != null && isUnregisteredCustomer(c)) return;
         const name = (b.customer || c.name || "").trim() || "—";
         const stored = b.finalBalanceAmount != null && String(b.finalBalanceAmount).trim() !== ""
           ? parseFloat(b.finalBalanceAmount) : null;
         const v = (stored != null && Number.isFinite(stored)) ? stored : allBillComputeRowBalance(b);
-        const displayAmount = Math.abs(Number(v) || 0);
-        const displayType = (Number(v) || 0) < 0 ? "Cr" : "Dr";
+        let displayAmount = Math.abs(Number(v) || 0);
+        let displayType = (Number(v) || 0) < 0 ? "Cr" : "Dr";
         const rawOpeningType = (c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "")
           ? (c.masterOpeningBalanceType || c.openingBalanceType || "Dr")
           : (c.openingBalanceType || "Dr");
+        const isRegisterStub = String(b.orderSource || "").trim() === "customer-register";
+        if (isRegisterStub) {
+          const masterCur = customerMasterCurrentBalanceDisplay(c);
+          if (masterCur) {
+            displayAmount = masterCur.displayAmount;
+            displayType = masterCur.displayType;
+          }
+        }
+        const hasMasterOp = c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "";
+        const stmtOpBalNum = hasMasterOp ? (parseFloat(c.masterOpeningBalance) || 0) : (parseFloat(c.openingBalance) || 0);
+        const stmtOpTypeStr = hasMasterOp ? (c.masterOpeningBalanceType || c.openingBalanceType || "Dr") : (c.openingBalanceType || "Dr");
         rows.push({
           billNo: billNo,
+          isRegisterStub: isRegisterStub,
           name: name,
-          lfno: c.lfno || "—",
-          relation: c.relation || "—",
-          relationName: c.relationName || "—",
-          station: c.station || "—",
-          phone: c.phone || "—",
-          mobile: c.mobile || "—",
+          lfno: c.lfno || b.lfno || "—",
+          relation: c.relation || b.relation || "—",
+          relationName: c.relationName || b.relationName || "—",
+          station: c.station || b.station || "—",
+          phone: c.phone || b.phone || "—",
+          mobile: c.mobile || b.mobile || "—",
           amount: displayAmount,
           balanceType: displayType,
           originalOpBal: 0,
@@ -763,11 +845,16 @@
           id: c.id != null ? c.id : null,
           originalOpType: rawOpeningType || "Dr",
           currentBal: displayAmount,
-          currentBalType: displayType
+          currentBalType: displayType,
+          statementOpeningBal: stmtOpBalNum,
+          statementOpeningType: stmtOpTypeStr
         });
       });
 
       const sorted = rows.slice().sort(function (a, b) {
+        const ra = a.isRegisterStub ? 1 : 0;
+        const rb = b.isRegisterStub ? 1 : 0;
+        if (ra !== rb) return ra - rb;
         return String(a.billNo || "").localeCompare(String(b.billNo || ""), undefined, { sensitivity: "base" });
       });
 
@@ -787,7 +874,7 @@
         const tr = document.createElement("tr");
         tr.dataset.customerId = r.id != null ? r.id : i;
         tr.dataset.billNo = (r.billNo || "").toLowerCase();
-        tr.dataset.amount = r.amount;
+        tr.dataset.amount = String(Number(r.amount) || 0);
         tr.dataset.marked = r.mark && r.mark !== "—" ? "1" : "0";
         tr.dataset.station = (r.station || "—").trim().toLowerCase();
         const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType === "Dr" ? "#d93025" : "#1a73e8"}">${r.balanceType}</span>` : "";
@@ -797,17 +884,18 @@
         const safeName = encodeURIComponent(r.name || "");
         const safeLfno = encodeURIComponent(r.lfno || "");
         const safeStation = encodeURIComponent(r.station || "");
-        const safeOpBal = encodeURIComponent(0);
-        const safeOpType = encodeURIComponent("Dr");
+        const safeOpBal = encodeURIComponent(r.statementOpeningBal != null ? r.statementOpeningBal : 0);
+        const safeOpType = encodeURIComponent(r.statementOpeningType || "Dr");
         const safeCurBal = encodeURIComponent(r.currentBal != null ? r.currentBal : 0);
         const safeCurType = encodeURIComponent(r.currentBalType || "Dr");
-        const safeBill = encodeURIComponent(r.billNo || "");
+        const safeBill = encodeURIComponent(r.isRegisterStub ? "" : (r.billNo || ""));
         const encBillAttr = encodeURIComponent(r.billNo || "").replace(/'/g, "%27");
+        const billNoShown = r.isRegisterStub ? "\u2014" : String(r.billNo || "\u2014");
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
           '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-bill-no="' + encBillAttr + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
           "<td>" + (r.lfno || "—") + "</td>" +
-          "<td><strong>" + String(r.billNo || "—").replace(/</g, "&lt;").replace(/"/g, "&quot;") + "</strong></td>" +
+          "<td><strong>" + billNoShown.replace(/</g, "&lt;").replace(/"/g, "&quot;") + "</strong></td>" +
           `<td><a href="#" onclick="openCustomerStatement('${masterId}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}','${safeOpType}','${safeCurBal}','${safeCurType}','${safeBill}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
           "<td>" + relName + "</td>" +
           "<td>" + (r.station || "—") + "</td>" +
@@ -853,7 +941,7 @@
       } catch (e) { }
     }
 
-    let activeFilter = 'nonzero';   // 'nonzero' (default) | 'all' | 'marked' | 'zero'
+    let activeFilter = 'all';   // 'all' (default) | 'nonzero' | 'marked' | 'zero'
 
     function setFilter(mode) {
       activeFilter = mode;
@@ -882,15 +970,17 @@
         // Search filter
         const text = row.innerText.toLowerCase();
         const matchesSearch = !q || text.includes(q);
-        // Amount filter
+        // Amount filter (epsilon so ₹0 opening / register stub matches Zero Balance)
         const amt = parseFloat(row.dataset.amount || '0') || 0;
+        const AMT_EPS = 0.000001;
+        const isZeroBalance = Math.abs(amt) < AMT_EPS;
         const isMarked = row.dataset.marked === '1';
         const rowStation = row.dataset.station || "";
 
         let matchesFilter = true;
-        if (activeFilter === 'nonzero') matchesFilter = amt > 0;
+        if (activeFilter === 'nonzero') matchesFilter = !isZeroBalance;
         else if (activeFilter === 'marked') matchesFilter = isMarked;
-        else if (activeFilter === 'zero') matchesFilter = amt <= 0;
+        else if (activeFilter === 'zero') matchesFilter = isZeroBalance;
         // 'all' shows everything
 
         // Station filter
@@ -906,6 +996,7 @@
         const total = rows.length;
         const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All bills)' : '';
         if (!q && activeFilter === 'nonzero') footer.textContent = "Customer Balance — " + visible + " bills (zero balance hidden)";
+        else if (!q && activeFilter === 'zero') footer.textContent = "Customer Balance — " + visible + " bills (non-zero hidden)";
         else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " bills" + filterLabel + ".";
       }
     }
