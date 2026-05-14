@@ -1475,6 +1475,23 @@
       box-shadow: 0 0 0 2px var(--primary-soft);
     }
 
+    .rex-transfer-to-banner {
+      display: none;
+      margin: 12px 0 0;
+      padding: 10px 12px;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #198754;
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 8px;
+    }
+
+    .rex-transfer-to-banner.rex-transfer-to-banner--visible {
+      display: block;
+    }
+
     .visually-hidden-rex {
       position: absolute;
       width: 1px;
@@ -2480,6 +2497,7 @@
               <label for="rexOrderNarration" class="visually-hidden-rex">Order narration or description</label>
               <textarea id="rexOrderNarration" class="rex-order-narration-textarea" maxlength="8000"
                 placeholder="Write narration, description, or any message for this order…"></textarea>
+              <p id="rexTransferToBanner" class="rex-transfer-to-banner" role="status" aria-live="polite" hidden></p>
             </div>
           </div>
         </div>
@@ -3165,21 +3183,93 @@
         return getSearchRoot().querySelector("#ready-order-item-table");
       }
 
-      /** True after Bill → Transfer save (read-only until Close / new load). */
+      /** True when this bill was finalized via the Bill → Transfer button (immutable view-only from any entry point). */
+      function isBillNoRexTransferLockedInStorage(bn) {
+        try {
+          var key = String(bn || "").trim();
+          if (!key) return false;
+          var bills = JSON.parse(localStorage.getItem("bills") || "[]");
+          var b = bills.find(function (x) {
+            return x && String(x.billNo || x.orderNo || "").trim() === key;
+          });
+          return !!(b && b.billRexTransferred);
+        } catch (e) {
+          return false;
+        }
+      }
+
+      /** True after Bill → Transfer save (read-only), or when reopening a bill that was saved with Transfers. */
       function isPostTransferLocked() {
         try {
           var app = orderApp || (typeof getSearchRoot === "function" ? getSearchRoot().querySelector("#orderApp") : null);
-          return !!(app && app.getAttribute("data-post-transfer-locked") === "1");
+          if (app && app.getAttribute("data-post-transfer-locked") === "1") return true;
         } catch (e) {
           return false;
+        }
+        try {
+          var bn = billNo && billNo.value ? String(billNo.value).trim() : "";
+          if (bn && isBillNoRexTransferLockedInStorage(bn)) return true;
+        } catch (e2) { /* ignore */ }
+        return false;
+      }
+
+      /** Green line below Narration when this bill was saved via Transfers (read-only view). */
+      function syncRexTransferToBanner() {
+        var el = null;
+        try {
+          var sr = typeof getSearchRoot === "function" ? getSearchRoot() : document;
+          el = sr && sr.querySelector ? sr.querySelector("#rexTransferToBanner") : null;
+        } catch (e0) { /* ignore */ }
+        if (!el) {
+          try { el = document.getElementById("rexTransferToBanner"); } catch (e1) { el = null; }
+        }
+        if (!el) return;
+        var show = typeof isPostTransferLocked === "function" && isPostTransferLocked();
+        var name = "";
+        if (show) {
+          try {
+            var bn = billNo && billNo.value ? String(billNo.value).trim() : "";
+            if (bn) {
+              var bills = JSON.parse(localStorage.getItem("bills") || "[]");
+              var b = bills.find(function (x) {
+                return x && String(x.billNo || x.orderNo || "").trim() === bn;
+              });
+              if (b) {
+                name = String(b.billRexTransferToName || "").trim();
+                if (!name) name = String(b.customer || "").trim();
+              }
+            }
+          } catch (e2) { /* ignore */ }
+        }
+        if (show && name) {
+          el.textContent = "Transfer To (" + name + ")";
+          el.classList.add("rex-transfer-to-banner--visible");
+          el.removeAttribute("hidden");
+        } else {
+          el.textContent = "";
+          el.classList.remove("rex-transfer-to-banner--visible");
+          try { el.setAttribute("hidden", "hidden"); } catch (e3) { el.hidden = true; }
         }
       }
 
       /** After successful Bill → Transfers save: lock UI; popups are outside #orderApp so we disable fields + guard open*() + close modals. */
       function setPostTransferLocked(locked) {
         var root = typeof getSearchRoot === "function" ? getSearchRoot() : null;
-        var app = orderApp || (root && root.querySelector("#orderApp"));
-        if (!app) return;
+        var app = (root && root.querySelector("#orderApp")) || orderApp;
+        if (!app && typeof document !== "undefined" && document.getElementById) {
+          app = document.getElementById("orderApp");
+        }
+        if (!app) {
+          if (!locked && document.body) {
+            try {
+              document.body.classList.remove("rex-post-transfer-locked-page");
+            } catch (eBody) { }
+          }
+          return;
+        }
+        try {
+          orderApp = app;
+        } catch (eOA) { }
         var on = !!locked;
         app.classList.toggle("rex-post-transfer-locked", on);
         try {
@@ -3277,6 +3367,9 @@
         try {
           if (typeof updateBillButtonState === "function") updateBillButtonState();
         } catch (eBillLock) { }
+        try {
+          if (typeof syncRexTransferToBanner === "function") syncRexTransferToBanner();
+        } catch (eBan) { }
       }
 
       function updateHideUnhideColumnsBtnLabel() {
@@ -3462,7 +3555,6 @@
 
       function onBillButtonClick() {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         if (!readyExtraAllRowsReadyForBillView()) {
@@ -3559,9 +3651,9 @@
               const balanceEntryJson = localStorage.getItem("editBalanceEntry");
               if (balanceEntryJson) {
                 const balanceEntry = JSON.parse(balanceEntryJson);
-                const orderNo = balanceEntry.orderNo;
+                const orderNo = String((balanceEntry && (balanceEntry.orderNo || balanceEntry.billNo)) || "").trim();
                 const bills = JSON.parse(localStorage.getItem("bills") || "[]");
-                const billIndex = bills.findIndex(b => b && b.billNo === orderNo);
+                const billIndex = bills.findIndex(b => b && String((b.billNo || b.orderNo || "")).trim() === orderNo);
                 if (billIndex >= 0) {
                   if (!window.__rexAllBillEditLoadPending) {
                     window.__rexAllBillEditLoadPending = true;
@@ -4198,13 +4290,12 @@
         setCell(12, src.readyWt);
       }
 
-      /* ADD ROW */
-      function addRow() {
+      /* ADD ROW — pass true when rebuilding from loadBill / loadOrderForEdit / restore (post-transfer lock must not block). */
+      function addRow(fromInternalLoad) {
         if (!itemBody) {
           if (!initElements()) return;
         }
-        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
+        if (!fromInternalLoad && typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
           return;
         }
 
@@ -4283,7 +4374,6 @@
 
       function removeReadyExtraRow(btn) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         if (!btn || typeof btn.closest !== "function") return;
@@ -4744,7 +4834,6 @@
       }
       function saveOrderPopup() {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         if (!popupDelivery) {
@@ -4779,7 +4868,6 @@
 
       function openReadyMetaPopup(rowOrCell) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         if (!readyMetaPopup || !readyMetaMetalInput || !readyMetaNegInput || !readyMetaWtInput) {
@@ -5434,10 +5522,6 @@
       }
 
       function openAdvancedPaymentsPopup() {
-        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
-          return;
-        }
         if (!billNo || !String(billNo.value || "").trim()) {
           alert("Order number is required");
           return;
@@ -5451,11 +5535,13 @@
         var adv = getAdvancedPaymentRecordsForBill(billVal);
         var sum = adv.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
         if (totalEl) totalEl.textContent = "Total: " + formatCurrency(sum);
-        var billViewReadOnly = !!billMidColumnsHidden;
+        var billViewReadOnly = !!billMidColumnsHidden || (typeof isPostTransferLocked === "function" && isPostTransferLocked());
         var titleEl = popup.querySelector(".advanced-payments-popup-title");
         if (titleEl) {
           titleEl.textContent = billViewReadOnly
-            ? "Advance payments (Bill view — read-only)"
+            ? (billMidColumnsHidden
+              ? "Advance payments (Bill view — read-only)"
+              : "Advance payments (view only)")
             : "Advance payments";
         }
         popup.setAttribute("data-bill-readonly", billViewReadOnly ? "1" : "0");
@@ -5538,10 +5624,6 @@
       }
 
       function openPaidPaymentsPopup() {
-        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
-          return;
-        }
         if (!billNo || !String(billNo.value || "").trim()) {
           alert("Order number is required");
           return;
@@ -5555,6 +5637,16 @@
         var paidRows = getPaidPaymentRecordsForBill(billVal);
         var sum = paidRows.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
         if (totalEl) totalEl.textContent = "Total: " + formatCurrency(sum);
+        var billViewReadOnly = !!billMidColumnsHidden || (typeof isPostTransferLocked === "function" && isPostTransferLocked());
+        var paidTitleEl = popup.querySelector(".advanced-payments-popup-title");
+        if (paidTitleEl) {
+          paidTitleEl.textContent = billViewReadOnly
+            ? (billMidColumnsHidden
+              ? "Paid payments (Bill view — read-only)"
+              : "Paid payments (view only)")
+            : "Paid payments";
+        }
+        popup.setAttribute("data-bill-readonly", billViewReadOnly ? "1" : "0");
         var escCell = function (s) {
           return String(s == null ? "" : s)
             .replace(/&/g, "&amp;")
@@ -5563,6 +5655,23 @@
         };
         if (paidRows.length === 0) {
           listEl.innerHTML = '<div class="empty-state" style="padding:16px;">No Paid payments for this bill.</div>';
+        } else if (billViewReadOnly) {
+          var htmlRo = '<table class="advanced-payments-table advanced-payments-table--bill-readonly"><colgroup>' +
+            '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
+            '<col class="advanced-payments-col--amt"><col class="advanced-payments-col--narr"></colgroup>' +
+            "<thead><tr><th>Date</th><th>Payment Mode</th><th>Amount</th><th>Narration</th></tr></thead><tbody>";
+          paidRows.slice().reverse().forEach(function (p) {
+            var dateStr = p.date ? new Date(p.date).toLocaleDateString() : "—";
+            var modeStr = p.mode ? String(p.mode) : "Cash";
+            var narrRaw = p.narration != null && String(p.narration).trim() !== ""
+              ? String(p.narration).trim()
+              : "—";
+            htmlRo += "<tr><td>" + escCell(dateStr) + "</td><td>" + escCell(modeStr) + "</td>" +
+              '<td class="advanced-payments-table__amt">' + formatCurrency(p.amount) + "</td>" +
+              '<td class="advanced-payments-table__narr">' + escCell(narrRaw) + "</td></tr>";
+          });
+          htmlRo += "</tbody></table>";
+          listEl.innerHTML = htmlRo;
         } else {
           var html = '<table class="advanced-payments-table"><colgroup>' +
             '<col class="advanced-payments-col--date"><col class="advanced-payments-col--mode">' +
@@ -5608,13 +5717,17 @@
 
       function closePaidPaymentsPopup() {
         var popup = getSearchRoot().querySelector("#ready-order-paid-payments-popup") || document.getElementById("ready-order-paid-payments-popup");
-        if (popup) popup.style.display = "none";
+        if (popup) {
+          popup.style.display = "none";
+          popup.removeAttribute("data-bill-readonly");
+          var tEl = popup.querySelector(".advanced-payments-popup-title");
+          if (tEl) tEl.textContent = "Paid payments";
+        }
       }
 
       /** Inline edit form in Advance / Paid payment detail tables (same storage as payment panel). */
       function openPaymentDetailTableEdit(btnEl) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         var tr = btnEl && btnEl.closest("tr");
@@ -5661,7 +5774,6 @@
       /** Remove one payment from localStorage (same key matching as savePaymentDetailTableEdit). */
       function deletePaymentDetailTableRow(btnEl) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         var tr = btnEl && btnEl.closest("tr");
@@ -5720,7 +5832,6 @@
 
       function savePaymentDetailTableEdit(btnEl) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         var wrap = btnEl && btnEl.closest(".advanced-payments-popup-edit-form");
@@ -5854,7 +5965,6 @@
 
         var appEl = orderApp || (typeof getSearchRoot === "function" ? getSearchRoot().querySelector("#orderApp") : null);
         if (appEl && appEl.getAttribute("data-post-transfer-locked") === "1") {
-          alert("This bill was already transferred. Use Close to leave the screen.");
           return;
         }
 
@@ -6123,7 +6233,6 @@
         if (!billNo.value) { alert("Order number is required"); return; }
 
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
 
@@ -6487,6 +6596,19 @@
         } else if (existingBill && String(existingBill.orderSource || "").trim() === "gold-invoice") {
           newBillData.orderSource = "gold-invoice";
           newBillData.goldInvoiceRegisteredCustomer = existingBill.goldInvoiceRegisteredCustomer === true;
+        }
+
+        if (lockAfterTransfer) {
+          newBillData.billRexTransferred = true;
+          if (targetCustOverride) {
+            var _rexTn = String(targetCustOverride.name || "").trim();
+            if (_rexTn) newBillData.billRexTransferToName = _rexTn;
+          }
+        } else if (existingBill && existingBill.billRexTransferred) {
+          newBillData.billRexTransferred = true;
+          if (existingBill.billRexTransferToName) {
+            newBillData.billRexTransferToName = existingBill.billRexTransferToName;
+          }
         }
 
         if (billIndex >= 0) {
@@ -6876,8 +6998,6 @@
           }
         }
 
-        setPostTransferLocked(false);
-
         const orders = JSON.parse(localStorage.getItem("orders") || "[]");
         let order = orders.find(o => o && (o.id == orderId || String(o.id) === String(orderId)));
 
@@ -6965,20 +7085,7 @@
           rexNarEd.value = rn != null ? String(rn) : "";
         }
 
-        // Customer name read-only when opened from All Bill (editCustomerReadOnly)
-        if (custName) {
-          if (localStorage.getItem("editCustomerReadOnly") === "true") {
-            custName.disabled = true;
-            custName.style.backgroundColor = "#f5f5f7";
-            custName.style.cursor = "not-allowed";
-          } else {
-            custName.disabled = false;
-            custName.style.backgroundColor = "";
-            custName.style.cursor = "";
-          }
-        }
-
-
+        // Customer name read-only when opened from All Bill (editCustomerReadOnly) — applied after transfer-lock check at end of load.
         // Clear stale return-state flags that can overwrite edit data
         localStorage.removeItem("ratebookOpened");
         localStorage.removeItem("receiptOpened");
@@ -6987,10 +7094,10 @@
         // Clear existing rows
         if (itemBody) itemBody.innerHTML = "";
 
-        // Load order items
+        // Load order items (use addRow(true): a second load pass may run after post-transfer lock is on)
         if (order.items && order.items.length > 0) {
           order.items.forEach(item => {
-            addRow();
+            addRow(true);
             const tr = itemBody.lastElementChild;
 
             // Restore by column index so Stamp, Pc, Ut. Wt., etc. stay in correct columns
@@ -7012,23 +7119,54 @@
             }
           });
 
-          if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+        } else {
+          var mergedFromBill = false;
+          try {
+            var bnLe = String((billNo && billNo.value) || order.orderNo || order.billNo || "").trim();
+            if (bnLe) {
+              var billsLe = JSON.parse(localStorage.getItem("bills") || "[]");
+              var bLe = billsLe.find(function (x) {
+                return x && String(x.billNo || x.orderNo || "").trim() === bnLe;
+              });
+              if (bLe) {
+                var brs = bLe.rows || bLe.items || [];
+                if (Array.isArray(brs) && brs.length > 0) {
+                  mergedFromBill = true;
+                  brs.forEach(function (r) {
+                    addRow(true);
+                    const trb = itemBody.lastElementChild;
+                    const valsB = normalizeToReadyExtraValues(r.values || []);
+                    if (valsB.length > 0) setReadyOrderRowValues(trb, valsB, valsB.length === 13, false);
+                    applyReadyMetaFieldsFromSource(trb, r, false);
+                    if (r.delivery || r.orderFilled) {
+                      trb.dataset.delivery = r.delivery || "";
+                      trb.dataset.sample = r.sample || "";
+                      trb.dataset.orderFilled = r.orderFilled || "";
+                    }
+                  });
+                }
+              }
+            }
+          } catch (eLe) { /* ignore */ }
+          if (!mergedFromBill) {
+            addRow(true);
+          }
+        }
+
+        if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
+          itemBody.querySelectorAll("tr").forEach(function (tr) {
+            var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
+            if (typeSel) setPurchaseOptionalFieldsState(tr, false);
+          });
+        }
+
+        setTimeout(function () {
+          if (itemBody) {
             itemBody.querySelectorAll("tr").forEach(function (tr) {
-              var typeSel = tr.cells[0] && tr.cells[0].querySelector("select");
-              if (typeSel) setPurchaseOptionalFieldsState(tr, false);
+              refreshRowTotalsAfterLoad(tr);
             });
           }
-
-          setTimeout(function () {
-            if (itemBody) {
-              itemBody.querySelectorAll("tr").forEach(function (tr) {
-                refreshRowTotalsAfterLoad(tr);
-              });
-            }
-          }, 15);
-        } else {
-          addRow();
-        }
+        }, 15);
 
         var useBillLayoutEdit = !!(order && order.hideBillMidColumns);
         if (!useBillLayoutEdit && localStorage.getItem("editCustomerReadOnly") === "true") {
@@ -7041,6 +7179,26 @@
           updateInfoPanel();
           if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 200);
+
+        var _bnTrLock = String((billNo && billNo.value) || (order && (order.orderNo || order.billNo)) || "").trim();
+        try {
+          if (_bnTrLock && isBillNoRexTransferLockedInStorage(_bnTrLock)) {
+            setPostTransferLocked(true);
+          } else {
+            setPostTransferLocked(false);
+            if (custName) {
+              if (localStorage.getItem("editCustomerReadOnly") === "true") {
+                custName.disabled = true;
+                custName.style.backgroundColor = "#f5f5f7";
+                custName.style.cursor = "not-allowed";
+              } else {
+                custName.disabled = false;
+                custName.style.backgroundColor = "";
+                custName.style.cursor = "";
+              }
+            }
+          }
+        } catch (eTrLo) { }
 
         // Keep editOrderId until order is saved (don't remove it here)
         // It will be removed in saveOrder function after saving
@@ -7072,8 +7230,6 @@
             return;
           }
         }
-
-        setPostTransferLocked(false);
 
         const bills = JSON.parse(localStorage.getItem("bills") || "[]");
         if (!bills[i]) {
@@ -7165,7 +7321,7 @@
 
         const billRows = b.rows || b.items || [];
         billRows.forEach(r => {
-          addRow();
+          addRow(true);
           const tr = itemBody.lastElementChild;
           const vals = normalizeToReadyExtraValues(r.values || []);
           if (vals.length > 0) setReadyOrderRowValues(tr, vals, vals.length === 13, false);
@@ -7178,6 +7334,60 @@
             tr.dataset.orderFilled = r.orderFilled || "";
           }
         });
+
+        /* Bill row array sometimes empty in storage while All Bill still has editBalanceRows / payload / order copy. */
+        if (!itemBody || itemBody.querySelectorAll("tr").length === 0) {
+          var bnFall = String(b.billNo || b.orderNo || "").trim();
+          var fallRows = [];
+          try {
+            var erStr = localStorage.getItem("editBalanceRows");
+            if (erStr) {
+              var erP = JSON.parse(erStr);
+              if (Array.isArray(erP) && erP.length > 0) fallRows = erP;
+            }
+          } catch (eBr) { /* ignore */ }
+          if (fallRows.length === 0 && bnFall) {
+            try {
+              var ep = JSON.parse(localStorage.getItem("editOrderPayload") || "null");
+              if (ep && String(ep.orderNo || ep.billNo || "").trim() === bnFall) {
+                var epItems = ep.items || ep.rows;
+                if (Array.isArray(epItems) && epItems.length > 0) fallRows = epItems;
+              }
+            } catch (eEp) { /* ignore */ }
+          }
+          if (fallRows.length === 0 && bnFall) {
+            try {
+              var ordList = JSON.parse(localStorage.getItem("orders") || "[]");
+              var oMatch = ordList.find(function (x) {
+                return x && String(x.orderNo || x.billNo || "").trim() === bnFall;
+              });
+              if (oMatch) {
+                var oItems = oMatch.items || oMatch.rows;
+                if (Array.isArray(oItems) && oItems.length > 0) fallRows = oItems;
+              }
+            } catch (eOr) { /* ignore */ }
+          }
+          fallRows.forEach(function (r) {
+            addRow(true);
+            const tr2 = itemBody.lastElementChild;
+            const vals2 = normalizeToReadyExtraValues((r && r.values) ? r.values : []);
+            if (vals2.length > 0) setReadyOrderRowValues(tr2, vals2, vals2.length === 13, false);
+            else {
+              var fb = buildNewOrderValuesFromItemObject(r);
+              if (fb) setReadyOrderRowValues(tr2, fb, true, false);
+            }
+            applyReadyMetaFieldsFromSource(tr2, r, false);
+            if (r.delivery || r.orderFilled) {
+              tr2.dataset.delivery = r.delivery || "";
+              tr2.dataset.sample = r.sample || "";
+              tr2.dataset.orderFilled = r.orderFilled || "";
+            }
+          });
+        }
+
+        if (!itemBody || itemBody.querySelectorAll("tr").length === 0) {
+          addRow(true);
+        }
 
         if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
           itemBody.querySelectorAll("tr").forEach(function (tr) {
@@ -7228,11 +7438,18 @@
           if (typeof updateBillButtonState === "function") updateBillButtonState();
         }, 400);
 
-        if (localStorage.getItem("editCustomerReadOnly") === "true" && custName) {
-          custName.disabled = true;
-          custName.style.backgroundColor = "#f5f5f7";
-          custName.style.cursor = "not-allowed";
-        }
+        try {
+          if (b && b.billRexTransferred) {
+            setPostTransferLocked(true);
+          } else {
+            setPostTransferLocked(false);
+            if (localStorage.getItem("editCustomerReadOnly") === "true" && custName) {
+              custName.disabled = true;
+              custName.style.backgroundColor = "#f5f5f7";
+              custName.style.cursor = "not-allowed";
+            }
+          }
+        } catch (eBillTr) { }
       }
 
       /* INVOICE */
@@ -7774,10 +7991,6 @@
 
       /* PAYMENT POPUP */
       function openPayment() {
-        if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
-          return;
-        }
         if (!custName || !billNo) {
           if (!initElements()) {
             alert("Form not initialized. Please refresh the page.");
@@ -7788,6 +8001,8 @@
         if (!custName.value) { alert("Select customer first"); return; }
         if (!billNo.value) { alert("Order number is required"); return; }
 
+        var payViewOnly = typeof isPostTransferLocked === "function" && isPostTransferLocked();
+
         // Calculate and show bill total
         const total = calculateBillTotal();
 
@@ -7797,14 +8012,34 @@
         if (!paymentBalance) paymentBalance = searchRoot.querySelector("#popupBalance");
         if (!paymentPopup) paymentPopup = searchRoot.querySelector("#ready-order-payment-popup");
 
+        if (paymentPopup) {
+          if (payViewOnly) paymentPopup.setAttribute("data-payment-viewonly", "1");
+          else paymentPopup.removeAttribute("data-payment-viewonly");
+        }
+
         if (paymentBillTotal) paymentBillTotal.textContent = total.toFixed(2);
 
         var amountInput = searchRoot.querySelector("#paymentAmount");
         var narrationInput = searchRoot.querySelector("#paymentNarration");
         var modeSelect = searchRoot.querySelector("#paymentMode");
-        if (amountInput) amountInput.value = "";
-        if (narrationInput) narrationInput.value = "";
-        if (modeSelect) modeSelect.selectedIndex = 0;
+        var payTitleEl = paymentPopup && paymentPopup.querySelector(".popup-box > h3");
+        var payActBtns = paymentPopup && paymentPopup.querySelectorAll(".popup-actions button");
+        if (payTitleEl) payTitleEl.textContent = payViewOnly ? "Payments (view only)" : "Add Payment";
+        if (amountInput) {
+          amountInput.value = "";
+          amountInput.disabled = !!payViewOnly;
+          amountInput.readOnly = !!payViewOnly;
+        }
+        if (narrationInput) {
+          narrationInput.value = "";
+          narrationInput.disabled = !!payViewOnly;
+          narrationInput.readOnly = !!payViewOnly;
+        }
+        if (modeSelect) modeSelect.disabled = !!payViewOnly;
+        if (payActBtns && payActBtns[0]) {
+          payActBtns[0].disabled = !!payViewOnly;
+          payActBtns[0].style.display = payViewOnly ? "none" : "";
+        }
 
         if (paymentAmountDisplay) paymentAmountDisplay.textContent = "0.00";
         var paid = getPaidAmount(billNo.value);
@@ -7814,7 +8049,8 @@
           paymentBalance.style.color = balance <= 0 ? "#28a745" : "#dc3545";
         }
 
-        if (amountInput) amountInput.oninput = function () { calculatePaymentBalance(); };
+        if (amountInput && !payViewOnly) amountInput.oninput = function () { calculatePaymentBalance(); };
+        else if (amountInput) amountInput.oninput = null;
         if (paymentPopup) {
           paymentPopup.style.display = "flex";
           paymentPopup.style.alignItems = "center";
@@ -7838,17 +8074,39 @@
       }
 
       function closePaymentPopup() {
-        if (paymentPopup) paymentPopup.style.display = "none";
+        if (paymentPopup) {
+          paymentPopup.style.display = "none";
+          paymentPopup.removeAttribute("data-payment-viewonly");
+        }
         var root = getSearchRoot();
         var amountEl = root.querySelector("#paymentAmount");
         var narrationEl = root.querySelector("#paymentNarration");
-        if (amountEl) amountEl.value = "";
-        if (narrationEl) narrationEl.value = "";
+        var modeEl = root.querySelector("#paymentMode");
+        if (amountEl) {
+          amountEl.value = "";
+          amountEl.disabled = false;
+          amountEl.readOnly = false;
+        }
+        if (narrationEl) {
+          narrationEl.value = "";
+          narrationEl.disabled = false;
+          narrationEl.readOnly = false;
+        }
+        if (modeEl) modeEl.disabled = false;
+        var pp = root.querySelector("#ready-order-payment-popup");
+        if (pp) {
+          var tEl = pp.querySelector(".popup-box > h3");
+          if (tEl) tEl.textContent = "Add Payment";
+          var bts = pp.querySelectorAll(".popup-actions button");
+          if (bts[0]) {
+            bts[0].disabled = false;
+            bts[0].style.display = "";
+          }
+        }
       }
 
       function savePaymentFromPopup() {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         var root = getSearchRoot();
@@ -7907,7 +8165,6 @@
 
       function openPaymentCardEdit(btnEl) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         var card = btnEl && btnEl.closest(".panel-item");
@@ -8172,7 +8429,6 @@
 
       function savePurchaseSheet() {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         var pGuard = getPopupEl("ready-extra-order-purchase-sheet-popup");
@@ -8517,7 +8773,6 @@
 
       function openPurchaseSheet(source, readyExtraUi, newOrderUi, opts) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         opts = opts || {};
@@ -8656,7 +8911,6 @@
 
       function openRateBook(rowElement = null) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         activeRateRow = rowElement || null;
@@ -8716,7 +8970,6 @@
 
       function saveRatebookEntry() {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         try {
@@ -8827,7 +9080,7 @@
           if (!savedState) {
             // No saved state, but check if we have existing data - preserve it
             if (itemBody && itemBody.querySelectorAll("tr").length === 0) {
-              addRow();
+              addRow(true);
             }
             return;
           }
@@ -8869,7 +9122,7 @@
               if (itemBody) itemBody.innerHTML = "";
               if (orderState.rows && orderState.rows.length > 0 && itemBody) {
                 orderState.rows.forEach(rowData => {
-                  addRow();
+                  addRow(true);
                   const tr = itemBody.lastElementChild;
 
                   if (rowData.values && rowData.values.length > 0) {
@@ -8886,7 +9139,7 @@
 
               } else {
                 // Ensure at least one row
-                addRow();
+                addRow(true);
               }
 
               if (typeof setPurchaseOptionalFieldsState === "function" && itemBody) {
@@ -8959,7 +9212,7 @@
                 if (existingRows === 0) {
                   // No existing rows, restore all saved rows
                   orderState.rows.forEach(rowData => {
-                    addRow();
+                    addRow(true);
                     const tr = itemBody.lastElementChild;
 
                     if (rowData.values && rowData.values.length > 0) {
@@ -9006,7 +9259,7 @@
                       }
                     } else {
                       // Add new row for additional saved data
-                      addRow();
+                      addRow(true);
                       const tr = itemBody.lastElementChild;
 
                       if (rowData.values && rowData.values.length > 0) {
@@ -9037,7 +9290,7 @@
                 }
               } else if (itemBody && itemBody.querySelectorAll("tr").length === 0) {
                 // If no rows saved and no existing rows, add one empty row
-                addRow();
+                addRow(true);
               }
             } else {
               // We have existing data and it's more complete - keep it as is
@@ -9062,7 +9315,7 @@
           localStorage.removeItem("readyExtraOrderState");
           // Make sure we have at least one row
           if (itemBody && itemBody.querySelectorAll("tr").length === 0) {
-            addRow();
+            addRow(true);
           }
         }
       }
@@ -9563,7 +9816,6 @@
 
       function showRateDetails(rateId) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         const rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
@@ -9659,7 +9911,6 @@
 
       function updateRateBookingRow(input, rateId, field) {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         const val = parseFloat(input.value) || 0;
@@ -9717,7 +9968,6 @@
 
       function saveRatebookDetailsFromPopup() {
         if (typeof isPostTransferLocked === "function" && isPostTransferLocked()) {
-          alert("This bill was transferred. The screen is read-only — use Close to leave.");
           return;
         }
         const table = getPopupEl("ready-order-ratebook-details-table");
