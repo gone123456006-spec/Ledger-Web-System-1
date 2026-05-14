@@ -825,8 +825,9 @@
           }
         }
         const hasMasterOp = c.masterOpeningBalance != null && String(c.masterOpeningBalance).trim() !== "";
-        const stmtOpBalNum = hasMasterOp ? (parseFloat(c.masterOpeningBalance) || 0) : (parseFloat(c.openingBalance) || 0);
-        const stmtOpTypeStr = hasMasterOp ? (c.masterOpeningBalanceType || c.openingBalanceType || "Dr") : (c.openingBalanceType || "Dr");
+        const isStmtClearedCust = !!(c && c.statementBillAmountCleared);
+        const stmtOpBalNum = isStmtClearedCust ? 0 : (hasMasterOp ? (parseFloat(c.masterOpeningBalance) || 0) : (parseFloat(c.openingBalance) || 0));
+        const stmtOpTypeStr = isStmtClearedCust ? "Dr" : (hasMasterOp ? (c.masterOpeningBalanceType || c.openingBalanceType || "Dr") : (c.openingBalanceType || "Dr"));
         rows.push({
           billNo: billNo,
           isRegisterStub: isRegisterStub,
@@ -1065,6 +1066,26 @@
       const plainCurbal = curbal ? decodeURIComponent(curbal) : '0';
       const plainCurType = curType ? decodeURIComponent(curType) : 'Dr';
       const plainBill = billNo ? decodeURIComponent(billNo) : '';
+
+      try {
+        const customers = JSON.parse(localStorage.getItem("customers") || "[]");
+        let cust = customers.find(function (c) { return c && String(c.id) === String(id); });
+        if (!cust && id && String(id).indexOf("idx-") === 0) {
+          var ix = parseInt(String(id).replace("idx-", ""), 10);
+          if (!isNaN(ix)) cust = customers[ix];
+        }
+        if (!cust && plainName) {
+          var nm = plainName.trim().toLowerCase();
+          var same = customers.filter(function (c) { return c && c.name && c.name.trim().toLowerCase() === nm; });
+          if (same.length === 1) cust = same[0];
+        }
+        if (cust && cust.statementBillAmountCleared) {
+          plainOpbal = "0";
+          plainOpType = "Dr";
+          plainCurbal = "0";
+          plainCurType = "Dr";
+        }
+      } catch (eOp) { }
 
       // Save to sessionStorage so QR page can always read it — even inside iframe
       try {

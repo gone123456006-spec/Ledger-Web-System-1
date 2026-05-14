@@ -2055,23 +2055,49 @@
             const t = normKey(cid);
             return !t || t === '—' || t === '–' || t === '-' || t === '\u2014';
         }
-        /** Match customers[] row: real id, idx-N, non-placeholder cid, or name. */
-        function matchCustomerRecord(c, idx) {
+        /** True when some customers[] row uses this id (so we must not match a different customer by name only). */
+        function customerIdExistsInCustomersList(customers, idVal) {
+            if (!idVal || !customers || !customers.length) return false;
+            return customers.some(row => row && row.id != null && String(row.id) === String(idVal));
+        }
+        /** Match customers[] row: real id, idx-N, non-placeholder cid, or name.
+         *  @param {Array} customersArr — same array being scanned; used to detect stale ids not in storage
+         *         while still allowing name/cid match when the statement id points at another customer. */
+        function matchCustomerRecord(c, idx, customersArr) {
             if (!c) return false;
             const idRaw = customerData.id != null ? String(customerData.id) : '';
             const idVal = idRaw && !idRaw.startsWith('idx-') ? idRaw : '';
-            if (idVal && c.id != null && String(c.id) === idVal) return true;
-            if (idRaw.startsWith('idx-')) {
-                const xi = parseInt(idRaw.replace('idx-', ''), 10);
-                if (Number.isInteger(xi) && xi === idx) return true;
-            }
-            if (idVal || (idRaw && idRaw.startsWith('idx-'))) return false;
             const tn = customerData.name ? normKey(customerData.name) : '';
             const tc = customerData.cid ? String(customerData.cid).trim() : '';
             const nameDup = stmtNameHasDuplicates(customerData.name);
-            const byName = tn && c.name && normKey(c.name) === tn && !nameDup;
-            const byCid = tc && !isPlaceholderCid(tc) && c.cid && !isPlaceholderCid(c.cid) && normKey(c.cid) === normKey(tc);
+            const byName = !!(tn && c.name && normKey(c.name) === tn && !nameDup);
+            const byCid = !!(tc && !isPlaceholderCid(tc) && c.cid && !isPlaceholderCid(c.cid) && normKey(c.cid) === normKey(tc));
+
+            if (idRaw.startsWith('idx-')) {
+                const xi = parseInt(idRaw.replace('idx-', ''), 10);
+                return Number.isInteger(xi) && xi === idx;
+            }
+            if (idVal && c.id != null && String(c.id) === idVal) {
+                if (tn && !nameDup && c.name && normKey(c.name) !== tn) return false;
+                if (tc && !isPlaceholderCid(tc) && c.cid && !isPlaceholderCid(c.cid) && normKey(c.cid) !== normKey(tc)) return false;
+                return true;
+            }
+            const idOnFile = customerIdExistsInCustomersList(customersArr, idVal);
+            if (idVal && idOnFile && c.id != null && String(c.id) !== idVal) {
+                if (byCid) return true;
+                if (byName) return true;
+                return false;
+            }
             return !!(byCid || byName);
+        }
+        /** Keep opening / current in sync when statement was cleared (covers stale session id + any missed path). */
+        function applyStatementClearedCustomerDataMemory() {
+            if (!customerData.statementBillAmountCleared) return;
+            customerData.openingBalance = 0;
+            customerData.openingBalanceType = 'Dr';
+            customerData.openingDate = '';
+            customerData.currentBalance = 0;
+            customerData.currentBalanceType = 'Dr';
         }
         /** Match customerBalances / bills row to current customer (customerId, cid, or customer name). */
         function matchCustomerBalanceOrBillRow(b) {
@@ -2101,6 +2127,7 @@
                 s.curbal = String(parseFloat(customerData.currentBalance) || 0);
                 s.opType = customerData.openingBalanceType || 'Dr';
                 s.curType = customerData.currentBalanceType || 'Dr';
+                s.opdate = customerData.statementBillAmountCleared ? '' : (customerData.openingDate || '');
                 if (activeStatementBillNo()) s.billNo = activeStatementBillNo();
                 sessionStorage.setItem('stmtCustomer', JSON.stringify(s));
             } catch (e) { }
@@ -2116,6 +2143,7 @@
             c.masterOpeningBalanceType = 'Dr';
             c.currentBalance = 0;
             c.currentBalanceType = 'Dr';
+            c.openingDate = '';
         }
         /** Fallback when customerId/cid mismatch: same display name as current statement. */
         function matchCustomerBalanceOrBillRowLoose(b) {
@@ -2135,16 +2163,17 @@
                 const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                 let changed = false;
                 customers.forEach((c, idx) => {
-                    if (!matchCustomerRecord(c, idx)) return;
+                    if (!matchCustomerRecord(c, idx, customers)) return;
                     applyClearedStateToCustomerRow(c);
                     changed = true;
                 });
                 if (!changed) {
                     const nm = normKey(customerData.name);
                     if (nm && !stmtNameHasDuplicates(customerData.name)) {
-                        customers.forEach(c => {
+                        customers.forEach((c, idx) => {
                             if (!c || !c.name) return;
                             if (normKey(c.name) !== nm) return;
+                            if (!matchCustomerRecord(c, idx, customers)) return;
                             applyClearedStateToCustomerRow(c);
                             changed = true;
                         });
@@ -2170,11 +2199,9 @@
                 if (s.length) keys.add('stmt_' + s);
             };
             keys.add(stmtStorageKey());
-            if (!activeStatementBillNo()) {
-                add(customerData.lfNo || customerData.name);
-                add(customerData.name);
-                add(customerData.lfNo);
-            }
+            add(customerData.lfNo || customerData.name);
+            add(customerData.name);
+            add(customerData.lfNo);
             keys.forEach(k => {
                 try {
                     localStorage.setItem(k, empty);
@@ -2206,30 +2233,12 @@
                         customerData.statementBillAmountCleared = false;
                         const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                         customers.forEach((c, idx) => {
-                            if (!matchCustomerRecord(c, idx)) return;
+                            if (!matchCustomerRecord(c, idx, customers)) return;
                             c.statementBillAmountCleared = false;
                             c.allBillStatusUiClear = false;
                         });
                         localStorage.setItem('customers', JSON.stringify(customers));
-                        try {
-                            const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
-                            balances.forEach(b => {
-                                if (!b || !matchCustomerBalanceOrBillRow(b)) return;
-                                if (String(b.status || '').toLowerCase() === 'cleared') b.status = 'Pending';
-                            });
-                            localStorage.setItem('customerBalances', JSON.stringify(balances));
-                            const bills = JSON.parse(localStorage.getItem('bills') || '[]');
-                            bills.forEach(b => {
-                                if (!b || !matchCustomerBalanceOrBillRow(b)) return;
-                                if (String(b.status || '').toLowerCase() === 'cleared') b.status = 'Pending';
-                            });
-                            localStorage.setItem('bills', JSON.stringify(bills));
-                            try {
-                                window.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
-                                if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
-                                if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent('customerBalancesUpdated'));
-                            } catch (e3) { }
-                        } catch (e2) { }
+                        // Keep All Bill rows as Cleared — do not flip to Pending here or old bill totals / "Bill No." row return.
                     }
                 }
             } catch (e) { }
@@ -2286,7 +2295,7 @@
                     const customers = JSON.parse(localStorage.getItem('customers') || '[]');
                     let updated = false;
                     customers.forEach((c, idx) => {
-                        if (!matchCustomerRecord(c, idx)) return;
+                        if (!matchCustomerRecord(c, idx, customers)) return;
                         if (customerData.statementBillAmountCleared) {
                             applyClearedStateToCustomerRow(c);
                         } else {
@@ -2334,7 +2343,7 @@
                             const customers2 = JSON.parse(localStorage.getItem('customers') || '[]');
                             let touched = false;
                             customers2.forEach((c, idx) => {
-                                if (!matchCustomerRecord(c, idx)) return;
+                                if (!matchCustomerRecord(c, idx, customers2)) return;
                                 const ob = Number(customerData.openingBalance) || 0;
                                 c.openingBalance = ob;
                                 c.openingBalanceType = customerData.openingBalanceType || 'Dr';
@@ -2525,6 +2534,7 @@
                 return balances
                     .filter(b => {
                         if (!b) return false;
+                        if (String(b.status || '').trim().toLowerCase() === 'cleared') return false;
                         // Add-Customer-only rows (CUSTREG-*) — All Bill / balance ledger only; not part of statement narration or bill-sum row.
                         if (b.orderSource === "customer-register") return false;
                         const hasBillRef = String(b.orderNo || b.billNo || "").trim() !== "";
@@ -2555,6 +2565,7 @@
                 const nameDupNarr = stmtNameHasDuplicates(customerData.name);
                 const rows = balances.filter(b => {
                     if (!b) return false;
+                    if (String(b.status || '').trim().toLowerCase() === 'cleared') return false;
                     if (b.orderSource === "customer-register") return false;
                     const sameCustomer = (
                         (!nameDupNarr && nameNorm && norm(b.customer) === nameNorm) ||
@@ -2893,7 +2904,7 @@
         function statementIncludesSyncedBillRows(sorted) {
             return (sorted || []).some((tx) => {
                 const n = String(tx && tx.narration ? tx.narration : '');
-                return n.includes('Bill No:') || n.includes('for Bill ') || n.includes('Advanced for Bill') || n.includes('Paid (minus) for Bill');
+                return n.includes('Bill No:') || /Bill No\.\s*-/i.test(n) || n.includes('for Bill ') || n.includes('Advanced for Bill') || n.includes('Paid (minus) for Bill');
             });
         }
 
@@ -2987,16 +2998,22 @@
         }
 
         function render() {
+            applyStatementClearedCustomerDataMemory();
             const tbody = document.getElementById('statementBody');
             if (!tbody) return;
             tbody.innerHTML = '';
 
             normalizeStatementTransactionDatesInPlace(transactions);
             const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+            if (customerData.statementBillAmountCleared) {
+                selectedIdx = null;
+                ctxTargetIdx = null;
+            }
+            const stmtTxRows = customerData.statementBillAmountCleared ? [] : sorted;
             const opSigned = customerData.statementBillAmountCleared ? 0 : openingSignedForStatement();
             const billsSum = customerData.statementBillAmountCleared ? 0 : getCustomerBillsSumFromBalances();
             const hasBillTx = statementIncludesSyncedBillRows(sorted);
-            const showBillsSummaryRow = !hasBillTx && Math.abs(billsSum) > 0.000001;
+            const showBillsSummaryRow = !customerData.statementBillAmountCleared && !hasBillTx && Math.abs(billsSum) > 0.000001;
             // Opening balance is already shown in the upper summary section.
             // Do not add a duplicate static "Opening Balance" row in statement table.
             const showOpeningRow = false;
@@ -3098,13 +3115,13 @@
             const ZERO_BAL_EPS = 0.000001;
             let zeroBalanceRowIdx = -1;
             let scanBalance = balance;
-            sorted.forEach((tx, idx) => {
+            stmtTxRows.forEach((tx, idx) => {
                 scanBalance += txDeltaForCurrentBalance(tx);
                 if (zeroBalanceRowIdx === -1 && Math.abs(scanBalance) < ZERO_BAL_EPS) {
                     zeroBalanceRowIdx = idx;
                 }
             });
-            sorted.forEach((tx, i) => {
+            stmtTxRows.forEach((tx, i) => {
                 const tr = document.createElement('tr');
                 if (i === selectedIdx) tr.classList.add('selected-row');
                 if (tx.narration === 'Interest') tr.classList.add('interest-row');
@@ -3322,7 +3339,7 @@
 
             // Auto "Clear Bill": when final balance becomes zero, tick cleared automatically.
             // Keep inputs editable; we only change the cleared flag.
-            if (Math.abs(balance) < 0.000001 && sorted.length > 0) {
+            if (!customerData.statementBillAmountCleared && Math.abs(balance) < 0.000001 && sorted.length > 0) {
                 let changed = false;
                 sorted.forEach(row => {
                     if (!row.cleared) {
@@ -3354,7 +3371,9 @@
                 const tagClass = isCr ? 'cr-tag' : 'dr-tag';
                 el.innerHTML = fmt(absAmt) + ' <span class="' + tagClass + '">' + tag + '</span>';
             })();
-            document.getElementById('dispOpDate').textContent = fmtDateLabel(customerData.openingDate);
+            document.getElementById('dispOpDate').textContent = customerData.statementBillAmountCleared
+                ? '—'
+                : fmtDateLabel(customerData.openingDate);
             document.getElementById('toolbarSubtitle').textContent =
                 (customerData.name || '') +
                 (customerData.station ? ' · ' + customerData.station : '') +
@@ -3770,8 +3789,8 @@
         function clearBillAmount() {
             const billOnly = activeStatementBillNo();
             const msg = billOnly
-                ? ('Clear bill amount for ' + billOnly + ' only? This bill\'s balance rows become ₹0. Other bills for the same customer are not changed.')
-                : 'Clear bill amount for this customer? Customer Balance and Current Balance become ₹0. Each bill will be marked status Cleared. Original bill amounts in All Bill are not changed.';
+                ? ('Clear bill amount for ' + billOnly + ' only? This bill\'s balance rows become ₹0; opening balance on file is set to ₹0. Other bills for the same customer are not changed.')
+                : 'Clear bill amount for this customer? Opening balance, customer balance, and current balance become ₹0. Each bill will be marked status Cleared. Original bill amounts in All Bill are not changed.';
             if (!confirm(msg)) return;
 
             try {
@@ -3807,10 +3826,11 @@
                 customerData.statementBillAmountCleared = true;
                 customerData.openingBalance = 0;
                 customerData.openingBalanceType = 'Dr';
+                customerData.openingDate = '';
                 customerData.currentBalance = 0;
                 customerData.currentBalanceType = 'Dr';
 
-                if (!billOnly) persistCustomerClearedMasterRecord();
+                persistCustomerClearedMasterRecord();
 
                 try {
                     const balances = JSON.parse(localStorage.getItem('customerBalances') || '[]');
@@ -3939,7 +3959,7 @@
             const opSigned = customerData.statementBillAmountCleared ? 0 : openingSignedForStatement();
             const billsSum = customerData.statementBillAmountCleared ? 0 : getCustomerBillsSumFromBalances();
             const hasBillTx = statementIncludesSyncedBillRows(sorted);
-            const tickedStaticBillsRow = !hasBillTx && Math.abs(opSigned + billsSum) > ZERO_BAL_EPS && Math.abs(billsSum) > ZERO_BAL_EPS;
+            const tickedStaticBillsRow = !customerData.statementBillAmountCleared && !hasBillTx && Math.abs(opSigned + billsSum) > ZERO_BAL_EPS && Math.abs(billsSum) > ZERO_BAL_EPS;
 
             const totalTickedRows = ticked.length + (tickedStaticBillsRow ? 1 : 0);
             if (!totalTickedRows) {
@@ -4106,6 +4126,7 @@
                             customerData.statementBillAmountCleared = true;
                             customerData.openingBalance = 0;
                             customerData.openingBalanceType = 'Dr';
+                            customerData.openingDate = '';
                             customerData.currentBalance = 0;
                             customerData.currentBalanceType = 'Dr';
                         }
@@ -4120,7 +4141,7 @@
                             if (cust.currentBalance != null) customerData.currentBalance = parseFloat(cust.currentBalance) || 0;
                             if (cust.currentBalanceType) customerData.currentBalanceType = cust.currentBalanceType;
                         }
-                        if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
+                        if (!cust.statementBillAmountCleared && !customerData.openingDate) customerData.openingDate = cust.openingDate || '';
                         if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
@@ -4134,9 +4155,16 @@
                         if (!customerData.name) customerData.name = (cust.name || '').trim();
                         if (!customerData.station) customerData.station = (cust.station || '').trim();
                         if (!customerData.lfNo) customerData.lfNo = (cust.lfno || '').trim();
-                        if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
                         if (!customerData.id) customerData.id = cust.id;
-                        if (!cust.statementBillAmountCleared) {
+                        if (cust.statementBillAmountCleared) {
+                            customerData.statementBillAmountCleared = true;
+                            customerData.openingBalance = 0;
+                            customerData.openingBalanceType = 'Dr';
+                            customerData.currentBalance = 0;
+                            customerData.currentBalanceType = 'Dr';
+                            customerData.openingDate = '';
+                        } else {
+                            if (!customerData.openingDate) customerData.openingDate = cust.openingDate || '';
                             const mOp = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
                             const mOpT = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
                             customerData.openingBalance = parseFloat(mOp) || 0;
@@ -4158,6 +4186,7 @@
                             customerData.statementBillAmountCleared = true;
                             customerData.openingBalance = 0;
                             customerData.openingBalanceType = 'Dr';
+                            customerData.openingDate = '';
                             customerData.currentBalance = 0;
                             customerData.currentBalanceType = 'Dr';
                         } else {
@@ -4179,10 +4208,32 @@
                     if (matches.length === 1) {
                         const cust = matches[0];
                         if (cust.cid) customerData.cid = String(cust.cid || '');
+                        if (cust.statementBillAmountCleared) {
+                            customerData.statementBillAmountCleared = true;
+                            customerData.openingBalance = 0;
+                            customerData.openingBalanceType = 'Dr';
+                            customerData.openingDate = '';
+                            customerData.currentBalance = 0;
+                            customerData.currentBalanceType = 'Dr';
+                        } else {
+                            const mOpN = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? cust.masterOpeningBalance : cust.openingBalance;
+                            const mOpTN = (cust.masterOpeningBalance != null && cust.masterOpeningBalance !== '') ? (cust.masterOpeningBalanceType || cust.openingBalanceType) : cust.openingBalanceType;
+                            customerData.openingBalance = parseFloat(mOpN) || 0;
+                            if (mOpTN) customerData.openingBalanceType = mOpTN;
+                        }
                         if (!customerData.id) customerData.id = cust.id;
                     }
                 } catch (e) { }
             }
+
+            try {
+                const customersReload = JSON.parse(localStorage.getItem('customers') || '[]');
+                customersReload.forEach((c, idx) => {
+                    if (!matchCustomerRecord(c, idx, customersReload)) return;
+                    if (c.statementBillAmountCleared) customerData.statementBillAmountCleared = true;
+                });
+            } catch (e) { }
+            applyStatementClearedCustomerDataMemory();
 
             if (customerData.openingBalance == null || customerData.openingBalance === '') {
                 customerData.openingBalance = 0;

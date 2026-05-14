@@ -2555,6 +2555,10 @@
                         <span class="summary-value" id="panelPaidPurchaseMinus">₹ 0.00</span>
                       </button>
                     </div>
+                    <div class="summary-item billing-detail-your-clear" id="panelYourClearBalanceWrap" style="display:none;">
+                      <span class="summary-label">Your Clear Balance Amount:</span>
+                      <span class="summary-value" id="panelYourClearBalanceAmt">₹ 0.00</span>
+                    </div>
                   </div>
                   <div class="summary-item billing-detail-est-total">
                     <span class="summary-label">Pending balance Net Total Amount:</span>
@@ -5521,6 +5525,34 @@
         });
       }
 
+      function rexPostTransferPendingSnapStorageKey(bn) {
+        return "rexPostTransferPendingSnap_" + String(bn || "").trim().replace(/[^a-z0-9_.\/-]/gi, "_");
+      }
+
+      /** Pending net frozen at Bill -> Transfer (shown as "Your Clear Balance Amount"). */
+      function getBillRexTransferPendingSnapshot(billNoStr, billRowOpt) {
+        const bn = String(billNoStr || "").trim();
+        if (!bn) return null;
+        if (billRowOpt && billRowOpt.billRexTransferPendingSnapshot != null && billRowOpt.billRexTransferPendingSnapshot !== "") {
+          const n = parseFloat(billRowOpt.billRexTransferPendingSnapshot);
+          if (Number.isFinite(n)) return n;
+        }
+        try {
+          const raw = localStorage.getItem(rexPostTransferPendingSnapStorageKey(bn));
+          if (raw != null && raw !== "") {
+            const n = parseFloat(raw);
+            if (Number.isFinite(n)) return n;
+          }
+        } catch (e) { }
+        return null;
+      }
+
+      function persistBillRexTransferPendingSnapshot(bn, amount) {
+        try {
+          localStorage.setItem(rexPostTransferPendingSnapStorageKey(bn), String(Number(amount) || 0));
+        } catch (e) { }
+      }
+
       function openAdvancedPaymentsPopup() {
         if (!billNo || !String(billNo.value || "").trim()) {
           alert("Order number is required");
@@ -6598,16 +6630,35 @@
           newBillData.goldInvoiceRegisteredCustomer = existingBill.goldInvoiceRegisteredCustomer === true;
         }
 
+        var _rexNetSnapForTransfer = null;
         if (lockAfterTransfer) {
+          try {
+            if (typeof updatePaymentPanel === "function") updatePaymentPanel();
+          } catch (ePan) { }
+          if (typeof window._rexLastPanelNetTotal === "number" && isFinite(window._rexLastPanelNetTotal)) {
+            _rexNetSnapForTransfer = window._rexLastPanelNetTotal;
+          }
           newBillData.billRexTransferred = true;
           if (targetCustOverride) {
             var _rexTn = String(targetCustOverride.name || "").trim();
             if (_rexTn) newBillData.billRexTransferToName = _rexTn;
           }
+          if (_rexNetSnapForTransfer != null) {
+            newBillData.billRexTransferPendingSnapshot = _rexNetSnapForTransfer;
+            try {
+              if (billNo && billNo.value) persistBillRexTransferPendingSnapshot(billNo.value, _rexNetSnapForTransfer);
+            } catch (ePs) { }
+          }
         } else if (existingBill && existingBill.billRexTransferred) {
           newBillData.billRexTransferred = true;
           if (existingBill.billRexTransferToName) {
             newBillData.billRexTransferToName = existingBill.billRexTransferToName;
+          }
+          if (existingBill.billRexTransferPendingSnapshot != null && existingBill.billRexTransferPendingSnapshot !== "") {
+            newBillData.billRexTransferPendingSnapshot = existingBill.billRexTransferPendingSnapshot;
+            try {
+              if (billNo && billNo.value) persistBillRexTransferPendingSnapshot(billNo.value, newBillData.billRexTransferPendingSnapshot);
+            } catch (ePs2) { }
           }
         }
 
@@ -7441,6 +7492,11 @@
         try {
           if (b && b.billRexTransferred) {
             setPostTransferLocked(true);
+            try {
+              if (b.billRexTransferPendingSnapshot != null && b.billRexTransferPendingSnapshot !== "" && billNo && billNo.value) {
+                persistBillRexTransferPendingSnapshot(billNo.value, b.billRexTransferPendingSnapshot);
+              }
+            } catch (eSnap) { }
           } else {
             setPostTransferLocked(false);
             if (localStorage.getItem("editCustomerReadOnly") === "true" && custName) {
@@ -9522,12 +9578,16 @@
         if (!billNo || !billNo.value) return;
         const currentBillNo = String(billNo.value || "").trim();
         let isBillCleared = false;
+        var billRowForPanel = null;
         try {
           const balances = JSON.parse(localStorage.getItem("customerBalances") || "[]");
           const bills = JSON.parse(localStorage.getItem("bills") || "[]");
           const isCleared = (row) => String((row && row.status) || "").trim().toLowerCase() === "cleared";
           isBillCleared = (balances || []).some(r => r && String((r.orderNo || r.billNo || "")).trim() === currentBillNo && isCleared(r))
             || (bills || []).some(r => r && String((r.orderNo || r.billNo || "")).trim() === currentBillNo && isCleared(r));
+          billRowForPanel = (bills || []).find(function (r) {
+            return r && String((r.billNo || r.orderNo || "")).trim() === currentBillNo;
+          }) || null;
         } catch (e) { }
 
         // Total section (Final col 15): Ready Order Total = sum of Order + Sale + Other line finals; Purchase handled separately below.
@@ -9583,6 +9643,8 @@
         const paidMinusEl = pickPanelEl("#panelPaidMinus");
         const paidPurchaseMinusEl = pickPanelEl("#panelPaidPurchaseMinus");
         const netDetailEl = pickPanelEl("#panelNetDetail");
+        const yourClearWrap = pickPanelEl("#panelYourClearBalanceWrap");
+        const yourClearAmt = pickPanelEl("#panelYourClearBalanceAmt");
 
         if (panelWrap) panelWrap.style.display = "";
         if (orderAddEl) orderAddEl.textContent = formatCurrency(orderAddTotal);
@@ -9629,6 +9691,22 @@
           }
         }
         if (netDetailEl) netDetailEl.textContent = formatCurrency(isBillCleared ? 0 : netTotalAmount);
+
+        var rexTransferred = !!(billRowForPanel && billRowForPanel.billRexTransferred);
+        var rexSnap = rexTransferred ? getBillRexTransferPendingSnapshot(currentBillNo, billRowForPanel) : null;
+        if (yourClearWrap && yourClearAmt) {
+          if (rexSnap != null && rexTransferred) {
+            yourClearWrap.style.display = "";
+            yourClearAmt.textContent = formatCurrency(rexSnap);
+          } else {
+            yourClearWrap.style.display = "none";
+            yourClearAmt.textContent = formatCurrency(0);
+          }
+        }
+
+        try {
+          window._rexLastPanelNetTotal = netTotalAmount;
+        } catch (eRex) { }
 
         var paymentListEl = pickPanelEl("#paymentList");
 
