@@ -3751,6 +3751,9 @@
                 cleared: false,
                 id: nextId++
             });
+            // Posted interest replaces every interest-module breakdown row (including legacy rows without `source`).
+            interestApplied = [];
+            rowInterestMap = {};
             pendingInterest = 0;
             pendingInterestSide = 'debit';
             interestHasCalcResult = false;
@@ -3758,6 +3761,7 @@
             document.getElementById('interestResultInline').style.display = 'none';
             document.getElementById('applyIntInline').style.display = 'none';
             syncInterestPanelOpenClass();
+            try { saveInterestModule(); } catch (eIm) { }
             render();
             showToast('✅ Interest added to statement — use Save & Close to keep changes');
         }
