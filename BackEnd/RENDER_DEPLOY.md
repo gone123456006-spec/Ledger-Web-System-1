@@ -37,13 +37,11 @@ Render sets **`PORT`**. `server.js` already uses `process.env.PORT` — no chang
 
 ## 5. Frontend → API URL
 
-After deploy, your API is like `https://ledger-api.onrender.com`.
+Production frontend on Vercel uses a **same-origin proxy** (`vercel.json` rewrites `/api/v1/*` → your Render URL). No manual `LEDGER_API_BASE` needed for `ledger-navi.vercel.app`.
 
-In your static frontend (or `index.html` / `login.html` before `auth.js`):
-
-```html
-<script>window.LEDGER_API_BASE = 'https://YOUR-SERVICE.onrender.com/api/v1';</script>
-```
+If you use a **different** Render service URL, update **both**:
+- `vercel.json` → `/api/v1/:path*` destination
+- `frontend/api-config.js` → `RENDER_API` fallback constant
 
 ## 6. “Never sleep” on Render
 

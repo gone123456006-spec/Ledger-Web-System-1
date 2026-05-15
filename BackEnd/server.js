@@ -101,6 +101,13 @@ app.use(
       ) {
         return callback(null, true);
       }
+      // Vercel production + preview deployments (*.vercel.app)
+      if (
+        !isDev &&
+        /^https:\/\/([a-z0-9-]+\.)*vercel\.app$/i.test(origin)
+      ) {
+        return callback(null, true);
+      }
       return callback(null, false);
     },
     credentials: true,
