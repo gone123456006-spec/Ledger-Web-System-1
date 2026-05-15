@@ -82,10 +82,15 @@ exports.deleteCustomer = asyncHandler(async (req, res, next) => {
     );
   }
 
-  await customer.deleteOne();
+  // Soft delete: mark as deleted instead of removing
+  customer.isDeleted = true;
+  customer.deletedAt = new Date();
+  customer.deletedBy = req.user.id;
+  await customer.save();
 
   res.status(200).json({
     success: true,
+    message: 'Customer deleted (recoverable)',
     data: {},
   });
 });

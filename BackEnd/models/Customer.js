@@ -100,6 +100,20 @@ const CustomerSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     notes: {
       type: String,
     },
@@ -154,6 +168,15 @@ CustomerSchema.pre('save', async function (next) {
     this.currentBalance = this.openingBalance;
   }
   
+  next();
+});
+
+// Query middleware to exclude deleted records by default
+CustomerSchema.pre(/^find/, function (next) {
+  if (this.options._recursed) {
+    return next();
+  }
+  this.find({ isDeleted: { $ne: true } });
   next();
 });
 

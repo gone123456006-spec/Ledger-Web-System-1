@@ -32,6 +32,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const rateBookRoutes = require('./routes/rateBookRoutes');
 const stationRoutes = require('./routes/stationRoutes');
 const syncRoutes = require('./routes/syncRoutes');
+const recoveryRoutes = require('./routes/recoveryRoutes');
 
 // Middleware
 const errorHandler = require('./middleware/error');
@@ -114,6 +115,7 @@ app.use(`${API_VERSION}/transactions`, transactionRoutes);
 app.use(`${API_VERSION}/ratebook`, rateBookRoutes);
 app.use(`${API_VERSION}/stations`, stationRoutes);
 app.use(`${API_VERSION}/sync`, syncRoutes);
+app.use(`${API_VERSION}/recovery`, recoveryRoutes);
 
 // Health check (no DB; excluded from rate limit via skip above)
 app.get(`${API_VERSION}/health`, (req, res) => {
