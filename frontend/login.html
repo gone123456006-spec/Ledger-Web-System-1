@@ -255,13 +255,13 @@
     const p = document.getElementById("password");
     const err = document.getElementById("errorMsg");
 
-    function doLogin(){
+    async function doLogin(){
       err.innerHTML = "";
       if(!window.ledgerAuth || typeof window.ledgerAuth.login !== "function"){
         err.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Auth system not loaded. Refreshing...';
         return;
       }
-      const res = window.ledgerAuth.login(u.value, p.value);
+      const res = await window.ledgerAuth.login(u.value, p.value);
       if(!res.ok){
         err.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + (res.message || "Invalid credentials");
         return;

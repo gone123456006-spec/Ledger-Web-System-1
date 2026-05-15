@@ -1,35 +1,34 @@
-// Simple frontend-only auth (localStorage session)
+// Auth against backend only — credentials live in MongoDB (hashed). No secrets in this file.
 (function () {
-  const SESSION_KEY = "ledger_auth_session_v1";
-  const STORAGE_FALLBACK_KEY = "ledger_auth_storage_fallback_v1";
+  const SESSION_KEY = 'ledger_auth_session_v1';
+  const API_BASE = window.LEDGER_API_BASE || 'http://localhost:5000/api/v1';
+  /** If user types the short id without @, map to this email (must match seeded user). */
+  const LOGIN_EMAIL_DOMAIN = '@ledger.co';
 
-  // Updated secure system credentials
-  const USERS = [
-    { username: "u9xQ7mL2vT8kR4pZ", password: "7#Kx!2vP9@LmQ4$Tz8&Yf3" }
-  ];
-
-  function normalizeUsername(u) {
-    return String(u || "").trim();
+  function normalizeInput(s) {
+    return String(s || '').trim();
   }
 
-  function normalizePassword(p) {
-    return String(p || "").trim();
+  function loginIdentifierToEmail(identifier) {
+    const raw = normalizeInput(identifier).toLowerCase();
+    if (!raw) return '';
+    if (raw.includes('@')) return raw;
+    return raw + LOGIN_EMAIL_DOMAIN;
   }
 
   function getStorage() {
-    // Prefer localStorage, fallback to sessionStorage (some browsers block localStorage)
     try {
-      const t = "__t";
-      localStorage.setItem(t, "1");
+      const t = '__t';
+      localStorage.setItem(t, '1');
       localStorage.removeItem(t);
       return localStorage;
-    } catch (e) { }
+    } catch (e) {}
     try {
-      const t = "__t";
-      sessionStorage.setItem(t, "1");
+      const t = '__t';
+      sessionStorage.setItem(t, '1');
       sessionStorage.removeItem(t);
       return sessionStorage;
-    } catch (e) { }
+    } catch (e) {}
     return null;
   }
 
@@ -45,56 +44,99 @@
 
   function isLoggedIn() {
     const s = getSession();
-    return !!(s && s.username);
+    return !!(s && s.token);
   }
 
   function getUsername() {
     const s = getSession();
-    return (s && s.username) ? String(s.username) : "";
+    if (!s) return '';
+    if (s.displayLogin) return String(s.displayLogin);
+    return s.email ? String(s.email) : '';
   }
 
-  function login(username, password) {
-    const u = normalizeUsername(username);
-    const p = normalizePassword(password);
+  function getToken() {
+    const s = getSession();
+    return s && s.token ? s.token : null;
+  }
 
-    const ok = USERS.some(x => x.username === u && x.password === p);
-    if (!ok) return { ok: false, message: "Invalid username or password" };
+  async function login(usernameOrEmail, password) {
+    const email = loginIdentifierToEmail(usernameOrEmail);
+    const pw = normalizeInput(password);
+
+    if (!email || !pw) {
+      return { ok: false, message: 'Username and password required' };
+    }
 
     try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pw }),
+        credentials: 'include',
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          message: data.message || 'Invalid credentials',
+        };
+      }
+
+      if (!data.success || !data.token) {
+        return { ok: false, message: 'Invalid response from server' };
+      }
+
       const storage = getStorage();
-      if (!storage) return { ok: false, message: "Browser storage is blocked. Please allow site data." };
+      if (!storage) {
+        return { ok: false, message: 'Browser storage is blocked. Please allow site data.' };
+      }
 
       storage.setItem(
         SESSION_KEY,
-        JSON.stringify({ username: u, loginAt: new Date().toISOString() })
+        JSON.stringify({
+          token: data.token,
+          email: data.user.email,
+          userId: data.user.id,
+          role: data.user.role,
+          name: data.user.name,
+          displayLogin: normalizeInput(usernameOrEmail),
+          loginAt: new Date().toISOString(),
+        })
       );
-      // store which storage we used (debug/support)
-      try {
-        storage.setItem(STORAGE_FALLBACK_KEY, storage === localStorage ? "local" : "session");
-      } catch (e) { }
-    } catch (e) { }
 
-    return { ok: true, message: "Login successful" };
+      if (window.ledgerSync) {
+        window.ledgerSync.setContext(data.user.email, data.token);
+      }
+
+      return { ok: true, message: 'Login successful', user: data.user };
+    } catch (err) {
+      return {
+        ok: false,
+        message: 'Cannot reach server. Is the API running on ' + API_BASE + '?',
+      };
+    }
   }
 
   function logout() {
     try {
       const storage = getStorage();
-      if (storage) {
-        storage.removeItem(SESSION_KEY);
-        storage.removeItem(STORAGE_FALLBACK_KEY);
-      } else {
-        // best effort
-        try { localStorage.removeItem(SESSION_KEY); } catch (e) { }
-        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { }
+      if (storage) storage.removeItem(SESSION_KEY);
+      else {
+        try {
+          localStorage.removeItem(SESSION_KEY);
+        } catch (e) {}
+        try {
+          sessionStorage.removeItem(SESSION_KEY);
+        } catch (e) {}
       }
-    } catch (e) { }
+    } catch (e) {}
   }
 
   function requireAuth(redirectUrl) {
     if (isLoggedIn()) return true;
-    // keep it relative when possible (works on localhost + Vercel + Render)
-    const target = redirectUrl || "login.html";
+    const target = redirectUrl || 'login.html';
     try {
       window.location.replace(target);
     } catch (e) {
@@ -103,13 +145,12 @@
     return false;
   }
 
-  // Expose minimal API
   window.ledgerAuth = {
     login,
     logout,
     isLoggedIn,
     getUsername,
-    requireAuth
+    getToken,
+    requireAuth,
   };
 })();
-

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sync Integration Example</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; }
+    .section { border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    button { padding: 8px 12px; margin: 5px; cursor: pointer; }
+    .status { padding: 10px; border-radius: 3px; margin: 10px 0; }
+    .online { background: #d4edda; color: #155724; }
+    .offline { background: #f8d7da; color: #721c24; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    input { padding: 8px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <!-- Auth Module MUST be first -->
+  <script>
+    window.LEDGER_API_BASE = 'http://localhost:5000/api/v1';
+  </script>
+  <script src="../sync-manager.js"></script>
+  <script src="../auth.js"></script>
+
+  <h1>Ledger Offline-First Sync - Integration Example</h1>
+
+  <!-- Login Section -->
+  <div class="section">
+    <h2>1. Login</h2>
+    <input type="email" id="email" placeholder="Email" value="test@shop.com">
+    <input type="password" id="password" placeholder="Password" value="password123">
+    <button onclick="handleLogin()">Login</button>
+    <div id="loginStatus"></div>
+  </div>
+
+  <!-- Network Status -->
+  <div class="section">
+    <h2>2. Network Status</h2>
+    <div id="networkStatus" class="status online">🟢 Online</div>
+    <button onclick="toggleNetworkStatus()">Simulate Offline (DevTools > Network > Offline)</button>
+  </div>
+
+  <!-- Data Save Example -->
+  <div class="section">
+    <h2>3. Save Data (Customers Example)</h2>
+    <textarea id="dataInput" placeholder="Enter JSON array" rows="4">
+[
+  { "id": 1, "name": "Customer 1", "email": "cust1@example.com" },
+  { "id": 2, "name": "Customer 2", "email": "cust2@example.com" }
+]
+    </textarea>
+    <br>
+    <button onclick="handleSaveData()">Save to Local + Queue Sync</button>
+    <button onclick="handleLoadData()">Load from Local</button>
+  </div>
+
+  <!-- Sync Control -->
+  <div class="section">
+    <h2>4. Sync Control</h2>
+    <button onclick="handleSyncNow()">Sync Now (Push pending)</button>
+    <button onclick="handlePullLatest()">Pull Latest (from server)</button>
+    <button onclick="handleSyncStatus()">Check Status</button>
+    <div id="syncStatus"></div>
+  </div>
+
+  <!-- Outbox -->
+  <div class="section">
+    <h2>5. Outbox (Pending Sync)</h2>
+    <button onclick="handleShowOutbox()">Show Outbox</button>
+    <button onclick="handleClearOutbox()">Clear Outbox</button>
+    <pre id="outboxDisplay"></pre>
+  </div>
+
+  <!-- Logout -->
+  <div class="section">
+    <button onclick="handleLogout()">Logout</button>
+  </div>
+
+  <script>
+    async function handleLogin() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      if (!email || !password) {
+        alert('Enter email and password');
+        return;
+      }
+
+      const result = await window.ledgerAuth.login(email, password);
+      const statusEl = document.getElementById('loginStatus');
+      
+      if (result.ok) {
+        statusEl.innerHTML = `✅ Logged in as ${result.user.email}`;
+      } else {
+        statusEl.innerHTML = `❌ ${result.message}`;
+      }
+    }
+
+    function handleLogout() {
+      window.ledgerAuth.logout();
+      document.getElementById('loginStatus').innerHTML = '✅ Logged out';
+    }
+
+    async function handleSaveData() {
+      if (!window.ledgerAuth.isLoggedIn()) {
+        alert('Please login first');
+        return;
+      }
+
+      try {
+        const input = document.getElementById('dataInput').value;
+        const data = JSON.parse(input);
+        
+        // Save to local + queue sync
+        await window.ledgerSync.saveData('customers', data, 1);
+        
+        alert('✅ Saved locally and queued for sync');
+      } catch (e) {
+        alert('❌ Invalid JSON: ' + e.message);
+      }
+    }
+
+    function handleLoadData() {
+      try {
+        const data = localStorage.getItem('customers');
+        if (data) {
+          document.getElementById('dataInput').value = JSON.stringify(JSON.parse(data), null, 2);
+        } else {
+          alert('No data found in localStorage');
+        }
+      } catch (e) {
+        alert('Error loading: ' + e.message);
+      }
+    }
+
+    async function handleSyncNow() {
+      if (!window.ledgerAuth.isLoggedIn()) {
+        alert('Please login first');
+        return;
+      }
+
+      const result = await window.ledgerSync.syncNow();
+      alert(result ? '✅ Sync successful' : '❌ Sync failed');
+    }
+
+    async function handlePullLatest() {
+      if (!window.ledgerAuth.isLoggedIn()) {
+        alert('Please login first');
+        return;
+      }
+
+      const result = await window.ledgerSync.pullLatest();
+      alert(result ? '✅ Pulled latest from server' : '❌ Pull failed');
+    }
+
+    async function handleSyncStatus() {
+      if (!window.ledgerAuth.isLoggedIn()) {
+        alert('Please login first');
+        return;
+      }
+
+      const status = await window.ledgerSync.getSyncStatus();
+      document.getElementById('syncStatus').innerHTML = 
+        `<pre>${JSON.stringify(status, null, 2)}</pre>`;
+    }
+
+    function handleShowOutbox() {
+      const outbox = window.ledgerSync.getOutbox();
+      document.getElementById('outboxDisplay').innerHTML = 
+        JSON.stringify(outbox, null, 2) || '(empty)';
+    }
+
+    function handleClearOutbox() {
+      window.ledgerSync.clearOutbox();
+      alert('✅ Outbox cleared');
+      document.getElementById('outboxDisplay').innerHTML = '(cleared)';
+    }
+
+    function toggleNetworkStatus() {
+      alert('Use Chrome DevTools: F12 > Network tab > set to "Offline" to simulate disconnection');
+    }
+
+    // Update network status indicator
+    function updateNetworkStatus() {
+      const el = document.getElementById('networkStatus');
+      if (navigator.onLine) {
+        el.textContent = '🟢 Online';
+        el.className = 'status online';
+      } else {
+        el.textContent = '🔴 Offline';
+        el.className = 'status offline';
+      }
+    }
+
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+
+    // Initial check
+    updateNetworkStatus();
+
+    // On load, try to pull latest if logged in
+    window.addEventListener('load', async () => {
+      if (window.ledgerAuth.isLoggedIn()) {
+        document.getElementById('loginStatus').innerHTML = 
+          `✅ Already logged in as ${window.ledgerAuth.getUsername()}`;
+        await window.ledgerSync.pullLatest();
+      }
+    });
+  </script>
+</body>
+</html>
