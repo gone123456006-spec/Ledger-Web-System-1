@@ -1,28 +1,20 @@
+# Render Blueprint — deploy the Ledger API (BackEnd folder).
+# https://render.com/docs/blueprint-spec
+#
+# Always-on: use a paid instance (see plan below). Free tier spins down after ~15 min idle.
 services:
-  # =========================
-  # Frontend (Static Site)
-  # =========================
-  - type: static
-    name: ledger-frontend
-    env: static
-    rootDir: frontend
-    buildCommand: ""
-    staticPublishPath: .
-
-  # =========================
-  # Backend (Node/Express API)
-  # =========================
   - type: web
-    name: ledger-backend
-    env: node
+    name: ledger-api
+    runtime: node
+    region: singapore
     rootDir: BackEnd
-    buildCommand: npm ci
+    buildCommand: npm install
     startCommand: npm start
+    healthCheckPath: /api/v1/health
+    # Starter = always on (no sleep). Remove this line for Free (will sleep when idle).
+    plan: starter
     envVars:
       - key: NODE_ENV
         value: production
-      # Set this in Render dashboard to your frontend URL after deploy:
-      # e.g. https://ledger-frontend.onrender.com
-      - key: CORS_ORIGIN
-        value: https://YOUR-FRONTEND.onrender.com
-
+      # Set these in the Render dashboard (Secrets) — do not commit real values:
+      # MONGO_URI, JWT_SECRET, JWT_EXPIRE, JWT_COOKIE_EXPIRE, CORS_ORIGIN, RATE_LIMIT_*
