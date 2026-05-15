@@ -59,11 +59,17 @@ app.use(helmet());
 // Prevent XSS attacks
 app.use(xss());
 
-// Rate limiting
+// Rate limiting (skip GET /api/v1/health so uptime monitors do not consume quota)
+const API_VERSION = '/api/v1';
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   message: 'Too many requests from this IP, please try again later.',
+  skip(req) {
+    if (req.method !== 'GET') return false;
+    const path = (req.originalUrl || '').split('?')[0];
+    return path === `${API_VERSION}/health`;
+  },
 });
 app.use('/api/', limiter);
 
@@ -95,8 +101,6 @@ app.use(
 // Frontend is deployed separately (static site). Keep API-only backend.
 
 // API Routes
-const API_VERSION = '/api/v1';
-
 app.use(`${API_VERSION}/auth`, authRoutes);
 app.use(`${API_VERSION}/customers`, customerRoutes);
 app.use(`${API_VERSION}/orders`, orderRoutes);
@@ -111,7 +115,7 @@ app.use(`${API_VERSION}/ratebook`, rateBookRoutes);
 app.use(`${API_VERSION}/stations`, stationRoutes);
 app.use(`${API_VERSION}/sync`, syncRoutes);
 
-// Health check route
+// Health check (no DB; excluded from rate limit via skip above)
 app.get(`${API_VERSION}/health`, (req, res) => {
   res.status(200).json({
     success: true,

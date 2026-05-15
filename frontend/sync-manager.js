@@ -7,7 +7,17 @@
  */
 
 (function () {
-  const API_BASE = window.LEDGER_API_BASE || 'http://localhost:5000/api/v1';
+  function defaultApiBase() {
+    try {
+      const h = location.hostname;
+      if (h === 'localhost' || h === '127.0.0.1') {
+        return 'http://localhost:5000/api/v1';
+      }
+    } catch (e) { /* ignore */ }
+    return 'https://ledger-api-qmtc.onrender.com/api/v1';
+  }
+  const API_BASE =
+    (window.LEDGER_API_BASE && String(window.LEDGER_API_BASE).trim()) || defaultApiBase();
   const OUTBOX_KEY = 'ledger_sync_outbox_v1';
   const DEVICE_ID_KEY = 'ledger_device_id';
   const LAST_SYNC_KEY = 'ledger_last_sync_v1';

@@ -16,10 +16,8 @@
   </style>
 </head>
 <body>
-  <!-- Auth Module MUST be first -->
-  <script>
-    window.LEDGER_API_BASE = 'http://localhost:5000/api/v1';
-  </script>
+  <!-- api-config.js sets API URL (localhost vs Render); override before load if needed -->
+  <script src="../api-config.js"></script>
   <script src="../sync-manager.js"></script>
   <script src="../auth.js"></script>
 
