@@ -59,6 +59,29 @@
     return s && s.token ? s.token : null;
   }
 
+  function loginFailedMessage(httpStatus, serverMessage) {
+    const s = Number(httpStatus) || 0;
+    const m = serverMessage ? String(serverMessage).trim() : '';
+
+    if (s === 401 || s === 400) {
+      return 'Failed to log in. Please check your username and password.';
+    }
+    if (s === 429) {
+      return 'Failed to log in. Too many attempts — please wait a few minutes and try again.';
+    }
+    if (s >= 500) {
+      return 'Failed to log in. The server is having a problem. Please try again later.';
+    }
+    if (m && m.length > 0 && m.length < 160) {
+      return 'Failed to log in. ' + m;
+    }
+    return 'Failed to log in. Please try again.';
+  }
+
+  function networkFailedMessage() {
+    return 'Failed to log in — we could not reach the server. Check that it is running and try again.';
+  }
+
   async function login(usernameOrEmail, password) {
     const email = loginIdentifierToEmail(usernameOrEmail);
     const pw = normalizeInput(password);
@@ -80,12 +103,12 @@
       if (!response.ok) {
         return {
           ok: false,
-          message: data.message || 'Invalid credentials',
+          message: loginFailedMessage(response.status, data.message),
         };
       }
 
       if (!data.success || !data.token) {
-        return { ok: false, message: 'Invalid response from server' };
+        return { ok: false, message: 'Failed to log in. Please try again.' };
       }
 
       const storage = getStorage();
@@ -112,9 +135,13 @@
 
       return { ok: true, message: 'Login successful', user: data.user };
     } catch (err) {
+      const msg = err && err.message ? String(err.message) : '';
+      const looksNetwork =
+        (err && err.name === 'TypeError') ||
+        /failed to fetch|network|load failed|aborted/i.test(msg);
       return {
         ok: false,
-        message: 'Cannot reach server. Is the API running on ' + API_BASE + '?',
+        message: looksNetwork ? networkFailedMessage() : 'Failed to log in. Something went wrong. Please try again.',
       };
     }
   }
