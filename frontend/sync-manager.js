@@ -11,10 +11,12 @@
     try {
       const h = location.hostname;
       if (h === 'localhost' || h === '127.0.0.1') {
-        return 'http://localhost:5000/api/v1';
+        return 'http://127.0.0.1:5000/api/v1';
       }
-    } catch (e) { /* ignore */ }
-    return 'https://ledger-api-qmtc.onrender.com/api/v1';
+      return location.origin.replace(/\/$/, '') + '/api/v1';
+    } catch (e) {
+      return 'https://ledger-api-qmtc.onrender.com/api/v1';
+    }
   }
   const API_BASE =
     (window.LEDGER_API_BASE && String(window.LEDGER_API_BASE).trim()) || defaultApiBase();

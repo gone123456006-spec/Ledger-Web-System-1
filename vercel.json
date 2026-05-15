@@ -10,7 +10,14 @@
     { "source": "/index.html", "destination": "/frontend/index.html", "permanent": false }
   ],
   "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://ledger-api-qmtc.onrender.com/api/v1/:path*"
+    },
     { "source": "/login.html", "destination": "/frontend/login.html" },
+    { "source": "/api-config.js", "destination": "/frontend/api-config.js" },
+    { "source": "/sync-manager.js", "destination": "/frontend/sync-manager.js" },
+    { "source": "/uptime-ping.js", "destination": "/frontend/uptime-ping.js" },
     { "source": "/style.css", "destination": "/frontend/style.css" },
     { "source": "/script.js", "destination": "/frontend/script.js" },
     { "source": "/auth.js", "destination": "/frontend/auth.js" },

@@ -18,8 +18,13 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const connectDB = require('./config/database');
 connectDB();
 
-// Uptime monitoring service
-const { startUptimeMonitor } = require('./services/uptimeService');
+// Uptime monitoring (optional — server still runs if node-cron is missing)
+let startUptimeMonitor = () => {};
+try {
+  ({ startUptimeMonitor } = require('./services/uptimeService'));
+} catch (err) {
+  console.warn(`[UPTIME] Monitor disabled: ${err.message}`.yellow);
+}
 
 // Route files
 const authRoutes = require('./routes/authRoutes');
