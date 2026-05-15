@@ -18,6 +18,9 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const connectDB = require('./config/database');
 connectDB();
 
+// Uptime monitoring service
+const { startUptimeMonitor } = require('./services/uptimeService');
+
 // Route files
 const authRoutes = require('./routes/authRoutes');
 const customerRoutes = require('./routes/customerRoutes');
@@ -150,9 +153,13 @@ const PORT = process.env.PORT || 5000;
 
 const server = app.listen(
   PORT,
-  console.log(
-    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
-  )
+  () => {
+    console.log(
+      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow.bold
+    );
+    // Start uptime monitor after server starts
+    startUptimeMonitor();
+  }
 );
 
 module.exports = app;
