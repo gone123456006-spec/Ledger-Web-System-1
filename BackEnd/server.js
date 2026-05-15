@@ -31,6 +31,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const rateBookRoutes = require('./routes/rateBookRoutes');
 const stationRoutes = require('./routes/stationRoutes');
+const syncRoutes = require('./routes/syncRoutes');
 
 // Middleware
 const errorHandler = require('./middleware/error');
@@ -69,10 +70,24 @@ app.use('/api/', limiter);
 // Prevent http param pollution
 app.use(hpp());
 
-// Enable CORS
+// Enable CORS — in development, allow any localhost / 127.0.0.1 origin (live-server uses random ports).
+const corsOriginEnv = process.env.CORS_ORIGIN || 'http://localhost:8000';
+const corsAllowList = corsOriginEnv.split(',').map((s) => s.trim()).filter(Boolean);
+const isDev = process.env.NODE_ENV !== 'production';
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:8000',
+    origin(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (corsAllowList.includes(origin)) return callback(null, true);
+      if (
+        isDev &&
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
   })
 );
@@ -94,6 +109,7 @@ app.use(`${API_VERSION}/payments`, paymentRoutes);
 app.use(`${API_VERSION}/transactions`, transactionRoutes);
 app.use(`${API_VERSION}/ratebook`, rateBookRoutes);
 app.use(`${API_VERSION}/stations`, stationRoutes);
+app.use(`${API_VERSION}/sync`, syncRoutes);
 
 // Health check route
 app.get(`${API_VERSION}/health`, (req, res) => {
