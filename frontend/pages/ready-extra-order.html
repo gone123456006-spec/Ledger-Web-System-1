@@ -5481,21 +5481,173 @@
         return total;
       }
 
+      /** Direct Bill / Gold Invoice uses one “Paid” total (all payments); Ready Extra splits Advance vs Paid. */
+      function isGoldInvoiceSourceBill(billNoVal, billRowOpt) {
+        if (billRowOpt && String(billRowOpt.orderSource || "").trim() === "gold-invoice") return true;
+        const k = String(billNoVal || "").trim();
+        if (!k) return false;
+        if (/^SGJ\/GI\//i.test(k)) return true;
+        try {
+          const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+          const b = bills.find(function (r) {
+            return r && String(r.billNo || r.orderNo || "").trim() === k;
+          });
+          if (b && String(b.orderSource || "").trim() === "gold-invoice") return true;
+          const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+          const o = orders.find(function (x) {
+            return x && String(x.orderNo || x.billNo || "").trim() === k;
+          });
+          if (o && String(o.orderSource || "").trim() === "gold-invoice") return true;
+        } catch (eGi) { }
+        return false;
+      }
+
+      function normPaymentBillKey(s) {
+        return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+
+      /** Bill keys for payment lookup (order no, SGJ bill no, draft keys, fuzzy GI/GI match). */
+      function collectPaymentKeysForBill(billNoVal) {
+        const keys = new Set();
+        const add = function (k) {
+          const t = String(k || "").trim();
+          if (t) keys.add(t);
+        };
+        add(billNoVal);
+        add(window.sgjBillNo && window.sgjBillNo.value);
+        const candidates = [];
+        [billNoVal, window.sgjBillNo && window.sgjBillNo.value].forEach(function (k) {
+          if (!k) return;
+          const s = String(k).trim();
+          if (!s) return;
+          candidates.push(s);
+          candidates.push(s.replace(/^SGJ\//i, ""));
+          const parts = s.split("/").filter(Boolean);
+          if (parts.length >= 2) candidates.push(parts.slice(1).join("/"));
+          if (parts.length >= 1) candidates.push(parts[parts.length - 1]);
+        });
+        const seen = {};
+        candidates.forEach(function (c) {
+          if (!c || seen[c]) return;
+          seen[c] = true;
+          add(c);
+        });
+        const want = normPaymentBillKey(billNoVal) || normPaymentBillKey(window.sgjBillNo && window.sgjBillNo.value);
+        if (want) {
+          try {
+            const payments = JSON.parse(localStorage.getItem("payments") || "[]");
+            payments.forEach(function (p) {
+              const pb = String(p && p.billNo || "").trim();
+              if (!pb) return;
+              const npb = normPaymentBillKey(pb);
+              if (!npb) return;
+              if (npb === want || npb.endsWith(want) || want.endsWith(npb)) add(pb);
+            });
+          } catch (e) { }
+        }
+        if (isGoldInvoiceSourceBill(billNoVal)) {
+          try {
+            const gk = sessionStorage.getItem("goldInvoiceDraftKey");
+            if (gk) add(gk);
+          } catch (eGk) { }
+        }
+        return keys;
+      }
+
+      function getGoldInvoiceStoredPaidFallback(billNoVal) {
+        const k = String(billNoVal || "").trim();
+        if (!k) return 0;
+        try {
+          const bills = JSON.parse(localStorage.getItem("bills") || "[]");
+          const b = bills.find(function (r) {
+            return r && String(r.billNo || r.orderNo || "").trim() === k;
+          });
+          if (b) {
+            const p = parseFloat(b.paid != null ? b.paid : b.advance);
+            if (!isNaN(p) && p > 0) return p;
+          }
+          const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+          const o = orders.find(function (x) {
+            return x && String(x.orderNo || x.billNo || "").trim() === k;
+          });
+          if (o) {
+            const p2 = parseFloat(o.advance != null ? o.advance : o.paid);
+            if (!isNaN(p2) && p2 > 0) return p2;
+          }
+        } catch (eFb) { }
+        return 0;
+      }
+
+      function paymentMatchesBill(p, billNoVal) {
+        if (!p) return false;
+        const keys = collectPaymentKeysForBill(billNoVal);
+        return keys.has(String(p.billNo || "").trim());
+      }
+
+      /** When opening a Gold Invoice bill in Ready Extra: attach draft-key payments and mark type Paid (matches GI panel). */
+      function syncGoldInvoicePaymentsForBill(billRow) {
+        if (!billRow || String(billRow.orderSource || "").trim() !== "gold-invoice") return;
+        const bn = String(billRow.billNo || billRow.orderNo || "").trim();
+        if (!bn) return;
+        const keys = collectPaymentKeysForBill(bn);
+        let payments = [];
+        try {
+          payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        } catch (e) {
+          return;
+        }
+        let changed = false;
+        payments.forEach(function (p) {
+          if (!p) return;
+          const pb = String(p.billNo || "").trim();
+          if (!pb) return;
+          if (!keys.has(pb) && !/^DRAFT-/i.test(pb)) return;
+          if (!keys.has(pb)) {
+            const npb = normPaymentBillKey(pb);
+            const want = normPaymentBillKey(bn);
+            if (!npb || !want || (npb !== want && !npb.endsWith(want) && !want.endsWith(npb))) return;
+          }
+          if (pb !== bn) {
+            p.billNo = bn;
+            changed = true;
+          }
+          if (String(p.type || "").trim().toLowerCase() !== "paid") {
+            p.type = "Paid";
+            changed = true;
+          }
+        });
+        if (changed) {
+          try {
+            localStorage.setItem("payments", JSON.stringify(payments));
+          } catch (e2) { }
+        }
+      }
+
       /* GET PAID AMOUNT FOR BILL (from payments storage). Bill match is trim-normalized (same as orders list / cross-page). */
       function getPaidAmount(billNo, typeFilter = null) {
         if (!billNo) return 0;
-        const key = String(billNo).trim();
-        const payments = JSON.parse(localStorage.getItem("payments") || "[]");
-        return payments
-          .filter(p => {
-            const billMatch = p && String(p.billNo || "").trim() === key;
-            if (!billMatch) return false;
-            if (typeFilter === 'Paid') return isPaidTypePayment(p);
-            // Advanced = explicit 'Advanced' OR no type (legacy)
-            if (typeFilter === 'Advanced') return !isPaidTypePayment(p);
-            return true; // All payments for this bill
+        const giBill = isGoldInvoiceSourceBill(billNo);
+        let payments = [];
+        try {
+          payments = JSON.parse(localStorage.getItem("payments") || "[]");
+        } catch (e) {
+          return 0;
+        }
+        let sum = payments
+          .filter(function (p) {
+            if (!paymentMatchesBill(p, billNo)) return false;
+            if (giBill && typeFilter === "Paid") return true;
+            if (giBill && typeFilter === "Advanced") return false;
+            if (typeFilter === "Paid") return isPaidTypePayment(p);
+            if (typeFilter === "Advanced") return isAdvancedPaymentRecord(p);
+            return true;
           })
-          .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+          .reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+        if (giBill && typeFilter === "Paid" && sum <= 0) {
+          const fb = getGoldInvoiceStoredPaidFallback(billNo);
+          if (fb > 0) sum = fb;
+        }
+        return sum;
       }
 
       /** True when payment is recorded as Paid (case-insensitive; trims type string). */
@@ -5511,7 +5663,7 @@
       /** All advance (non‑Paid) payment rows for a bill — same filter as getPaidAmount(bill, 'Advanced'). */
       function getAdvancedPaymentRecordsForBill(billNoVal) {
         if (!billNoVal) return [];
-        const key = String(billNoVal).trim();
+        if (isGoldInvoiceSourceBill(billNoVal)) return [];
         let payments = [];
         try {
           payments = JSON.parse(localStorage.getItem("payments") || "[]");
@@ -5519,14 +5671,14 @@
           return [];
         }
         return payments.filter(function (p) {
-          return p && String(p.billNo || "").trim() === key && isAdvancedPaymentRecord(p);
+          return paymentMatchesBill(p, billNoVal) && isAdvancedPaymentRecord(p);
         });
       }
 
       /** Paid-type payment rows for a bill — same filter as getPaidAmount(bill, 'Paid'). */
       function getPaidPaymentRecordsForBill(billNoVal) {
         if (!billNoVal) return [];
-        const key = String(billNoVal).trim();
+        const giBill = isGoldInvoiceSourceBill(billNoVal);
         let payments = [];
         try {
           payments = JSON.parse(localStorage.getItem("payments") || "[]");
@@ -5534,7 +5686,9 @@
           return [];
         }
         return payments.filter(function (p) {
-          return p && String(p.billNo || "").trim() === key && isPaidTypePayment(p);
+          if (!paymentMatchesBill(p, billNoVal)) return false;
+          if (giBill) return true;
+          return isPaidTypePayment(p);
         });
       }
 
@@ -7474,6 +7628,10 @@
           useBillLayout = true;
         }
         applyBillMidColumnsHidden(useBillLayout);
+
+        if (String(b.orderSource || "").trim() === "gold-invoice") {
+          syncGoldInvoicePaymentsForBill(b);
+        }
 
         var rexNarBill = document.getElementById("rexOrderNarration");
         if (rexNarBill) {
@@ -9635,8 +9793,11 @@
         const rateDiffVal = parseRateDiffFromStored(rateDiffStored);
         const rateDiffAbs = Math.abs(parseFloat(rateDiffVal) || 0);
 
-        const advanced = getPaidAmount(billNo.value, 'Advanced');
-        const paid = getPaidAmount(billNo.value, 'Paid');
+        let advanced = getPaidAmount(billNo.value, 'Advanced');
+        let paid = getPaidAmount(billNo.value, 'Paid');
+        if (isGoldInvoiceSourceBill(currentBillNo, billRowForPanel)) {
+          advanced = 0;
+        }
 
         const orderAddTotal = finalOrderTotal + finalSaleTotal + finalOtherTotal;
         const netBalanceMid = orderAddTotal - combinedPurchaseSheets - advanced - rateDiffAbs;
