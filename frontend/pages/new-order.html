@@ -1913,7 +1913,7 @@
 
         <div class="row">
           <label>Due Date</label>
-          <input type="date" id="dueDate" autocomplete="off">
+          <input type="date" id="dueDate" autocomplete="off" data-persist="ignore">
         </div>
 
         <div class="row" style="display: none;">
@@ -2421,24 +2421,6 @@
         if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
         const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
         if (m) return `${m[3]}-${m[2]}-${m[1]}`;
-        return '';
-      }
-
-      function getLastSavedDueDateISO() {
-        try {
-          const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-          if (!Array.isArray(orders) || orders.length === 0) return '';
-          const sorted = orders.slice().sort((a, b) => {
-            const ta = new Date((a && a.timestamp) || 0).getTime() || 0;
-            const tb = new Date((b && b.timestamp) || 0).getTime() || 0;
-            return tb - ta;
-          });
-          for (let i = 0; i < sorted.length; i++) {
-            const o = sorted[i] || {};
-            const d = normalizeDateInputValue(o.dueDate || o.due_date || '');
-            if (d) return d;
-          }
-        } catch (e) { }
         return '';
       }
 
@@ -5190,6 +5172,17 @@
         clearOrderFormAndState();
       }
 
+      function clearNewOrderDraftCache() {
+        try { localStorage.removeItem('orderAutoSave'); } catch (e) { }
+        try { localStorage.removeItem('newOrderState'); } catch (e) { }
+        try {
+          if (window.FormPersistence) {
+            var fp = window.FormPersistence.getInstance();
+            if (fp && typeof fp.clear === 'function') fp.clear('pages/new-order.html');
+          }
+        } catch (e2) { }
+      }
+
       function clearOrderFormAndState() {
         const oldBillNo = AppState.elements.billNo ? String(AppState.elements.billNo.value || '').trim() : '';
         if (oldBillNo) discardTempRatebookForBill(oldBillNo);
@@ -5211,8 +5204,7 @@
         const narrClear = AppState.elements.orderNarration || getSearchRoot().querySelector('#orderNarration');
         if (narrClear) narrClear.value = '';
 
-        localStorage.removeItem('orderAutoSave');
-        localStorage.removeItem('newOrderState');
+        clearNewOrderDraftCache();
         localStorage.removeItem('editOrderId');
         localStorage.removeItem('editOrderPayload');
         localStorage.removeItem('editCustomerReadOnly');
@@ -5477,16 +5469,24 @@
         const editLoaded = loadOrderForEdit();
         const restored = editLoaded ? true : (cameFromReadyExtraPage ? false : restoreFormState());
 
-        // Fresh New Order: prefill from previous saved order due date (ISO storage, browser-local display).
-        if (!pendingEditOrderId && AppState.elements.dueDate) {
-          var lastDue = getLastSavedDueDateISO();
-          AppState.elements.dueDate.value = lastDue || '';
+        // Fresh New Order: always start with an empty due date (not restored from drafts or prior orders).
+        if (!pendingEditOrderId && !editLoaded && AppState.elements.dueDate) {
+          AppState.elements.dueDate.value = '';
+          try {
+            if (window.FormPersistence) {
+              var fpDue = window.FormPersistence.getInstance();
+              var ctxDue = 'pages/new-order.html';
+              if (fpDue.data && fpDue.data[ctxDue] && fpDue.data[ctxDue].dueDate != null) {
+                delete fpDue.data[ctxDue].dueDate;
+                localStorage.setItem(fpDue.storageKey, JSON.stringify(fpDue.data));
+              }
+            }
+          } catch (eDue) { }
           setTimeout(function () {
             if (!localStorage.getItem('editOrderId') && AppState.elements.dueDate) {
-              var dueAgain = getLastSavedDueDateISO();
-              AppState.elements.dueDate.value = dueAgain || '';
+              AppState.elements.dueDate.value = '';
             }
-          }, 350);
+          }, 400);
         }
 
         if (!pendingEditOrderId) {

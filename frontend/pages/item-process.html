@@ -1405,6 +1405,23 @@
             openIpEntryPopup();
         }
 
+        /** After JW entry save: mark every in-process line for this order as Done (MARK column). */
+        function ipMarkJwEntryDoneForOrder(orderId) {
+            const oid = String(orderId || '').trim();
+            if (!oid) return 0;
+            const proc = JSON.parse(localStorage.getItem('itemProcess') || '[]');
+            const now = new Date().toISOString();
+            let count = 0;
+            proc.forEach(function (x) {
+                if (!x || String(x.orderId || '') !== oid) return;
+                x.jwEntryDone = true;
+                x.jwEntryDoneAt = now;
+                count++;
+            });
+            if (count > 0) localStorage.setItem('itemProcess', JSON.stringify(proc));
+            return count;
+        }
+
         function onItemProcessMessage(event) {
             if (event && event.data && event.data.type === 'jwEntrySaved') {
                 let preserveList = [];
@@ -1418,25 +1435,12 @@
                 } catch (eList) { }
 
                 const markCb = _ipCurrentMarkCb;
+                let markedCount = 0;
                 try {
                     if (markCb) {
-                        const preserve = {
-                            orderId: String(markCb.dataset.orderId || ''),
-                            itemIdx: String(markCb.dataset.itemIdx != null ? markCb.dataset.itemIdx : '')
-                        };
-                        const rowCbForPid = [...document.querySelectorAll('.ip-row-cb')].find(function (el) {
-                            return String(el.dataset.orderId || '') === preserve.orderId &&
-                                String(el.dataset.itemIdx || '') === preserve.itemIdx;
-                        });
-                        const pid = rowCbForPid ? String(rowCbForPid.dataset.processId || '') : '';
-                        if (pid) {
-                            const proc = JSON.parse(localStorage.getItem('itemProcess') || '[]');
-                            const idx = proc.findIndex(function (x) { return x && String(x.id) === pid; });
-                            if (idx >= 0) {
-                                proc[idx].jwEntryDone = true;
-                                proc[idx].jwEntryDoneAt = new Date().toISOString();
-                                localStorage.setItem('itemProcess', JSON.stringify(proc));
-                            }
+                        const orderIdFromMark = String(markCb.dataset.orderId || '').trim();
+                        if (orderIdFromMark) {
+                            markedCount = ipMarkJwEntryDoneForOrder(orderIdFromMark);
                         }
                     }
                 } catch (eSaveMark) { }
@@ -1444,8 +1448,10 @@
                 try {
                     if (markCb) markCb.checked = false;
                 } catch (eMc) { }
-                closeIpEntryPopup();
-                showIpToast('✅ Job worker entry saved');
+                if (!(event.data && event.data.stayOpen)) closeIpEntryPopup();
+                showIpToast(markedCount > 1
+                    ? '✅ Job worker entry saved — all ' + markedCount + ' items for this order marked Done'
+                    : '✅ Job worker entry saved');
                 _ipPreserveRowSelectionsAfterReload = preserveList;
                 setTimeout(function () { tbody = null; loadProcessItems(); }, 150);
                 return;

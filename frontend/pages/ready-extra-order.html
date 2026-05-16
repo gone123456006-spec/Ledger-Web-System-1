@@ -373,14 +373,19 @@
     }
 
     /* Keep table column alignment with header for Other rows (do not remove td columns). */
-    /* Cross-hatch only on disabled “Order details” cells — not Type, Order No., Item Name, Stamp, Pc, Ready Rate, Other, Total, delete. */
+    /* Cross-hatch only on disabled “Order details” cells — white fill + white cross lines (not Type, Order No., Item Name, Stamp, Pc, Ready Rate, Other, Total, delete). */
     .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(4)):not(:nth-child(5)):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)):not(:nth-child(18)) {
       background-image:
-        linear-gradient(25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%),
-        linear-gradient(-25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%);
+        linear-gradient(25deg, transparent 49.2%, #ffffff 49.7%, #ffffff 50.3%, transparent 50.8%),
+        linear-gradient(-25deg, transparent 49.2%, #ffffff 49.7%, #ffffff 50.3%, transparent 50.8%);
       background-size: 100% 100%;
       background-repeat: no-repeat;
-      background-color: rgba(210, 214, 220, 0.08) !important;
+      background-color: #ffffff !important;
+    }
+
+    /* Override green column band on Other row locked cells — keep uniform white */
+    .order-details-table-wrap #ready-order-item-table tbody tr.rex-row-type-other > td:nth-child(n+11):nth-child(-n+17):not(:nth-child(14)):not(:nth-child(16)):not(:nth-child(17)) {
+      background-color: #ffffff !important;
     }
 
     /* Optional: purchase-field-disabled for readonly styling */

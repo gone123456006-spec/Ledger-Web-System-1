@@ -858,6 +858,10 @@ function loadPage(pageUrl) {
                                         if (!skipPersistRestore2) {
                                             window.FormPersistence.getInstance().restore();
                                         }
+                                        if (/pages\/add-jobworker\.html$/i.test(String(pageUrl || "")) &&
+                                            typeof window.scheduleFocusJwNameField === "function") {
+                                            setTimeout(function () { window.scheduleFocusJwNameField(); }, 60);
+                                        }
                                     } catch (e) { }
                                 }
                             }, 200);

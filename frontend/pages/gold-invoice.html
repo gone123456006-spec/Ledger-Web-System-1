@@ -196,15 +196,15 @@
       border-right: none; text-align: right; vertical-align: middle; width: 1%; white-space: nowrap;
     }
     .order-details-table-wrap #new-order-item-table tbody tr { background: #fff; }
-    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other { background: #fafafa; }
-    /* Other row: cross-hatch on locked cells; inputs use transparent bg so pattern shows */
+    .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other { background: #ffffff; }
+    /* Other row: cross-hatch on locked cells — white fill + white cross lines (Stamp, R.Metal, Neg, R.Wt, Making %) */
     .order-details-table-wrap #new-order-item-table tbody tr.gi-row-type-other > td:nth-child(n):not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(4)):not(:nth-child(8)):not(:nth-child(10)):not(:nth-child(11)):not(:nth-child(12)) {
       background-image:
-        linear-gradient(25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%),
-        linear-gradient(-25deg, transparent 49.2%, rgba(185, 74, 72, 0.18) 49.7%, rgba(185, 74, 72, 0.18) 50.3%, transparent 50.8%);
+        linear-gradient(25deg, transparent 49.2%, #ffffff 49.7%, #ffffff 50.3%, transparent 50.8%),
+        linear-gradient(-25deg, transparent 49.2%, #ffffff 49.7%, #ffffff 50.3%, transparent 50.8%);
       background-size: 100% 100%;
       background-repeat: no-repeat;
-      background-color: rgba(210, 214, 220, 0.08) !important;
+      background-color: #ffffff !important;
     }
     .order-details-table-wrap #new-order-item-table th.total,
     .order-details-table-wrap #new-order-item-table td.total { background: #f5f6fa; }

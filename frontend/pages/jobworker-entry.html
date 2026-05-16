@@ -901,7 +901,19 @@
         }
       };
       window.saveAndNew = function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAssignmentMode = urlParams.get('mode') === 'assignment';
         if (save()) {
+          if (isAssignmentMode) {
+            const name = document.getElementById('jwName').value.trim();
+            const jw = _jwData.find(j => j.name.toLowerCase() === name.toLowerCase());
+            window.parent.postMessage({
+              type: 'jwEntrySaved',
+              stayOpen: true,
+              jobworkerId: jw ? jw.id : null,
+              jobworkerName: name
+            }, '*');
+          }
           resetAll();
           document.getElementById('jwName').focus();
         }
@@ -913,6 +925,52 @@
         resetAll();
         goBack();
       };
+
+      // ── NARRATION: first letter of each word capital, rest lowercase (on space / input) ──
+      function formatJwNarrationTitleCase(value) {
+        if (value == null) return '';
+        return String(value).replace(/[^\s]+/g, function (word) {
+          if (!word) return word;
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        });
+      }
+
+      function onJwNarrationTitleCaseInput(e) {
+        var el = e.target;
+        if (!el || el.id !== 'entryNarration' || el.disabled || el.readOnly) return;
+        var start = el.selectionStart;
+        var end = el.selectionEnd;
+        var raw = el.value;
+        var next = formatJwNarrationTitleCase(raw);
+        if (next === raw) return;
+        el.value = next;
+        var lenDiff = next.length - raw.length;
+        if (typeof start === 'number' && typeof end === 'number') {
+          try {
+            el.setSelectionRange(
+              Math.max(0, Math.min(next.length, start + lenDiff)),
+              Math.max(0, Math.min(next.length, end + lenDiff))
+            );
+          } catch (err) { }
+        }
+      }
+
+      function onJwNarrationTitleCaseBlur(e) {
+        var el = e.target;
+        if (!el || el.id !== 'entryNarration') return;
+        var next = formatJwNarrationTitleCase(el.value);
+        if (next !== el.value) el.value = next;
+      }
+
+      function wireJwNarrationTitleCase() {
+        var root = getFormRoot();
+        var el = (root && root.querySelector('#entryNarration')) || document.getElementById('entryNarration');
+        if (!el) return;
+        el.removeEventListener('input', onJwNarrationTitleCaseInput);
+        el.removeEventListener('blur', onJwNarrationTitleCaseBlur);
+        el.addEventListener('input', onJwNarrationTitleCaseInput);
+        el.addEventListener('blur', onJwNarrationTitleCaseBlur);
+      }
 
       // ── KEYBOARD: Ctrl+M = Add Jobworker; Arrow Up/Down = move between entry fields ──
       var JW_ENTRY_FIELD_CHAIN = ['jwName', 'entryDate', 'entryMetal', 'entryChain', 'entryNag', 'entryMaal', 'entryNarration'];
@@ -986,6 +1044,7 @@
       // ── INIT: when opened from sidebar or any visit, clear form so data is reset ──
       try { sessionStorage.removeItem('jobworkerFormClear'); } catch (e) { }
       resetAll();
+      wireJwNarrationTitleCase();
       document.getElementById('entryDate').value = new Date().toISOString().slice(0, 10);
       loadJobworkers();
       setTimeout(function () {

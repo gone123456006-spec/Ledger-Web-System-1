@@ -352,6 +352,19 @@
     }
 
     /**
+     * True when any itemProcess row for this order has qty > 0 in workshop READY status
+     * (lines visible on the Ready Items screen, before READY_ORDER finalization).
+     */
+    function orderHasQtyInReadyItems(itemProcess, orderId) {
+        var oid = String(orderId);
+        return (itemProcess || []).some(function (e) {
+            if (!e || String(e.orderId) !== oid) return false;
+            if (String(e.status || '').toUpperCase() !== 'READY') return false;
+            return (parseFloat(e.qty) || 0) > 0;
+        });
+    }
+
+    /**
      * Sets order.status to READY only when isOrderReadyForReadyOrdersList (Rules 1 + 4: finalized in Ready Items).
      * Demotes READY orders when that is no longer true.
      */
@@ -448,6 +461,8 @@
         orderMeetsReadyOrdersPolicy: isOrderReadyForReadyOrdersList,
         /** True if any itemProcess row exists for this order (workshop / Item Process). */
         orderHasProcessEntries: orderHasProcessEntries,
+        /** True if any qty is in workshop READY status (Ready Items queue). */
+        orderHasQtyInReadyItems: orderHasQtyInReadyItems,
         syncOrdersReadyFromProcess: syncOrdersReadyFromProcess,
         pruneItemProcessForOrder: pruneItemProcessForOrder,
         syncOrderLineAssignmentFromItemProcess: syncOrderLineAssignmentFromItemProcess,

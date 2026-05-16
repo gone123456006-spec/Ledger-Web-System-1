@@ -509,7 +509,7 @@
 
           <div class="row">
             <label>Jobworker Id <span class="required-star">*</span></label>
-            <input id="jwId" readonly placeholder="Auto-generated">
+            <input id="jwId" readonly tabindex="-1" placeholder="Auto-generated">
           </div>
 
           <div class="row">
@@ -990,13 +990,25 @@
       function focusJwNameField() {
         var root = getFormRoot();
         var el = root.querySelector('#jwName') || document.getElementById('jwName');
-        if (!el || el.disabled) return;
+        if (!el || el.disabled || el.offsetParent === null) return false;
         try {
           el.focus({ preventScroll: false });
         } catch (err) {
-          el.focus();
+          try { el.focus(); } catch (e2) { return false; }
         }
+        try {
+          if (el.select && el.tagName === 'INPUT' && el.type !== 'date') el.select();
+        } catch (errSel) { }
+        return document.activeElement === el;
       }
+
+      function scheduleFocusJwNameField() {
+        [0, 80, 220, 450].forEach(function (ms) {
+          setTimeout(focusJwNameField, ms);
+        });
+      }
+      window.focusJwNameField = focusJwNameField;
+      window.scheduleFocusJwNameField = scheduleFocusJwNameField;
 
       function stationDropdownIsOpen() {
         var dd = document.getElementById('jwStationDropdown');
@@ -1135,10 +1147,15 @@
         setDefaults();
       }
       loadStations();
-      requestAnimationFrame(function () {
-        focusJwNameField();
-        setTimeout(focusJwNameField, 80);
-      });
+      scheduleFocusJwNameField();
+
+      function onJwAddPageRefresh() {
+        scheduleFocusJwNameField();
+      }
+      document.addEventListener('pageRefresh', onJwAddPageRefresh);
+      if (typeof ledgerNavListen === 'function') {
+        ledgerNavListen(document, 'pageRefresh', onJwAddPageRefresh);
+      }
 
       // Refresh customer list if new customer was added in another tab
       window.addEventListener('storage', function (e) {
