@@ -1442,12 +1442,65 @@
             return /^interest(\s|$)/i.test(t);
         }
 
+        /** Simple-mode segment rows (Interest Debit from this run), one entry per ⊕ line. */
+        function listSimpleModeSegmentInterestDebits(applied) {
+            const rows = [];
+            (applied || []).forEach(r => {
+                if (!r || r.source !== 'segment-calc') return;
+                const nar = String(r.narration || '').trim().toLowerCase();
+                if (nar !== 'interest debit') return;
+                const amt = round2(Math.abs(Number(r.debit) || 0));
+                if (amt <= 0) return;
+                rows.push({ date: String(r.date || '').trim(), amount: amt });
+            });
+            rows.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+            return rows;
+        }
+
+        function sumSimpleModeSegmentInterestDebits(applied) {
+            return round2(listSimpleModeSegmentInterestDebits(applied).reduce((s, r) => s + r.amount, 0));
+        }
+
+        /** Simple mode: only the latest dated segment is posted via Add as Debit/Credit. */
+        function getLatestSimpleModeSegmentInterestAmount(applied) {
+            const segments = listSimpleModeSegmentInterestDebits(applied);
+            if (!segments.length) return 0;
+            return round2(segments[segments.length - 1].amount);
+        }
+
+        /** Footer HTML: each segment on its own line, optional total, and amount to post (latest segment). */
+        function buildInterestResultBreakdownHtml(segments, totalAmt, applyAmt) {
+            if (!segments || segments.length === 0) return '';
+            const lineHtml = segments.map(seg => {
+                const d = fmtDate(seg.date) || seg.date || '—';
+                return '<div class="interest-seg-line" style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:2px 0;">' +
+                    '<span style="color:var(--muted);">' + d + '</span>' +
+                    '<span style="font-weight:600;color:var(--danger);">₹ ' + fmt(seg.amount) + '</span></div>';
+            });
+            const total = round2(totalAmt != null ? totalAmt : segments.reduce((sum, r) => sum + r.amount, 0));
+            const toPost = round2(applyAmt != null ? applyAmt : (segments.length ? segments[segments.length - 1].amount : total));
+            let html = '<div style="min-width:140px;">' + lineHtml.join('');
+            if (segments.length > 1) {
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:4px 0 0;margin-top:4px;border-top:1px dashed var(--border);">' +
+                    '<span style="font-weight:600;color:var(--text);">Total</span>' +
+                    '<span style="font-weight:700;color:var(--muted);">₹ ' + fmt(total) + '</span></div>';
+                html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:4px 0 0;">' +
+                    '<span style="font-weight:700;color:var(--text);">Add as Debit</span>' +
+                    '<span style="font-weight:800;color:var(--danger);">₹ ' + fmt(toPost) + '</span></div>';
+            }
+            return html + '</div>';
+        }
+
         function dedupeInterestDebitRows() {
             if (!Array.isArray(interestApplied) || interestApplied.length === 0) return;
             const seenDates = new Set();
             const out = [];
             for (let i = interestApplied.length - 1; i >= 0; i--) {
                 const r = interestApplied[i];
+                if (r && r.source === 'segment-calc') {
+                    out.unshift(r);
+                    continue;
+                }
                 const nar = String(r && r.narration ? r.narration : '').trim().toLowerCase();
                 if (!isInterestNarrationText(nar)) {
                     out.unshift(r);
@@ -1832,15 +1885,23 @@
             }
 
 
+            const simpleInterestSegments = interestLastCompMonth > 0
+                ? []
+                : listSimpleModeSegmentInterestDebits(interestApplied);
+            const breakdownTotal = interestLastCompMonth > 0
+                ? pendingInterest
+                : sumSimpleModeSegmentInterestDebits(interestApplied);
+            const interestBreakdownHtml = buildInterestResultBreakdownHtml(simpleInterestSegments, breakdownTotal, pendingInterest);
+
             if (res) {
                 res.style.display = 'block';
                 res.innerHTML = `
-                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                         <span style="font-weight:600; color:var(--text); font-size:13px;">Net Interest Payable</span>
                         <span style="font-weight:400; font-size:11px; color:var(--muted);">${interestLastCompMonth > 0 ? 'Compounding' : 'Simple'} Method</span>
                     </div>
-                    <span style="font-size:18px; font-weight:800; color:var(--danger); white-space:nowrap;">₹ ${fmt(pendingInterest)}</span>
+                    ${interestBreakdownHtml || `<span style="font-size:18px;font-weight:800;color:var(--danger);white-space:nowrap;">₹ ${fmt(pendingInterest)}</span>`}
                 </div>
             `;
             }
@@ -2502,6 +2563,24 @@
             if (isZeroForInterestSegment(rPost)) return null;
             const principalBase = Math.abs(rPost);
             if (!Number.isFinite(principalBase) || principalBase < 0.005) return null;
+            /**
+             * After "Add as Debit", a posted Interest row can sit alone after the last zero-balance row.
+             * Compound mode would then use that tiny tail as principalBase (looks like "current balance only").
+             * If the post-zero tail contains posted interest but no other money, ignore restart — use full
+             * opening principal again so the next Interest run matches the whole statement balance logic.
+             */
+            let rPostExInterest = 0;
+            for (let j = startIdx; j < list.length; j++) {
+                const row = list[j];
+                if (row && isInterestNarrationText(row.narration)) continue;
+                rPostExInterest = snapInterestRunningBalance(rPostExInterest + txDelta(row));
+            }
+            const tailHasPostedInterest = list.slice(startIdx).some(function (tx) {
+                return tx && isInterestNarrationText(tx.narration);
+            });
+            if (tailHasPostedInterest && isZeroForInterestSegment(rPostExInterest) && !isZeroForInterestSegment(rPost)) {
+                return null;
+            }
             const restartDate = parseDateOnly(list[startIdx].date);
             if (isNaN(restartDate.getTime())) return null;
             return { restartDate, principalBase, startIdx };
@@ -3708,7 +3787,20 @@
 
             const closingAfterInterest = round2(runningBal);
             pendingInterestSide = closingAfterInterest < 0 ? 'credit' : 'debit';
-            pendingInterest = round2(Math.abs(totalInterest));
+            if (!compoundBreakdown) {
+                const summedSimpleSegments = sumSimpleModeSegmentInterestDebits(interestApplied);
+                if (summedSimpleSegments > 0.005) totalInterest = summedSimpleSegments;
+            }
+            const simpleInterestSegments = !compoundBreakdown
+                ? listSimpleModeSegmentInterestDebits(interestApplied)
+                : [];
+            pendingInterest = !compoundBreakdown
+                ? getLatestSimpleModeSegmentInterestAmount(interestApplied)
+                : round2(Math.abs(totalInterest));
+            const breakdownTotal = !compoundBreakdown
+                ? sumSimpleModeSegmentInterestDebits(interestApplied)
+                : pendingInterest;
+            const interestBreakdownHtml = buildInterestResultBreakdownHtml(simpleInterestSegments, breakdownTotal, pendingInterest);
             interestHasCalcResult = true;
             interestLastCompMonth = compMonth;
             renderInterestTable();
@@ -3731,13 +3823,13 @@
             `;
             } else {
                 res.innerHTML = `
-                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                         <span style="font-weight:600; color:var(--text); font-size:13px;">Net Interest Payable</span>
                         <span style="font-size:11px; color:var(--muted);">${compMonth > 0 ? `Actual Days (365) · every 6 months · annual rate ${round2(rate * 12)}%` : `Simple segment-wise @ ${rate}% monthly`}</span>
                         <span style="font-size:11px; color:var(--muted);">Closing: ₹ ${fmt(closingAfterInterest)}</span>
                     </div>
-                    <span style="font-size:18px; font-weight:800; color:var(--danger); white-space:nowrap;">₹ ${fmt(pendingInterest)}</span>
+                    ${interestBreakdownHtml || `<span style="font-size:18px;font-weight:800;color:var(--danger);white-space:nowrap;">₹ ${fmt(pendingInterest)}</span>`}
                 </div>
             `;
             }
