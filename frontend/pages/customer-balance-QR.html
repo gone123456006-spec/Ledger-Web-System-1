@@ -1123,8 +1123,8 @@
             <div class="interest-section-inner">
                 <div class="int-row">
                     <div class="int-field">
-                        <label>Rate</label>
-                        <input type="number" id="int_rate_inline" value="2" step="0.1">
+                        <label>Rate (% monthly)</label>
+                        <input type="number" id="int_rate_inline" value="2" step="0.1" title="Monthly rate; compound uses 6-month cycles + remaining months + extra days">
                     </div>
                     <div class="int-field">
                         <label>Compound Month</label>
@@ -1275,6 +1275,8 @@
         let selectedIdx = null;
         let ctxTargetIdx = null;
         let pendingInterest = 0;
+        /** Simple mode: unposted segment lines from last Calculate (date + amount); used for breakdown and Add as Debit. */
+        let pendingInterestSegments = [];
         let deleteTargetIdx = null;
         let draftRows = [{ date: '', nar: '', cr: '', dr: '', entryType: null }];
         /** Draft row(s) at bottom of Interest module table (same flow as Account Statement). */
@@ -1300,6 +1302,7 @@
                     rowInterestMap: JSON.parse(JSON.stringify(rowInterestMap || {})),
                     interestApplied: JSON.parse(JSON.stringify(interestApplied || [])),
                     pendingInterest: pendingInterest,
+                    pendingInterestSegments: JSON.parse(JSON.stringify(pendingInterestSegments || [])),
                     interestHasCalcResult: interestHasCalcResult,
                     interestLastCompMonth: interestLastCompMonth,
                     lastInterestCalculatedDate: lastInterestCalculatedDate,
@@ -1329,6 +1332,9 @@
                 rowInterestMap = JSON.parse(JSON.stringify(s.rowInterestMap || {}));
                 interestApplied = JSON.parse(JSON.stringify(s.interestApplied || []));
                 pendingInterest = parseFloat(s.pendingInterest) || 0;
+                pendingInterestSegments = Array.isArray(s.pendingInterestSegments)
+                    ? JSON.parse(JSON.stringify(s.pendingInterestSegments))
+                    : [];
                 interestHasCalcResult = !!s.interestHasCalcResult;
                 interestLastCompMonth = parseInt(s.interestLastCompMonth, 10) || 0;
                 lastInterestCalculatedDate = s.lastInterestCalculatedDate != null ? String(s.lastInterestCalculatedDate) : '';
@@ -1401,6 +1407,7 @@
             if (!obj || typeof obj !== 'object') return;
             rowInterestMap = obj.rowInterestMap && typeof obj.rowInterestMap === 'object' ? obj.rowInterestMap : {};
             pendingInterest = parseFloat(obj.pendingInterest) || 0;
+            pendingInterestSegments = Array.isArray(obj.pendingInterestSegments) ? obj.pendingInterestSegments : [];
             interestApplied = Array.isArray(obj.interestApplied) ? obj.interestApplied : [];
             interestHasCalcResult = !!obj.interestHasCalcResult;
             interestLastCompMonth = parseInt(obj.interestLastCompMonth, 10) || 0;
@@ -1423,6 +1430,7 @@
                 const payload = {
                     rowInterestMap,
                     pendingInterest,
+                    pendingInterestSegments,
                     interestApplied,
                     interestHasCalcResult,
                     interestLastCompMonth,
@@ -1440,6 +1448,102 @@
         function isInterestNarrationText(nar) {
             const t = String(nar || '').trim().toLowerCase();
             return /^interest(\s|$)/i.test(t);
+        }
+
+        function isStatementInterestDebitNarration(nar) {
+            const t = String(nar || '').trim().toLowerCase();
+            if (!t) return false;
+            if (t.indexOf('interest credit') >= 0 || /^interest\s*credit/.test(t)) return false;
+            if (t === 'interest debit') return true;
+            if (t.indexOf('compound interest') >= 0) return true;
+            if (/^interest(\s|$)/i.test(t) && t.indexOf('credit') < 0) return true;
+            return false;
+        }
+
+        function isStatementInterestDebitTx(tx) {
+            if (!tx || !isStatementInterestDebitNarration(tx.narration)) return false;
+            return round2(effectiveAmounts(tx).debit || 0) > 0.005;
+        }
+
+        /** True if statement already has any Interest Debit on this date (any amount). */
+        function hasStatementInterestDebitOnDate(dateStr, sortedTx) {
+            const d = normalizeStatementDateInput(dateStr);
+            if (!d) return false;
+            return (sortedTx || []).some(function (tx) {
+                return isStatementInterestDebitTx(tx) && normalizeStatementDateInput(tx.date) === d;
+            });
+        }
+
+        /** Signed balance before date, excluding posted Interest Debit rows (money principal at period start). */
+        function getPrincipalBalanceBeforeDate(sorted, beforeDate) {
+            let bal = openingBalanceWithBackdatedAdjustments(sorted || []);
+            const cutoff = beforeDate instanceof Date && !isNaN(beforeDate.getTime()) ? beforeDate : null;
+            (sorted || []).forEach(function (tx) {
+                const d = parseDateOnly(normalizeStatementDateInput(tx && tx.date));
+                if (!(d instanceof Date) || isNaN(d.getTime())) return;
+                if (cutoff && d >= cutoff) return;
+                if (isStatementInterestDebitTx(tx)) return;
+                bal = snapInterestRunningBalance(bal + txDeltaForCurrentBalance(tx));
+            });
+            return bal;
+        }
+
+        /** Dr base for new interest — money owed excluding posted Interest Debit lines (avoids interest-on-interest). */
+        function getMoneyPrincipalForInterest(sorted, beforeDate, runningBalFallback) {
+            const money = snapDebitPrincipal(getPrincipalBalanceBeforeDate(sorted, beforeDate));
+            if (money > 0.005) return money;
+            return snapDebitPrincipal(runningBalFallback || 0);
+        }
+
+        function sortedStatementByDateAndIndex(sorted) {
+            return [...(sorted || [])]
+                .map(function (tx, stmtIdx) {
+                    return { tx: tx, stmtIdx: stmtIdx };
+                })
+                .sort(function (a, b) {
+                    const da = parseDateOnly(normalizeStatementDateInput(a.tx && a.tx.date));
+                    const db = parseDateOnly(normalizeStatementDateInput(b.tx && b.tx.date));
+                    const d = (da instanceof Date && db instanceof Date && !isNaN(da) && !isNaN(db))
+                        ? da - db : String((a.tx && a.tx.date) || '').localeCompare(String((b.tx && b.tx.date) || ''));
+                    if (d !== 0) return d;
+                    return (a.stmtIdx || 0) - (b.stmtIdx || 0);
+                })
+                .map(function (e) { return e.tx; });
+        }
+
+        /**
+         * True if this principal is exactly the statement balance right after a posted Interest Debit row
+         * (e.g. 1,25,858.13) — skip re-charging that leg only. Real legs like 75,858.13 return false.
+         */
+        function isPostedInterestBalanceLeg(principalAmount, sorted) {
+            const target = snapDebitPrincipal(principalAmount);
+            if (target <= 0.005) return false;
+            const list = sortedStatementByDateAndIndex(sorted);
+            for (let i = 0; i < list.length; i++) {
+                if (!isStatementInterestDebitTx(list[i])) continue;
+                let bal = openingBalanceWithBackdatedAdjustments(list);
+                for (let j = 0; j <= i; j++) {
+                    bal = snapInterestRunningBalance(bal + txDeltaForCurrentBalance(list[j]));
+                }
+                if (Math.abs(snapDebitPrincipal(bal) - target) < 1) return true;
+            }
+            return false;
+        }
+
+        /** True when a credit matches a posted Interest Debit (interest paid off — do not re-accrue on old balance). */
+        function creditSettlesPostedInterestDebit(tx, sorted) {
+            if (!tx) return false;
+            const eff = effectiveAmounts(tx);
+            const creditAmt = round2(eff.credit || 0);
+            if (creditAmt <= 0) return false;
+            const txD = parseDateOnly(normalizeStatementDateInput(tx.date));
+            if (!(txD instanceof Date) || isNaN(txD.getTime())) return false;
+            return (sorted || []).some(function (other) {
+                if (!isStatementInterestDebitTx(other)) return false;
+                const intD = parseDateOnly(normalizeStatementDateInput(other.date));
+                if (!(intD instanceof Date) || isNaN(intD.getTime()) || intD > txD) return false;
+                return Math.abs(round2(effectiveAmounts(other).debit || 0) - creditAmt) < 0.01;
+            });
         }
 
         /** Simple-mode segment rows (Interest Debit from this run), one entry per ⊕ line. */
@@ -1461,14 +1565,381 @@
             return round2(listSimpleModeSegmentInterestDebits(applied).reduce((s, r) => s + r.amount, 0));
         }
 
-        /** Simple mode: only the latest dated segment is posted via Add as Debit/Credit. */
-        function getLatestSimpleModeSegmentInterestAmount(applied) {
+        function isStatementInterestDebitPosted(dateStr, amount, sortedTx) {
+            const d = normalizeStatementDateInput(dateStr);
+            const amt = round2(Math.abs(Number(amount) || 0));
+            if (!d || amt <= 0) return false;
+            if (hasStatementInterestDebitOnDate(d, sortedTx)) return true;
+            return (sortedTx || []).some(function (tx) {
+                if (!isStatementInterestDebitTx(tx)) return false;
+                if (normalizeStatementDateInput(tx.date) !== d) return false;
+                const posted = round2(effectiveAmounts(tx).debit || 0);
+                return Math.abs(posted - amt) < 0.01;
+            });
+        }
+
+        /** Latest calendar date of a posted Interest Debit (on or before uptoCap). Used to avoid double compound accrual. */
+        function getLatestStatementInterestDebitDate(sortedTx, uptoCap) {
+            let maxD = null;
+            (sortedTx || []).forEach(function (tx) {
+                if (!isStatementInterestDebitTx(tx)) return;
+                const eff = effectiveAmounts(tx);
+                const norm = normalizeStatementDateInput(tx.date);
+                const d = parseDateOnly(norm || (tx && tx.date) || '');
+                if (!(d instanceof Date) || isNaN(d.getTime())) return;
+                if (uptoCap instanceof Date && !isNaN(uptoCap.getTime()) && d > uptoCap) return;
+                if (!maxD || d.getTime() > maxD.getTime()) maxD = d;
+            });
+            return maxD;
+        }
+
+        /** Calendar day immediately after d (local date). */
+        function addOneCalendarDay(d) {
+            if (!(d instanceof Date) || isNaN(d.getTime())) return null;
+            const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+            return x;
+        }
+
+        function listPendingSimpleModeSegmentInterestDebits(applied, sortedTx) {
+            return listSimpleModeSegmentInterestDebits(applied).filter(function (seg) {
+                return !isStatementInterestDebitPosted(seg.date, seg.amount, sortedTx);
+            });
+        }
+
+        function sumPendingSimpleModeSegmentInterestDebits(applied, sortedTx) {
+            return round2(listPendingSimpleModeSegmentInterestDebits(applied, sortedTx).reduce(function (s, r) {
+                return s + r.amount;
+            }, 0));
+        }
+
+        function readCompoundMonthFromUi() {
+            const el = document.getElementById('int_comp_inline');
+            return parseInt(el && el.value, 10) || 0;
+        }
+
+        /** True when compound month is blank/zero (simple segment-wise interest). */
+        function isSimpleInterestModeUi() {
+            return readCompoundMonthFromUi() <= 0;
+        }
+
+        /** Pending segments from last calc and/or interestApplied; excludes rows already on the statement. */
+        function resolvePendingSimpleInterestSegments(applied, sortedTx, segmentCache) {
+            let segs = listPendingSimpleModeSegmentInterestDebits(applied, sortedTx);
+            if (!segs.length && Array.isArray(segmentCache) && segmentCache.length) {
+                segs = segmentCache
+                    .map(function (seg) {
+                        return {
+                            date: String(seg && seg.date ? seg.date : '').trim(),
+                            amount: round2(Math.abs(Number(seg && seg.amount != null ? seg.amount : 0)))
+                        };
+                    })
+                    .filter(function (seg) {
+                        return seg.date && seg.amount > 0 && !isStatementInterestDebitPosted(seg.date, seg.amount, sortedTx);
+                    });
+                segs.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+            }
+            return segs;
+        }
+
+        /** All unposted simple segments (⊕ rows + cache), merged without duplicates — used for Add as Debit. */
+        function collectSimpleInterestSegmentsToPost(sortedTx) {
+            const byKey = new Map();
+            function addSeg(seg) {
+                const dateNorm = normalizeStatementDateInput(seg && seg.date);
+                const amount = round2(Math.abs(Number(seg && seg.amount != null ? seg.amount : 0)));
+                if (!dateNorm || amount <= 0) return;
+                if (isStatementInterestDebitPosted(dateNorm, amount, sortedTx)) return;
+                byKey.set(dateNorm + '|' + amount, { date: dateNorm, amount: amount });
+            }
+            resolvePendingSimpleInterestSegments(interestApplied, sortedTx, pendingInterestSegments).forEach(addSeg);
+            listSimpleModeSegmentInterestDebits(interestApplied).forEach(function (seg) { addSeg(seg); });
+            (pendingInterestSegments || []).forEach(function (seg) { addSeg(seg); });
+            return Array.from(byKey.values()).sort(function (a, b) {
+                return String(a.date).localeCompare(String(b.date));
+            });
+        }
+
+        function calendarDayDiffInterest(a, b) {
+            if (!(a instanceof Date) || !(b instanceof Date)) return 0;
+            const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+            const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+            return Math.max(0, Math.floor((ub - ua) / (1000 * 60 * 60 * 24)));
+        }
+
+        /**
+         * Compound interest: compounding every `compIntervalMonths` (e.g. 6), then simple months, then extra days.
+         * monthlyInterestRate = % per month (2 → 0.02). Returns final amount and interest (A − original P).
+         */
+        function calcCompoundInterestSixMonthStyle(originalPrincipal, monthlyInterestRatePct, compIntervalMonths, totalDays) {
+            const P0 = Math.max(0, Number(originalPrincipal) || 0);
+            const monthlyRate = (Number(monthlyInterestRatePct) || 0) / 100;
+            const intervalMonths = Math.max(1, parseInt(compIntervalMonths, 10) || 6);
+            const days = Math.max(0, Math.floor(Number(totalDays) || 0));
+            if (P0 <= 0.005 || monthlyRate <= 0 || days <= 0) {
+                return {
+                    finalAmount: round2(P0),
+                    finalInterest: 0,
+                    totalMonths: 0,
+                    extraDays: 0
+                };
+            }
+
+            let principal = P0;
+            let totalMonths = Math.floor(days / 30);
+            const extraDays = days % 30;
+
+            while (totalMonths >= intervalMonths) {
+                const interest = principal * monthlyRate * intervalMonths;
+                principal = principal + interest;
+                totalMonths = totalMonths - intervalMonths;
+            }
+
+            if (totalMonths > 0) {
+                const interest = principal * monthlyRate * totalMonths;
+                principal = principal + interest;
+            }
+
+            if (extraDays > 0) {
+                const monthlyInterest = principal * monthlyRate;
+                const dailyInterest = monthlyInterest / 30;
+                principal = principal + (dailyInterest * extraDays);
+            }
+
+            return {
+                finalAmount: round2(principal),
+                finalInterest: round2(principal - P0),
+                totalMonths: Math.floor(days / 30),
+                extraDays: extraDays
+            };
+        }
+
+        function snapDebitPrincipal(signedBal) {
+            const s = snapInterestRunningBalance(Number(signedBal) || 0);
+            return s > 0.005 ? s : 0;
+        }
+
+        function getSignedBalanceBeforeDate(sorted, beforeDate) {
+            let bal = openingBalanceWithBackdatedAdjustments(sorted || []);
+            const cutoff = beforeDate instanceof Date && !isNaN(beforeDate.getTime()) ? beforeDate : null;
+            (sorted || []).forEach(function (tx) {
+                const d = parseDateOnly(tx && tx.date);
+                if (isNaN(d.getTime())) return;
+                if (cutoff && d >= cutoff) return;
+                bal = snapInterestRunningBalance(bal + txDeltaForCurrentBalance(tx));
+            });
+            return bal;
+        }
+
+        function isCompoundInterestDisplayOnlyRow(r) {
+            const n = String(r && r.narration ? r.narration : '').trim().toLowerCase();
+            return n.indexOf('total compound interest') >= 0 ||
+                n.indexOf('closing balance') >= 0;
+        }
+
+        function isCompoundInterestAccrualRow(r) {
+            if (!r || r.source !== 'segment-calc' || isCompoundInterestDisplayOnlyRow(r)) return false;
+            const amt = round2(Math.abs(Number(r.debit) || 0));
+            if (amt <= 0) return false;
+            const n = String(r.narration || '').trim().toLowerCase();
+            return n.indexOf('compound interest') >= 0 || n === 'interest debit';
+        }
+
+        function listCompoundModeAccrualRows(applied) {
+            const rows = [];
+            (applied || []).forEach(function (r) {
+                if (!isCompoundInterestAccrualRow(r)) return;
+                rows.push({
+                    date: String(r.date || '').trim(),
+                    amount: round2(Math.abs(Number(r.debit) || 0)),
+                    calculatedOn: round2(Math.abs(Number(r.calculatedOn) || 0))
+                });
+            });
+            rows.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)); });
+            return rows;
+        }
+
+        function listPendingCompoundModeAccrualRows(applied, sortedTx) {
+            return listCompoundModeAccrualRows(applied).filter(function (seg) {
+                return !isStatementInterestDebitPosted(seg.date, seg.amount, sortedTx);
+            });
+        }
+
+        function collectCompoundInterestSegmentsToPost(sortedTx) {
+            const byKey = new Map();
+            function addSeg(seg) {
+                const dateNorm = normalizeStatementDateInput(seg && seg.date);
+                const amount = round2(Math.abs(Number(seg && seg.amount != null ? seg.amount : 0)));
+                if (!dateNorm || amount <= 0) return;
+                if (isStatementInterestDebitPosted(dateNorm, amount, sortedTx)) return;
+                byKey.set(dateNorm + '|' + amount, { date: dateNorm, amount: amount });
+            }
+            listPendingCompoundModeAccrualRows(interestApplied, sortedTx).forEach(addSeg);
+            (pendingInterestSegments || []).forEach(addSeg);
+            return Array.from(byKey.values()).sort(function (a, b) {
+                return String(a.date).localeCompare(String(b.date));
+            });
+        }
+
+        /**
+         * Compound interest by transaction-date segments: each range uses the active Dr balance
+         * at segment start. Formula: 6-month (or comp interval) loops, remaining months simple, extra days daily.
+         * Posted rows are not recalculated.
+         */
+        function runCompoundInterestEngine(opts) {
+            const sorted = opts.sorted || [];
+            const periodStart = opts.periodStart;
+            const uptoDate = opts.uptoDate;
+            const compMonth = Math.max(1, parseInt(opts.compMonth, 10) || 6);
+            const monthlyInterestRatePct = Number(opts.monthlyRatePct) || 0;
+            const localYmd = opts.localYmd;
+            const compPeriodDays = compMonth * 30;
+
+            const txEvents = sorted
+                .map(function (tx, stmtIdx) {
+                    const norm = normalizeStatementDateInput(tx && tx.date);
+                    const d = parseDateOnly(norm || (tx && tx.date) || '');
+                    return { tx: tx, date: d, stmtIdx: stmtIdx };
+                })
+                .filter(function (e) {
+                    return e.date instanceof Date && !isNaN(e.date.getTime()) && e.date >= periodStart && e.date <= uptoDate;
+                })
+                .sort(function (a, b) {
+                    const d = a.date - b.date;
+                    if (d !== 0) return d;
+                    return (a.stmtIdx || 0) - (b.stmtIdx || 0);
+                });
+
+            let runningBal = getSignedBalanceBeforeDate(sorted, periodStart);
+            const principalAtStart = snapDebitPrincipal(runningBal);
+            let totalCredits = 0;
+            const accrualRows = [];
+            let segStart = null;
+            let segmentCalcPrincipal = principalAtStart;
+
+            function addCompoundSegment(segEndDate, principalForSegment) {
+                const days = calendarDayDiffInterest(segStart, segEndDate);
+                const principal = snapDebitPrincipal(principalForSegment);
+                if (days <= 0 || principal <= 0 || isZeroForInterestSegment(principal)) return;
+                if (principal <= 0 || monthlyInterestRatePct <= 0) return;
+                const compoundResult = calcCompoundInterestSixMonthStyle(
+                    principal, monthlyInterestRatePct, compMonth, days
+                );
+                const interest = compoundResult.finalInterest;
+                if (interest <= 0) return;
+                const segDateStr = localYmd(segEndDate);
+                if (hasStatementInterestDebitOnDate(segDateStr, sorted)) return;
+                if (isStatementInterestDebitPosted(segDateStr, interest, sorted)) return;
+                const principalLabel = fmt(principal);
+                accrualRows.push({
+                    date: segDateStr,
+                    debit: interest,
+                    calculatedOn: round2(principal),
+                    narration: days >= compPeriodDays
+                        ? 'Compound Interest (' + compMonth + 'm) @ ₹' + principalLabel
+                        : 'Compound Interest (' + days + 'd) @ ₹' + principalLabel,
+                    runningBalance: compoundResult.finalAmount,
+                    segmentDays: days,
+                    monthsPart: compoundResult.totalMonths,
+                    extraDaysPart: compoundResult.extraDays
+                });
+            }
+
+            if (!txEvents.length) {
+                const baseTotalDaysOpen = calendarDayDiffInterest(periodStart, uptoDate);
+                if (principalAtStart <= 0.005) {
+                    return {
+                        accrualRows: [],
+                        totalNewInterest: 0,
+                        totalCredits: 0,
+                        principalAtStart: round2(principalAtStart),
+                        principalAtEnd: round2(principalAtStart),
+                        closingBalance: round2(principalAtStart),
+                        baseTotalDays: baseTotalDaysOpen,
+                        monthsPart: Math.floor(baseTotalDaysOpen / 30),
+                        extraDaysPart: baseTotalDaysOpen % 30,
+                        noTransactionsInPeriod: true
+                    };
+                }
+                segStart = new Date(periodStart);
+                segmentCalcPrincipal = principalAtStart;
+                addCompoundSegment(uptoDate, segmentCalcPrincipal);
+                const totalNewInterestOpen = round2(accrualRows.reduce(function (s, r) {
+                    return s + (Number(r.debit) || 0);
+                }, 0));
+                const principalAtEndOpen = snapDebitPrincipal(runningBal);
+                const closingOpen = round2(principalAtEndOpen + totalNewInterestOpen);
+                return {
+                    accrualRows: accrualRows,
+                    totalNewInterest: totalNewInterestOpen,
+                    totalCredits: 0,
+                    principalAtStart: round2(principalAtStart),
+                    principalAtEnd: round2(principalAtEndOpen),
+                    closingBalance: closingOpen,
+                    baseTotalDays: baseTotalDaysOpen,
+                    monthsPart: Math.floor(baseTotalDaysOpen / 30),
+                    extraDaysPart: baseTotalDaysOpen % 30
+                };
+            }
+
+            segStart = new Date(periodStart);
+            segmentCalcPrincipal = principalAtStart;
+            txEvents.forEach(function (e) {
+                const tx = e.tx;
+                const date = e.date;
+                runningBal = snapInterestRunningBalance(runningBal + txDeltaForCurrentBalance(tx));
+                if (isStatementInterestDebitTx(tx)) {
+                    segmentCalcPrincipal = snapDebitPrincipal(runningBal);
+                    return;
+                }
+                const eff = effectiveAmounts(tx);
+                totalCredits = round2(totalCredits + (eff.credit || 0));
+                const prevCalc = segmentCalcPrincipal;
+                const nextCalc = snapDebitPrincipal(runningBal);
+                if (Math.abs(nextCalc - prevCalc) >= 0.01) {
+                    if (!isPostedInterestBalanceLeg(prevCalc, sorted)) {
+                        addCompoundSegment(date, prevCalc);
+                    }
+                    segStart = new Date(date);
+                    segmentCalcPrincipal = nextCalc;
+                } else if (nextCalc > 0.005) {
+                    segmentCalcPrincipal = nextCalc;
+                }
+            });
+            if (segStart != null) {
+                addCompoundSegment(uptoDate, segmentCalcPrincipal);
+            }
+
+            const totalNewInterest = round2(accrualRows.reduce(function (s, r) {
+                return s + (Number(r.debit) || 0);
+            }, 0));
+            const principalAtEnd = snapDebitPrincipal(runningBal);
+            const closingBalance = round2(principalAtEnd + totalNewInterest);
+            const baseTotalDays = calendarDayDiffInterest(periodStart, uptoDate);
+
+            return {
+                accrualRows: accrualRows,
+                totalNewInterest: totalNewInterest,
+                totalCredits: round2(totalCredits),
+                principalAtStart: round2(principalAtStart),
+                principalAtEnd: round2(principalAtEnd),
+                closingBalance: closingBalance,
+                baseTotalDays: baseTotalDays,
+                monthsPart: Math.floor(baseTotalDays / 30),
+                extraDaysPart: baseTotalDays % 30
+            };
+        }
+
+        /** Simple mode: sum of all unposted segments (Add as Debit total). */
+        function getLatestSimpleModeSegmentInterestAmount(applied, sortedTxOpt) {
+            if (sortedTxOpt) {
+                return sumPendingSimpleModeSegmentInterestDebits(applied, sortedTxOpt);
+            }
             const segments = listSimpleModeSegmentInterestDebits(applied);
             if (!segments.length) return 0;
             return round2(segments[segments.length - 1].amount);
         }
 
-        /** Footer HTML: each segment on its own line, optional total, and amount to post (latest segment). */
+        /** Footer: pending segments only; Add as Debit = sum of unposted amounts. */
         function buildInterestResultBreakdownHtml(segments, totalAmt, applyAmt) {
             if (!segments || segments.length === 0) return '';
             const lineHtml = segments.map(seg => {
@@ -1478,16 +1949,16 @@
                     '<span style="font-weight:600;color:var(--danger);">₹ ' + fmt(seg.amount) + '</span></div>';
             });
             const total = round2(totalAmt != null ? totalAmt : segments.reduce((sum, r) => sum + r.amount, 0));
-            const toPost = round2(applyAmt != null ? applyAmt : (segments.length ? segments[segments.length - 1].amount : total));
+            const toPost = round2(applyAmt != null ? applyAmt : total);
             let html = '<div style="min-width:140px;">' + lineHtml.join('');
             if (segments.length > 1) {
                 html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:4px 0 0;margin-top:4px;border-top:1px dashed var(--border);">' +
                     '<span style="font-weight:600;color:var(--text);">Total</span>' +
                     '<span style="font-weight:700;color:var(--muted);">₹ ' + fmt(total) + '</span></div>';
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:4px 0 0;">' +
-                    '<span style="font-weight:700;color:var(--text);">Add as Debit</span>' +
-                    '<span style="font-weight:800;color:var(--danger);">₹ ' + fmt(toPost) + '</span></div>';
             }
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;padding:4px 0 0;margin-top:4px;border-top:1px dashed var(--border);">' +
+                '<span style="font-weight:700;color:var(--text);">Add as Debit</span>' +
+                '<span style="font-weight:800;color:var(--danger);">₹ ' + fmt(toPost) + '</span></div>';
             return html + '</div>';
         }
 
@@ -1700,7 +2171,16 @@
                 tbody.appendChild(tr);
             });
 
+            const sortedIntTbl = [...(transactions || [])].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             interestApplied.forEach((ap, j) => {
+                if (ap && ap.source === 'segment-calc' && !isCompoundInterestDisplayOnlyRow(ap)) {
+                    const apNar = String(ap.narration || '').trim().toLowerCase();
+                    if (apNar === 'interest debit' || apNar.indexOf('compound interest') >= 0) {
+                        const apAmt = round2(Math.abs(Number(ap.debit) || 0));
+                        if (apAmt > 0 && (hasStatementInterestDebitOnDate(ap.date, sortedIntTbl) ||
+                            isStatementInterestDebitPosted(ap.date, apAmt, sortedIntTbl))) return;
+                    }
+                }
                 const tr = document.createElement('tr');
                 tr.className = 'interest-row interest-module-recorded';
 
@@ -1885,12 +2365,17 @@
             }
 
 
-            const simpleInterestSegments = interestLastCompMonth > 0
-                ? []
-                : listSimpleModeSegmentInterestDebits(interestApplied);
-            const breakdownTotal = interestLastCompMonth > 0
-                ? pendingInterest
-                : sumSimpleModeSegmentInterestDebits(interestApplied);
+            const sortedRestore = [...(transactions || [])].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+            const useSimpleBreakdown = isSimpleInterestModeUi() || interestLastCompMonth <= 0;
+            const simpleInterestSegments = useSimpleBreakdown
+                ? collectSimpleInterestSegmentsToPost(sortedRestore)
+                : [];
+            const breakdownTotal = useSimpleBreakdown
+                ? round2(simpleInterestSegments.reduce(function (s, r) { return s + r.amount; }, 0))
+                : pendingInterest;
+            if (useSimpleBreakdown && interestHasCalcResult) {
+                pendingInterest = breakdownTotal;
+            }
             const interestBreakdownHtml = buildInterestResultBreakdownHtml(simpleInterestSegments, breakdownTotal, pendingInterest);
 
             if (res) {
@@ -2059,7 +2544,7 @@
         }
 
         function isInterestDebitTx(tx) {
-            return isInterestNarrationText(tx && tx.narration);
+            return isStatementInterestDebitTx(tx);
         }
 
         function txDeltaForCurrentBalance(tx) {
@@ -3505,9 +3990,13 @@
             const compMonth = parseInt(document.getElementById('int_comp_inline').value) || 0;
             const monthlyRate = rate / 100;
 
-            if (!Number.isFinite(rate) || rate <= 0) { showToast('⚠️ Enter valid monthly rate.'); return; }
+            if (!Number.isFinite(rate) || rate <= 0) {
+                showToast(compMonth > 0 ? '⚠️ Enter valid monthly interest rate (%).' : '⚠️ Enter valid monthly rate.');
+                return;
+            }
             if (isNaN(uptoDate)) { showToast('⚠️ Enter valid Upto date.'); return; }
 
+            normalizeStatementTransactionDatesInPlace(transactions);
             const sorted = [...transactions].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
             const openingDateParsed = parseDateOnly(customerData.openingDate || todayStr());
             // Use loan/opening date as period start for compound statement logic.
@@ -3530,8 +4019,11 @@
             interestApplied = (interestApplied || []).filter(r => !(r && r.source === 'segment-calc'));
 
             const txEvents = sorted
-                .map((tx, idx) => ({ tx, date: parseDateOnly(tx.date), stmtIdx: idx }))
-                .filter(e => !isNaN(e.date) && e.date >= startDate && e.date <= uptoDate)
+                .map((tx, idx) => {
+                    const norm = normalizeStatementDateInput(tx && tx.date);
+                    return { tx, date: parseDateOnly(norm || (tx && tx.date) || ''), stmtIdx: idx };
+                })
+                .filter(e => e.date instanceof Date && !isNaN(e.date.getTime()) && e.date >= startDate && e.date <= uptoDate)
                 .sort((a, b) => {
                     const d = a.date - b.date;
                     if (d !== 0) return d;
@@ -3556,250 +4048,191 @@
                 return Math.max(0, Math.floor((ub - ua) / (1000 * 60 * 60 * 24)));
             }
 
-            function calculateCompoundStatementStyle(principal, monthlyRatePct, startDateX, endDateX, compoundMonths, fixedExtraDays) {
-                const rows = [];
-                const P = Number(principal) || 0;
-                const R = Number(monthlyRatePct) || 0;
-                const intervalMonths = Math.max(1, parseInt(compoundMonths, 10) || 6);
-                const start = parseDateOnly(startDateX);
-                const end = parseDateOnly(endDateX);
-                if (!Number.isFinite(P) || !Number.isFinite(R) || P <= 0 || R <= 0 || isNaN(start) || isNaN(end) || end <= start) {
-                    return { rows, totalInterest: 0, finalBalance: round2(P), totalMonths: 0, extraDays: 0 };
-                }
-
-                const totalDays = calendarDayDiff(start, end);
-                const totalMonths = Math.floor(totalDays / 30);
-                const baseExtraDays = totalDays % 30;
-                const extraDays = baseExtraDays + Math.max(0, parseInt(fixedExtraDays, 10) || 0);
-
-                const fullBlocks = Math.floor(totalMonths / intervalMonths);
-                const remainingMonths = totalMonths % intervalMonths;
-                const remainderBase = P * Math.pow(1 + ((R * intervalMonths) / 100), fullBlocks);
-
-                let A = P;
-                let cursor = new Date(start);
-                for (let i = 0; i < fullBlocks; i++) {
-                    const opening = A;
-                    const interest = Math.round(opening * ((R * intervalMonths) / 100));
-                    A += interest;
-                    cursor = addMonthsSafe(cursor, intervalMonths);
-                    rows.push({ date: localYmd(cursor), debit: Math.round(interest), calculatedOn: Math.round(opening), balance: Math.round(A) });
-                }
-                if (remainingMonths > 0) {
-                    const opening = remainderBase;
-                    const interest = Math.round((opening * R * remainingMonths) / 100);
-                    A += interest;
-                    cursor = addMonthsSafe(cursor, remainingMonths);
-                    rows.push({ date: localYmd(cursor), debit: Math.round(interest), calculatedOn: Math.round(opening), balance: Math.round(A) });
-                }
-                if (extraDays > 0) {
-                    const opening = remainderBase;
-                    const dailyInterest = Math.round((opening * R * extraDays) / (100 * 30));
-                    A += dailyInterest;
-                    rows.push({ date: localYmd(end), debit: Math.round(dailyInterest), calculatedOn: Math.round(opening), balance: Math.round(A) });
-                }
-                return { rows, totalInterest: Math.round(A - P), finalBalance: Math.round(A), totalMonths, extraDays };
-            }
-
             if (compMonth > 0) {
-                // Compound statement method:
-                // 1) Full principal compound for full period (+5 extra days)
-                // 2) For each credit/payment, compute separate credited-interest from credit date to end
-                // 3) Net interest = full principal interest - total credited interest
-                // 4) Closing = pending principal + net interest
-                // After balance hits zero (settled), a new draw uses that row's date and post-zero closing as principal — not the original opening.
                 const postZeroCompound = getCompoundRestartAfterZero(sorted);
-                let principalBase = Math.abs(snapInterestRunningBalance(openingBalanceWithBackdatedAdjustments(sorted)));
                 let compoundPeriodStart = startDate;
                 if (postZeroCompound) {
-                    principalBase = postZeroCompound.principalBase;
                     compoundPeriodStart = postZeroCompound.restartDate;
-                }
-                if (!Number.isFinite(principalBase) || principalBase <= 0) {
-                    showToast('⚠️ Principal must be greater than zero for compound interest.');
-                    return;
                 }
                 if (compoundPeriodStart > uptoDate) {
                     showToast('⚠️ Upto date must be on or after the first row after a zero balance for compound interest.');
                     return;
                 }
 
-                const baseTotalDays = calendarDayDiff(compoundPeriodStart, uptoDate);
-                const monthsPart = Math.floor(baseTotalDays / 30);
-                const extraDaysPart = baseTotalDays % 30;
+                /** Compound uses full period + per-balance legs (e.g. 75,858 then 50,000); do not skip legs after resume. */
+                let compoundEnginePeriodStart = compoundPeriodStart;
+                if (compoundEnginePeriodStart.getTime() > uptoDate.getTime()) {
+                    showToast('ℹ️ Interest is already on the statement through your Upto date — nothing new to calculate.');
+                    return;
+                }
 
-                const fullComp = calculateCompoundStatementStyle(
-                    principalBase,
-                    rate,
-                    dateToYMD(compoundPeriodStart),
-                    dateToYMD(uptoDate),
-                    compMonth,
-                    0
-                );
-                const principalLabel = postZeroCompound
-                    ? `New balance after settlement (from ${dateToYMD(postZeroCompound.restartDate)})`
-                    : `Full Principal Interest (${monthsPart}m + ${extraDaysPart}d / ${baseTotalDays}d)`;
-                fullComp.rows.forEach((step, idx) => {
+                const engine = runCompoundInterestEngine({
+                    sorted: sorted,
+                    periodStart: compoundEnginePeriodStart,
+                    uptoDate: uptoDate,
+                    compMonth: compMonth,
+                    monthlyRatePct: rate,
+                    localYmd: localYmd
+                });
+
+                if (engine.noTransactionsInPeriod) {
+                    showToast('⚠️ Principal must be greater than zero for compound interest (set opening balance Dr or add a debit).');
+                    return;
+                }
+
+                if (engine.principalAtStart <= 0.005 && engine.totalNewInterest <= 0.005) {
+                    showToast('⚠️ Principal must be greater than zero for compound interest.');
+                    return;
+                }
+
+                if (engine.principalAtStart > 0.005 && engine.totalNewInterest <= 0.005) {
+                    showToast('ℹ️ No new compound interest to add (already on the statement, no debit days in range, or balance not Dr).');
+                    return;
+                }
+
+                let rowSeed = Date.now();
+                engine.accrualRows.forEach(function (row, idx) {
                     interestApplied.push({
-                        id: Date.now() + idx,
-                        date: step.date,
-                        narration: idx === 0 ? principalLabel : 'Full Principal Interest',
+                        id: rowSeed + idx,
+                        date: row.date,
+                        narration: row.narration,
                         credit: 0,
-                        debit: round2(Math.abs(step.debit)),
-                        calculatedOn: round2(Math.abs(step.calculatedOn)),
-                        runningBalance: round2(step.balance),
-                        source: 'segment-calc'
+                        debit: round2(row.debit),
+                        calculatedOn: round2(row.calculatedOn),
+                        runningBalance: round2(row.runningBalance),
+                        source: 'segment-calc',
+                        compoundAccrual: true
                     });
                 });
+                rowSeed += engine.accrualRows.length + 1;
 
-                // Credit/payment rows during period (exclude interest narration rows)
-                const creditsByDate = {};
-                const txEventsForCompoundCredits = postZeroCompound
-                    ? txEvents.filter(e => e.date >= postZeroCompound.restartDate)
-                    : txEvents;
-                txEventsForCompoundCredits.forEach(({ tx, date }) => {
-                    if (!tx || isInterestNarrationText(tx.narration)) return;
-                    const eff = effectiveAmounts(tx);
-                    const c = round2(eff.credit || 0);
-                    if (c <= 0) return;
-                    const k = localYmd(date);
-                    creditsByDate[k] = round2((creditsByDate[k] || 0) + c);
-                });
-
-                const creditDates = Object.keys(creditsByDate).sort();
-                let totalCreditedInterest = 0;
-                let totalCredits = 0;
-                let rowSeed = Date.now() + 1000;
-                creditDates.forEach((d) => {
-                    const creditAmount = round2(creditsByDate[d] || 0);
-                    if (creditAmount <= 0) return;
-                    const cd = parseDateOnly(d);
-                    if (isNaN(cd) || cd >= uptoDate) return;
-                    totalCredits = round2(totalCredits + creditAmount);
-
-                    const creditComp = calculateCompoundStatementStyle(
-                        creditAmount,
-                        rate,
-                        cd,
-                        uptoDate,
-                        compMonth,
-                        0
-                    );
-                    const creditInterest = round2(Math.abs(creditComp.totalInterest));
-                    totalCreditedInterest = round2(totalCreditedInterest + creditInterest);
-
-                    interestApplied.push({
-                        id: rowSeed++,
-                        date: d,
-                        narration: `Credit Received`,
-                        credit: creditAmount,
-                        debit: 0,
-                        calculatedOn: creditAmount,
-                        runningBalance: '',
-                        source: 'segment-calc'
-                    });
-                    creditComp.rows.forEach((seg) => {
-                        interestApplied.push({
-                            id: rowSeed++,
-                            date: seg.date,
-                            narration: `Credited Interest (${d} to ${seg.date})`,
-                            credit: round2(Math.abs(seg.debit)),
-                            debit: 0,
-                            calculatedOn: round2(Math.abs(seg.calculatedOn)),
-                            runningBalance: '',
-                            source: 'segment-calc'
-                        });
-                    });
-                });
-
-                totalInterest = round2(Math.abs(fullComp.totalInterest) - totalCreditedInterest);
-                const pendingPrincipal = round2(principalBase - totalCredits);
-                runningBal = round2(pendingPrincipal + totalInterest);
+                totalInterest = engine.totalNewInterest;
+                runningBal = engine.closingBalance;
                 compoundBreakdown = {
-                    principalBase,
-                    totalCompoundInterest: round2(Math.abs(fullComp.totalInterest)),
-                    totalCreditedInterest: round2(totalCreditedInterest),
-                    pendingPrincipal: round2(pendingPrincipal),
-                    totalDays: baseTotalDays,
-                    monthsPart,
-                    extraDaysPart
+                    principalBase: engine.principalAtStart,
+                    totalCompoundInterest: engine.totalNewInterest,
+                    totalCredits: engine.totalCredits,
+                    pendingPrincipal: engine.principalAtEnd,
+                    totalDays: engine.baseTotalDays,
+                    monthsPart: engine.monthsPart,
+                    extraDaysPart: engine.extraDaysPart,
+                    accrualRows: engine.accrualRows
                 };
 
-                // Statement totals row
+                pendingInterestSegments = engine.accrualRows.map(function (r) {
+                    return { date: r.date, amount: r.debit };
+                });
+
                 interestApplied.push({
                     id: rowSeed++,
                     date: localYmd(uptoDate),
-                    narration: `Total Compound Interest`,
+                    narration: 'Total Compound Interest',
                     credit: 0,
-                    debit: round2(Math.abs(fullComp.totalInterest)),
-                    calculatedOn: principalBase,
+                    debit: 0,
+                    calculatedOn: engine.totalNewInterest,
                     runningBalance: '',
                     source: 'segment-calc'
                 });
                 interestApplied.push({
                     id: rowSeed++,
                     date: localYmd(uptoDate),
-                    narration: `Minus Credited Interest`,
-                    credit: round2(totalCreditedInterest),
-                    debit: 0,
-                    calculatedOn: totalCredits,
-                    runningBalance: '',
-                    source: 'segment-calc'
-                });
-                interestApplied.push({
-                    id: rowSeed++,
-                    date: localYmd(uptoDate),
-                    narration: `Closing Balance (Pending Principal + Final Interest)`,
+                    narration: 'Closing Balance (Principal + Interest − Credits)',
                     credit: 0,
                     debit: 0,
-                    calculatedOn: round2(pendingPrincipal),
-                    runningBalance: round2(runningBal),
+                    calculatedOn: engine.principalAtEnd,
+                    runningBalance: engine.closingBalance,
                     source: 'segment-calc'
                 });
             } else {
-                // Simple segment mode: one interest entry per segment (no capitalization).
-                let segStart = new Date(startDate);
-                const addSegment = (segEndDate) => {
+                // Simple segment mode: only NEW interest after last posted Interest Debit (no double accrual).
+                let simplePeriodStart = new Date(startDate);
+                const latestPostedInt = getLatestStatementInterestDebitDate(sorted, uptoDate);
+                if (latestPostedInt instanceof Date && !isNaN(latestPostedInt.getTime())) {
+                    const resumeAfter = addOneCalendarDay(latestPostedInt);
+                    if (resumeAfter instanceof Date && !isNaN(resumeAfter.getTime()) &&
+                        resumeAfter.getTime() > simplePeriodStart.getTime()) {
+                        simplePeriodStart = resumeAfter;
+                    }
+                }
+                if (simplePeriodStart.getTime() > uptoDate.getTime()) {
+                    showToast('ℹ️ Interest is already on the statement through your Upto date — nothing new to calculate.');
+                    return;
+                }
+
+                runningBal = snapInterestRunningBalance(getSignedBalanceBeforeDate(sorted, simplePeriodStart));
+                let calcPrincipal = getMoneyPrincipalForInterest(sorted, simplePeriodStart, runningBal);
+                let segmentPrincipal = calcPrincipal;
+                let segStart = new Date(simplePeriodStart);
+
+                const closeSegment = function (segEndDate, principalForSegment) {
                     const days = Math.round((segEndDate - segStart) / (1000 * 60 * 60 * 24));
-                    if (days <= 0 || isZeroForInterestSegment(runningBal)) return;
-                    const segInterest = Math.round(runningBal * monthlyRate * (days / 30));
+                    const principalBase = snapDebitPrincipal(principalForSegment);
+                    if (days <= 0 || principalBase <= 0 || isZeroForInterestSegment(principalBase)) return;
+                    const segInterest = Math.round(principalBase * monthlyRate * (days / 30));
                     if (segInterest === 0) return;
+                    const segDateStr = localYmd(segEndDate);
+                    if (hasStatementInterestDebitOnDate(segDateStr, sorted)) return;
+                    if (isStatementInterestDebitPosted(segDateStr, segInterest, sorted)) return;
                     interestApplied.push({
                         id: Date.now() + interestApplied.length,
-                        date: localYmd(segEndDate),
+                        date: segDateStr,
                         narration: 'Interest Debit',
                         credit: 0,
                         debit: Math.abs(segInterest),
-                        calculatedOn: Math.abs(Math.round(runningBal)),
+                        calculatedOn: round2(principalBase),
                         source: 'segment-calc'
                     });
                     totalInterest += Math.abs(segInterest);
                 };
 
-                txEvents.forEach(({ tx, date }) => {
-                    rowInterestMap[tx.id] = null;
-                    addSegment(date);
-                    runningBal = snapInterestRunningBalance(runningBal + txDelta(tx));
-                    segStart = new Date(date);
+                const simpleTxEvents = txEvents.filter(function (e) {
+                    return e.date instanceof Date && !isNaN(e.date.getTime()) && e.date >= simplePeriodStart;
                 });
-                addSegment(uptoDate);
+
+                simpleTxEvents.forEach(function (e) {
+                    const tx = e.tx;
+                    const date = e.date;
+                    rowInterestMap[tx.id] = null;
+                    const prevCalc = calcPrincipal;
+                    runningBal = snapInterestRunningBalance(runningBal + txDeltaForCurrentBalance(tx));
+                    if (isStatementInterestDebitTx(tx)) return;
+                    calcPrincipal = snapDebitPrincipal(runningBal);
+                    if (calcPrincipal > prevCalc + 0.01) {
+                        closeSegment(date, prevCalc);
+                        segStart = new Date(date);
+                        segmentPrincipal = calcPrincipal;
+                    } else if (calcPrincipal < prevCalc - 0.01 || creditSettlesPostedInterestDebit(tx, sorted)) {
+                        segStart = new Date(date);
+                        segmentPrincipal = calcPrincipal;
+                    } else {
+                        segmentPrincipal = calcPrincipal;
+                    }
+                });
+                closeSegment(uptoDate, segmentPrincipal);
             }
 
             const closingAfterInterest = round2(runningBal);
-            pendingInterestSide = closingAfterInterest < 0 ? 'credit' : 'debit';
+            pendingInterestSide = 'debit';
             if (!compoundBreakdown) {
-                const summedSimpleSegments = sumSimpleModeSegmentInterestDebits(interestApplied);
+                const summedSimpleSegments = sumPendingSimpleModeSegmentInterestDebits(interestApplied, sorted);
                 if (summedSimpleSegments > 0.005) totalInterest = summedSimpleSegments;
             }
             const simpleInterestSegments = !compoundBreakdown
-                ? listSimpleModeSegmentInterestDebits(interestApplied)
+                ? resolvePendingSimpleInterestSegments(interestApplied, sorted, null)
                 : [];
+            if (!compoundBreakdown) {
+                pendingInterestSegments = simpleInterestSegments.map(function (seg) {
+                    return { date: seg.date, amount: seg.amount };
+                });
+            } else {
+                pendingInterestSegments = [];
+            }
             pendingInterest = !compoundBreakdown
-                ? getLatestSimpleModeSegmentInterestAmount(interestApplied)
-                : round2(Math.abs(totalInterest));
-            const breakdownTotal = !compoundBreakdown
-                ? sumSimpleModeSegmentInterestDebits(interestApplied)
-                : pendingInterest;
+                ? round2(simpleInterestSegments.reduce(function (s, r) { return s + r.amount; }, 0))
+                : round2(listPendingCompoundModeAccrualRows(interestApplied, sorted).reduce(function (s, r) {
+                    return s + r.amount;
+                }, 0));
+            const breakdownTotal = pendingInterest;
             const interestBreakdownHtml = buildInterestResultBreakdownHtml(simpleInterestSegments, breakdownTotal, pendingInterest);
             interestHasCalcResult = true;
             interestLastCompMonth = compMonth;
@@ -3807,18 +4240,30 @@
             const res = document.getElementById('interestResultInline');
             res.style.display = 'block';
             if (compMonth > 0 && compoundBreakdown) {
+                const compoundSegLinesHtml = (compoundBreakdown.accrualRows || []).map(function (row) {
+                    const d = fmtDate(row.date) || row.date || '—';
+                    return '<div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:2px 0;">' +
+                        '<span style="color:var(--muted);">' + d + '</span>' +
+                        '<span style="font-weight:600;color:var(--danger);">₹ ' + fmt(row.debit) + '</span></div>';
+                }).join('');
+                const compoundPanelRightHtml = compoundSegLinesHtml
+                    ? ('<div style="min-width:200px;">' + compoundSegLinesHtml +
+                        '<div style="display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:4px 0 0;margin-top:4px;border-top:1px dashed var(--border);">' +
+                        '<span style="font-weight:700;">Add as Debit (total)</span>' +
+                        '<span style="font-weight:800;color:var(--danger);">₹ ' + fmt(pendingInterest) + '</span></div></div>')
+                    : ('<span style="font-size:18px;font-weight:800;color:var(--danger);white-space:nowrap;">₹ ' + fmt(pendingInterest) + '</span>');
                 res.innerHTML = `
-                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                     <div style="display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap;">
                         <span style="font-weight:600; color:var(--text); font-size:13px;">Compound Interest Statement</span>
-                        <span style="font-size:11px; color:var(--muted);">Period: ${compoundBreakdown.monthsPart}m + ${compoundBreakdown.extraDaysPart}d (${compoundBreakdown.totalDays}d)</span>
-                        <span style="font-size:11px; color:var(--muted);">Principal: ₹ ${fmt(compoundBreakdown.principalBase)}</span>
-                        <span style="font-size:11px; color:var(--muted);">Compound: ₹ ${fmt(compoundBreakdown.totalCompoundInterest)}</span>
-                        <span style="font-size:11px; color:var(--muted);">Credit Int: ₹ ${fmt(compoundBreakdown.totalCreditedInterest)}</span>
-                        <span style="font-size:11px; color:var(--muted);">Pending Principal: ₹ ${fmt(compoundBreakdown.pendingPrincipal)}</span>
+                        <span style="font-size:11px; color:var(--muted);">${rate}% monthly · compound every ${compMonth}m · ${compoundBreakdown.totalDays}d (${compoundBreakdown.monthsPart}m + ${compoundBreakdown.extraDaysPart}d)</span>
+                        <span style="font-size:11px; color:var(--muted);">Opening Principal: ₹ ${fmt(compoundBreakdown.principalBase)}</span>
+                        <span style="font-size:11px; color:var(--muted);">New Compound: ₹ ${fmt(compoundBreakdown.totalCompoundInterest)}</span>
+                        <span style="font-size:11px; color:var(--muted);">Credits: ₹ ${fmt(compoundBreakdown.totalCredits || 0)}</span>
+                        <span style="font-size:11px; color:var(--muted);">Remaining Principal: ₹ ${fmt(compoundBreakdown.pendingPrincipal)}</span>
                         <span style="font-size:11px; color:var(--muted);">Closing: ₹ ${fmt(closingAfterInterest)}</span>
                     </div>
-                    <span style="font-size:18px; font-weight:800; color:var(--danger); white-space:nowrap;">₹ ${fmt(pendingInterest)}</span>
+                    ${compoundPanelRightHtml}
                 </div>
             `;
             } else {
@@ -3826,7 +4271,7 @@
                 <div style="background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-top:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
                     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
                         <span style="font-weight:600; color:var(--text); font-size:13px;">Net Interest Payable</span>
-                        <span style="font-size:11px; color:var(--muted);">${compMonth > 0 ? `Actual Days (365) · every 6 months · annual rate ${round2(rate * 12)}%` : `Simple segment-wise @ ${rate}% monthly`}</span>
+                        <span style="font-size:11px; color:var(--muted);">${compMonth > 0 ? `Compound every ${compMonth} month(s) @ ${rate}% monthly` : `Simple segment-wise @ ${rate}% monthly`}</span>
                         <span style="font-size:11px; color:var(--muted);">Closing: ₹ ${fmt(closingAfterInterest)}</span>
                     </div>
                     ${interestBreakdownHtml || `<span style="font-size:18px;font-weight:800;color:var(--danger);white-space:nowrap;">₹ ${fmt(pendingInterest)}</span>`}
@@ -3835,46 +4280,119 @@
             }
             const applyBtn = document.getElementById('applyIntInline');
             if (applyBtn) {
-                applyBtn.textContent = pendingInterestSide === 'credit' ? '✅ Add as Credit' : '✅ Add as Debit';
-                applyBtn.style.display = 'inline-block';
+                applyBtn.textContent = '✅ Add as Debit';
+                applyBtn.style.display = (pendingInterest > 0.005) ? 'inline-block' : 'none';
             }
-            // Keep controls visible after calculation; avoid forcing viewport jump.
+            if (interestHasCalcResult && pendingInterest <= 0.005) {
+                showToast('ℹ️ All interest is already on the statement.');
+            }
             scrollInterestTableToBottom({ smooth: true });
         }
 
         function applyInterestInline() {
-            if (!pendingInterest) return;
-            const to = document.getElementById('int_to_inline').value;
-            const hasSameDate = (transactions || []).some(tx =>
-                tx && isInterestNarrationText(tx.narration) &&
-                String(tx.date || '').trim() === String(to || '').trim()
-            );
-            if (hasSameDate) {
-                showToast('ℹ️ Interest Debit already exists for this date.');
+            const sortedApply = [...(transactions || [])].sort((a, b) => String((a && a.date) || '').localeCompare(String((b && b.date) || '')));
+            const compMonthNow = readCompoundMonthFromUi();
+            const isSimpleMode = compMonthNow <= 0;
+            const pendingSegs = isSimpleMode ? collectSimpleInterestSegmentsToPost(sortedApply) : [];
+            const compoundSegs = !isSimpleMode ? collectCompoundInterestSegmentsToPost(sortedApply) : [];
+            const amountToPost = isSimpleMode
+                ? (pendingSegs.length
+                    ? round2(pendingSegs.reduce(function (s, r) { return s + r.amount; }, 0))
+                    : 0)
+                : (compoundSegs.length
+                    ? round2(compoundSegs.reduce(function (s, r) { return s + r.amount; }, 0))
+                    : (pendingInterest || 0));
+            if (!amountToPost || amountToPost <= 0) {
+                showToast('ℹ️ No pending interest to add.');
                 return;
             }
-            transactions.push({
-                date: to,
-                narration: pendingInterestSide === 'credit' ? 'Interest Credit' : 'Interest Debit',
-                credit: pendingInterestSide === 'credit' ? Math.abs(pendingInterest) : 0,
-                debit: pendingInterestSide === 'debit' ? Math.abs(pendingInterest) : 0,
-                entryType: pendingInterestSide === 'credit' ? 'credit' : 'debit',
-                cleared: false,
-                id: nextId++
-            });
+            if (isSimpleMode && !pendingSegs.length) {
+                showToast('ℹ️ Please Calculate Interest again, then Add as Debit.');
+                return;
+            }
+            if (!isSimpleMode && !compoundSegs.length) {
+                showToast('ℹ️ Please Calculate Interest again, then Add as Debit.');
+                return;
+            }
+            let postedLines = [];
+            if (isSimpleMode && pendingSegs.length > 0) {
+                pendingSegs.forEach(function (seg) {
+                    if (hasStatementInterestDebitOnDate(seg.date, transactions) ||
+                        isStatementInterestDebitPosted(seg.date, seg.amount, transactions)) return;
+                    transactions.push({
+                        date: normalizeStatementDateInput(seg.date),
+                        narration: 'Interest Debit',
+                        credit: 0,
+                        debit: Math.abs(seg.amount),
+                        entryType: 'debit',
+                        cleared: false,
+                        id: nextId++
+                    });
+                    postedLines.push({ date: seg.date, amount: seg.amount });
+                });
+                if (!postedLines.length) {
+                    showToast('ℹ️ No pending interest to add.');
+                    return;
+                }
+            } else if (!isSimpleMode) {
+                compoundSegs.forEach(function (seg) {
+                    if (isStatementInterestDebitPosted(seg.date, seg.amount, transactions)) return;
+                    transactions.push({
+                        date: normalizeStatementDateInput(seg.date),
+                        narration: 'Interest Debit',
+                        credit: 0,
+                        debit: Math.abs(seg.amount),
+                        entryType: 'debit',
+                        cleared: false,
+                        id: nextId++
+                    });
+                    postedLines.push({ date: seg.date, amount: seg.amount });
+                });
+                if (!postedLines.length) {
+                    showToast('ℹ️ No pending interest to add.');
+                    return;
+                }
+            } else {
+                const to = document.getElementById('int_to_inline').value;
+                if (hasStatementInterestDebitOnDate(to, transactions)) {
+                    showToast('ℹ️ Interest Debit already exists for this date.');
+                    return;
+                }
+                transactions.push({
+                    date: to,
+                    narration: 'Interest Debit',
+                    credit: 0,
+                    debit: Math.abs(amountToPost),
+                    entryType: 'debit',
+                    cleared: false,
+                    id: nextId++
+                });
+                postedLines.push({ date: to, amount: amountToPost });
+            }
             // Posted interest replaces every interest-module breakdown row (including legacy rows without `source`).
             interestApplied = [];
             rowInterestMap = {};
             pendingInterest = 0;
+            pendingInterestSegments = [];
             pendingInterestSide = 'debit';
             interestHasCalcResult = false;
+            interestLastCompMonth = compMonthNow;
             document.getElementById('interestSection').style.display = 'none';
             document.getElementById('interestResultInline').style.display = 'none';
             document.getElementById('applyIntInline').style.display = 'none';
             syncInterestPanelOpenClass();
             try { saveInterestModule(); } catch (eIm) { }
             render();
-            showToast('✅ Interest added to statement — use Save & Close to keep changes');
+            let toastMsg = '✅ Interest added to statement';
+            if (postedLines.length > 1) {
+                toastMsg += ': ' + postedLines.map(function (p) {
+                    return '₹ ' + fmt(p.amount) + ' (' + (fmtDate(p.date) || p.date) + ')';
+                }).join(' + ');
+            } else if (postedLines.length === 1) {
+                toastMsg += ' — ₹ ' + fmt(postedLines[0].amount) + ' (' + (fmtDate(postedLines[0].date) || postedLines[0].date) + ')';
+            }
+            toastMsg += ' — use Save & Close to keep changes';
+            showToast(toastMsg);
         }
 
         // ─── CLEAR BILL AMOUNT (customer-level settlement only; bill status Cleared; All Bill Balance column frozen, not recalculated) ───
@@ -3889,6 +4407,7 @@
                 rowInterestMap = {};
                 interestApplied = [];
                 pendingInterest = 0;
+                pendingInterestSegments = [];
                 interestHasCalcResult = false;
                 interestLastCompMonth = 0;
                 lastInterestCalculatedDate = '';

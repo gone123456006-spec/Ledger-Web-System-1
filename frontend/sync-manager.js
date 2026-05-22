@@ -11,7 +11,7 @@
     try {
       const h = location.hostname;
       if (h === 'localhost' || h === '127.0.0.1') {
-        return 'http://127.0.0.1:5000/api/v1';
+        return 'http://127.0.0.1:5001/api/v1';
       }
       return location.origin.replace(/\/$/, '') + '/api/v1';
     } catch (e) {
