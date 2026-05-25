@@ -7072,46 +7072,16 @@
         }
       }
 
-      /* SAVE RATEBOOK FROM ROWS */
+      /* Order save must not remove or collapse ratebook list — entries are managed only via Ratebook UI. */
       function saveRatebookFromRows() {
-        if (!itemBody || !billNo || !custName) return;
-
-        const currentBillNo = billNo.value;
-        const currentCustomerId = custName.value;
-        const currentCustomerName = getCustomerName();
-
-        if (!currentBillNo) return;
-
-        // Get existing rates
-        let rates = [];
+        if (!billNo || !billNo.value) return;
         try {
-          rates = JSON.parse(localStorage.getItem("rateBook") || "[]");
-        } catch (e) { rates = []; }
-
-        // Remove auto-generated "From order row" entries for this bill (do not re-add from rows — user sees only what they added)
-        const fromRowNarrationPrefix = "From order row ";
-        rates = rates.filter(r => {
-          if (r.billNo !== currentBillNo) return true;
-          const nar = (r.narration || "").trim();
-          return !nar.startsWith(fromRowNarrationPrefix);
-        });
-
-        // For this bill: keep only one ratebook entry (most recent) so extra entries do not appear or display after save
-        const forThisBill = rates.filter(r => r.billNo === currentBillNo);
-        const others = rates.filter(r => r.billNo !== currentBillNo);
-        if (forThisBill.length > 1) {
-          forThisBill.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-          rates = others.concat([forThisBill[0]]);
-        }
-
-        // Save back to localStorage
-        try {
-          localStorage.setItem("rateBook", JSON.stringify(rates));
-
-          // Trigger update event
-          window.dispatchEvent(new CustomEvent('ratebookUpdated'));
+          if (typeof updateRatebookPanel === "function") {
+            updateRatebookPanel();
+          }
+          window.dispatchEvent(new CustomEvent("ratebookUpdated"));
         } catch (e) {
-          console.error("Error saving ratebook from rows:", e);
+          console.error("Error refreshing ratebook after order save:", e);
         }
       }
 
