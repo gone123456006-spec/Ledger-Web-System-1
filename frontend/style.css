@@ -24,25 +24,38 @@ ul, li{
 /* =========================
    TOP MENU BAR
 ========================= */
+:root{
+    --menu-bar-height:30px;
+}
+
 .menu-bar{
-    height:36px;
+    height:var(--menu-bar-height);
     background:linear-gradient(#73a9fb,#5c95ea);
     border-bottom:1px solid #c7ccd4;
     display:flex;
     align-items:center;
 }
 
+/* Top menu hidden when a module is open (see ledgerSetMenuBarHidden / loadPage in script.js). */
+.menu-bar.menu-esc-dismiss{
+    display:none !important;
+}
+
+.menu-bar.menu-esc-dismiss + .app-container{
+    height:100vh;
+}
+
 .menu-root{
     display:flex;
-    padding:0 10px;
+    padding:0 8px;
 }
 
 .menu-item{
     position:relative;
-    padding:7px 16px;
-    font-size:14px;
+    padding:5px 12px;
+    font-size:12px;
     cursor:default;
-    border-radius:6px 6px 0 0;
+    border-radius:5px 5px 0 0;
 }
 
 .menu-item:hover{
@@ -124,7 +137,7 @@ ul, li{
 ========================= */
 .app-container{
     display:flex;
-    height:calc(100vh - 36px);
+    height:calc(100vh - var(--menu-bar-height));
 }
 
 /* =========================
@@ -141,11 +154,11 @@ ul, li{
    SIDEBAR
 ========================= */
 .sidebar{
-    width:210px;
+    width:152px;
     flex-shrink:0;
     background:#80aaff;
     border-left:1px solid #c7ccd4;
-    padding:10px;
+    padding:6px;
     overflow-y:auto;
     transition:width .2s ease,opacity .15s ease,padding .2s ease,border-width .2s ease;
 }
@@ -163,12 +176,12 @@ ul, li{
 
 .sidebar button{
     width:100%;
-    margin-bottom:8px;
-    padding:8px 10px;
-    border-radius:10px;
+    margin-bottom:5px;
+    padding:6px 6px;
+    border-radius:7px;
     border:1px solid #d1d6de;
     background:#ffffff;
-    font-size:13px;
+    font-size:11px;
     font-weight: bold;
     text-align:left;
     cursor:pointer;
@@ -212,7 +225,7 @@ ul, li{
 /* Gold Order Book: hover to show submenu (New Order → Orders → Pending Orders → Pending Items → Item Process → Ready Items → Ready Orders) */
 .sidebar-gold-order{
     position:relative;
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 .sidebar-gold-order .gold-order-trigger{
     width:100%;
@@ -254,7 +267,7 @@ ul, li{
 /* Job Worker Book: same hover-to-open side submenu as Gold Order Book */
 .sidebar-jobworker-book{
     position:relative;
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 .sidebar-jobworker-book .jobworker-book-trigger{
     width:100%;
@@ -296,7 +309,7 @@ ul, li{
 /* Direct Bill: hover side submenu (Gold / Silver / Raw Gold / Raw Silver invoice) */
 .sidebar-direct-bill{
     position:relative;
-    margin-bottom:8px;
+    margin-bottom:6px;
 }
 .sidebar-direct-bill .direct-bill-trigger{
     width:100%;
@@ -505,7 +518,7 @@ ul, li{
 ========================= */
 @media(max-width:900px){
     .sidebar{
-        width:170px;
+        width:140px;
     }
 }
 
@@ -520,7 +533,11 @@ ul, li{
     .app-container{
         flex-direction:column;
         height:auto;
-        min-height:calc(100vh - 36px);
+        min-height:calc(100vh - var(--menu-bar-height));
+    }
+
+    .menu-bar.menu-esc-dismiss + .app-container{
+        min-height:100vh;
     }
 
     .workspace{

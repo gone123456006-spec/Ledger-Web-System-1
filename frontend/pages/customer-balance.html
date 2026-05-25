@@ -6,32 +6,37 @@
   <title>Customer Balance</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    :root {
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+    }
+
     * {
       box-sizing: border-box;
-      font-family: Segoe UI, Arial, sans-serif;
-      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
     body {
       margin: 0;
-      background: #e6ebf2;
+      background: #e8f0fe;
     }
 
     .workspace {
       background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
     }
 
+    /* PHP list shell — matches Customer List */
     .customer-balance-wrap {
       margin: 15px;
       background: #fff;
-      border: 1px solid #d1d6de;
-      border-radius: 12px;
+      border: 1px solid #b0bcc9;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       height: calc(100vh - 30px);
       max-height: calc(100vh - 30px);
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     }
 
     .workspace .customer-balance-wrap {
@@ -43,249 +48,334 @@
     }
 
     .customer-balance-wrap > .ledger-page-titlebar:first-child {
-      border-radius: 12px 12px 0 0;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 12px;
+      font-size: 15px;
     }
 
     .workspace .customer-balance-wrap > .ledger-page-titlebar:first-child {
       border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
     }
 
-    .balance-toolbar {
+    .customer-balance-toolbar {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 14px;
-      padding: 18px 20px;
-      border-bottom: 2px solid #d1d6de;
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
+      gap: 8px 10px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #b0bcc9;
+      background: #f4f6f8;
       flex-shrink: 0;
     }
 
-    .balance-toolbar .toolbar-subtitle {
-      font-size: 14px;
-      color: #6e6e73;
-      flex: 1;
-      min-width: 200px;
+    .customer-balance-toolbar .btn-refresh {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      border-radius: 6px;
+      border: 1px solid #466690;
+      background: linear-gradient(180deg, #5a7ca8 0%, #466690 100%);
+      color: #fff;
+      cursor: pointer;
+      min-height: 30px;
     }
 
-    .btn {
-      padding: 10px 18px;
-      border: 1px solid #d1d6de;
+    .customer-balance-toolbar .btn-refresh:hover {
+      filter: brightness(1.05);
+    }
+
+    .customer-balance-toolbar .list-search-wrap {
+      flex: 1 1 180px;
+      min-width: 160px;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .customer-balance-toolbar .list-search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: #5f6368;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .customer-balance-toolbar .list-search-icon svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .customer-balance-toolbar #customerBalanceSearch {
+      width: 100%;
+      padding: 5px 10px 5px 32px;
+      font-size: 12px;
+      min-height: 30px;
+      border-radius: 6px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .customer-balance-toolbar #customerBalanceSearch:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .customer-balance-toolbar #stationFilter,
+    .customer-balance-toolbar #balanceFilterSelect {
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      min-width: 120px;
+      min-height: 30px;
       background: #fff;
       cursor: pointer;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #1d1d1f;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      transition: all 0.2s;
     }
 
-    .btn:hover {
-      background: #007aff;
-      border-color: #007aff;
-      color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    label {
-      font-size: 14px;
-      color: #3a3a3c;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    input {
-      height: 40px;
-      padding: 8px 14px;
-      border: 1px solid #d1d6de;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #fff;
-      min-width: 180px;
-    }
-
-    input:focus {
+    .customer-balance-toolbar #stationFilter:focus,
+    .customer-balance-toolbar #balanceFilterSelect:focus {
       outline: none;
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+      border-color: var(--primary);
     }
 
-    input::placeholder {
-      color: #8e8e93;
+    .customer-balance-toolbar .filter-sep {
+      width: 1px;
+      height: 24px;
+      background: #b0bcc9;
+      flex-shrink: 0;
     }
 
-    .table-wrap {
+    .customer-balance-toolbar .filter-btn {
+      padding: 4px 10px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #3c4043;
+      white-space: nowrap;
+      min-height: 30px;
+    }
+
+    .customer-balance-toolbar .filter-btn:hover {
+      background: #e8f0fe;
+      border-color: #5a7ca8;
+    }
+
+    .customer-balance-toolbar .mark-toggle-btn.mark-all-btn {
+      background: #34a853;
+      border-color: #34a853;
+      color: #fff;
+    }
+
+    .customer-balance-toolbar .mark-toggle-btn.mark-all-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .customer-balance-toolbar .mark-toggle-btn.unmark-all-btn {
+      background: #d93025;
+      border-color: #d93025;
+      color: #fff;
+    }
+
+    .customer-balance-toolbar .mark-toggle-btn.unmark-all-btn:hover {
+      filter: brightness(1.05);
+    }
+
+    .customer-balance-grid-wrap {
       flex: 1;
       overflow: auto;
       min-height: 0;
       background: #fff;
     }
 
-    table {
+    .customer-excel-table {
       width: 100%;
-      min-width: 1080px;
+      min-width: max-content;
       border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-
-    select {
-      height: 40px;
-      padding: 8px 14px;
-      border: 1px solid #d1d6de;
-      border-radius: 8px;
-      font-size: 14px;
+      border-spacing: 0;
+      table-layout: auto;
       background: #fff;
-      color: #1d1d1f;
-      cursor: pointer;
-      min-width: 140px;
-      outline: none;
-      transition: all 0.2s;
+      font-size: 12px;
     }
 
-    select:focus {
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+    .customer-excel-table th,
+    .customer-excel-table td {
+      border: 1px solid #a8b4c4;
+      padding: 5px 7px;
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
     }
 
-    thead {
+    .customer-excel-table th {
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
       position: sticky;
       top: 0;
-      z-index: 10;
-      background: #fff;
-      box-shadow: 0 1px 0 0 #c5c9ce;
+      z-index: 2;
+      box-shadow: 0 1px 0 #a8b4c4;
     }
 
-    thead th {
-      background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
-      border: 1px solid #c5c9ce;
-      padding: 18px;
-      white-space: nowrap;
-      font-weight: 600;
-      font-size: 13px;
-      text-align: left;
-      color: #1d1d1f;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+    .customer-excel-table tbody tr:nth-child(even) td {
+      background: #f8fafc;
     }
 
-    thead th.center {
+    .customer-excel-table tbody tr:hover td {
+      background: #e8f0fe;
+    }
+
+    .customer-excel-table .center {
       text-align: center;
     }
 
-    thead th.right {
+    .customer-excel-table .right {
       text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
     }
 
-    tbody td {
-      padding: 18px;
-      border: 1px solid #d1d6de;
-      font-size: 14px;
-      vertical-align: middle;
-      color: #333;
-      line-height: 1.35;
+    .customer-excel-table thead th:nth-child(1),
+    .customer-excel-table tbody td:nth-child(1) {
+      min-width: 42px;
+      width: 42px;
+      text-align: center;
     }
 
-    tbody td:nth-child(4),
-    tbody td:nth-child(5) {
+    .customer-excel-table thead th:nth-child(2),
+    .customer-excel-table tbody td:nth-child(2) {
+      min-width: 44px;
+      width: 44px;
+    }
+
+    .customer-excel-table thead th:nth-child(3),
+    .customer-excel-table tbody td:nth-child(3) {
+      min-width: 48px;
+      text-align: center;
+    }
+
+    .customer-excel-table thead th:nth-child(4),
+    .customer-excel-table tbody td:nth-child(4) {
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .customer-excel-table thead th:nth-child(5),
+    .customer-excel-table tbody td:nth-child(5) {
+      min-width: 100px;
+      font-weight: 600;
+    }
+
+    .customer-excel-table thead th:nth-child(6),
+    .customer-excel-table tbody td:nth-child(6) {
+      min-width: 120px;
       white-space: normal;
       word-break: break-word;
     }
 
-    tbody tr {
-      transition: background 0.2s;
-      background: #fff;
+    .customer-excel-table thead th:nth-child(7),
+    .customer-excel-table tbody td:nth-child(7) {
+      min-width: 100px;
+      white-space: normal;
+      word-break: break-word;
     }
 
-    tbody tr:nth-child(even) {
-      background: #f8f9fb;
-    }
-
-    tbody tr:hover {
-      background: #e8f2ff;
-    }
-
-    tbody tr:hover td {
-      border-color: #b8d4f0;
-    }
-
-    .center {
+    .customer-excel-table thead th:nth-child(8),
+    .customer-excel-table tbody td:nth-child(8),
+    .customer-excel-table thead th:nth-child(9),
+    .customer-excel-table tbody td:nth-child(9) {
+      min-width: 88px;
       text-align: center;
-    }
-
-    .right {
-      text-align: right;
-      font-weight: 500;
       font-variant-numeric: tabular-nums;
     }
 
+    .customer-excel-table thead th:nth-child(10),
+    .customer-excel-table tbody td:nth-child(10) {
+      min-width: 120px;
+      text-align: right;
+      padding-right: 16px;
+      padding-left: 10px;
+    }
+
     .amount-rate-diff {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
-      color: #28a745;
+      color: #188038;
     }
 
-    .empty-state {
-      padding: 48px 24px;
+    .customer-excel-table .empty-state {
+      padding: 24px 16px;
       text-align: center;
-      color: #6e6e73;
-      font-size: 15px;
-      line-height: 1.5;
+      color: #5f6368;
+      font-size: 12px;
+      white-space: normal;
     }
 
-    .footer {
-      padding: 14px 20px;
-      font-size: 14px;
-      color: #6e6e73;
-      border-top: 2px solid #d1d6de;
-      background: #f5f7fa;
+    .customer-balance-footer {
+      padding: 7px 10px;
+      font-size: 11px;
+      color: #5f6368;
+      border-top: 1px solid #b0bcc9;
+      background: #f4f6f8;
       flex-shrink: 0;
     }
 
-    .mark-cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .customer-excel-table tbody td.mark-td {
+      text-align: center;
+      vertical-align: middle;
+      padding: 4px 5px;
+      line-height: 1;
     }
 
-    .mark-cell input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-      accent-color: #007aff;
+    .customer-excel-table .mark-check-wrap {
+      display: inline-block;
       margin: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      line-height: 0;
+      vertical-align: middle;
+      cursor: pointer;
+    }
+
+    .customer-excel-table .mark-checkbox {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      padding: 0;
+      cursor: pointer;
+      accent-color: var(--primary);
+      vertical-align: middle;
+      border: none;
+      outline: none;
+      box-shadow: none;
+      background: transparent;
     }
 
     .customer-link {
-      color: #007aff;
+      color: var(--primary);
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
     }
 
     .customer-link:hover {
       text-decoration: underline;
-    }
-
-    .table-wrap::-webkit-scrollbar {
-      width: 12px;
-      height: 12px;
-    }
-
-    .table-wrap::-webkit-scrollbar-track {
-      background: #f0f2f5;
-      border-radius: 6px;
-    }
-
-    .table-wrap::-webkit-scrollbar-thumb {
-      background: #b0b4b8;
-      border-radius: 6px;
     }
 
     @media (max-width: 768px) {
@@ -300,55 +390,6 @@
         height: 100%;
         max-height: 100%;
       }
-
-      .balance-toolbar {
-        padding: 14px;
-        gap: 10px;
-      }
-
-      input {
-        min-width: 140px;
-        font-size: 14px;
-      }
-
-      tbody td,
-      thead th {
-        padding: 14px;
-        font-size: 13px;
-      }
-    }
-
-    .filter-btn {
-      padding: 8px 14px;
-      border: 1.5px solid #d1d6de;
-      background: #fff;
-      cursor: pointer;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: #3a3a3c;
-      transition: all 0.18s;
-      white-space: nowrap;
-    }
-
-    .filter-btn:hover {
-      border-color: #007aff;
-      color: #007aff;
-      background: #f0f7ff;
-    }
-
-    .filter-btn.active {
-      background: #007aff;
-      border-color: #007aff;
-      color: #fff;
-      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.22);
-    }
-
-    .filter-sep {
-      width: 1px;
-      height: 28px;
-      background: #d1d6de;
-      flex-shrink: 0;
     }
   </style>
 </head>
@@ -356,51 +397,53 @@
 <body>
   <div class="customer-balance-wrap">
     <div class="ledger-page-titlebar">Customer Balance</div>
-    <div class="balance-toolbar">
-      <span class="toolbar-subtitle">One row per bill — balance is isolated by Bill / Order No (same customer name is not merged)</span>
-      <button type="button" class="btn" onclick="loadTable()">🔄 Refresh</button>
-      <label for="customerBalanceSearch">Search</label>
-      <input id="customerBalanceSearch" type="text" placeholder="Name, phone, mobile…" onkeyup="filterRows()">
-
-      <select id="stationFilter" onchange="filterRows()">
+    <div class="customer-balance-toolbar">
+      <button type="button" class="btn-refresh" onclick="loadTable()">Refresh</button>
+      <div class="list-search-wrap">
+        <span class="list-search-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+          </svg>
+        </span>
+        <input id="customerBalanceSearch" type="search" placeholder="Name, phone, mobile…" onkeyup="filterRows()"
+          autocomplete="off">
+      </div>
+      <select id="stationFilter" aria-label="Filter by station" onchange="filterRows()">
         <option value="">All Stations</option>
       </select>
-
+      <select id="balanceFilterSelect" aria-label="Balance filter" onchange="setFilter(this.value)">
+        <option value="all">All</option>
+        <option value="nonzero" selected>With Balance</option>
+        <option value="zero">Zero Balance</option>
+      </select>
       <div class="filter-sep"></div>
-      <button type="button" class="filter-btn active" id="filterAll" onclick="setFilter('all')">All</button>
-      <button type="button" class="filter-btn" id="filterNonzero" onclick="setFilter('nonzero')">With
-        Balance</button>
-      <button type="button" class="filter-btn" id="filterZero" onclick="setFilter('zero')">Zero Balance</button>
-
-      <div class="filter-sep"></div>
-      <button type="button" class="filter-btn" id="markAllBtn" onclick="markAll()"
-        style="background:#34c759;border-color:#34c759;color:#fff;" title="Check all visible rows">✓ Mark All</button>
-      <button type="button" class="filter-btn" id="unmarkAllBtn" onclick="unmarkAll()"
-        style="background:#ff3b30;border-color:#ff3b30;color:#fff;" title="Uncheck all visible rows">✕ Unmark
-        All</button>
+      <button type="button" class="filter-btn mark-toggle-btn mark-all-btn" id="markToggleBtn" onclick="toggleMarkAll()"
+        title="Mark or unmark all visible rows">Mark All</button>
     </div>
 
-    <div class="table-wrap">
-      <table>
+    <div class="customer-balance-grid-wrap">
+      <table id="customerBalanceTable" class="customer-excel-table">
         <thead>
           <tr>
-            <th class="center" style="width:8%;">Serial No.</th>
-            <th class="center" style="width:7%;">Marks</th>
-            <th style="width:8%;">LF No.</th>
-            <th style="width:12%;">Bill No.</th>
-            <th style="width:10%;">Name</th>
-            <th style="width:12%;">Relation and Name</th>
-            <th style="width:10%;">Station</th>
-            <th style="width:9%;">Phone no.</th>
-            <th style="width:9%;">Mobile</th>
-            <th class="right" style="width:22%;">Balance</th>
+            <th class="center">S.N</th>
+            <th class="center">Marks</th>
+            <th>LF No.</th>
+            <th>Bill No.</th>
+            <th>Name</th>
+            <th>Relation and Name</th>
+            <th>Station</th>
+            <th>Phone no.</th>
+            <th>Mobile</th>
+            <th class="right">Balance</th>
           </tr>
         </thead>
         <tbody id="customerBalanceTableBody"></tbody>
       </table>
     </div>
 
-    <div class="footer" id="customerBalanceFooter">Customer Balance — one row per bill. Same customer name with different bills is not merged.</div>
+    <div class="customer-balance-footer" id="customerBalanceFooter">Customer Balance — one row per bill. Same customer name with different bills is not merged.</div>
   </div>
 
   <script>
@@ -894,7 +937,7 @@
         const billNoShown = r.isRegisterStub ? "\u2014" : String(r.billNo || "\u2014");
         tr.innerHTML =
           '<td class="center">' + sn + "</td>" +
-          '<td class="mark-cell"><input type="checkbox" class="mark-checkbox" data-bill-no="' + encBillAttr + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></td>' +
+          '<td class="center mark-td"><label class="mark-check-wrap"><input type="checkbox" class="mark-checkbox" data-bill-no="' + encBillAttr + '" onchange="saveMarkCheckbox(this)" ' + (isChecked ? "checked" : "") + ' title="Mark"></label></td>' +
           "<td>" + (r.lfno || "—") + "</td>" +
           "<td><strong>" + billNoShown.replace(/</g, "&lt;").replace(/"/g, "&quot;") + "</strong></td>" +
           `<td><a href="#" onclick="openCustomerStatement('${masterId}','${safeName}','${safeLfno}','${safeStation}','${safeOpBal}','${safeOpType}','${safeCurBal}','${safeCurType}','${safeBill}'); return false;" class="customer-link">${(r.name || "—")}</a></td>` +
@@ -942,16 +985,41 @@
       } catch (e) { }
     }
 
-    let activeFilter = 'all';   // 'all' (default) | 'nonzero' | 'marked' | 'zero'
+    let activeFilter = 'nonzero';   // 'all' | 'nonzero' (default) | 'marked' | 'zero'
 
     function setFilter(mode) {
-      activeFilter = mode;
-      // Toggle active class on buttons
-      ['all', 'nonzero', 'marked', 'zero'].forEach(m => {
-        const btn = document.getElementById('filter' + m.charAt(0).toUpperCase() + m.slice(1));
-        if (btn) btn.classList.toggle('active', m === mode);
-      });
+      activeFilter = mode || 'nonzero';
+      const sel = document.getElementById('balanceFilterSelect');
+      if (sel && sel.value !== activeFilter) sel.value = activeFilter;
       filterRows();
+    }
+
+    function updateMarkToggleButtonLabel() {
+      const btn = document.getElementById('markToggleBtn');
+      if (!btn || !tbody) return;
+      const visibleRows = Array.from(tbody.querySelectorAll('tr')).filter(function (row) {
+        return row.style.display !== 'none' && !row.querySelector('.empty-state');
+      });
+      if (!visibleRows.length) {
+        btn.textContent = 'Mark All';
+        btn.classList.add('mark-all-btn');
+        btn.classList.remove('unmark-all-btn');
+        return;
+      }
+      const allMarked = visibleRows.every(function (row) {
+        const cb = row.querySelector('.mark-checkbox');
+        return cb && cb.checked;
+      });
+      btn.textContent = allMarked ? 'Unmark All' : 'Mark All';
+      btn.classList.toggle('unmark-all-btn', allMarked);
+      btn.classList.toggle('mark-all-btn', !allMarked);
+    }
+
+    function toggleMarkAll() {
+      const btn = document.getElementById('markToggleBtn');
+      if (btn && btn.textContent === 'Unmark All') unmarkAll();
+      else markAll();
+      updateMarkToggleButtonLabel();
     }
 
     function filterRows() {
@@ -1000,6 +1068,7 @@
         else if (!q && activeFilter === 'zero') footer.textContent = "Customer Balance — " + visible + " bills (non-zero hidden)";
         else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " bills" + filterLabel + ".";
       }
+      updateMarkToggleButtonLabel();
     }
 
     function markAll() {
@@ -1027,6 +1096,7 @@
         if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
         if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
       } catch (e) { }
+      updateMarkToggleButtonLabel();
     }
 
     function unmarkAll() {
@@ -1054,6 +1124,7 @@
         if (window.parent && window.parent !== window) window.parent.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
         if (window.top && window.top !== window) window.top.dispatchEvent(new CustomEvent("customerBalancesUpdated"));
       } catch (e) { }
+      updateMarkToggleButtonLabel();
     }
 
     function openCustomerStatement(id, name, lfno, station, opbal, opType, curbal, curType, billNo) {
@@ -1119,6 +1190,7 @@
     window.loadTable = loadTable;
     window.filterRows = filterRows;
     window.setFilter = setFilter;
+    window.toggleMarkAll = toggleMarkAll;
     window.markAll = markAll;
     window.unmarkAll = unmarkAll;
     window.openCustomerStatement = openCustomerStatement;

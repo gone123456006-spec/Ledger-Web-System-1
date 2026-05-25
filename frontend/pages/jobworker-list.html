@@ -40,6 +40,12 @@
       max-width: none;
       margin: 0;
       padding: 16px 12px;
+      background: #e8f0fe;
+    }
+
+    .workspace .app.jobworker-list-page {
+      padding: 0;
+      background: transparent;
     }
 
     .jobworker-list-page > .ledger-page-titlebar.jw-page-titlebar-grid {
@@ -92,38 +98,109 @@
       border-radius: 8px;
     }
 
-    .jobworker-list-page > .box {
+    .jobworker-list-page > .jobworker-list-shell {
       margin-top: 0;
       border-top-left-radius: 0;
       border-top-right-radius: 0;
       border-top: none;
     }
 
-    .box {
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      padding: 16px;
-    }
-    /* Pattern only inside white cards (5% capacity) */
-    .box, .table-wrap, .info-panel, .panel-section, .list-table-wrap {
-      background-color: #f8f8f9;
-      background-image: var(--card-pattern);
-      background-size: 22px 22px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-      background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-      background-position: 0 0, center, center, center, center;
+    .jobworker-list-shell {
+      background: #fff;
+      border: 1px solid #b0bcc9;
+      border-radius: 0 0 8px 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
     }
 
-    .box-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
+    .jobworker-list-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 12px;
+      padding: 8px 10px;
+      background: #f4f6f8;
+      border-bottom: 1px solid #b0bcc9;
+    }
+
+    .jobworker-list-toolbar .list-station-filter-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .jobworker-list-toolbar #listStationFilter {
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      min-width: 120px;
+      min-height: 30px;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .jobworker-list-toolbar #listStationFilter:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .jobworker-list-toolbar .list-search-wrap {
+      flex: 1 1 200px;
+      min-width: 160px;
+      margin: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .jobworker-list-toolbar .list-search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: #5f6368;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    .jobworker-list-toolbar .list-search-icon svg {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+
+    .jobworker-list-toolbar .list-search-wrap input {
+      width: 100%;
+      max-width: none;
+      padding: 5px 10px 5px 32px;
+      font-size: 12px;
+      min-height: 30px;
+      border-radius: 6px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .jobworker-list-toolbar .list-search-wrap input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .jobworker-list-grid-wrap {
+      width: 100%;
+      overflow: auto;
+      flex: 1;
+      min-height: 0;
+      background: #fff;
     }
 
     button {
@@ -150,110 +227,148 @@
       background: var(--primary-hover);
     }
 
-    .list-table-wrap {
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-    }
-
-    .list-table {
+    /* PHP / Excel grid */
+    .jw-excel-table {
       width: 100%;
+      min-width: max-content;
       border-collapse: collapse;
-      font-size: 13px;
-      table-layout: fixed;
+      border-spacing: 0;
+      table-layout: auto;
+      background: #fff;
+      font-size: 12px;
     }
 
-    .list-table th,
-    .list-table td {
-      padding: 12px 14px;
+    .jw-excel-table th,
+    .jw-excel-table td {
+      border: 1px solid #a8b4c4;
+      padding: 5px 7px;
+      font-size: 12px;
+      line-height: 1.3;
       text-align: left;
-      border: 1px solid var(--border);
       vertical-align: middle;
-    }
-
-    .list-table th {
-      background: #f1f5f9;
-      color: var(--muted);
-      font-weight: 600;
       white-space: nowrap;
     }
 
-    .list-table tbody tr:hover {
-      background: #f8faff;
+    .jw-excel-table th {
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 1px 0 #a8b4c4;
     }
 
-    .list-table .col-id {
-      width: 10%;
+    .jw-excel-table tbody tr:nth-child(even) td {
+      background: #f8fafc;
     }
 
-    .list-table .col-name {
-      width: 10%;
+    .jw-excel-table tbody tr:hover td {
+      background: #e8f0fe;
     }
 
-    .list-table .col-relation {
-      width: 10%;
-    }
-
-    .list-table .col-num {
-      width: 6%;
+    .jw-excel-table .col-num {
       text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
-    .list-table .col-address {
-      width: 14%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .list-table .col-station {
-      width: 8%;
-    }
-
-    .list-table .col-phone {
-      width: 8%;
-    }
-
-    .list-table .col-action {
-      width: 7%;
+    .jw-excel-table thead th:nth-child(1),
+    .jw-excel-table tbody td:nth-child(1) {
+      min-width: 118px;
       text-align: center;
     }
 
-    .btn-edit {
-      padding: 6px 12px;
-      font-size: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--primary);
-      color: #fff;
-      cursor: pointer;
+    .jw-excel-table thead th:nth-child(2),
+    .jw-excel-table tbody td:nth-child(2) {
+      min-width: 100px;
+      font-weight: 600;
     }
 
-    .btn-edit:hover {
-      background: var(--primary-hover);
+    .jw-excel-table thead th:nth-child(3),
+    .jw-excel-table tbody td:nth-child(3) {
+      min-width: 120px;
+    }
+
+    .jw-excel-table thead th:nth-child(4),
+    .jw-excel-table tbody td:nth-child(4) {
+      min-width: 88px;
+      text-align: center;
+    }
+
+    .jw-excel-table thead th:nth-child(5),
+    .jw-excel-table tbody td:nth-child(5),
+    .jw-excel-table thead th:nth-child(6),
+    .jw-excel-table tbody td:nth-child(6),
+    .jw-excel-table thead th:nth-child(7),
+    .jw-excel-table tbody td:nth-child(7),
+    .jw-excel-table thead th:nth-child(8),
+    .jw-excel-table tbody td:nth-child(8) {
+      min-width: 72px;
+      text-align: right;
+    }
+
+    .jw-excel-table thead th:nth-child(9),
+    .jw-excel-table tbody td:nth-child(9) {
+      min-width: 180px;
+      max-width: 280px;
+      white-space: normal;
+      word-break: break-word;
+      text-align: left;
+    }
+
+    .jw-excel-table thead th:nth-child(10),
+    .jw-excel-table tbody td:nth-child(10) {
+      min-width: 100px;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .jw-excel-table thead th:nth-child(11),
+    .jw-excel-table tbody td:nth-child(11),
+    .jw-excel-table thead th:nth-child(12),
+    .jw-excel-table tbody td:nth-child(12) {
+      min-width: 88px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .jw-excel-table thead th:nth-child(13),
+    .jw-excel-table tbody td:nth-child(13) {
+      min-width: 64px;
+      width: 64px;
+      text-align: center;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .jw-excel-table tbody td:nth-child(13) .btn-edit {
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid #1a73e8;
+      background: #1a73e8;
+      color: #fff;
+      cursor: pointer;
+      line-height: 1.2;
+      min-height: 0;
+    }
+
+    .jw-excel-table tbody td:nth-child(13) .btn-edit:hover {
+      background: #1557b0;
+      border-color: #1557b0;
     }
 
     .empty-list {
       text-align: center;
-      padding: 32px;
+      padding: 24px;
       color: var(--muted);
-    }
-
-    .search-wrap {
-      margin-bottom: 12px;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      max-width: 320px;
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-    }
-
-    .search-wrap input:focus {
-      outline: none;
-      border-color: var(--primary);
+      font-size: 13px;
+      border-top: 1px solid #b0bcc9;
     }
   </style>
 </head>
@@ -268,13 +383,27 @@
       </div>
     </div>
 
-    <div class="box">
-      <div class="box-title">All job workers (saved with full details)</div>
-      <div class="search-wrap">
-        <input type="text" id="searchInput" placeholder="Search by name, id, station, phone..." oninput="filterList()">
+    <div class="jobworker-list-shell">
+      <div class="jobworker-list-toolbar">
+        <div class="list-station-filter-wrap">
+          <select id="listStationFilter" aria-label="Filter by station" onchange="filterList()">
+            <option value="">All Stations</option>
+          </select>
+        </div>
+        <div class="list-search-wrap">
+          <span class="list-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"></circle>
+              <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+            </svg>
+          </span>
+          <input type="search" id="searchInput" placeholder="Search by name, id, station, phone..."
+            oninput="filterList()" autocomplete="off">
+        </div>
       </div>
-      <div class="list-table-wrap">
-        <table class="list-table">
+      <div class="jobworker-list-grid-wrap">
+        <table id="jobworkerListTable" class="jw-excel-table">
           <thead>
             <tr>
               <th class="col-id">Jobworker Id</th>
@@ -304,6 +433,61 @@
     (function () {
       function getList() {
         return JSON.parse(localStorage.getItem('jobworkers') || '[]');
+      }
+
+      function resolveStationCanonical(stored) {
+        var n = (stored == null ? '' : String(stored)).trim();
+        if (!n) return '';
+        var stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        var found = stations.find(function (s) {
+          return String((s && s.name) || s).toLowerCase() === n.toLowerCase();
+        });
+        return found ? (found.name || found) : n;
+      }
+
+      function populateListStationFilter() {
+        var sel = document.getElementById('listStationFilter');
+        if (!sel) return;
+        var keep = sel.value;
+        var names = {};
+        try {
+          JSON.parse(localStorage.getItem('stations') || '[]').forEach(function (s) {
+            var n = (s && s.name) ? String(s.name).trim() : '';
+            if (n) names[n] = true;
+          });
+        } catch (e) { /* ignore */ }
+        getList().forEach(function (j) {
+          var c = resolveStationCanonical(j.station || '');
+          if (c) names[c] = true;
+        });
+        var sorted = Object.keys(names).sort(function (a, b) {
+          return a.localeCompare(b, undefined, { sensitivity: 'base' });
+        });
+        sel.innerHTML = '';
+        var allOpt = document.createElement('option');
+        allOpt.value = '';
+        allOpt.textContent = 'All Stations';
+        sel.appendChild(allOpt);
+        sorted.forEach(function (name) {
+          var o = document.createElement('option');
+          o.value = name;
+          o.textContent = name;
+          sel.appendChild(o);
+        });
+        if (keep && [].slice.call(sel.options).some(function (o) { return o.value === keep; })) {
+          sel.value = keep;
+        }
+      }
+
+      function recordMatchesListStationFilter(record) {
+        var filterSel = document.getElementById('listStationFilter');
+        var filterVal = filterSel && filterSel.value ? String(filterSel.value).trim() : '';
+        if (!filterVal) return true;
+        var stored = record && record.station != null ? String(record.station).trim() : '';
+        if (!stored) return false;
+        var canon = resolveStationCanonical(stored);
+        var norm = function (s) { return (s || '').trim().toLowerCase(); };
+        return norm(canon) === norm(filterVal) || norm(stored) === norm(filterVal);
       }
 
       function relText(j) {
@@ -351,7 +535,7 @@
 
       function filterList() {
         var q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-        var list = getList();
+        var list = getList().filter(recordMatchesListStationFilter);
         if (q) {
           list = list.filter(function (j) {
             var name = (j.name || '').toLowerCase();
@@ -369,7 +553,8 @@
       }
 
       function loadList() {
-        renderRows(getList());
+        populateListStationFilter();
+        filterList();
       }
 
       function goToAddJobworker() {
@@ -407,7 +592,7 @@
 
       loadList();
       window.addEventListener('storage', function (e) {
-        if (e.key === 'jobworkers') loadList();
+        if (e.key === 'jobworkers' || e.key === 'stations') loadList();
       });
     })();
   </script>

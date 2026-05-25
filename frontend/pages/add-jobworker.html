@@ -7,30 +7,23 @@
   <title>Add Job Worker</title>
   <style>
     :root {
-      --bg: #f8f9fc;
+      --bg: #e8f0fe;
+      --bg-gradient: linear-gradient(160deg, #d4e4f7 0%, #e8f0fe 50%, #f0f6fc 100%);
       --card: #ffffff;
-      --text: #1e293b;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --primary-soft: rgba(59, 130, 246, 0.1);
-      --danger: #ef4444;
-      --success: #10b981;
+      --text: #1a1a1a;
+      --muted: #5f6368;
+      --border: #dadce0;
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
+      --danger: #d93025;
+      --success: #188038;
       --radius: 12px;
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
-      --card-pattern:
-        radial-gradient(circle at 14px 14px, rgba(0,0,0,0.015) 0 3px, transparent 3.5px),
-        linear-gradient(140deg, transparent 0 66%, rgba(255, 178, 0, 0.05) 66% 72%, transparent 72%),
-        linear-gradient(140deg, transparent 0 70%, rgba(255,255,255,0.05) 70% 73%, transparent 73%),
-        linear-gradient(140deg, transparent 0 74%, rgba(255, 160, 0, 0.05) 74% 82%, transparent 82%),
-        linear-gradient(145deg, rgba(255,255,255,0.05) 0 45%, rgba(0,0,0,0.006) 45% 100%);
+      --radius-sm: 8px;
     }
 
     * {
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif;
     }
 
     input::-webkit-outer-spin-button,
@@ -44,10 +37,31 @@
       appearance: textfield;
     }
 
+    html,
     body {
       margin: 0;
-      background: var(--bg);
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg-gradient);
       color: var(--text);
+      overflow-x: hidden;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 24px 32px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .workspace .page {
+      padding: 0;
+      min-height: 0;
+      background: transparent;
     }
 
     .toast {
@@ -75,384 +89,404 @@
       background: var(--danger);
     }
 
-    /* ── PAGE WRAPPER ── */
-    .app {
-      width: 100%;
-      max-width: none;
-      margin: 0;
-      padding: 16px 12px;
-    }
-
-    /* Title row: list action (left) + heading (center), flush with top cards */
-    .add-jobworker-page > .ledger-page-titlebar.jw-add-titlebar-grid {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      column-gap: 10px;
-      text-align: initial;
-      background: linear-gradient(#f4f6fa, #e6eaf0);
-      color: #1d1d1f;
-      padding: 8px 12px;
-      font-size: 15px;
-      font-weight: 600;
-      border-bottom: 1px solid #d1d6de;
-      margin: 0;
-      letter-spacing: 0.01em;
-      border-radius: var(--radius) var(--radius) 0 0;
-    }
-
-    .workspace[data-page] .app.add-jobworker-page > .ledger-page-titlebar.jw-add-titlebar-grid:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
-    }
-
-    .jw-add-titlebar-grid .jw-titlebar-left {
-      grid-column: 1;
-      justify-self: start;
-      min-width: 0;
-    }
-
-    .jw-add-titlebar-grid .jw-titlebar-heading {
-      grid-column: 2;
-      justify-self: center;
-      text-align: center;
-      margin: 0;
-      font-size: inherit;
-      font-weight: inherit;
-    }
-
-    .jw-add-titlebar-grid .jw-titlebar-right {
-      grid-column: 3;
-      justify-self: end;
-      min-width: 0;
-    }
-
-    .jw-titlebar-list-btn {
-      height: 32px;
-      padding: 0 12px;
-      border-radius: 8px;
-      border: 1px solid #d1d6de;
-      background: #fff;
-      color: #1e293b;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .jw-titlebar-list-btn:hover {
-      background: #f5f5f7;
-    }
-
-    .add-jobworker-page > .form-grid {
-      margin-top: 0;
-    }
-
-    .add-jobworker-page > .form-grid > div:first-child > .box:first-child,
-    .add-jobworker-page > .form-grid > .box {
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
-      border-top: none;
-    }
-
-    /* ── TWO-COLUMN LAYOUT ── */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    /* ── CARD / BOX ── */
-    .box {
+    /* ── Add Job Worker shell (matches Add Customer) ── */
+    .erp-form {
       background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-sm);
-      padding: 16px;
-      animation: fadeIn .35s ease;
-    }
-    /* Pattern only inside white cards (5% capacity) */
-    .box, .table-wrap, .info-panel, .panel-section, .list-table-wrap {
-      background-color: #f8f8f9;
-      background-image: var(--card-pattern);
-      background-size: 22px 22px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-      background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-      background-position: 0 0, center, center, center, center;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      padding: 14px 14px 16px;
+      display: block;
+      max-width: none;
+      width: 100%;
+      min-width: 0;
+      align-self: stretch;
     }
 
-    .box-title {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .ledger-page-shell.customer-add-shell.jw-add-shell {
+      width: 100%;
+      max-width: min(820px, calc(100vw - 48px));
+      align-self: center;
       margin-bottom: 16px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(8px);
-      }
-
-      to {
-        opacity: 1;
-        transform: none;
-      }
-    }
-
-    /* ── FORM ROWS ── */
-    .row {
       display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
+      flex-direction: column;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
     }
 
-    .row label {
-      min-width: 130px;
-      font-size: 14px;
-      color: var(--muted);
+    .workspace .ledger-page-shell.customer-add-shell.jw-add-shell {
+      margin: 0 auto;
+      width: fit-content;
+      max-width: 100%;
+      height: auto;
+      border-radius: 6px;
+      margin-bottom: 0;
+    }
+
+    .jw-add-shell .erp-form {
+      width: 100%;
+      max-width: 100%;
+      align-self: stretch;
+    }
+
+    .jw-add-shell {
+      --jw-input-width: 248px;
+    }
+
+    .jw-add-shell .customer-cards-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .jw-add-shell .detail-card {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .customer-cards-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+      gap: 12px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .detail-card {
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 440px;
+      overflow: hidden;
+    }
+
+    .detail-card-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      line-height: 1.2;
+      border-bottom: 1px solid #b0bcc9;
+    }
+
+    .detail-card-body {
+      padding: 12px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .customer-add-shell .inline-field {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 4px 8px;
+      align-items: center;
+      margin: 0;
+      min-height: 36px;
+    }
+
+    .customer-add-shell .inline-field label {
+      margin: 0;
+      font-size: 12px;
+      text-align: right;
+      line-height: 1.3;
+      padding-right: 4px;
+      color: #3c4043;
       font-weight: 600;
     }
 
-    .row .required-star {
+    label .required {
       color: var(--danger);
+      margin-left: 1px;
     }
 
-    .row input,
-    .row select,
-    .row textarea {
-      flex: 1;
-      height: 40px;
-      padding: 8px 12px;
-      border-radius: 10px;
+    .customer-add-shell .inline-field input,
+    .customer-add-shell .inline-field select,
+    .customer-add-shell .inline-field textarea {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 13px;
+      min-height: 34px;
       border: 1px solid var(--border);
-      font-size: 15px;
+      border-radius: 3px;
       background: #fff;
-      transition: .2s;
       color: var(--text);
+      box-sizing: border-box;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .row textarea {
-      height: 140px;
-      resize: vertical;
+    .customer-add-shell .inline-field textarea {
+      min-height: 56px;
+      resize: none;
+      padding-top: 6px;
+      padding-bottom: 6px;
       font-family: inherit;
     }
 
-    .row select {
-      cursor: pointer;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 32px;
-      appearance: none;
+    input::placeholder,
+    textarea::placeholder {
+      color: #9aa0a6;
     }
 
-    .row select:hover {
-      border-color: var(--primary);
-      background-color: #f8faff;
-    }
-
-    .row input:focus,
-    .row select:focus,
-    .row textarea:focus {
+    .customer-add-shell .inline-field input:focus,
+    .customer-add-shell .inline-field select:focus,
+    .customer-add-shell .inline-field textarea:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--primary-soft);
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
     }
 
-    .row input[readonly],
-    .row input:disabled {
-      background: #f5f5f7;
-      cursor: not-allowed;
+    .customer-add-shell .inline-field input[readonly],
+    .customer-add-shell .inline-field input:disabled {
+      background: #f8f9fa;
+      color: var(--muted);
+      cursor: default;
     }
 
-    /* Relation row: two inputs side by side */
-    .relation-wrap {
-      flex: 1;
+    .row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
+      align-items: stretch;
+      min-width: 0;
     }
 
-    .relation-wrap select {
-      flex: 0 0 90px;
+    .customer-add-shell .inline-field .row {
+      gap: 4px;
     }
 
-    .relation-wrap input {
-      flex: 1;
-    }
-
-    /* Phone icon button */
-    .icon-btn {
-      width: 36px;
-      height: 36px;
+    .customer-add-shell .inline-field .row select#jwRelationType {
+      width: 56px;
+      min-width: 56px;
       flex-shrink: 0;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .date-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .date-wrap input[type="date"] {
+      padding-right: 8px;
+    }
+
+    .customer-add-shell .btn-station-add {
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #eef4ff;
-      color: var(--primary);
-      cursor: pointer;
-      font-size: 16px;
-      transition: .2s;
-    }
-
-    .icon-btn:hover {
-      background: #dce9ff;
-    }
-
-    /* ── OPENING BALANCE TABLE-STYLE ── */
-    .ob-grid {
-      display: grid;
-      grid-template-columns: 120px 1fr;
-      gap: 0;
-    }
-
-    .ob-grid .ob-label {
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 600;
-      padding: 7px 0;
-      display: flex;
-      align-items: center;
-    }
-
-    .ob-grid .ob-input {
-      padding: 4px 0 4px 8px;
-    }
-
-    .ob-grid .ob-input input {
-      width: 100%;
+      width: 34px;
+      min-width: 34px;
       height: 34px;
-      padding: 6px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-      background: #fff;
-      transition: .2s;
-    }
-
-    .ob-grid .ob-input input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--primary-soft);
-    }
-
-    /* ── ACTION BUTTONS ── */
-    .actions {
-      margin-top: 4px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .actions button {
-      min-width: 110px;
-      height: 38px;
-      padding: 6px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #fff;
-      font-size: 14px;
+      min-height: 34px;
+      padding: 0;
+      background: #eef1f5;
+      border: 1px solid #b0bcc9;
+      border-radius: 3px;
       cursor: pointer;
-      transition: .2s;
-      font-weight: 500;
+      flex-shrink: 0;
     }
 
-    .actions button:hover:not(:disabled) {
-      background: #f5f5f7;
-      transform: translateY(-1px);
+    .customer-add-shell .btn-station-add:hover {
+      background: #e2e6eb;
+      border-color: #9aa5b5;
     }
 
-    .actions button.primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
+    .customer-add-shell .btn-station-add svg {
+      width: 14px;
+      height: 14px;
+      color: #5f6368;
+    }
+
+    .ledger-page-shell.customer-add-shell > .ledger-page-titlebar:first-child {
+      position: relative;
+      background: #f8f9fa;
+      color: #1a1a1a;
+      text-align: center;
+      padding: 8px 14px;
+      font-size: 14px;
       font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      border-radius: 6px 6px 0 0;
+      margin: 0;
+      flex-shrink: 0;
     }
 
-    .actions button.primary:hover:not(:disabled) {
+    .ledger-page-titlebar-label {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+
+    .ledger-page-shell.customer-add-shell .erp-form {
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      margin: 0;
+    }
+
+    .customer-add-shell > .form-actions {
+      position: static;
+      background: #f4f6f8;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 8px 12px;
+      margin: 0;
+      border-radius: 0 0 6px 6px;
+      flex-shrink: 0;
+    }
+
+    .customer-add-shell > .form-actions button {
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 100px;
+      min-height: 32px;
+      cursor: pointer;
+    }
+
+    .form-actions button:not(.primary) {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+
+    .form-actions button:not(.primary):hover {
+      background: #f8f9fa;
+      border-color: #bdc1c6;
+    }
+
+    .form-actions button.primary {
+      background: var(--primary);
+      color: #fff;
+      border: 1px solid var(--primary);
+    }
+
+    .form-actions button.primary:hover {
       background: var(--primary-hover);
     }
 
-    .actions button.success {
-      background: var(--success);
-      border-color: var(--success);
-      color: #fff;
-      font-weight: 600;
+    .jw-add-shell .station-select-wrap {
+      flex: 1;
+      min-width: 0;
     }
 
-    .actions button.success:hover:not(:disabled) {
-      background: #059669;
+    .jw-add-shell select#jwStation,
+    .jw-add-shell .station-select-wrap select {
+      width: 100%;
+      height: 34px;
+      min-height: 34px;
+      padding: 6px 28px 6px 8px;
+      border: 1px solid #b0bcc9;
+      border-radius: 3px;
+      font-size: 13px;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text);
+      appearance: auto;
     }
 
-    .actions button.danger {
-      background: var(--danger);
-      border-color: var(--danger);
-      color: #fff;
+    .jw-add-shell select#jwStation:invalid {
+      color: #757575;
     }
 
-    .actions button.danger:hover:not(:disabled) {
-      background: #dc2626;
+    .jw-add-shell .row .station-select-wrap select#jwStation {
+      width: 100%;
+      flex: 1;
+      min-width: 0;
+      max-width: var(--jw-input-width);
     }
 
-    /* ── RESPONSIVE ── */
-    @media(max-width:900px) {
-      .form-grid {
+    /* Same-width input bars as Jobworker Id */
+    .jw-add-shell .inline-field {
+      grid-template-columns: 82px var(--jw-input-width);
+      justify-items: stretch;
+    }
+
+    .jw-add-shell .inline-field input,
+    .jw-add-shell .inline-field select,
+    .jw-add-shell .inline-field textarea,
+    .jw-add-shell .inline-field .date-wrap,
+    .jw-add-shell .inline-field .row {
+      width: 100%;
+      max-width: var(--jw-input-width);
+    }
+
+    .jw-add-shell .inline-field .row input#jwRelationName {
+      flex: 1;
+      min-width: 0;
+      width: auto;
+      max-width: none;
+    }
+
+    .jw-add-shell .inline-field input.jw-ob-decimal {
+      width: 100%;
+      max-width: var(--jw-input-width);
+      justify-self: stretch;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 900px) {
+      .jw-add-shell .customer-cards-grid {
         grid-template-columns: 1fr;
       }
 
-      .add-jobworker-page > .form-grid > .box {
-        border-top-left-radius: var(--radius);
-        border-top-right-radius: var(--radius);
-        border-top: 1px solid var(--border);
+      .customer-cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-card {
+        min-height: 0;
       }
     }
 
-    @media(max-width:600px) {
-      .app {
-        padding: 12px;
+    @media (max-width: 600px) {
+      .page {
+        padding: 8px;
       }
 
-      .row {
-        flex-direction: column;
-        align-items: flex-start;
+      .customer-add-shell .inline-field {
+        grid-template-columns: 1fr;
       }
 
-      .row label {
-        min-width: 100%;
+      .customer-add-shell .inline-field label {
+        text-align: left;
       }
-
-      .row input,
-      .row select,
-      .row textarea {
-        width: 100%;
-      }
-
-      .relation-wrap {
-        width: 100%;
-      }
-
-      .actions {
-        flex-direction: column;
-      }
-
-      .actions button {
-        width: 100%;
-      }
-
     }
 
     /* STATION POPUP */
     .stn-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
-    .stn-popup { background: #fff; border-radius: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); width: 420px; max-width: 95vw; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn .2s ease; }
-    .stn-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
+    .stn-popup { background: #fff; border-radius: 8px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18); width: 420px; max-width: 95vw; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; animation: fadeIn .2s ease; border: 1px solid #b0bcc9; }
+    .stn-header { padding: 8px 12px; border-bottom: 1px solid #b0bcc9; font-weight: 700; font-size: 12px; display: flex; align-items: center; justify-content: space-between; background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%); color: #3c4043; text-transform: uppercase; letter-spacing: 0.04em; }
     .stn-header .stn-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); line-height: 1; }
     .stn-search { padding: 10px 16px; border-bottom: 1px solid var(--border); }
     .stn-search input { width: 100%; height: 36px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
@@ -467,20 +501,6 @@
     .stn-add button:hover { background: var(--primary-hover); }
     .stn-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 14px; }
 
-    /* CUSTOM STATION DROPDOWN */
-    .search-dropdown-wrap { position: relative; flex: 1; min-width: 0; }
-    .search-dropdown-list {
-      position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto;
-      background: #fff; border: 1px solid var(--border); border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1000; display: none; margin-top: 6px; padding: 6px 0;
-      animation: fadeIn 0.15s ease-out;
-    }
-    .search-dropdown-item { padding: 10px 16px; font-size: 14px; cursor: pointer; transition: all 0.15s; border-radius: 4px; margin: 0 6px; }
-    .search-dropdown-item:hover { background: #f0f4ff; color: var(--primary); }
-
-    .search-dropdown-item.active { background: #dbeafe; color: var(--primary); }
-    .search-dropdown-item span { font-size: 12px; color: var(--muted); margin-left: 8px; font-style: italic; }
-    .search-dropdown-empty { padding: 12px 16px; font-size: 13px; color: var(--muted); text-align: center; font-style: italic; }
   </style>
 </head>
 
@@ -488,126 +508,119 @@
 
   <div id="toastMsg" class="toast"></div>
 
-  <div class="app add-jobworker-page">
+  <div class="page">
+    <div class="app add-jobworker-page ledger-page-shell customer-add-shell jw-add-shell">
 
-    <div class="ledger-page-titlebar jw-add-titlebar-grid">
-      <div class="jw-titlebar-left">
-        <button type="button" class="jw-titlebar-list-btn" onclick="goToJobworkerList()">Job Worker List</button>
+      <div class="ledger-page-titlebar">
+        <span class="ledger-page-titlebar-label">Add Job Worker</span>
       </div>
-      <span class="jw-titlebar-heading">Add Job Worker</span>
-      <div class="jw-titlebar-right" aria-hidden="true"></div>
-    </div>
 
-    <div class="form-grid">
+      <form class="erp-form" onsubmit="return false;">
+        <div class="customer-cards-grid">
 
-      <!-- ── LEFT COLUMN ── -->
-      <div>
-
-        <!-- Personal -->
-        <div class="box" style="margin-bottom:16px;">
-          <div class="box-title">Personal</div>
-
-          <div class="row">
-            <label>Jobworker Id <span class="required-star">*</span></label>
-            <input id="jwId" readonly tabindex="-1" placeholder="Auto-generated">
-          </div>
-
-          <div class="row">
-            <label>Name <span class="required-star">*</span></label>
-            <input id="jwName" placeholder="Full name" required autofocus>
-          </div>
-
-          <div class="row">
-            <label>Relation</label>
-            <div class="relation-wrap">
-              <select id="jwRelationType">
-                <option value="">—</option>
-                <option value="S/O">S/O</option>
-                <option value="D/O">D/O</option>
-                <option value="W/O">W/O</option>
-                <option value="C/O">C/O</option>
-              </select>
-              <input id="jwRelationName" placeholder="Relation name">
+          <div class="detail-card">
+            <div class="detail-card-head">Personal Details</div>
+            <div class="detail-card-body">
+              <div class="inline-field field">
+                <label for="jwId">Jobworker Id</label>
+                <input id="jwId" readonly tabindex="-1" placeholder="Auto Generated" title="Auto generated on save">
+              </div>
+              <div class="inline-field field">
+                <label for="jwName">Name <span class="required">*</span></label>
+                <input id="jwName" placeholder="Enter full name" required autofocus>
+              </div>
+              <div class="inline-field field">
+                <label for="jwRelationType">Relation</label>
+                <div class="row">
+                  <select id="jwRelationType">
+                    <option value="S/O">S/O</option>
+                    <option value="W/O">W/O</option>
+                    <option value="D/O">D/O</option>
+                    <option value="C/O">C/O</option>
+                  </select>
+                  <input id="jwRelationName" placeholder="Name">
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="jwLfNo">LF No</label>
+                <input id="jwLfNo" type="text" placeholder="Auto Generated" readonly>
+              </div>
+              <div class="inline-field field">
+                <label for="jwObDate">Opening Date</label>
+                <div class="date-wrap">
+                  <input id="jwObDate" type="date" placeholder="dd-mm-yyyy">
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="jwObMetal">Metal</label>
+                <input id="jwObMetal" type="text" class="jw-ob-decimal" inputmode="decimal" placeholder="0.000" autocomplete="off">
+              </div>
+              <div class="inline-field field">
+                <label for="jwObChain">Chain</label>
+                <input id="jwObChain" type="text" class="jw-ob-decimal" inputmode="decimal" placeholder="0.000" autocomplete="off">
+              </div>
+              <div class="inline-field field">
+                <label for="jwObNag">Nag</label>
+                <input id="jwObNag" type="text" class="jw-ob-decimal" inputmode="decimal" placeholder="0.000" autocomplete="off">
+              </div>
+              <div class="inline-field field">
+                <label for="jwObMaal">Maal</label>
+                <input id="jwObMaal" type="text" class="jw-ob-decimal" inputmode="decimal" placeholder="0.000" autocomplete="off">
+              </div>
             </div>
           </div>
 
-          <div class="row">
-            <label>LF No <span class="required-star">*</span></label>
-            <input id="jwLfNo" type="text" placeholder="Auto-generated" readonly
-              style="background:#f5f5f7;cursor:not-allowed;">
+          <div class="detail-card">
+            <div class="detail-card-head">Contact Details</div>
+            <div class="detail-card-body">
+              <div class="inline-field field">
+                <label for="jwAddress">Address <span class="required">*</span></label>
+                <textarea id="jwAddress" placeholder="Enter full address" rows="2"></textarea>
+              </div>
+              <div class="inline-field field">
+                <label for="jwStation">Station <span class="required">*</span></label>
+                <div class="row">
+                  <div class="station-select-wrap">
+                    <select id="jwStation" required>
+                      <option value="">— Select station —</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn-station-add" aria-label="Add New Station" title="Add New Station"
+                    onclick="saveJwStationInline()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="jwPhone">Phone</label>
+                <input id="jwPhone" type="tel" placeholder="10-digit" maxlength="10" inputmode="numeric">
+              </div>
+              <div class="inline-field field">
+                <label for="jwMobile">Mobile</label>
+                <input id="jwMobile" type="tel" placeholder="10-digit" maxlength="10" inputmode="numeric">
+              </div>
+              <div class="inline-field field">
+                <label for="jwEmail">Email</label>
+                <input id="jwEmail" type="email" placeholder="email@example.com">
+              </div>
+            </div>
           </div>
+
         </div>
+      </form>
 
-        <!-- Opening Balance -->
-        <div class="box">
-          <div class="box-title">Opening Balance</div>
-
-          <div class="row">
-            <label>Date</label>
-            <input id="jwObDate" type="date">
-          </div>
-
-          <div class="ob-grid">
-            <div class="ob-label">Metal</div>
-            <div class="ob-input"><input id="jwObMetal" type="number" step="0.001" placeholder="0.000"></div>
-
-            <div class="ob-label">Chain</div>
-            <div class="ob-input"><input id="jwObChain" type="number" step="0.001" placeholder="0.000"></div>
-
-            <div class="ob-label">Nag</div>
-            <div class="ob-input"><input id="jwObNag" type="number" step="0.001" placeholder="0.000"></div>
-
-            <div class="ob-label">Maal</div>
-            <div class="ob-input"><input id="jwObMaal" type="number" step="0.001" placeholder="0.000"></div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── RIGHT COLUMN ── -->
-      <div class="box">
-        <div class="box-title">Contact</div>
-
-        <div class="row">
-          <label>Address <span class="required-star">*</span></label>
-          <textarea id="jwAddress" placeholder="Full address..."></textarea>
-        </div>
-
-        <div class="row">
-          <label>Station <span class="required-star">*</span></label>
-          <div class="search-dropdown-wrap" id="jwStationWrap">
-            <input id="jwStation" placeholder="Type station name..." autocomplete="off" onfocus="showJwStationDropdown()" oninput="filterJwStationDropdown()" style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%235f6368%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px; padding-right: 40px; cursor: pointer;">
-            <div id="jwStationDropdown" class="search-dropdown-list"></div>
-          </div>
-          <button class="icon-btn" title="Save typed station to list" onclick="saveJwStationInline()" style="background:#eef4ff; font-size:16px; font-weight:700; color:var(--primary);">+</button>
-        </div>
-
-        <div class="row">
-          <label>Phone No</label>
-          <input id="jwPhone" type="tel" placeholder="Phone number">
-        </div>
-
-        <div class="row">
-          <label>Mobile No</label>
-          <input id="jwMobile" type="tel" placeholder="Mobile number">
-        </div>
-
-        <div class="row">
-          <label>Email Id</label>
-          <input id="jwEmail" type="email" placeholder="email@example.com">
-        </div>
+      <div class="form-actions">
+        <button type="button" class="primary" onclick="saveAndClose()">Save & Close</button>
+        <button type="button" onclick="saveAndNew()">Save & New</button>
+        <button type="button" onclick="resetForm()">Reset</button>
+        <button type="button" onclick="goToJobworkerList()">Job Worker List</button>
       </div>
 
     </div>
-
-    <!-- ── ACTIONS ── -->
-    <div class="actions">
-      <button class="primary" onclick="saveAndClose()">Save And Close</button>
-      <button class="success" onclick="saveAndNew()">Save And New</button>
-      <button onclick="resetForm()">Reset</button>
-      <button class="danger" onclick="closeForm()">Close</button>
-    </div>
-
   </div>
 
 
@@ -681,6 +694,45 @@
         }
       }
 
+      // ── Metal / Chain / Nag / Maal — always 3 decimal places (e.g. 123 → 123.000) ──
+      var JW_OB_DECIMAL_IDS = ['jwObMetal', 'jwObChain', 'jwObNag', 'jwObMaal'];
+
+      function parseJwObDecimal(val) {
+        var raw = String(val == null ? '' : val).trim().replace(/,/g, '');
+        if (raw === '' || raw === '-' || raw === '.') return NaN;
+        return parseFloat(raw);
+      }
+
+      function formatJwObDecimalValue(val) {
+        var n = typeof val === 'number' ? val : parseJwObDecimal(val);
+        if (!Number.isFinite(n)) return '';
+        return n.toFixed(3);
+      }
+
+      function formatJwObDecimalField(el) {
+        if (!el) return;
+        var formatted = formatJwObDecimalValue(el.value);
+        el.value = formatted;
+      }
+
+      function formatAllJwObDecimals(root) {
+        var scope = root || document;
+        JW_OB_DECIMAL_IDS.forEach(function (id) {
+          formatJwObDecimalField(scope.querySelector('#' + id) || document.getElementById(id));
+        });
+      }
+
+      function bindJwObDecimalInputs() {
+        JW_OB_DECIMAL_IDS.forEach(function (id) {
+          var el = document.getElementById(id);
+          if (!el || el.dataset.jwObFmtBound) return;
+          el.dataset.jwObFmtBound = '1';
+          el.addEventListener('blur', function () {
+            formatJwObDecimalField(el);
+          });
+        });
+      }
+
       // ── AUTO LF No ─────────────────────────────────
       function generateLfNo() {
         const list = JSON.parse(localStorage.getItem('jobworkers') || '[]');
@@ -693,78 +745,86 @@
         return String(max + 1);
       }
 
-      // ── STATION DROPDOWN UI ─────────────────────────
-      var jwStationDropdownActiveIdx = -1;
-
-      function getJwStations() {
-        const stored = JSON.parse(localStorage.getItem('stations') || '[]');
-        const cust = JSON.parse(localStorage.getItem('customers') || '[]').map(function (c) { return c.station; }).filter(Boolean);
-        const workers = JSON.parse(localStorage.getItem('jobworkers') || '[]').map(function (j) { return j.station; }).filter(Boolean);
-        const all = stored.map(s => s.name || s).concat(cust).concat(workers);
-        const unique = [];
-        all.forEach(function (s) { if (unique.indexOf(s) === -1) unique.push(s); });
-        return unique.sort();
+      // ── STATION (native select — same as Add Customer) ──
+      function resolveJwStationCanonical(stored) {
+        var n = (stored == null ? '' : String(stored)).trim();
+        if (!n) return '';
+        var stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        var found = stations.find(function (s) {
+          return String(s.name || s).toLowerCase() === n.toLowerCase();
+        });
+        return found ? (found.name || found) : n;
       }
 
-      function showJwStationDropdown() {
-        var dd = document.getElementById('jwStationDropdown');
-        if (dd) { dd.style.display = 'block'; filterJwStationDropdown(); }
-      }
-
-      function filterJwStationDropdown() {
-        var inputVal = (document.getElementById('jwStation').value || '').toLowerCase();
-        var allStns = getJwStations();
-        var filtered = inputVal ? allStns.filter(function(s) { return s.toLowerCase().indexOf(inputVal) !== -1; }) : allStns;
-        renderJwStationDropdown(filtered);
-      }
-
-      function renderJwStationDropdown(list) {
-        var dd = document.getElementById('jwStationDropdown');
-        if (!dd) return;
-        jwStationDropdownActiveIdx = -1;
-        if (!list.length) {
-          dd.innerHTML = '<div class="search-dropdown-empty">No matching stations.<br>Type and click "+" to add.</div>';
-        } else {
-          dd.innerHTML = list.map(function(s) {
-            var safe = s.replace(/'/g, "\\'");
-            return '<div class="search-dropdown-item" onclick="selectJwStation(\'' + safe + '\')">' + s + '</div>';
-          }).join('');
+      function populateJwStationSelect(selectAfter) {
+        var sel = document.getElementById('jwStation');
+        if (!sel || sel.tagName !== 'SELECT') return;
+        var stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        var sorted = stations.slice().sort(function (a, b) {
+          return String(a.name || a).localeCompare(String(b.name || b), undefined, { sensitivity: 'base' });
+        });
+        sel.innerHTML = '';
+        var ph = document.createElement('option');
+        ph.value = '';
+        ph.textContent = '— Select station —';
+        sel.appendChild(ph);
+        sorted.forEach(function (s) {
+          var o = document.createElement('option');
+          var name = s.name || s;
+          o.value = name;
+          o.textContent = s.state ? (name + ' (' + s.state + ')') : name;
+          sel.appendChild(o);
+        });
+        var pick = selectAfter != null ? String(selectAfter).trim() : '';
+        if (pick) {
+          var canon = resolveJwStationCanonical(pick);
+          var opts = Array.from(sel.options);
+          if (opts.some(function (opt) { return opt.value === canon; })) {
+            sel.value = canon;
+          } else {
+            var byLower = opts.find(function (opt) {
+              return opt.value.toLowerCase() === pick.toLowerCase();
+            });
+            if (byLower) sel.value = byLower.value;
+          }
         }
       }
 
-      window.showJwStationDropdown = showJwStationDropdown;
-      window.filterJwStationDropdown = filterJwStationDropdown;
+      function loadStations() {
+        populateJwStationSelect();
+      }
 
-      window.selectJwStation = function(name) {
-        document.getElementById('jwStation').value = name;
-        var dd = document.getElementById('jwStationDropdown');
-        if (dd) dd.style.display = 'none';
-      };
-
-      // Hide dropdown on outside click
-      document.addEventListener('click', function(e) {
-        var wrap = document.getElementById('jwStationWrap');
-        if (wrap && !wrap.contains(e.target)) {
-          var dd = document.getElementById('jwStationDropdown');
-          if (dd) dd.style.display = 'none';
+      function openJwStationSelectList(sel) {
+        if (!sel || sel.tagName !== 'SELECT') return;
+        if (typeof sel.showPicker === 'function') {
+          try {
+            sel.showPicker();
+            return;
+          } catch (err) { /* fallback */ }
         }
-      });
+        sel.focus();
+        sel.click();
+      }
 
-      window.saveJwStationInline = function() {
-        const input = document.getElementById('jwStation');
-        const name = (input ? input.value : '').trim();
-        if (!name) { showToast('Type a station name first', 'error'); return; }
-        const stations = JSON.parse(localStorage.getItem('stations') || '[]');
-        if (stations.some(function(s) { return (s.name || s).toLowerCase() === name.toLowerCase(); })) {
-          showToast('Station already in list', 'error'); return;
+      window.saveJwStationInline = function () {
+        var name = (prompt('Enter station name:') || '').trim();
+        if (!name) return;
+        var state = (prompt('Enter state (optional):') || '').trim();
+        var stations = JSON.parse(localStorage.getItem('stations') || '[]');
+        if (stations.some(function (s) {
+          return String(s.name || s).toLowerCase() === name.toLowerCase();
+        })) {
+          showToast('Station already in list', 'error');
+          populateJwStationSelect(name);
+          document.getElementById('jwStation').value = resolveJwStationCanonical(name);
+          return;
         }
-        stations.push({ name: name });
+        stations.push({ name: name, state: state });
         localStorage.setItem('stations', JSON.stringify(stations));
+        populateJwStationSelect(name);
+        document.getElementById('jwStation').value = name;
         showToast('Station "' + name + '" saved!', 'success');
       };
-
-      function loadStations() { /* No-op on load because dropdown builds dynamically on click */ }
-
 
       // ── AUTO ID GENERATION ─────────────────────────
       function generateJWId() {
@@ -772,9 +832,6 @@
         const next = Number(last) + 1;
         return 'SGJ/Jobworker/' + next;
       }
-
-      // ── STATION ────────────────────────────────────
-      function loadStations() { refreshJwStationList(); }
 
       // ── SET DATE DEFAULTS ──────────────────────────
       function setDefaults() {
@@ -832,8 +889,7 @@
             el.value = '';
             return;
           }
-          var n = parseFloat(v);
-          el.value = Number.isFinite(n) ? String(n) : '';
+          el.value = formatJwObDecimalValue(v);
         }
         var obDateRaw = (j.obDate != null && String(j.obDate).trim() !== '') ? j.obDate : (j.date || '');
         var obDateStr = String(obDateRaw || '').trim();
@@ -851,7 +907,7 @@
         setNum('jwObNag', j.obNag);
         setNum('jwObMaal', j.obMaal);
         setText('jwAddress', j.address || '');
-        setText('jwStation', j.station || '');
+        populateJwStationSelect(resolveJwStationCanonical(j.station || ''));
         setText('jwPhone', j.phone || '');
         setText('jwMobile', j.mobile || '');
         setText('jwEmail', j.email || '');
@@ -868,10 +924,10 @@
           relationName: document.getElementById('jwRelationName').value.trim(),
           lfNo: document.getElementById('jwLfNo').value.trim(),
           obDate: document.getElementById('jwObDate').value,
-          obMetal: parseFloat(document.getElementById('jwObMetal').value) || 0,
-          obChain: parseFloat(document.getElementById('jwObChain').value) || 0,
-          obNag: parseFloat(document.getElementById('jwObNag').value) || 0,
-          obMaal: parseFloat(document.getElementById('jwObMaal').value) || 0,
+          obMetal: parseJwObDecimal(document.getElementById('jwObMetal').value) || 0,
+          obChain: parseJwObDecimal(document.getElementById('jwObChain').value) || 0,
+          obNag: parseJwObDecimal(document.getElementById('jwObNag').value) || 0,
+          obMaal: parseJwObDecimal(document.getElementById('jwObMaal').value) || 0,
           address: document.getElementById('jwAddress').value.trim(),
           station: document.getElementById('jwStation').value.trim(),
           phone: document.getElementById('jwPhone').value.trim(),
@@ -890,6 +946,7 @@
       // ── SAVE ───────────────────────────────────────
       function save() {
         if (!validate()) return null;
+        formatAllJwObDecimals(getFormRoot());
 
         const data = collectData();
         const list = JSON.parse(localStorage.getItem('jobworkers') || '[]');
@@ -951,6 +1008,7 @@
           });
         var relSelect = root.querySelector('#jwRelationType');
         if (relSelect) relSelect.selectedIndex = 0;
+        populateJwStationSelect('');
         var jwIdEl = root.querySelector('#jwId');
         if (jwIdEl) jwIdEl.value = generateJWId();
         var lfEl = root.querySelector('#jwLfNo');
@@ -977,6 +1035,10 @@
       var JW_ADD_FIELD_CHAIN = ['jwName', 'jwRelationType', 'jwRelationName', 'jwLfNo', 'jwObDate', 'jwObMetal', 'jwObChain', 'jwObNag', 'jwObMaal', 'jwAddress', 'jwStation', 'jwPhone', 'jwMobile', 'jwEmail'];
 
       function focusJwAddFieldByIndex(idx) {
+        var active = document.activeElement;
+        if (active && active.classList && active.classList.contains('jw-ob-decimal')) {
+          formatJwObDecimalField(active);
+        }
         if (idx < 0) idx = JW_ADD_FIELD_CHAIN.length - 1;
         if (idx >= JW_ADD_FIELD_CHAIN.length) idx = 0;
         var root = getFormRoot();
@@ -1010,93 +1072,33 @@
       window.focusJwNameField = focusJwNameField;
       window.scheduleFocusJwNameField = scheduleFocusJwNameField;
 
-      function stationDropdownIsOpen() {
-        var dd = document.getElementById('jwStationDropdown');
-        return !!(dd && dd.style.display === 'block');
-      }
-
-      function getJwStationDropdownItems() {
-        var dd = document.getElementById('jwStationDropdown');
-        if (!dd) return [];
-        return Array.from(dd.querySelectorAll('.search-dropdown-item'));
-      }
-
-      function setJwStationDropdownActive(idx) {
-        var items = getJwStationDropdownItems();
-        items.forEach(function (it) { it.classList.remove('active'); });
-        jwStationDropdownActiveIdx = -1;
-        if (idx < 0 || idx >= items.length) return;
-        jwStationDropdownActiveIdx = idx;
-        items[jwStationDropdownActiveIdx].classList.add('active');
-      }
-
-      function moveJwStationDropdownActive(delta) {
-        var items = getJwStationDropdownItems();
-        if (!items.length) return;
-        var next = jwStationDropdownActiveIdx;
-        if (next < 0) next = delta > 0 ? 0 : items.length - 1;
-        else next = next + delta;
-        if (next < 0) next = 0;
-        if (next >= items.length) next = items.length - 1;
-        setJwStationDropdownActive(next);
-        try { items[next].scrollIntoView({ block: 'nearest' }); } catch (err) { }
-      }
-
-      function selectJwStationDropdownActive() {
-        var items = getJwStationDropdownItems();
-        if (!items.length) return;
-        var idx = jwStationDropdownActiveIdx;
-        if (idx < 0 || idx >= items.length) idx = 0;
-        var name = (items[idx] && items[idx].textContent ? items[idx].textContent.trim() : '');
-        if (!name) return;
-        window.selectJwStation(name);
-        jwStationDropdownActiveIdx = -1;
-      }
-
       document.addEventListener('keydown', function (e) {
         if (e.altKey || e.ctrlKey || e.metaKey) return;
         var t = e.target;
         if (!t || !t.id) return;
 
-        // Station dropdown controls
-        if (t.id === 'jwStation') {
-          if (e.key === 'Escape') {
-            var dd = document.getElementById('jwStationDropdown');
-            if (dd && dd.style.display === 'block') {
-              e.preventDefault();
-              dd.style.display = 'none';
-              jwStationDropdownActiveIdx = -1;
-            }
-            return;
+        if (e.key === 'Enter' && t.id === 'jwAddress' && !e.shiftKey) {
+          e.preventDefault();
+          focusJwAddFieldByIndex(JW_ADD_FIELD_CHAIN.indexOf('jwAddress') + 1);
+          var st = document.getElementById('jwStation');
+          if (st && st.tagName === 'SELECT' && !st.value) {
+            setTimeout(function () { openJwStationSelectList(st); }, 0);
           }
-
-          if (e.key === 'Enter') {
-            if (stationDropdownIsOpen()) {
-              var items = getJwStationDropdownItems();
-              if (items.length) {
-                e.preventDefault();
-                selectJwStationDropdownActive();
-                return;
-              }
-            }
-          }
-
-          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            var dd = document.getElementById('jwStationDropdown');
-            if (!stationDropdownIsOpen()) showJwStationDropdown();
-            if (dd && dd.style.display === 'block') {
-              var items = getJwStationDropdownItems();
-              if (items.length) {
-                e.preventDefault();
-                moveJwStationDropdownActive(e.key === 'ArrowDown' ? 1 : -1);
-                return;
-              }
-            }
-          }
+          return;
         }
 
-        // Field-to-field navigation
+        if (e.key === 'Enter' && t.id === 'jwStation' && t.tagName === 'SELECT') {
+          e.preventDefault();
+          if (!t.value) {
+            openJwStationSelectList(t);
+          } else {
+            focusJwAddFieldByIndex(JW_ADD_FIELD_CHAIN.indexOf('jwStation') + 1);
+          }
+          return;
+        }
+
         if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        if (t.tagName === 'SELECT') return;
         if (!JW_ADD_FIELD_CHAIN.includes(t.id)) return;
         e.preventDefault();
         focusJwAddFieldByIndex(JW_ADD_FIELD_CHAIN.indexOf(t.id) + (e.key === 'ArrowDown' ? 1 : -1));
@@ -1147,6 +1149,7 @@
         setDefaults();
       }
       loadStations();
+      bindJwObDecimalInputs();
       scheduleFocusJwNameField();
 
       function onJwAddPageRefresh() {
@@ -1159,7 +1162,7 @@
 
       // Refresh customer list if new customer was added in another tab
       window.addEventListener('storage', function (e) {
-        if (e.key === 'customers' || e.key === 'jobworkers') loadStations();
+        if (e.key === 'stations' || e.key === 'customers' || e.key === 'jobworkers') loadStations();
       });
 
     })();

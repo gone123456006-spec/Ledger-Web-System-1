@@ -58,36 +58,305 @@
 
     .erp-form {
       background: var(--card);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-      padding: 28px 36px 32px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px 44px;
-      max-width: 800px;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      padding: 14px 14px 16px;
+      display: block;
+      max-width: none;
       width: 100%;
       min-width: 0;
-      align-self: center;
-      transition: box-shadow 0.2s ease;
+      align-self: stretch;
     }
 
     .erp-form:hover {
-      box-shadow: var(--shadow-hover);
+      box-shadow: none;
     }
 
     .ledger-page-shell.customer-add-shell {
       width: 100%;
-      max-width: 800px;
+      max-width: 1180px;
       align-self: center;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       display: flex;
       flex-direction: column;
       background: #ffffff;
       border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
       overflow: hidden;
+    }
+
+    .customer-cards-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+      gap: 12px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .detail-card {
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 440px;
+      overflow: hidden;
+    }
+
+    .detail-card-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 10px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      line-height: 1.2;
+      border-bottom: 1px solid #b0bcc9;
+    }
+
+    .detail-card-body {
+      padding: 12px 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .customer-add-shell .inline-field {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 4px 8px;
+      align-items: center;
+      margin: 0;
+      min-height: 36px;
+    }
+
+    .customer-add-shell .inline-field label {
+      margin: 0;
+      font-size: 12px;
+      text-align: right;
+      line-height: 1.3;
+      padding-right: 4px;
+      color: #3c4043;
+      font-weight: 600;
+    }
+
+    .customer-add-shell .inline-field input,
+    .customer-add-shell .inline-field select,
+    .customer-add-shell .inline-field textarea {
+      padding: 6px 8px;
+      font-size: 13px;
+      min-height: 34px;
+      border-radius: 3px;
+      line-height: 1.3;
+    }
+
+    .customer-add-shell .inline-field textarea {
+      min-height: 56px;
+      resize: none;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    .customer-add-shell .inline-field .row {
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .customer-add-shell .inline-field .row select#relation {
+      width: 56px;
+      min-width: 56px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .customer-add-shell .inline-field select#openingBalanceType {
+      width: 48px;
+      min-width: 48px;
+      flex-shrink: 0;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    .customer-add-shell .inline-field .date-wrap input[type="date"] {
+      padding-right: 8px;
+    }
+
+    .customer-add-shell .station-select-wrap select,
+    .customer-add-shell select#station {
+      min-height: 34px;
+      height: 34px;
+      padding: 6px 28px 6px 8px;
+      font-size: 13px;
+    }
+
+    .customer-add-shell .btn-station-add {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
+      min-height: 34px;
+      padding: 0;
+      background: #eef1f5;
+      border: 1px solid #b0bcc9;
+      border-radius: 3px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .customer-add-shell .btn-station-add:hover {
+      background: #e2e6eb;
+      border-color: #9aa5b5;
+    }
+
+    .customer-add-shell .btn-station-add svg {
+      width: 14px;
+      height: 14px;
+      color: #5f6368;
+    }
+
+    /* Station popup — PHP-style compact card (matches Add Customer) */
+    #stationPopupOverlay.station-popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(2px);
+    }
+
+    #stationPopupOverlay.station-popup-overlay[style*="flex"] {
+      display: flex !important;
+    }
+
+    .station-popup-modal {
+      background: #fff;
+      width: 520px;
+      max-width: calc(100vw - 24px);
+      border-radius: 4px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+      font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif;
+      overflow: hidden;
+      border: 1px solid #b0bcc9;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .station-popup-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      padding: 7px 10px;
+      font-weight: 700;
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      flex-shrink: 0;
+      line-height: 1.2;
+      border-bottom: 1px solid #b0bcc9;
+    }
+
+    .station-popup-card {
+      border: none;
+      background: #f8fafc;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .station-popup-card-body {
+      padding: 10px 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .station-popup-inline {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 4px 8px;
+      align-items: center;
+      min-height: 34px;
+    }
+
+    .station-popup-inline label {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: right;
+      color: #3c4043;
+      padding-right: 4px;
+      line-height: 1.3;
+    }
+
+    .station-popup-inline label .required {
+      color: var(--danger);
+    }
+
+    .station-popup-inline input,
+    .station-popup-inline select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      font-size: 13px;
+      min-height: 34px;
+      color: var(--text);
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    .station-popup-inline input[readonly] {
+      background: #f1f3f4;
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .station-popup-inline select {
+      cursor: pointer;
+    }
+
+    .station-popup-actions {
+      background: #f4f6f8;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: stretch;
+      align-items: stretch;
+      flex-wrap: nowrap;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .station-popup-actions button {
+      flex: 1 1 0;
+      min-width: 0;
+      padding: 9px 10px;
+      min-height: 38px;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text);
+      white-space: nowrap;
+      line-height: 1.25;
+      transition: background 0.15s ease;
+    }
+
+    .station-popup-actions button:hover {
+      background: #e8eaed;
+      border-color: #bdc1c6;
     }
 
     /* Same header treatment as the Station modal (#stationPopupOverlay) */
@@ -96,13 +365,30 @@
       background: #f8f9fa;
       color: #1a1a1a;
       text-align: center;
-      padding: 12px 20px;
-      font-size: 16px;
+      padding: 8px 14px;
+      font-size: 14px;
       font-weight: 600;
       border-bottom: 1px solid var(--border);
-      border-radius: 12px 12px 0 0;
+      border-radius: 6px 6px 0 0;
       margin: 0;
       flex-shrink: 0;
+    }
+
+    .customer-add-shell .erp-form label {
+      margin-bottom: 0;
+    }
+
+    .customer-add-shell .erp-form input,
+    .customer-add-shell .erp-form select,
+    .customer-add-shell .erp-form textarea {
+      padding: 6px 8px;
+      font-size: 13px;
+      min-height: 34px;
+    }
+
+    .customer-add-shell .erp-form textarea {
+      min-height: 56px;
+      resize: none;
     }
 
     .ledger-page-titlebar-label {
@@ -157,43 +443,7 @@
       box-shadow: none;
     }
 
-    .form-left,
-    .form-right {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      min-width: 0;
-    }
-
-    .form-section {
-      margin-bottom: 20px;
-    }
-
-    .form-section:last-child {
-      margin-bottom: 0;
-    }
-
-    .form-left h4,
-    .form-right h4 {
-      margin: 0 0 14px 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #c00;
-      letter-spacing: -0.01em;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    .form-left h4:not(:first-child),
-    .form-right h4:not(:first-child) {
-      margin-top: 4px;
-    }
-
-    .field {
-      margin-bottom: 14px;
-    }
-
-    .field:last-child {
+    .customer-add-shell .field {
       margin-bottom: 0;
     }
 
@@ -271,18 +521,8 @@
       align-items: center;
     }
 
-    .date-wrap input {
-      padding-right: 40px;
-    }
-
-    .date-wrap::after {
-      content: "";
-      position: absolute;
-      right: 12px;
-      width: 18px;
-      height: 18px;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235f6368'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z'/%3E%3C/svg%3E") center/contain no-repeat;
-      pointer-events: none;
+    .date-wrap input[type="date"] {
+      padding-right: 8px;
     }
 
     /* Popup mode overrides for a more compact look */
@@ -312,92 +552,96 @@
       width: 100%;
       align-self: stretch;
     }
-    body.popup-mode .form-left,
-    body.popup-mode .form-right {
-      background: #fff;
-      min-width: 0;
-    }
-    body.popup-mode .erp-form {
-      max-width: none;
-      width: 100%;
-      align-self: stretch;
-      padding: 8px 10px 12px;
-      gap: 8px 14px;
+    body.popup-mode .customer-add-shell {
       border-radius: 0;
       box-shadow: none;
       border: none;
+    }
+    body.popup-mode .erp-form {
+      padding: 10px 10px 12px;
       background: #fff !important;
     }
-    body.popup-mode h4 {
-      margin: 5px 0 !important;
-      font-size: 14px !important;
+    body.popup-mode .customer-cards-grid {
+      gap: 10px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
     }
-    body.popup-mode .field {
-      margin-bottom: 5px;
+    body.popup-mode .detail-card {
+      min-height: 400px;
     }
-    body.popup-mode label {
+    body.popup-mode .detail-card-head {
+      padding: 6px 8px;
       font-size: 11px;
-      margin-bottom: 2px;
     }
-    body.popup-mode input,
-    body.popup-mode select,
-    body.popup-mode textarea {
-      padding: 8px 12px;
-      font-size: 14px;
+    body.popup-mode .detail-card-body {
+      padding: 10px 8px 12px;
+      gap: 8px;
     }
-    body.popup-mode .erp-form input:not([type="date"]):not([type="checkbox"]):not([type="radio"]),
-    body.popup-mode .erp-form select,
-    body.popup-mode .date-wrap input {
-      min-height: 42px;
-      box-sizing: border-box;
+    body.popup-mode .customer-add-shell .inline-field {
+      grid-template-columns: 78px minmax(0, 1fr);
+      gap: 3px 6px;
+      min-height: 32px;
     }
-    body.popup-mode .erp-form textarea {
-      min-height: 56px;
-      resize: none;
+    body.popup-mode .customer-add-shell .inline-field label {
+      font-size: 11px;
     }
-    body.popup-mode .row select#relation {
-      width: 88px;
-      min-height: 42px;
-      height: 42px;
+    body.popup-mode .customer-add-shell .inline-field input,
+    body.popup-mode .customer-add-shell .inline-field select,
+    body.popup-mode .customer-add-shell .inline-field textarea {
+      padding: 5px 7px;
+      font-size: 12px;
+      min-height: 30px;
     }
-    body.popup-mode select#openingBalanceType {
-      min-height: 42px;
-      height: 42px;
+    body.popup-mode .customer-add-shell .inline-field textarea {
+      min-height: 48px;
     }
-    body.popup-mode .form-section {
-      margin-bottom: 5px;
+    body.popup-mode .customer-add-shell .station-select-wrap select,
+    body.popup-mode .customer-add-shell select#station {
+      height: 30px;
+      min-height: 30px;
+    }
+    body.popup-mode .customer-add-shell .btn-station-add {
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
+      min-height: 30px;
     }
     body.popup-mode .form-actions {
       position: static;
       box-shadow: none;
       border-top: 1px solid var(--border);
-      margin-top: 5px;
+      margin-top: 0;
       backdrop-filter: none;
-      padding: 5px;
+      padding: 6px 8px;
+      gap: 6px;
+    }
+    body.popup-mode .form-actions button {
+      padding: 5px 12px;
+      font-size: 12px;
+      min-width: 96px;
     }
 
     .ledger-page-shell.customer-add-shell > .form-actions {
-      border-radius: 0 0 12px 12px;
+      border-radius: 0 0 6px 6px;
     }
 
-    .form-actions {
+    .customer-add-shell > .form-actions {
       position: static;
-      background: #fff;
+      background: #f4f6f8;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 12px;
-      padding: 16px 20px;
+      gap: 8px;
+      padding: 8px 12px;
       flex-shrink: 0;
     }
 
-    .form-actions button {
-      padding: 10px 20px;
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-weight: 500;
-      min-width: 130px;
+    .customer-add-shell > .form-actions button {
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      min-width: 100px;
       cursor: pointer;
       transition: background 0.15s ease, transform 0.05s ease;
     }
@@ -427,7 +671,8 @@
       background: var(--primary-hover);
     }
 
-    #customerListSection {
+    /* Customer list — PHP shell + Excel-style grid */
+    #customerListSection.customer-list-shell {
       display: none;
       flex: 1;
       width: 100%;
@@ -436,238 +681,328 @@
       overflow: hidden;
       flex-direction: column;
       min-height: 0;
-      background: var(--card);
-      border-radius: 16px;
-      box-shadow: var(--shadow);
-      padding: 20px;
+      background: #fff;
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      padding: 0;
     }
 
-    #customerListSection[style*="flex"] {
+    #customerListSection.customer-list-shell.customer-list-open {
       display: flex !important;
     }
 
-    #customerListSection > .ledger-page-titlebar:first-child {
-      margin: -20px -20px 16px -20px;
-      border-radius: 16px 16px 0 0;
-      background: #f8f9fa;
-      color: #1a1a1a;
+    #customerListSection .customer-list-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
       text-align: center;
-      padding: 12px 20px;
-      font-size: 16px;
-      font-weight: 600;
-      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border-bottom: 1px solid #b0bcc9;
+      border-radius: 8px 8px 0 0;
+      flex-shrink: 0;
+      margin: 0;
     }
 
-    #customerListSection .list-header {
+    #customerListSection .customer-list-toolbar {
       display: flex;
-      justify-content: flex-end;
-      align-items: center;
       flex-wrap: wrap;
-      gap: 16px;
-      padding-bottom: 16px;
-      margin-bottom: 16px;
-      border-bottom: 2px solid var(--border);
+      align-items: center;
+      gap: 8px 12px;
+      padding: 8px 10px;
+      background: #f4f6f8;
+      border-bottom: 1px solid #b0bcc9;
+      flex-shrink: 0;
     }
 
-    #customerListSection .list-controls {
+    #customerListSection .list-toolbar-left {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     #customerListSection .list-controls label {
       margin: 0;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      color: #3c4043;
     }
 
-    #customerListSection .list-controls select {
-      padding: 8px 12px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      font-size: 14px;
-      min-width: 140px;
+    #customerListSection .list-controls select,
+    #customerListSection #listStationFilter {
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      min-width: 120px;
+      min-height: 30px;
       background: #fff;
       cursor: pointer;
+    }
+
+    #customerListSection .list-station-filter-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     #customerListSection .list-controls select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
     }
 
-    #customerListSection .back-btn {
-      padding: 10px 20px;
-      font-size: 14px;
+    #customerListSection .list-back-btn {
+      padding: 5px 14px;
+      font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
-      border-radius: var(--radius-sm);
-      border: none;
-      background: var(--primary);
+      border-radius: 6px;
+      border: 1px solid #466690;
+      background: linear-gradient(180deg, #5a7ca8 0%, #466690 100%);
       color: #fff;
       cursor: pointer;
-      transition: background 0.2s ease, transform 0.05s ease;
-      box-shadow: 0 1px 3px rgba(26, 115, 232, 0.3);
+      min-height: 30px;
     }
 
-    #customerListSection .back-btn:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
-    }
-
-    #customerListSection .back-btn:active {
-      transform: translateY(0);
+    #customerListSection .list-back-btn:hover {
+      filter: brightness(1.05);
     }
 
     #customerListSection .list-search-wrap {
-      margin-bottom: 16px;
+      flex: 1 1 200px;
+      min-width: 160px;
+      margin: 0;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    #customerListSection .list-search-icon {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: #5f6368;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    #customerListSection .list-search-icon svg {
+      width: 16px;
+      height: 16px;
+      display: block;
     }
 
     #customerListSection #searchCustomer {
       width: 100%;
-      max-width: 360px;
-      padding: 12px 16px;
-      font-size: 14px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
+      max-width: none;
+      padding: 5px 10px 5px 32px;
+      font-size: 12px;
+      min-height: 30px;
+      border-radius: 6px;
+      border: 1px solid #b0bcc9;
       background: #fff;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      box-sizing: border-box;
     }
 
     #customerListSection #searchCustomer:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
     }
 
-    #customerListSection #searchCustomer::placeholder {
-      color: var(--muted);
-    }
-
-    .table-wrap {
+    #customerListSection .customer-list-grid-wrap {
       width: 100%;
       overflow: auto;
-      border-radius: var(--radius-sm);
       flex: 1;
       min-height: 0;
-      border: 1px solid var(--border);
-      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
-    }
-
-    #customerListSection table {
-      width: 100%;
-      min-width: 1600px;
-      border-collapse: collapse;
       background: #fff;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
     }
 
-    #customerListSection th,
-    #customerListSection td {
-      padding: 20px 24px;
-      font-size: 17px;
-      line-height: 1.5;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    #customerListSection th {
-      background: linear-gradient(to bottom, #f8f9fa, #f1f3f4);
-      font-weight: 700;
-      color: var(--text);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      font-size: 15px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--muted);
-      padding: 18px 24px;
-    }
-
-    #customerListSection tbody tr {
-      transition: background 0.15s ease;
-    }
-
-    #customerListSection tbody tr:nth-child(even) {
-      background: #fafbfd;
-    }
-
-    #customerListSection tbody tr:hover {
-      background: #e8f0fe;
-    }
-
-    #customerListSection tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    /* Actions column: tighter cell + smaller buttons */
-    #customerListSection tbody td:last-child {
-      padding: 8px 10px;
-      vertical-align: middle;
-      white-space: nowrap;
-      width: 1%;
-    }
-
-    #customerListSection thead th:last-child {
-      padding: 12px 10px;
+    #customerListSection .customer-excel-table {
+      width: 100%;
+      min-width: max-content;
+      border-collapse: collapse;
+      border-spacing: 0;
+      table-layout: auto;
+      background: #fff;
       font-size: 12px;
     }
 
-    /* Customer list: make Name column bigger (S.N=1, Customer id=2, Name=3) */
+    #customerListSection .customer-excel-table th,
+    #customerListSection .customer-excel-table td {
+      border: 1px solid #a8b4c4;
+      padding: 5px 7px;
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: left;
+      vertical-align: middle;
+      overflow: visible;
+      white-space: nowrap;
+    }
+
+    #customerListSection .customer-excel-table th {
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      box-shadow: 0 1px 0 #a8b4c4;
+    }
+
+    #customerListSection .customer-excel-table tbody tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    #customerListSection .customer-excel-table tbody tr:hover td {
+      background: #e8f0fe;
+    }
+
+    #customerListSection .customer-excel-table tbody td:last-child {
+      white-space: nowrap;
+      text-align: center;
+      overflow: visible;
+      min-width: 118px;
+      width: 118px;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+
+    #customerListSection .customer-excel-table thead th:last-child {
+      min-width: 118px;
+      width: 118px;
+    }
+
+    #customerListTable[data-list="Customer"] thead th:nth-child(1),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(1) {
+      width: 42px;
+      min-width: 42px;
+      max-width: 42px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    /* Customer id — show full value */
+    #customerListTable[data-list="Customer"] thead th:nth-child(2),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(2) {
+      min-width: 96px;
+      text-align: center;
+      overflow: visible;
+    }
+
     #customerListTable[data-list="Customer"] thead th:nth-child(3),
     #customerListTable[data-list="Customer"] tbody td:nth-child(3) {
-      min-width: 220px;
-      max-width: 360px;
-      font-size: 15px;
-      font-weight: 700;
+      width: 12%;
+      font-weight: 600;
       white-space: normal;
       word-break: break-word;
     }
 
-    /* Customer list: make S.N column small (S.N=1) */
-    #customerListTable[data-list="Customer"] thead th:nth-child(1),
-    #customerListTable[data-list="Customer"] tbody td:nth-child(1) {
-      min-width: 54px;
-      width: 54px;
-      max-width: 54px;
-      padding-left: 10px;
-      padding-right: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
+    /* LF no. — compact but fully visible */
+    #customerListTable[data-list="Customer"] thead th:nth-child(4),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(4) {
+      min-width: 44px;
       text-align: center;
+      padding-left: 4px;
+      padding-right: 4px;
+      overflow: visible;
     }
 
-    #customerListSection tbody td:last-child button {
-      padding: 4px 8px;
+    /* Relation — compact but fully visible */
+    #customerListTable[data-list="Customer"] thead th:nth-child(5),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(5) {
+      min-width: 48px;
+      text-align: center;
+      padding-left: 4px;
+      padding-right: 4px;
+      overflow: visible;
+    }
+
+    #customerListTable[data-list="Customer"] thead th:nth-child(6),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(6) {
+      width: 10%;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* Address — wider */
+    #customerListTable[data-list="Customer"] thead th:nth-child(7),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(7) {
+      width: 22%;
+      min-width: 180px;
+      white-space: normal;
+      word-break: break-word;
+      text-align: left;
+    }
+
+    /* Station — wider so full name is visible */
+    #customerListTable[data-list="Customer"] thead th:nth-child(8),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(8) {
+      min-width: 140px;
+      width: 140px;
+      white-space: normal;
+      word-break: break-word;
+      text-align: left;
+      overflow: visible;
+    }
+
+    /* Phone & Mobile — full 10-digit numbers visible */
+    #customerListTable[data-list="Customer"] thead th:nth-child(9),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(9),
+    #customerListTable[data-list="Customer"] thead th:nth-child(10),
+    #customerListTable[data-list="Customer"] tbody td:nth-child(10) {
+      min-width: 88px;
+      width: 88px;
+      text-align: center;
+      padding-left: 6px;
+      padding-right: 6px;
+      overflow: visible;
+      text-overflow: clip;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #customerListSection .customer-excel-table tbody td:last-child button {
+      padding: 3px 7px;
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
       margin: 0 2px;
-      border-radius: 5px;
-      border: 1px solid var(--border);
+      border-radius: 6px;
+      border: 1px solid #a8b4c4;
       background: #fff;
-      color: var(--text);
+      color: #1a3a5c;
       cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      line-height: 1.2;
     }
 
-    #customerListSection tbody td:last-child button:hover {
-      background: #e8f0fe;
-      border-color: var(--primary);
-      color: var(--primary);
+    #customerListSection .customer-excel-table tbody td:last-child button:hover {
+      background: #d6e4f4;
+      border-color: #5a7ca8;
     }
 
-    #customerListSection tbody td:last-child button.primary {
+    #customerListSection .customer-excel-table tbody td:last-child button.primary {
       background: var(--primary);
       color: #fff;
       border-color: var(--primary);
     }
 
-    #customerListSection tbody td:last-child button.primary:hover {
+    #customerListSection .customer-excel-table tbody td:last-child button.primary:hover {
       background: var(--primary-hover);
       border-color: var(--primary-hover);
       color: #fff;
@@ -678,23 +1013,24 @@
     }
 
     @media (max-width: 960px) {
-      .erp-form {
+      .customer-cards-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 20px 24px;
-        max-width: 100%;
+      }
+
+      .customer-add-shell .erp-form {
+        padding: 10px;
       }
 
       .page {
         padding: 16px 20px 90px;
       }
 
-      #customerListSection .list-header {
+      #customerListSection .customer-list-toolbar {
         flex-direction: column;
         align-items: stretch;
       }
 
-      #customerListSection .list-controls {
+      #customerListSection .list-toolbar-left {
         width: 100%;
       }
 
@@ -713,14 +1049,15 @@
       min-width: 0;
     }
 
-    select#station,
-    .station-select-wrap select {
+    .customer-add-shell select#station,
+    .customer-add-shell .station-select-wrap select {
       width: 100%;
-      height: 42px;
-      padding: 8px 32px 8px 12px;
+      height: 34px;
+      min-height: 34px;
+      padding: 6px 28px 6px 8px;
       border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 14px;
+      border-radius: 3px;
+      font-size: 13px;
       background: #fff;
       cursor: pointer;
       color: var(--text);
@@ -745,40 +1082,7 @@
       font-weight: bold;
     }
 
-    #customerListSection table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      background: #fff;
-    }
-
-    #customerListSection th,
-    #customerListSection td {
-      border: 1px solid #ddd !important;
-      padding: 16px 20px;
-      text-align: left;
-      font-size: 15px;
-    }
-
-    #customerListSection th {
-      background: #f8f9fa;
-      font-weight: 600;
-      color: #333;
-      font-size: 13px;
-    }
-
-    #customerListSection tbody td:last-child {
-      padding: 8px 10px !important;
-    }
-
-    #customerListSection tbody td:last-child button {
-      padding: 4px 8px !important;
-      font-size: 11px !important;
-    }
-
-    #customerListSection tr:hover {
-      background: #f1f7ff;
-    }
+    /* Customer list excel grid — see .customer-excel-table in main stylesheet */
   </style>
 </head>
 
@@ -791,115 +1095,116 @@
           title="Close">&times;</button>
       </div>
       <form id="customerForm" class="erp-form">
-      <div class="form-left">
-        <h4>Personal Details</h4>
-        <div class="field">
-          <label for="cid">Customer ID</label>
-          <input id="cid" readonly placeholder="Auto Generated" title="Auto generated on save">
-        </div>
-        <div class="field">
-          <label for="name">Name <span class="required">*</span></label>
-          <input id="name" required placeholder="Enter full name">
-        </div>
-        <div class="field">
-          <label for="relation">Relation</label>
-          <div class="row">
-            <select id="relation">
-              <option>S/O</option>
-              <option>W/O</option>
-              <option>D/O</option>
-              <option>C/O</option>
-            </select>
-            <input id="relationName" placeholder="Name">
+        <div class="customer-cards-grid">
+          <div class="detail-card">
+            <div class="detail-card-head">Personal Details</div>
+            <div class="detail-card-body">
+              <div class="inline-field field">
+                <label for="cid">Customer ID</label>
+                <input id="cid" readonly placeholder="Auto Generated" title="Auto generated on save">
+              </div>
+              <div class="inline-field field">
+                <label for="name">Name <span class="required">*</span></label>
+                <input id="name" required placeholder="Enter full name">
+              </div>
+              <div class="inline-field field">
+                <label for="relation">Relation</label>
+                <div class="row">
+                  <select id="relation">
+                    <option>S/O</option>
+                    <option>W/O</option>
+                    <option>D/O</option>
+                    <option>C/O</option>
+                  </select>
+                  <input id="relationName" placeholder="Name">
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="type">Type</label>
+                <div class="row">
+                  <div class="station-select-wrap">
+                    <select id="type">
+                      <option value="Customer">Customer</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="lfno">LF No</label>
+                <input id="lfno" placeholder="Auto Generated" readonly>
+              </div>
+              <div class="inline-field field">
+                <label for="openingDate">Opening Date</label>
+                <div class="date-wrap">
+                  <input type="date" id="openingDate" placeholder="dd-mm-yyyy">
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="openingBalance">Opening Bal.</label>
+                <div class="row">
+                  <input type="number" id="openingBalance" step="0.01" placeholder="0.00">
+                  <select id="openingBalanceType">
+                    <option value="Dr">Dr</option>
+                    <option value="Cr">Cr</option>
+                  </select>
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="maxLimit">Max Credit</label>
+                <input type="number" id="maxLimit" step="0.01" placeholder="0.00">
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="field">
-          <label for="type">Type</label>
-          <div class="row">
-            <div class="station-select-wrap">
-              <select id="type">
-                <option value="Customer">Customer</option>
-              </select>
+
+          <div class="detail-card">
+            <div class="detail-card-head">Contact Details</div>
+            <div class="detail-card-body">
+              <div class="inline-field field">
+                <label for="address">Address</label>
+                <textarea id="address" placeholder="Enter full address" rows="2"></textarea>
+              </div>
+              <div class="inline-field field">
+                <label for="station">Station <span class="required">*</span></label>
+                <div class="row">
+                  <div class="station-select-wrap">
+                    <select id="station" required>
+                      <option value="">— Select station —</option>
+                    </select>
+                  </div>
+                  <button type="button" class="btn-station-add" aria-label="Add New Station" title="Add New Station"
+                    onclick="openStationPopup()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="inline-field field">
+                <label for="phone">Phone <span class="required">*</span></label>
+                <input id="phone" required placeholder="10-digit" maxlength="10" inputmode="numeric">
+              </div>
+              <div class="inline-field field">
+                <label for="mobile">Mobile</label>
+                <input id="mobile" placeholder="10-digit" maxlength="10" inputmode="numeric">
+              </div>
+              <div class="inline-field field">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="email@example.com">
+              </div>
+              <div class="inline-field field">
+                <label for="aadhar">Aadhar No</label>
+                <input id="aadhar" placeholder="Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]*">
+              </div>
+              <div class="inline-field field">
+                <label for="pan">PAN No</label>
+                <input id="pan" placeholder="PAN number" maxlength="10">
+              </div>
             </div>
           </div>
         </div>
-        <div class="field">
-          <label for="lfno">LF No</label>
-          <input id="lfno" placeholder="Auto Generated" readonly>
-        </div>
-        <div class="field">
-          <label for="openingDate">Opening Date</label>
-          <div class="date-wrap">
-            <input type="date" id="openingDate" placeholder="dd-mm-yyyy">
-          </div>
-        </div>
-
-        <h4>Account</h4>
-        <div class="field">
-          <label for="openingBalance">Opening Balance</label>
-          <div class="row">
-            <input type="number" id="openingBalance" step="0.01" placeholder="0.00">
-            <select id="openingBalanceType">
-              <option value="Dr">Dr</option>
-              <option value="Cr">Cr</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="maxLimit">Max Credit Limit</label>
-          <input type="number" id="maxLimit" step="0.01" placeholder="0.00">
-        </div>
-
-      </div>
-      <div class="form-right">
-        <h4>Contact Details</h4>
-        <div class="field">
-          <label for="address">Address</label>
-          <textarea id="address" placeholder="Enter full address" rows="3"></textarea>
-        </div>
-        <div class="field">
-          <label for="station">Station <span class="required">*</span></label>
-          <div class="row">
-            <div class="station-select-wrap">
-              <select id="station" required>
-                <option value="">— Select station —</option>
-              </select>
-            </div>
-            <button type="button" aria-label="Add New Station" title="Add New Station" onclick="openStationPopup()"
-              style="display:flex; align-items:center; justify-content:center; width:38px; height:100%; min-height:42px; background:#f8f9fa; border:1px solid var(--border, #dadce0); border-radius:4px; cursor:pointer; flex-shrink:0; transition:all 0.2s;"
-              onmouseover="this.style.background='#e8eaed'; this.style.borderColor='#bebfc1';"
-              onmouseout="this.style.background='#f8f9fa'; this.style.borderColor='var(--border, #dadce0)';">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" style="color:#5f6368;">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="phone">Phone <span class="required">*</span></label>
-          <input id="phone" required placeholder="10-digit" maxlength="10" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label for="mobile">Mobile</label>
-          <input id="mobile" placeholder="10-digit" maxlength="10" inputmode="numeric">
-        </div>
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" placeholder="email@example.com">
-        </div>
-        <div class="field">
-          <label for="aadhar">Aadhar No</label>
-          <input id="aadhar" placeholder="Aadhar number" maxlength="12" inputmode="numeric" pattern="[0-9]*">
-        </div>
-        <div class="field">
-          <label for="pan">PAN No</label>
-          <input id="pan" placeholder="PAN number" maxlength="10">
-        </div>
-      </div>
-    </form>
+      </form>
     <div class="form-actions">
       <button type="button" class="primary" onclick="submitForm(event)">Save & Close</button>
       <button type="button" onclick="saveAndNew(event)">Save & New</button>
@@ -908,23 +1213,36 @@
     </div>
     </div>
 
-    <div id="customerListSection">
-      <div class="ledger-page-titlebar" id="listSectionTitle">Customer List</div>
-      <div class="list-header">
-        <div class="list-controls">
-          <label for="listTypeSelect">Show list</label>
-          <select id="listTypeSelect" onchange="switchListType()">
+    <div id="customerListSection" class="customer-list-shell">
+      <div class="customer-list-head" id="listSectionTitle">Customer List</div>
+      <div class="customer-list-toolbar">
+        <div class="list-toolbar-left list-controls">
+          <select id="listTypeSelect" aria-hidden="true" tabindex="-1" style="display:none">
             <option value="Customer">Customer</option>
             <option value="Jeweller">Jeweller</option>
             <option value="Agent">Agent</option>
           </select>
+          <button type="button" class="list-back-btn" onclick="goBackToAddCustomer()">Back</button>
+        </div>
+        <div class="list-station-filter-wrap list-controls">
+          <select id="listStationFilter" aria-label="Filter by station" onchange="renderCustomerList()">
+            <option value="">All Stations</option>
+          </select>
+        </div>
+        <div class="list-search-wrap">
+          <span class="list-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"></circle>
+              <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+            </svg>
+          </span>
+          <input id="searchCustomer" type="search" placeholder="Search by name or mobile…"
+            onkeyup="renderCustomerList()" autocomplete="off">
         </div>
       </div>
-      <div class="list-search-wrap">
-        <input id="searchCustomer" placeholder="Search by name or mobile…" onkeyup="renderCustomerList()">
-      </div>
-      <div class="table-wrap">
-        <table id="customerListTable">
+      <div class="customer-list-grid-wrap">
+        <table id="customerListTable" class="customer-excel-table">
           <thead>
             <tr id="customerTableHeadRow">
               <th>CID</th>
@@ -945,32 +1263,22 @@
   </div>
 
   <!-- Station Popup -->
-  <div id="stationPopupOverlay"
-    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(2px);">
-    <div
-      style="background:#fff; width:500px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family:var(--font, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif); overflow:hidden; border:1px solid var(--border);">
-      <div
-        style="background:#f8f9fa; padding:12px 20px; font-weight:600; text-align:center; border-bottom:1px solid var(--border); font-size:16px; color:#1a1a1a;">
-        Station
-      </div>
-      <div style="padding:24px 32px; display:flex; flex-direction:column; gap:16px;">
-        <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Station <span
-              style="color:var(--danger)">*</span></label>
-          <input type="text" id="popStationName"
-            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
-        </div>
-        <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Country <span
-              style="color:var(--danger)">*</span></label>
-          <input type="text" id="popStationCountry" value="India" readonly
-            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#f8f9fa; color:var(--muted); cursor:not-allowed;">
-        </div>
-        <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">State <span
-              style="color:var(--danger)">*</span></label>
-          <select id="popStationState"
-            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff; cursor:pointer;">
+  <div id="stationPopupOverlay" class="station-popup-overlay">
+    <div class="station-popup-modal">
+      <div class="station-popup-head">Station</div>
+      <div class="station-popup-card">
+        <div class="station-popup-card-body">
+          <div class="station-popup-inline">
+            <label for="popStationName">Station <span class="required">*</span></label>
+            <input type="text" id="popStationName">
+          </div>
+          <div class="station-popup-inline">
+            <label for="popStationCountry">Country <span class="required">*</span></label>
+            <input type="text" id="popStationCountry" value="India" readonly>
+          </div>
+          <div class="station-popup-inline">
+            <label for="popStationState">State <span class="required">*</span></label>
+            <select id="popStationState">
             <option value="">-- Select State --</option>
             <option value="Andhra Pradesh">Andhra Pradesh</option>
             <option value="Arunachal Pradesh">Arunachal Pradesh</option>
@@ -1000,35 +1308,23 @@
             <option value="Uttar Pradesh">Uttar Pradesh</option>
             <option value="Uttarakhand">Uttarakhand</option>
             <option value="West Bengal">West Bengal</option>
-          </select>
-        </div>
-        <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">City</label>
-          <input type="text" id="popStationCity"
-            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;">
-        </div>
-        <div style="display:flex; align-items:center;">
-          <label style="width:100px; margin:0; font-size:13px; font-weight:500; color:var(--muted);">Pin code</label>
-          <input type="text" id="popStationPin"
-            style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; background:#fff;"
-            maxlength="6" inputmode="numeric">
+            </select>
+          </div>
+          <div class="station-popup-inline">
+            <label for="popStationCity">City</label>
+            <input type="text" id="popStationCity">
+          </div>
+          <div class="station-popup-inline">
+            <label for="popStationPin">Pin code</label>
+            <input type="text" id="popStationPin" maxlength="6" inputmode="numeric">
+          </div>
         </div>
       </div>
-      <div
-        style="background:#f8f9fa; padding:16px 20px; display:flex; justify-content:center; gap:12px; border-top:1px solid var(--border);">
-        <button type="button" onclick="saveStationFromPopup(true)"
-          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
-          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And
-          Close</button>
-        <button type="button" onclick="saveStationFromPopup(false)"
-          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
-          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Save And New</button>
-        <button type="button" onclick="resetStationPopup()"
-          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
-          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Reset</button>
-        <button type="button" onclick="closeStationPopup()"
-          style="padding:8px 16px; border:1px solid var(--border); background:#fff; border-radius:var(--radius-sm); font-size:13px; cursor:pointer;"
-          onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='#fff'">Close</button>
+      <div class="station-popup-actions">
+        <button type="button" onclick="saveStationFromPopup(true)">Save And Close</button>
+        <button type="button" onclick="saveStationFromPopup(false)">Save And New</button>
+        <button type="button" onclick="resetStationPopup()">Reset</button>
+        <button type="button" onclick="closeStationPopup()">Close</button>
       </div>
     </div>
   </div>
@@ -1127,6 +1423,7 @@
       stations.push(newStation);
       localStorage.setItem("stations", JSON.stringify(stations));
       populateStationSelect(name);
+      populateListStationFilter();
 
       if (closeAfter) {
         closeStationPopup();
@@ -1226,6 +1523,18 @@
       else if (editAgentId) loadForEdit("Agent", editAgentId);
       else { resetForm(); if (fields.name) setTimeout(() => fields.name.focus(), 100); }
 
+      function openSelectOptionsList(sel) {
+        if (!sel || sel.tagName !== "SELECT") return;
+        if (typeof sel.showPicker === "function") {
+          try {
+            sel.showPicker();
+            return;
+          } catch (err) { /* fallback below */ }
+        }
+        sel.focus();
+        sel.click();
+      }
+
       // Keyboard navigation: Enter and Arrow keys to move between fields
       form.addEventListener("keydown", e => {
         const isControl = e.target.tagName === "BUTTON" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT";
@@ -1236,9 +1545,24 @@
         );
         const idx = fields.indexOf(e.target);
 
-        if (e.key === "Enter" && e.target.tagName !== "BUTTON" && e.target.tagName !== "TEXTAREA") {
+        if (e.key === "Enter" && e.target.tagName !== "BUTTON" &&
+          (e.target.tagName !== "TEXTAREA" || e.target.id === "address")) {
           e.preventDefault();
-          if (idx > -1 && idx < fields.length - 1) fields[idx + 1].focus();
+          if (e.target.id === "station" && e.target.tagName === "SELECT") {
+            if (!e.target.value) {
+              openSelectOptionsList(e.target);
+            } else if (idx > -1 && idx < fields.length - 1) {
+              fields[idx + 1].focus();
+            }
+            return;
+          }
+          if (idx > -1 && idx < fields.length - 1) {
+            const next = fields[idx + 1];
+            next.focus();
+            if (next.id === "station" && next.tagName === "SELECT" && !next.value) {
+              setTimeout(() => openSelectOptionsList(next), 0);
+            }
+          }
         } else if (e.key === "ArrowDown" && !isControl && !isNumber) {
           e.preventDefault();
           if (idx > -1 && idx < fields.length - 1) fields[idx + 1].focus();
@@ -1341,6 +1665,57 @@
       const sel = $("station");
       const keep = sel && sel.tagName === 'SELECT' ? sel.value : '';
       populateStationSelect(keep);
+      populateListStationFilter();
+    }
+
+    function populateListStationFilter() {
+      const sel = $("listStationFilter");
+      if (!sel) return;
+      const keep = sel.value;
+      const names = new Set();
+      try {
+        const stations = JSON.parse(localStorage.getItem("stations") || "[]");
+        stations.forEach(s => {
+          const n = (s && s.name) ? String(s.name).trim() : "";
+          if (n) names.add(n);
+        });
+      } catch (e) { /* ignore */ }
+      getCustomers().forEach(c => {
+        const n = resolveStationCanonical(c.station || "");
+        if (n) names.add(n);
+      });
+      getJewellers().forEach(j => {
+        const n = resolveStationCanonical(j.station || "");
+        if (n) names.add(n);
+      });
+      getAgents().forEach(a => {
+        const n = resolveStationCanonical(a.station || "");
+        if (n) names.add(n);
+      });
+      const sorted = [...names].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+      sel.innerHTML = "";
+      const allOpt = document.createElement("option");
+      allOpt.value = "";
+      allOpt.textContent = "All Stations";
+      sel.appendChild(allOpt);
+      sorted.forEach(name => {
+        const o = document.createElement("option");
+        o.value = name;
+        o.textContent = name;
+        sel.appendChild(o);
+      });
+      if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+    }
+
+    function recordMatchesListStationFilter(record) {
+      const filterSel = $("listStationFilter");
+      const filterVal = filterSel && filterSel.value ? String(filterSel.value).trim() : "";
+      if (!filterVal) return true;
+      const stored = record && record.station != null ? String(record.station).trim() : "";
+      if (!stored) return false;
+      const canon = resolveStationCanonical(stored);
+      const n = (s) => (s || "").trim().toLowerCase();
+      return n(canon) === n(filterVal) || n(stored) === n(filterVal);
     }
 
     function getNextLfNo() {
@@ -1503,7 +1878,12 @@
       localStorage.removeItem(EDIT_KEY);
       localStorage.removeItem(EDIT_KEY_JEWELLER);
       localStorage.removeItem(EDIT_KEY_AGENT);
-      if (fields.cid) { fields.cid.value = ""; fields.cid.placeholder = "Auto Generated"; }
+      setAddCustomerTitle("Add Customer");
+      if (fields.cid) {
+        fields.cid.value = "";
+        fields.cid.disabled = false;
+        fields.cid.placeholder = "Auto Generated";
+      }
       if (fields.type) fields.type.value = "Customer";
       if (fields.lfno) fields.lfno.value = getNextLfNo();
       if (fields.openingDate) {
@@ -1627,44 +2007,110 @@
     }
 
     function getListType() { const sel = $("listTypeSelect"); return (sel && sel.value) ? sel.value : "Customer"; }
-    function switchListType() { const t = getListType(); const title = $("listSectionTitle"); if (title) title.textContent = t + " List"; renderCustomerList(); }
+    function switchListType() {
+      const t = getListType();
+      const title = $("listSectionTitle");
+      if (title) title.textContent = t + " List";
+      populateListStationFilter();
+      renderCustomerList();
+    }
 
-    function openList() {
-      const formEl = document.querySelector(".erp-form");
-      const addShell = document.querySelector(".customer-add-shell");
-      const listSection = $("customerListSection");
-      const actionButtons = document.querySelector(".form-actions");
-      const listTypeSelect = $("listTypeSelect");
+    function setAddCustomerTitle(text) {
+      const titleLabel = document.querySelector(".customer-add-shell .ledger-page-titlebar-label");
+      if (titleLabel) titleLabel.textContent = text;
+    }
+
+    function showCustomerFormView() {
       const pageContainer = document.querySelector(".page");
+      const addShell = document.querySelector(".customer-add-shell");
+      const formEl = document.querySelector(".customer-add-shell .erp-form");
+      const listSection = $("customerListSection");
+      const actionButtons = document.querySelector(".customer-add-shell > .form-actions");
+      const inPopup = document.body.classList.contains("popup-mode");
+      if (pageContainer) pageContainer.style.padding = inPopup ? "0" : "24px 32px 40px";
+      if (addShell) {
+        addShell.style.display = "flex";
+        addShell.style.flexDirection = "column";
+      }
+      if (formEl) formEl.style.display = "block";
+      if (listSection) {
+        listSection.classList.remove("customer-list-open");
+        listSection.style.display = "none";
+        listSection.style.minHeight = "0";
+      }
+      if (actionButtons) actionButtons.style.display = "flex";
+    }
+
+    function showCustomerListView() {
+      const pageContainer = document.querySelector(".page");
+      const addShell = document.querySelector(".customer-add-shell");
+      const formEl = document.querySelector(".customer-add-shell .erp-form");
+      const listSection = $("customerListSection");
+      const actionButtons = document.querySelector(".customer-add-shell > .form-actions");
       if (pageContainer) pageContainer.style.padding = "0";
       if (addShell) addShell.style.display = "none";
       if (formEl) formEl.style.display = "none";
       if (listSection) {
+        listSection.classList.add("customer-list-open");
         listSection.style.display = "flex";
         listSection.style.flexDirection = "column";
-        listSection.style.borderRadius = "0";
+        listSection.style.borderRadius = "8px";
         listSection.style.minHeight = "100vh";
       }
       if (actionButtons) actionButtons.style.display = "none";
+    }
+
+    function applyRecordToEditForm(record, entryType) {
+      if (!record || !fields) return;
+      if (entryType === "Agent") {
+        if (fields.cid) { fields.cid.value = record.cid || record.agentId || record.id; fields.cid.disabled = true; }
+        if (fields.name) fields.name.value = record.name || "";
+        if (fields.mobile) fields.mobile.value = record.mobile || "";
+        if (fields.email) fields.email.value = record.email || "";
+        if (fields.address) fields.address.value = record.notes || "";
+        if (fields.type) fields.type.value = "Agent";
+        setAddCustomerTitle("Edit Agent");
+        return;
+      }
+      const setVal = (key, val) => {
+        if (fields[key]) fields[key].value = val != null && val !== undefined ? val : "";
+      };
+      setVal("cid", record.cid);
+      if (fields.cid) fields.cid.disabled = true;
+      setVal("name", record.name);
+      setVal("relation", record.relation || record.relationType);
+      setVal("relationName", record.relationName);
+      setVal("lfno", record.lfno);
+      setVal("openingDate", record.openingDate);
+      if (entryType === "Customer" && record.masterOpeningBalance != null && record.masterOpeningBalance !== "") {
+        setVal("openingBalance", record.masterOpeningBalance);
+        setVal("openingBalanceType", record.masterOpeningBalanceType || record.openingBalanceType);
+      } else {
+        setVal("openingBalance", record.openingBalance);
+        setVal("openingBalanceType", record.openingBalanceType);
+      }
+      setVal("maxLimit", record.maxLimit);
+      setVal("aadhar", record.aadhar);
+      setVal("pan", record.pan);
+      setVal("address", record.address || record.notes);
+      setVal("phone", record.phone);
+      setVal("mobile", record.mobile);
+      setVal("email", record.email);
+      if (fields.type) fields.type.value = entryType;
+      populateStationSelect(resolveStationCanonical(record.station || ""));
+      setAddCustomerTitle("Edit " + entryType);
+    }
+
+    function openList() {
+      const listTypeSelect = $("listTypeSelect");
+      showCustomerListView();
       if (listTypeSelect && fields.type && fields.type.value) listTypeSelect.value = fields.type.value;
+      populateListStationFilter();
       switchListType();
     }
 
     function goBackToAddCustomer() {
-      const formEl = document.querySelector(".erp-form");
-      const addShell = document.querySelector(".customer-add-shell");
-      const listSection = $("customerListSection");
-      const actionButtons = document.querySelector(".form-actions");
-      const pageContainer = document.querySelector(".page");
-      if (pageContainer) pageContainer.style.padding = "24px 32px 40px";
-      if (addShell) addShell.style.display = "";
-      if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
-      if (listSection) {
-        listSection.style.display = "none";
-        listSection.style.borderRadius = "16px";
-        listSection.style.minHeight = "0";
-      }
-      if (actionButtons) actionButtons.style.display = "flex";
+      showCustomerFormView();
       resetForm();
       if (fields && fields.name) setTimeout(() => fields.name.focus(), 100);
     }
@@ -1724,7 +2170,7 @@
           <th>Actions</th>
         `;
         getCustomers()
-          .filter(c => (c.name || "").toLowerCase().includes(search) || (c.mobile || "").includes(search))
+          .filter(c => ((c.name || "").toLowerCase().includes(search) || (c.mobile || "").includes(search)) && recordMatchesListStationFilter(c))
           .forEach((c, idx) => {
             const nameEsc = (c.name || "").replace(/'/g, "&#39;");
             tbody.innerHTML += `<tr ondblclick="selectCustomerForOrder('${nameEsc}')">
@@ -1738,7 +2184,7 @@
     <td>${c.station || ""}</td>
     <td>${c.phone || ""}</td>
     <td>${c.mobile || ""}</td>
-    <td><button onclick="editCustomer(${c.id})">Edit</button><button onclick="deleteCustomer(${c.id})">Delete</button><button onclick="selectCustomerForOrder('${nameEsc}')">Select</button></td></tr>`;
+    <td><button onclick="editCustomer(${c.id})">Edit</button><button onclick="deleteCustomer(${c.id})">Delete</button></td></tr>`;
           });
       } else if (listType === "Jeweller") {
         const title = $("listSectionTitle"); if (title) title.textContent = "Jeweller List";
@@ -1754,7 +2200,7 @@
           <th>Actions</th>
         `;
         getJewellers()
-          .filter(j => (j.name || "").toLowerCase().includes(search) || (j.mobile || "").includes(search))
+          .filter(j => ((j.name || "").toLowerCase().includes(search) || (j.mobile || "").includes(search)) && recordMatchesListStationFilter(j))
           .forEach(j => {
             const dispBal = getCalculatedBalance(j.name, j.openingBalance, j.openingBalanceType, j.currentBalance, j.currentBalanceType);
             tbody.innerHTML += `<tr>
@@ -1775,7 +2221,7 @@
           <th>Actions</th>
         `;
         getAgents()
-          .filter(a => (a.name || "").toLowerCase().includes(search) || (a.mobile || "").includes(search) || (a.email || "").toLowerCase().includes(search))
+          .filter(a => ((a.name || "").toLowerCase().includes(search) || (a.mobile || "").includes(search) || (a.email || "").toLowerCase().includes(search)) && recordMatchesListStationFilter(a))
           .forEach(a => {
             const dispBal = getCalculatedBalance(a.name, a.openingBalance, a.openingBalanceType, a.currentBalance, a.currentBalanceType);
             tbody.innerHTML += `<tr>
@@ -1844,44 +2290,13 @@
       if (entryType === "Customer") record = getCustomers().find(c => String(c.id) === String(id));
       else if (entryType === "Jeweller") record = getJewellers().find(j => String(j.id) === String(id));
       else record = getAgents().find(a => String(a.id) === String(id));
-      if (!record) return;
-
-      const formEl = document.querySelector(".erp-form");
-      const addShell = document.querySelector(".customer-add-shell");
-      const listSection = $("customerListSection");
-      const actionButtons = document.querySelector(".form-actions");
-      const pageContainer = document.querySelector(".page");
-      // openList() hides .customer-add-shell and zeroes .page padding; restore those here
-      // so the edit form is actually visible after clicking Edit from the list.
-      if (pageContainer) pageContainer.style.padding = "24px 32px 40px";
-      if (addShell) addShell.style.display = "";
-      if (formEl) { formEl.style.display = "grid"; formEl.style.flex = "1"; }
-      if (listSection) {
-        listSection.style.display = "none";
-        listSection.style.borderRadius = "16px";
-        listSection.style.minHeight = "0";
+      if (!record) {
+        alert(entryType + " record not found.");
+        return;
       }
-      if (actionButtons) actionButtons.style.display = "flex";
 
-      if (entryType === "Agent") {
-        if (fields.cid) { fields.cid.value = record.cid || record.agentId || record.id; fields.cid.disabled = true; }
-        if (fields.name) fields.name.value = record.name || "";
-        if (fields.mobile) fields.mobile.value = record.mobile || "";
-        if (fields.email) fields.email.value = record.email || "";
-        if (fields.address) fields.address.value = record.notes || "";
-        if (fields.type) fields.type.value = "Agent";
-      } else {
-        ["cid", "name", "relation", "relationName", "lfno", "openingDate", "openingBalance", "openingBalanceType", "maxLimit", "aadhar", "pan", "address", "phone", "mobile", "email"].forEach(k => {
-          if (fields[k] && record[k] !== undefined) fields[k].value = record[k];
-        });
-        if (entryType === "Customer" && fields.openingBalance && record.masterOpeningBalance != null && record.masterOpeningBalance !== "") {
-          fields.openingBalance.value = record.masterOpeningBalance;
-          if (fields.openingBalanceType && record.masterOpeningBalanceType) fields.openingBalanceType.value = record.masterOpeningBalanceType;
-        }
-        if (fields.type) fields.type.value = entryType;
-        if (fields.cid) { fields.cid.value = record.cid; fields.cid.disabled = true; }
-      }
-      populateStationSelect(resolveStationCanonical(record.station || ""));
+      showCustomerFormView();
+      applyRecordToEditForm(record, entryType);
 
       try {
         const ws = document.querySelector(".workspace");

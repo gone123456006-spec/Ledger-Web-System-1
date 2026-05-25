@@ -25,6 +25,18 @@ function ledgerSetSidebarHidden(hidden) {
 }
 window.ledgerSetSidebarHidden = ledgerSetSidebarHidden;
 
+/** Show or hide the top menu bar (Master, Transactions, …) — hidden with sidebar when a module opens. */
+function ledgerSetMenuBarHidden(hidden) {
+    const bar = document.querySelector("nav.menu-bar");
+    if (!bar) return;
+    if (hidden) {
+        bar.classList.add("menu-esc-dismiss");
+    } else {
+        bar.classList.remove("menu-esc-dismiss");
+    }
+}
+window.ledgerSetMenuBarHidden = ledgerSetMenuBarHidden;
+
 function ledgerToggleSidebar() {
     const app = document.getElementById("appContainer");
     if (!app) return;
@@ -36,11 +48,8 @@ window.ledgerToggleSidebar = ledgerToggleSidebar;
 function ledgerEscShowSidebarOnly() {
     try {
         ledgerSetSidebarHidden(false);
+        ledgerSetMenuBarHidden(false);
     } catch (e) { }
-    try {
-        const bar = document.querySelector("nav.menu-bar");
-        if (bar) bar.classList.remove("menu-esc-dismiss");
-    } catch (e2) { }
     requestAnimationFrame(function () {
         try {
             ledgerFocusFirstSidebarButton();
@@ -353,6 +362,7 @@ function initEscToDashboard() {
         if (app && app.classList.contains("sidebar-hidden")) {
             e.preventDefault();
             ledgerSetSidebarHidden(false);
+            ledgerSetMenuBarHidden(false);
             requestAnimationFrame(function () {
                 ledgerFocusFirstSidebarButton();
             });
@@ -685,6 +695,7 @@ function loadPage(pageUrl) {
     const isDashboard = /dashboard\.html$/i.test(String(pageUrl).trim());
     if (isDashboard) {
         ledgerSetSidebarHidden(false);
+        ledgerSetMenuBarHidden(false);
         workspace.innerHTML = `
             <div style="padding:40px; font-size:16px; color:#6b7280;">
                 <h2 style="margin:0 0 12px 0; font-weight:600; color:#6b7280;">Dashboard</h2>
@@ -697,6 +708,7 @@ function loadPage(pageUrl) {
     }
 
     ledgerSetSidebarHidden(true);
+    ledgerSetMenuBarHidden(true);
 
     // Normalize/encode URL (handles spaces like "ready extra order.html")
     let fetchUrl = pageUrl;

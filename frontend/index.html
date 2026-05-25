@@ -154,6 +154,7 @@
         function openStation() {
             try {
                 if (window.ledgerSetSidebarHidden) window.ledgerSetSidebarHidden(true);
+                if (window.ledgerSetMenuBarHidden) window.ledgerSetMenuBarHidden(true);
             } catch (e) { }
             document.getElementById("workspace").innerHTML = `
     <div class="station-window">
@@ -346,6 +347,7 @@
         function listStations() {
             try {
                 if (window.ledgerSetSidebarHidden) window.ledgerSetSidebarHidden(true);
+                if (window.ledgerSetMenuBarHidden) window.ledgerSetMenuBarHidden(true);
             } catch (e) { }
             const stations = JSON.parse(localStorage.getItem("stations") || "[]");
             let html = `
