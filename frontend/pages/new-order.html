@@ -996,129 +996,134 @@
       opacity: 0.9;
     }
 
-    /* Add Payment popup */
-    #new-order-payment-popup .advanced-payments-popup-box {
+    /* Add Payment popup — PHP compact */
+    #new-order-payment-popup .popup-box.payment-php-shell {
+      padding: 0;
+      width: auto;
+      max-width: none;
+      border-radius: 8px;
+    }
+
+    #new-order-payment-popup .advanced-payments-popup-box.payment-php-shell {
       display: flex;
       flex-direction: column;
-      width: min(840px, calc(100vw - 24px));
-      max-width: min(840px, calc(100vw - 24px));
+      width: min(440px, calc(100vw - 24px));
+      max-width: min(440px, calc(100vw - 24px));
       min-width: 0;
       box-sizing: border-box;
-      padding: 16px 18px 14px;
-      overflow-x: hidden;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid #b0bcc9;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    #new-order-payment-popup .payment-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+      margin: 0;
     }
 
     #new-order-payment-popup .advanced-payments-popup-title {
-      margin: 0 0 10px 0;
-      font-size: 16px;
-      font-weight: 600;
-      flex-shrink: 0;
+      display: none;
     }
 
     #new-order-payment-popup .advanced-payments-popup-body {
       width: 100%;
       min-width: 0;
       max-width: 100%;
-      flex: 0 1 auto;
+      padding: 8px 10px 10px;
       overflow: hidden;
     }
 
     #new-order-payment-popup .new-order-payment-add-header-table {
-      margin: 0 0 0;
-      table-layout: fixed;
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-      border: 1px solid #c5cad4;
-      background: #fff;
+      display: none;
     }
 
-    #new-order-payment-popup .new-order-payment-add-header-table thead th {
-      background: #eef1f5;
-      font-weight: 600;
-      color: var(--text);
-      border: 1px solid #d1d6de;
-      padding: 8px;
-      text-align: left;
-    }
-
-    #new-order-payment-popup .new-order-payment-add-header-table thead th:nth-child(3) {
-      text-align: right;
-    }
-
-    #new-order-payment-popup .new-order-payment-add-header-table thead th:nth-child(5) {
-      text-align: center;
-      width: 10%;
-    }
-
-    #new-order-payment-popup .advanced-payments-popup-edit-form {
-      padding: 12px 4px 4px;
+    #new-order-payment-popup .advanced-payments-popup-edit-form.payment-php-form {
+      padding: 0;
       text-align: left;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form-grid {
       display: grid;
-      grid-template-columns: 100px 1fr;
-      gap: 8px 12px;
+      grid-template-columns: 88px 1fr;
+      gap: 5px 8px;
       align-items: center;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form-grid label {
-      color: var(--muted);
-      font-weight: 500;
+      color: #3c4043;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form-grid input,
     #new-order-payment-popup .advanced-payments-popup-edit-form-grid select,
     #new-order-payment-popup .advanced-payments-popup-edit-form-grid textarea {
       width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 13px;
+      height: 28px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
       font-family: inherit;
       box-sizing: border-box;
+      background: #fff;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form-grid textarea {
-      min-height: 52px;
+      height: auto;
+      min-height: 32px;
+      max-height: 56px;
       resize: vertical;
+      line-height: 1.35;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 8px;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button {
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
+      padding: 4px 12px;
+      min-height: 28px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
       background: #fff;
       cursor: pointer;
-      font-weight: 500;
-      font-size: 13px;
+      font-weight: 600;
+      font-size: 12px;
     }
 
     #new-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button:first-child {
-      background: var(--primary);
+      background: #1a73e8;
       color: #fff;
-      border-color: var(--primary);
+      border-color: #1a73e8;
     }
 
     #new-order-payment-popup .new-order-payment-popup-summary {
       font-weight: 600;
-      font-size: 13px;
-      text-align: right;
+      font-size: 11px;
       font-variant-numeric: tabular-nums;
-      margin: 10px 0 0;
-      padding: 10px 0 0;
-      border-top: 1px solid var(--border);
+      margin: 8px 0 0;
+      padding: 6px 8px;
+      border-top: 1px solid #b0bcc9;
+      background: #f4f6f8;
+      border-radius: 4px;
       color: var(--text);
     }
 
@@ -1126,10 +1131,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      margin-top: 4px;
+      gap: 8px;
+      margin-top: 3px;
       font-weight: 500;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     #new-order-payment-popup .new-order-payment-popup-summary .summary-line:first-child {
@@ -1138,14 +1143,536 @@
 
     #new-order-payment-popup .new-order-payment-popup-summary .summary-line--balance .summary-line-value {
       color: #dc3545;
+      font-weight: 700;
     }
 
     @media (max-width: 600px) {
-      #new-order-payment-popup .advanced-payments-popup-box {
+      #new-order-payment-popup .advanced-payments-popup-box.payment-php-shell {
         width: calc(100vw - 16px);
         max-width: calc(100vw - 16px);
-        padding: 12px 12px 10px;
       }
+    }
+
+    /* Rate Booking popup — PHP compact */
+    #new-order-ratebook-popup .popup-box.ratebook-php-shell {
+      padding: 0;
+      width: min(480px, calc(100vw - 24px));
+      max-width: min(480px, calc(100vw - 24px));
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+    }
+
+    #new-order-ratebook-popup .popup-box.ratebook-php-shell > h3 {
+      display: none;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-body {
+      padding: 8px 10px 10px;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-grid label {
+      color: #3c4043;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-grid input,
+    #new-order-ratebook-popup .ratebook-php-grid select,
+    #new-order-ratebook-popup .ratebook-php-grid textarea {
+      width: 100%;
+      height: 28px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-grid textarea {
+      height: auto;
+      min-height: 32px;
+      max-height: 56px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-actions button {
+      padding: 4px 12px;
+      min-height: 28px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    #new-order-ratebook-popup .ratebook-php-actions button:first-child {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    /* Ratebook list popup — PHP compact */
+    #new-order-ratebook-list-popup .popup-box.ratebook-list-php-shell {
+      padding: 0;
+      width: min(920px, calc(100vw - 20px));
+      max-width: min(920px, calc(100vw - 20px));
+      max-height: 85vh;
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-php-shell > h3 {
+      display: none;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border-bottom: 1px solid #b0bcc9;
+      flex-shrink: 0;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-php-shell .ratebook-list-table-wrap {
+      margin: 8px 10px 0;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      overflow: hidden;
+      max-height: none;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table {
+      min-width: 0;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th {
+      background: #d6e4f4;
+      color: #1a3a5c;
+      padding: 5px 6px;
+      font-size: 10px;
+      border: 1px solid #a8b4c4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td {
+      padding: 5px 6px;
+      font-size: 11px;
+      border: 1px solid #a8b4c4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(1),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(1) {
+      width: 8%;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(2),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(2),
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(3),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(3),
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(4),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(4) {
+      width: 9%;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(5),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(5) {
+      width: 11%;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(6),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(6) {
+      width: 5%;
+      text-align: center;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(7),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(7) {
+      width: 24%;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table thead th:nth-child(8),
+    #new-order-ratebook-list-popup .ratebook-list-table tbody td:nth-child(8) {
+      width: 26%;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-row-actions {
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-row-actions button {
+      font-size: 10px;
+      padding: 3px 6px;
+      min-width: 0;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-table .empty-state {
+      white-space: normal;
+      text-align: center;
+    }
+
+    /* Purchase sheet popup — PHP compact / Excel grid */
+    #new-order-purchase-sheet-popup .popup-box.purchase-php-shell {
+      padding: 0;
+      width: min(980px, calc(100vw - 20px));
+      max-width: min(980px, calc(100vw - 20px));
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+      margin: 0;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-popup-title {
+      display: none;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-table-wrap {
+      margin: 8px 10px 0;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: min(300px, 48vh);
+      background: #fff;
+      box-shadow: none;
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-table-wrap::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-table-wrap::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table {
+      min-width: 0;
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border-spacing: 0;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      padding: 0 4px;
+      height: 28px;
+      line-height: 28px;
+      border: 1px solid #a8b4c4;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table th,
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table td {
+      padding: 0;
+      vertical-align: middle;
+      border: 1px solid #a8b4c4;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(4),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(5),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(6),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(7),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(8),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(4),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(5),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(6),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(7),
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(8) {
+      text-align: right;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table input,
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table select {
+      width: 100%;
+      min-width: 0;
+      height: 28px;
+      margin: 0;
+      padding: 0 6px;
+      font-size: 12px;
+      box-sizing: border-box;
+      border-radius: 0;
+      border: 1px solid #d1d9e0;
+      background: #fff;
+      outline: none;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table input:focus,
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table select:focus {
+      border: 2px solid #1a73e8;
+      padding: 0 5px;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .ps-stamp {
+      min-width: 0 !important;
+      height: 28px !important;
+      font-size: 12px !important;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table td:last-child button {
+      width: 100%;
+      min-width: 0;
+      height: 28px;
+      padding: 0;
+      border-radius: 0;
+      border: 1px solid #d1d9e0;
+      background: #fff;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody tr:hover td {
+      background: #e8f0fe;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tfoot td {
+      background: #f4f6f8;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 5px 8px;
+      border: 1px solid #a8b4c4;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-total-label {
+      text-align: right;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-total-amt {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 10px 10px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-actions-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-actions button {
+      min-height: 28px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    #new-order-purchase-sheet-popup .purchase-php-actions button.primary {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    /* Order Details popup — PHP compact */
+    #new-order-order-details-popup .popup-box.order-details-php-shell {
+      padding: 0;
+      width: min(400px, calc(100vw - 24px));
+      max-width: min(400px, calc(100vw - 24px));
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+    }
+
+    #new-order-order-details-popup .order-details-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+      margin: 0;
+    }
+
+    #new-order-order-details-popup .order-details-php-shell > h3 {
+      display: none;
+    }
+
+    #new-order-order-details-popup .order-details-php-body {
+      padding: 8px 10px 10px;
+    }
+
+    #new-order-order-details-popup .order-details-php-grid {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    #new-order-order-details-popup .order-details-php-grid label {
+      color: #3c4043;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+      margin: 0;
+      min-width: 0;
+    }
+
+    #new-order-order-details-popup .order-details-php-grid input,
+    #new-order-order-details-popup .order-details-php-grid textarea {
+      width: 100%;
+      height: 28px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      box-sizing: border-box;
+      background: #fff;
+      margin: 0;
+    }
+
+    #new-order-order-details-popup .order-details-php-grid input:focus,
+    #new-order-order-details-popup .order-details-php-grid textarea:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    #new-order-order-details-popup .order-details-php-grid textarea {
+      height: auto;
+      min-height: 32px;
+      max-height: 56px;
+      resize: vertical;
+      line-height: 1.35;
+      font-family: inherit;
+    }
+
+    #new-order-order-details-popup .order-details-php-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #new-order-order-details-popup .order-details-php-actions button {
+      padding: 4px 12px;
+      min-height: 28px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    #new-order-order-details-popup .order-details-php-actions button:first-child {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-php-shell .popup-actions {
+      margin: 8px 10px 10px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #new-order-ratebook-list-popup .ratebook-list-php-shell .popup-actions button {
+      min-height: 28px;
+      padding: 4px 12px;
+      font-size: 12px;
+      border-radius: 4px;
     }
 
     .summary-item.summary-item--new-order-paid-open {
@@ -1832,6 +2359,312 @@
         transform: rotate(360deg);
       }
     }
+
+    /* =====================
+   PHP COMPACT — one screen; only order rows scroll
+===================== */
+    .workspace[data-page="new-order"] {
+      padding: 6px 8px !important;
+      overflow: hidden !important;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .workspace[data-page="new-order"] .app.new-order-page,
+    #orderApp.new-order-page {
+      flex: 1;
+      min-height: 0;
+      max-height: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+      margin: 0;
+      background: #fff;
+      border: 1px solid #b0bcc9;
+      border-radius: var(--ledger-ws-r, 10px);
+    }
+
+    #orderApp.new-order-page > .ledger-page-titlebar {
+      flex-shrink: 0;
+      padding: 6px 10px;
+      font-size: 14px;
+    }
+
+    #orderApp.new-order-page > .error-message {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    #orderApp.new-order-page > .order-top {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 6px 8px 4px;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) 240px;
+    }
+
+    #orderApp.new-order-page .box {
+      padding: 8px 10px;
+      border-radius: 6px;
+      box-shadow: none;
+      background: #fff;
+      background-image: none;
+    }
+
+    #orderApp.new-order-page .box-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #5f6368;
+      margin-bottom: 6px;
+    }
+
+    #orderApp.new-order-page .customer-field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 10px;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .row-full {
+      grid-column: 1 / -1;
+    }
+
+    #orderApp.new-order-page .row {
+      margin-bottom: 0;
+      gap: 6px;
+    }
+
+    #orderApp.new-order-page .row label {
+      min-width: 72px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    #orderApp.new-order-page .row input,
+    #orderApp.new-order-page .row select {
+      height: 28px;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    #orderApp.new-order-page .row button {
+      height: 28px;
+      font-size: 11px;
+      border-radius: 4px;
+    }
+
+    #orderApp.new-order-page .box-order-info .row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+    }
+
+    #orderApp.new-order-page .box-order-info .row label {
+      min-width: 76px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    #orderApp.new-order-page .box-order-info .row input {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      height: 30px;
+      line-height: normal;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    #orderApp.new-order-page .box-order-info #billNo {
+      background: #fff;
+      color: #1d1d1f;
+      cursor: default;
+      font-weight: 600;
+    }
+
+    #orderApp.new-order-page .box-order-info .row input[readonly]:not([type="date"]) {
+      background: #fff;
+      cursor: default;
+    }
+
+    #orderApp.new-order-page .box-order-info input[type="date"] {
+      padding-right: 28px;
+    }
+
+    #orderApp.new-order-page > .order-details {
+      flex: 1;
+      min-height: 0;
+      margin: 0;
+      padding: 0 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #orderApp.new-order-page > .order-details > .box-title {
+      flex-shrink: 0;
+      margin-bottom: 4px;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      margin-top: 0;
+      border-radius: 4px;
+      box-shadow: none;
+      background: #fff;
+      background-image: none;
+      border: 1px solid #b0bcc9;
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 2px;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #7a8da6;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap #new-order-item-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-size: 11px;
+      height: 28px;
+      line-height: 28px;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap #new-order-item-table input,
+    #orderApp.new-order-page .order-details-table-wrap #new-order-item-table select {
+      height: 28px;
+      font-size: 12px;
+    }
+
+    #orderApp.new-order-page .order-details-table-wrap #new-order-item-table .row-del-btn {
+      height: 28px;
+      min-width: 26px;
+    }
+
+    #orderApp.new-order-page > .actions {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 6px 8px;
+      gap: 6px;
+    }
+
+    #orderApp.new-order-page > .actions button {
+      min-width: 0;
+      height: 30px;
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    #orderApp.new-order-page > .info-panel {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 6px 8px 8px;
+      border-radius: 0 0 6px 6px;
+      border-top: 1px solid #b0bcc9;
+      background: #fff;
+      background-image: none;
+      box-shadow: none;
+    }
+
+    #orderApp.new-order-page .panel-grid {
+      gap: 8px;
+    }
+
+    #orderApp.new-order-page .panel-stack {
+      gap: 8px;
+    }
+
+    #orderApp.new-order-page .panel-section {
+      background: #fff;
+      background-image: none;
+      border-radius: 6px;
+      border-color: #b0bcc9;
+    }
+
+    #orderApp.new-order-page .panel-section-header {
+      padding: 6px 10px;
+    }
+
+    #orderApp.new-order-page .panel-section-header h3 {
+      font-size: 12px;
+    }
+
+    #orderApp.new-order-page .panel-content {
+      padding: 8px;
+      max-height: 88px;
+      overflow-y: auto;
+    }
+
+    #orderApp.new-order-page .panel-section--narration .panel-content {
+      max-height: none;
+      padding-top: 6px;
+    }
+
+    #orderApp.new-order-page .panel-section--payment-summary .panel-content {
+      max-height: none;
+      overflow: visible;
+    }
+
+    #orderApp.new-order-page .order-narration-hint {
+      display: none;
+    }
+
+    #orderApp.new-order-page .order-narration-textarea {
+      min-height: 44px;
+      max-height: 56px;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    #orderApp.new-order-page .panel-summary {
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+    }
+
+    #orderApp.new-order-page .summary-item {
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    #orderApp.new-order-page .empty-state {
+      padding: 8px 0;
+      font-size: 11px;
+    }
   </style>
 </head>
 
@@ -1863,56 +2696,58 @@
       <div class="box">
         <div class="box-title">Customer Information</div>
 
-        <div class="row">
-          <label>Name *</label>
-          <select id="custName" required>
-            <option value="">-- Select Customer --</option>
-          </select>
-        </div>
+        <div class="customer-field-grid">
+          <div class="row row-full">
+            <label>Name *</label>
+            <select id="custName" required>
+              <option value="">-- Select Customer --</option>
+            </select>
+          </div>
 
-        <div class="row">
-          <label>Current Bal</label>
-          <input id="currentBal" readonly>
-        </div>
+          <div class="row">
+            <label>Current Bal</label>
+            <input id="currentBal" readonly>
+          </div>
 
-        <div class="row">
-          <label>Relation</label>
-          <input id="relation" readonly>
-        </div>
+          <div class="row">
+            <label>Relation</label>
+            <input id="relation" readonly>
+          </div>
 
-        <div class="row">
-          <label>Station</label>
-          <input id="station" readonly>
-        </div>
+          <div class="row">
+            <label>Station</label>
+            <input id="station" readonly>
+          </div>
 
-        <div class="row">
-          <label>LF No.</label>
-          <input id="lfNo" readonly>
-        </div>
+          <div class="row">
+            <label>LF No.</label>
+            <input id="lfNo" readonly>
+          </div>
 
-        <div class="row">
-          <button onclick="openCustomer()" class="no-print">
-            + Add / Edit Customer
-          </button>
+          <div class="row row-full">
+            <button onclick="openCustomer()" class="no-print">
+              + Add / Edit Customer
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- BILL -->
-      <div class="box">
+      <div class="box box-order-info">
         <div class="box-title">Order Information</div>
 
         <div class="row">
-          <label>Order No *</label>
-          <input id="billNo" required readonly>
+          <label for="billNo">Order No *</label>
+          <input type="text" id="billNo" required readonly autocomplete="off">
         </div>
 
         <div class="row">
-          <label>Date *</label>
+          <label for="orderDate">Date *</label>
           <input type="date" id="orderDate" required>
         </div>
 
         <div class="row">
-          <label>Due Date</label>
+          <label for="dueDate">Due Date</label>
           <input type="date" id="dueDate" autocomplete="off" data-persist="ignore">
         </div>
 
@@ -1963,7 +2798,7 @@
       <button type="button" id="newOrderBtnSaveAndNew" onclick="saveAndNew()">Save & New</button>
       <button type="button" onclick="resetCustomerNameOnly()"
         title="Clears only Customer Name (and linked Current Bal / Relation / Station). Order lines and bill are unchanged.">Reset</button>
-      <button onclick="showInvoice()">📄 A4 Invoice</button>
+      <button type="button" onclick="printOrder()">Print</button>
       <button type="button" class="danger" id="newOrderBtnClose" onclick="closeDashboard()">Close</button>
     </div>
 
@@ -2001,7 +2836,7 @@
         </div>
 
         <!-- PAYMENT SECTION -->
-        <div class="panel-section">
+        <div class="panel-section panel-section--payment-summary">
           <div class="panel-section-header">
             <h3>Payment Summary</h3>
             <button class="panel-add-btn" onclick="openPayment()">+ Add</button>
@@ -2105,17 +2940,11 @@
   <!-- PAYMENT POPUP -->
   <div id="new-order-payment-popup" class="popup-bg new-order-popup"
     onclick="if(event.target===this) (typeof newOrderClosePaymentPopup==='function'?newOrderClosePaymentPopup:closePaymentPopup)()">
-    <div class="popup-box advanced-payments-popup-box" onclick="event.stopPropagation()">
+    <div class="popup-box advanced-payments-popup-box payment-php-shell" onclick="event.stopPropagation()">
+      <div class="payment-php-head">Add Payment</div>
       <h3 class="advanced-payments-popup-title">Add Payment</h3>
       <div class="advanced-payments-popup-body">
         <table class="advanced-payments-table new-order-payment-add-header-table" aria-hidden="true">
-          <colgroup>
-            <col style="width:16%">
-            <col style="width:18%">
-            <col style="width:16%">
-            <col style="width:40%">
-            <col style="width:10%">
-          </colgroup>
           <thead>
             <tr>
               <th>Date</th>
@@ -2126,10 +2955,10 @@
             </tr>
           </thead>
         </table>
-        <div class="advanced-payments-popup-edit-form">
+        <div class="advanced-payments-popup-edit-form payment-php-form">
           <div class="advanced-payments-popup-edit-form-grid">
-            <label for="paymentAmount">Amount (₹)</label>
-            <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
+            <label for="paymentDate">Date</label>
+            <input type="date" id="paymentDate">
             <label for="paymentMode">Mode</label>
             <select id="paymentMode">
               <option>Cash</option>
@@ -2138,10 +2967,10 @@
               <option>UPI</option>
               <option>Online</option>
             </select>
-            <label for="paymentDate">Date</label>
-            <input type="date" id="paymentDate">
+            <label for="paymentAmount">Amount (₹)</label>
+            <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
             <label for="paymentNarration">Narration</label>
-            <textarea id="paymentNarration" rows="2" placeholder="Narration"></textarea>
+            <textarea id="paymentNarration" rows="1" placeholder="Narration"></textarea>
           </div>
           <div class="advanced-payments-popup-edit-actions">
             <button type="button"
@@ -2187,7 +3016,8 @@
   <!-- RATEBOOK LIST POPUP -->
   <div id="new-order-ratebook-list-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this) (typeof closeRatebookListPopup==='function'&&closeRatebookListPopup())">
-    <div class="popup-box ratebook-list-popup-box" onclick="event.stopPropagation()">
+    <div class="popup-box ratebook-list-popup-box ratebook-list-php-shell" onclick="event.stopPropagation()">
+      <div class="ratebook-list-php-head">Ratebook List</div>
       <h3>Ratebook List</h3>
       <div class="ratebook-list-table-wrap">
         <table class="ratebook-list-table">
@@ -2220,48 +3050,39 @@
   <!-- RATEBOOK POPUP -->
   <div id="new-order-ratebook-popup" class="popup-bg new-order-popup"
     onclick="if(event.target===this) (typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup:closeRatebookPopup)()">
-    <div class="popup-box" style="max-width: 500px;">
+    <div class="popup-box ratebook-php-shell" onclick="event.stopPropagation()">
+      <div class="ratebook-php-head">Rate Booking</div>
       <h3>Rate Booking</h3>
-      <div class="popup-row">
-        <label>Stamp *</label>
-        <select id="rbStamp">
-          <option value="14 CR">14 CR</option>
-          <option value="18 CR">18 CR</option>
-          <option value="20 CR">20 CR</option>
-          <option value="22 CR">22 CR</option>
-          <option value="24 CR">24 CR</option>
-        </select>
-      </div>
-      <div class="popup-row">
-        <label>Weight (g)</label>
-        <input type="number" id="rbWeight" step="0.001" placeholder="0.000" oninput="calcRatebookAmount()">
-      </div>
-      <div class="popup-row">
-        <label>Rate (₹)</label>
-        <input type="number" id="rbRate" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
-      </div>
-      <div class="popup-row">
-        <label>Amount (₹)</label>
-        <input type="number" id="rbAmount" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
-      </div>
-      <div class="popup-row">
-        <label>Delivery Date</label>
-        <input type="date" id="rbDelDate">
-      </div>
-      <div class="popup-row">
-        <label>Type</label>
-        <input id="rbType" value="S" maxlength="1" style="text-align: center; width: 60px;">
-      </div>
-      <div class="popup-row">
-        <label>Narration</label>
-        <textarea id="rbNarration" placeholder="Enter narration..."></textarea>
-      </div>
-      <div class="popup-actions">
-        <button
-          onclick="typeof newOrderSaveRatebookEntry==='function'?newOrderSaveRatebookEntry():saveRatebookEntry()">Save
-          Rate</button>
-        <button
-          onclick="typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup():closeRatebookPopup()">Cancel</button>
+      <div class="ratebook-php-body">
+        <div class="ratebook-php-grid">
+          <label for="rbStamp">Stamp *</label>
+          <select id="rbStamp">
+            <option value="14 CR">14 CR</option>
+            <option value="18 CR">18 CR</option>
+            <option value="20 CR">20 CR</option>
+            <option value="22 CR">22 CR</option>
+            <option value="24 CR">24 CR</option>
+          </select>
+          <label for="rbWeight">Weight (g)</label>
+          <input type="number" id="rbWeight" step="0.001" placeholder="0.000" oninput="calcRatebookAmount()">
+          <label for="rbRate">Rate (₹)</label>
+          <input type="number" id="rbRate" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
+          <label for="rbAmount">Amount (₹)</label>
+          <input type="number" id="rbAmount" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
+          <label for="rbDelDate">Delivery Date</label>
+          <input type="date" id="rbDelDate">
+          <label for="rbType">Type</label>
+          <input type="text" id="rbType" value="S" maxlength="1">
+          <label for="rbNarration">Narration</label>
+          <textarea id="rbNarration" rows="1" placeholder="Enter narration..."></textarea>
+        </div>
+        <div class="popup-actions ratebook-php-actions">
+          <button type="button"
+            onclick="typeof newOrderSaveRatebookEntry==='function'?newOrderSaveRatebookEntry():saveRatebookEntry()">Save
+            Rate</button>
+          <button type="button"
+            onclick="typeof newOrderCloseRatebookPopup==='function'?newOrderCloseRatebookPopup():closeRatebookPopup()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2269,26 +3090,25 @@
   <!-- ORDER DETAILS POPUP -->
   <div id="new-order-order-details-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this) (typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup:closeOrderDetailsPopup)()">
-    <div class="popup-box" style="max-width: 420px;">
+    <div class="popup-box order-details-php-shell" onclick="event.stopPropagation()">
+      <div class="order-details-php-head">Order Details</div>
       <h3>Order Details</h3>
-      <div class="popup-row">
-        <label>Days to Delivery</label>
-        <input type="number" id="orderDetailsDays" min="0" placeholder="0" style="width:100px;"
-          oninput="calculateOrderDetailsDeliveryDate()">
-      </div>
-      <div class="popup-row">
-        <label>Delivery Date</label>
-        <input type="date" id="orderDetailsDeliveryDate">
-      </div>
-      <div class="popup-row">
-        <label>Sample Details</label>
-        <textarea id="orderDetailsSample" placeholder="Sample details..." rows="2"></textarea>
-      </div>
-      <div class="popup-actions">
-        <button
-          onclick="typeof newOrderSaveOrderDetailsPopup==='function'?newOrderSaveOrderDetailsPopup():saveOrderDetailsPopup()">Save</button>
-        <button
-          onclick="typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup():closeOrderDetailsPopup()">Cancel</button>
+      <div class="order-details-php-body">
+        <div class="order-details-php-grid">
+          <label for="orderDetailsDays">Days to Delivery</label>
+          <input type="number" id="orderDetailsDays" min="0" placeholder="0"
+            oninput="calculateOrderDetailsDeliveryDate()">
+          <label for="orderDetailsDeliveryDate">Delivery Date</label>
+          <input type="date" id="orderDetailsDeliveryDate">
+          <label for="orderDetailsSample">Sample Details</label>
+          <textarea id="orderDetailsSample" placeholder="Sample details..." rows="1"></textarea>
+        </div>
+        <div class="popup-actions order-details-php-actions">
+          <button type="button"
+            onclick="typeof newOrderSaveOrderDetailsPopup==='function'?newOrderSaveOrderDetailsPopup():saveOrderDetailsPopup()">Save</button>
+          <button type="button"
+            onclick="typeof newOrderCloseOrderDetailsPopup==='function'?newOrderCloseOrderDetailsPopup():closeOrderDetailsPopup()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2296,20 +3116,21 @@
   <!-- PURCHASE SHEET POPUP -->
   <div id="new-order-purchase-sheet-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this && typeof newOrderClosePurchaseSheetPopup==='function') newOrderClosePurchaseSheetPopup()">
-    <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
+    <div class="popup-box purchase-sheet-box purchase-php-shell" onclick="event.stopPropagation()">
+      <div class="purchase-php-head">Purchase</div>
       <h3 class="purchase-popup-title">Purchase</h3>
-      <div class="purchase-sheet-wrap">
+      <div class="purchase-sheet-wrap purchase-php-table-wrap">
         <table class="purchase-sheet-table">
           <thead>
             <tr>
-              <th style="min-width:128px;">On date</th>
-              <th style="min-width:160px;">Item Name</th>
-              <th style="min-width:80px;">Stamp</th>
-              <th style="min-width:92px;">GROSS WT.</th>
-              <th style="min-width:88px;">Less Wt</th>
-              <th style="min-width:100px;">Net Weight</th>
-              <th style="min-width:88px;">Rate</th>
-              <th style="min-width:100px;">Amount</th>
+              <th>On date</th>
+              <th>Item Name</th>
+              <th>Stamp</th>
+              <th>GROSS WT.</th>
+              <th>Less Wt</th>
+              <th>Net Weight</th>
+              <th>Rate</th>
+              <th>Amount</th>
               <th>❌</th>
             </tr>
           </thead>
@@ -2323,11 +3144,10 @@
           </tfoot>
         </table>
       </div>
-      <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
-        <div style="display:flex; flex-wrap:wrap; gap:8px;">
+      <div class="popup-actions purchase-php-actions">
+        <div class="purchase-php-actions-left">
           <button type="button" class="primary"
-            onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+
-            Add Row</button>
+            onclick="typeof addPurchaseSheetRow==='function'&&addPurchaseSheetRow()">+ Add Row</button>
           <button type="button" class="primary"
             onclick="typeof savePurchaseSheet==='function'&&savePurchaseSheet()">Save</button>
         </div>
@@ -2994,7 +3814,60 @@
 
       function getFocusableInCell(cell) {
         if (!cell) return null;
-        return cell.querySelector('input, select, button');
+        var el = cell.querySelector('input:not([type="hidden"]), select, button');
+        if (!el || el.disabled) return null;
+        return el;
+      }
+
+      function cellIsNavigable(cell) {
+        if (!cell || cell.style.display === 'none') return false;
+        return !!getFocusableInCell(cell);
+      }
+
+      function navigableCellsInRow(tr) {
+        if (!tr) return [];
+        return Array.from(tr.cells).filter(cellIsNavigable);
+      }
+
+      /** Arrow keys between fields in PHP-style popup forms (Payment, Rate Booking, Order Details). */
+      function setupPopupFormArrowKeys() {
+        if (window.__newOrderPopupArrowWired) return;
+        window.__newOrderPopupArrowWired = true;
+        document.addEventListener('keydown', function (e) {
+          var key = e.key;
+          if (key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+          var t = e.target;
+          if (!t || !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/i.test(t.tagName)) return;
+          var grid = t.closest(
+            '.order-details-php-grid, .advanced-payments-popup-edit-form-grid, .ratebook-php-grid'
+          );
+          if (!grid) return;
+          var popup = grid.closest(
+            '#new-order-order-details-popup, #new-order-payment-popup, #new-order-ratebook-popup'
+          );
+          if (!popup || popup.style.display === 'none') return;
+
+          var fields = Array.from(
+            grid.querySelectorAll('input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)')
+          ).filter(function (el) {
+            return el.offsetParent !== null;
+          });
+          var idx = fields.indexOf(t);
+          if (idx < 0) return;
+
+          var nextIdx = idx;
+          if (key === 'ArrowDown' || key === 'ArrowRight') nextIdx = idx + 1;
+          if (key === 'ArrowUp' || key === 'ArrowLeft') nextIdx = idx - 1;
+          if (nextIdx < 0 || nextIdx >= fields.length) return;
+
+          e.preventDefault();
+          fields[nextIdx].focus();
+          try {
+            if (fields[nextIdx].tagName === 'INPUT' && fields[nextIdx].type !== 'date' && typeof fields[nextIdx].select === 'function') {
+              fields[nextIdx].select();
+            }
+          } catch (errSel) { }
+        });
       }
 
       // =====================================================
@@ -3029,44 +3902,57 @@
       }
 
       function setupTableArrowKeys() {
+        if (window.__newOrderTableArrowWired) return;
+        window.__newOrderTableArrowWired = true;
         document.addEventListener('keydown', function (e) {
-          const table = getSearchRoot().querySelector('#new-order-item-table'); // FIXED
+          var key = e.key;
+          if (key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+
+          var table = getSearchRoot().querySelector('#new-order-item-table');
           if (!table || !table.contains(document.activeElement)) return;
-          const tbody = table.querySelector('tbody');
+          var tbody = table.querySelector('tbody');
           if (!tbody || !tbody.contains(document.activeElement)) return;
 
-          const active = document.activeElement;
-          const tr = active.closest('tr');
+          var active = document.activeElement;
+          if (active.tagName === 'SELECT' && (key === 'ArrowUp' || key === 'ArrowDown')) return;
+
+          var tr = active.closest('tr');
           if (!tr || !tbody.contains(tr)) return;
 
-          const rows = Array.from(tbody.querySelectorAll('tr'));
-          const rowIndex = rows.indexOf(tr);
-          const cells = Array.from(tr.cells);
-          const cell = active.closest('td');
-          const colIndex = cell ? cells.indexOf(cell) : -1;
+          var rows = Array.from(tbody.querySelectorAll('tr'));
+          var rowIndex = rows.indexOf(tr);
+          var navCells = navigableCellsInRow(tr);
+          var cell = active.closest('td');
+          var colIndex = navCells.indexOf(cell);
           if (colIndex < 0) return;
 
-          let nextTr = null;
-          let nextCell = null;
+          var nextCell = null;
 
-          if (e.key === 'ArrowDown' && rowIndex < rows.length - 1) {
+          if (key === 'ArrowDown' && rowIndex < rows.length - 1) {
             e.preventDefault();
-            nextTr = rows[rowIndex + 1];
-            nextCell = nextTr.cells[colIndex];
-          } else if (e.key === 'ArrowUp' && rowIndex > 0) {
+            var nextNav = navigableCellsInRow(rows[rowIndex + 1]);
+            if (nextNav[colIndex]) nextCell = nextNav[colIndex];
+          } else if (key === 'ArrowUp' && rowIndex > 0) {
             e.preventDefault();
-            nextTr = rows[rowIndex - 1];
-            nextCell = nextTr.cells[colIndex];
-          } else if (e.key === 'ArrowRight' && colIndex < cells.length - 1) {
+            var prevNav = navigableCellsInRow(rows[rowIndex - 1]);
+            if (prevNav[colIndex]) nextCell = prevNav[colIndex];
+          } else if (key === 'ArrowRight' && colIndex < navCells.length - 1) {
             e.preventDefault();
-            nextCell = tr.cells[colIndex + 1];
-          } else if (e.key === 'ArrowLeft' && colIndex > 0) {
+            nextCell = navCells[colIndex + 1];
+          } else if (key === 'ArrowLeft' && colIndex > 0) {
             e.preventDefault();
-            nextCell = tr.cells[colIndex - 1];
+            nextCell = navCells[colIndex - 1];
           }
 
-          const nextEl = nextCell ? getFocusableInCell(nextCell) : null;
-          if (nextEl) nextEl.focus();
+          var nextEl = nextCell ? getFocusableInCell(nextCell) : null;
+          if (nextEl) {
+            nextEl.focus();
+            try {
+              if (nextEl.tagName === 'INPUT' && nextEl.type !== 'date' && typeof nextEl.select === 'function') {
+                nextEl.select();
+              }
+            } catch (errSel) { }
+          }
         });
       }
 
@@ -5294,6 +6180,13 @@
         app.style.display = 'none';
       }
 
+      function printOrder() {
+        showInvoice();
+        setTimeout(function () {
+          window.print();
+        }, 150);
+      }
+
       function back() {
         const invoice = document.getElementById('invoice');
         const app = document.getElementById('orderApp');
@@ -5408,6 +6301,7 @@
           updateInfoPanel();
           setupBillNoHandler();
           setupTableArrowKeys();
+          setupPopupFormArrowKeys();
           setupStampKeyboardOpen();
           attachInitListeners();
           registerGlobals();
@@ -5444,6 +6338,7 @@
           }, 200);
           updateInfoPanel();
           setupTableArrowKeys();
+          setupPopupFormArrowKeys();
           setupStampKeyboardOpen();
           setupBillNoHandler();
           attachInitListeners();
@@ -5500,6 +6395,7 @@
         attachInitListeners();
         updateInfoPanel();
         setupTableArrowKeys();
+        setupPopupFormArrowKeys();
         setupStampKeyboardOpen();
         registerGlobals();
       }
@@ -5551,6 +6447,7 @@
         window.resetOrder = resetOrder;
         window.resetCustomerNameOnly = resetCustomerNameOnly;
         window.showInvoice = showInvoice;
+        window.printOrder = printOrder;
         window.back = back;
         window.closeDashboard = closeDashboard;
         window.saveOrderState = saveOrderState;
@@ -5593,7 +6490,7 @@
             'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup',
             'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount',
             'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew',
-            'resetOrder', 'resetCustomerNameOnly', 'showInvoice', 'back', 'closeDashboard', 'saveOrderState',
+            'resetOrder', 'resetCustomerNameOnly', 'showInvoice', 'printOrder', 'back', 'closeDashboard', 'saveOrderState',
             'restoreOrderState', 'openPaymentCardEdit', 'savePaymentCardEdit',
             'cancelPaymentCardEdit', 'cancelPaymentDetailTableEdit'
           ];
