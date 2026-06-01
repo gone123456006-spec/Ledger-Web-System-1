@@ -52,10 +52,10 @@ ul, li{
 
 .menu-item{
     position:relative;
-    padding:5px 12px;
-    font-size:12px;
+    padding:4px 10px;
+    font-size:11px;
     cursor:default;
-    border-radius:5px 5px 0 0;
+    border-radius:4px 4px 0 0;
 }
 
 .menu-item:hover{
@@ -71,12 +71,12 @@ ul, li{
     position:absolute;
     top:100%;
     left:0;
-    min-width:200px;
+    min-width:148px;
     background:#ffffff;
-    border:1px solid #6493e0;
-    border-radius:8px;
-    box-shadow:0 10px 25px rgba(0,0,0,.18);
-    padding:6px 0;
+    border:1px solid #a8b4c4;
+    border-radius:4px;
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
+    padding:2px 0;
     z-index:1000;
 }
 
@@ -88,25 +88,29 @@ ul, li{
 }
 
 .submenu li{
-    padding:8px 36px;
-    font-size:14px;
+    padding:4px 10px;
+    font-size:11px;
+    font-weight:600;
+    line-height:1.25;
     cursor:pointer;
     white-space:nowrap;
+    color:#1a3a5c;
 }
 
 .submenu li:hover{
-    background:#bad5ff;
+    background:#d6e4f4;
 }
 
 .submenu li.submenu-esc-item{
-    margin-top:4px;
-    border-top:1px solid #d9e6fc;
-    padding-top:10px;
+    margin-top:2px;
+    border-top:1px solid #d4d4d4;
+    padding:4px 10px;
+    font-size:10px;
     font-weight:600;
-    color:#174ea6;
+    color:#1a73e8;
 }
 .submenu li.submenu-esc-item:hover{
-    background:#cfe0ff;
+    background:#eef4ff;
 }
 
 .submenu.right{
@@ -129,7 +133,7 @@ ul, li{
 .divider{
     height:1px;
     background:#e1e4ea;
-    margin:6px 10px;
+    margin:3px 8px;
 }
 
 /* =========================
@@ -148,6 +152,489 @@ ul, li{
     padding:20px;
     overflow:auto;
     background:linear-gradient(to bottom,#cde1ff,#e6f1ff);
+}
+
+/* Jobworker Balance — edge-to-edge in dashboard (no workspace gutter) */
+.workspace[data-page="jobworker-balance"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="jobworker-balance"] > .app.jobworker-balance-page{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+}
+
+/* Job Worker List — edge-to-edge in dashboard (same as Jobworker Balance) */
+.workspace[data-page="jobworker-list"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="jobworker-list"] > .app.jobworker-list-page{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+}
+
+/* Orders list — full width in dashboard */
+.workspace[data-page="orders"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="orders"] > .orders-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0;
+    border:none;
+    border-radius:0;
+    box-shadow:none;
+}
+
+/* Pending Orders — full width in dashboard */
+.workspace[data-page="pending-orders"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="pending-orders"] > .pending-orders-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* Pending Items — full width in dashboard */
+.workspace[data-page="pending-items"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="pending-items"] > .wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* Item Process — full width in dashboard */
+.workspace[data-page="item-process"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="item-process"] > .process-items-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* Ready Items — full width in dashboard */
+.workspace[data-page="ready-items"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="ready-items"] > .process-items-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* Ready Orders — full width in dashboard */
+.workspace[data-page="ready-orders"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="ready-orders"] > .ready-orders-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* All Bill — full width in dashboard */
+.workspace[data-page="all-bill"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="all-bill"] > .balance-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* Customer Balance — full width in dashboard */
+.workspace[data-page="customer-balance"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+}
+
+.workspace[data-page="customer-balance"] > .customer-balance-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+/* Customer Statement (QR) — full width in dashboard */
+.workspace[data-page="customer-balance-QR"],
+.workspace:has(> .stmt-wrap){
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
+}
+
+.workspace[data-page="customer-balance-QR"] > .stmt-wrap,
+.workspace:has(> .stmt-wrap) > .stmt-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    background:#fff !important;
+}
+
+/* Customer page — blue workspace for Add Customer form */
+.workspace[data-page="customer"]:not(:has(#customerListSection.customer-list-open)){
+    background:linear-gradient(to bottom,#cde1ff,#e6f1ff) !important;
+    padding:20px;
+    overflow:auto;
+}
+
+.workspace[data-page="customer"]:not(:has(#customerListSection.customer-list-open)) > .page{
+    background:transparent;
+}
+
+/* Customer page — full width when Customer List is open */
+.workspace[data-page="customer"]:has(#customerListSection.customer-list-open),
+.workspace:has(#customerListSection.customer-list-open){
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
+}
+
+.workspace[data-page="customer"]:has(#customerListSection.customer-list-open) > .page,
+.workspace:has(#customerListSection.customer-list-open) > .page{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0;
+    padding:0 !important;
+    background:#fff;
+}
+
+.workspace[data-page="customer"]:has(#customerListSection.customer-list-open) #customerListSection,
+.workspace:has(#customerListSection.customer-list-open) #customerListSection{
+    flex:1 1 auto;
+    min-height:0;
+    height:100%;
+    max-height:none;
+}
+
+/* Station List (injected in workspace from index.html) */
+.workspace[data-page="station-list"],
+.workspace:has(> .station-list-wrap){
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
+}
+
+.workspace[data-page="station-list"] > .station-list-wrap,
+.workspace > .station-list-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:#fff;
+    box-sizing:border-box;
+}
+
+.station-list-wrap > .ledger-page-titlebar{
+    flex-shrink:0;
+    background:#f4f6f8;
+    color:#1a3a5c;
+    padding:6px 12px;
+    font-size:14px;
+    font-weight:700;
+    border-bottom:1px solid #a8b4c4;
+    text-align:center;
+    margin:0;
+    border-radius:0;
+}
+
+.station-list-toolbar{
+    display:flex;
+    flex-wrap:nowrap;
+    align-items:center;
+    gap:8px 10px;
+    width:calc(100% - 28px);
+    margin:0 14px;
+    padding:6px 0;
+    border-bottom:1px solid #a8b4c4;
+    background:#fff;
+    flex-shrink:0;
+    box-sizing:border-box;
+    overflow-x:auto;
+}
+
+.station-list-toolbar #stationSearch{
+    flex:0 1 200px;
+    min-width:160px;
+    max-width:280px;
+    height:26px;
+    min-height:26px;
+    margin-left:auto;
+    padding:3px 8px;
+    border:1px solid #a8b4c4;
+    border-radius:3px;
+    font-size:12px;
+    box-sizing:border-box;
+}
+
+.station-list-toolbar #stationSearch:focus{
+    outline:none;
+    border-color:#1a73e8;
+    box-shadow:0 0 0 2px rgba(26,115,232,.15);
+}
+
+.station-list-btn,
+.station-list-btn-primary{
+    height:26px;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:3px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    flex-shrink:0;
+    box-shadow:none;
+    transform:none;
+}
+
+.station-list-btn{
+    border:1px solid #a8b4c4;
+    background:#fff;
+    color:#1a3a5c;
+}
+
+.station-list-btn:hover{
+    background:#d6e4f4;
+    border-color:#7a8da6;
+}
+
+.station-list-btn-primary{
+    border:1px solid #6aae6a;
+    background:#f0fdf4;
+    color:#166534;
+}
+
+.station-list-btn-primary:hover{
+    background:#dcfce7;
+    border-color:#4d9a4d;
+}
+
+.station-list-btn-danger{
+    border:1px solid #e57373;
+    background:#fef2f2;
+    color:#b91c1c;
+    height:26px;
+    min-height:26px;
+    padding:0 10px;
+    border-radius:3px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.station-list-btn-danger:hover{
+    background:#fee2e2;
+    border-color:#dc2626;
+}
+
+.station-list-table-wrap{
+    flex:1 1 0;
+    min-height:0;
+    width:calc(100% - 28px);
+    margin:0 14px;
+    overflow:auto;
+    background:#fff;
+    box-sizing:border-box;
+    border:none;
+}
+
+.station-list-footer{
+    width:calc(100% - 28px);
+    margin:0 14px;
+    padding:6px 0;
+    border-top:1px solid #a8b4c4;
+    background:#fff;
+    flex-shrink:0;
+    display:flex;
+    justify-content:flex-end;
+    box-sizing:border-box;
+}
+
+#stationsTable.station-excel-table{
+    width:100%;
+    min-width:max-content;
+    border-collapse:collapse;
+    border-spacing:0;
+    font-family:Calibri,"Segoe UI",Arial,sans-serif;
+    font-size:12px;
+    background:#fff;
+}
+
+#stationsTable.station-excel-table thead{
+    position:sticky;
+    top:0;
+    z-index:10;
+}
+
+#stationsTable.station-excel-table thead th{
+    background:#d6e4f4 !important;
+    border:1px solid #a8b4c4;
+    padding:6px 10px;
+    font-size:11px;
+    font-weight:700;
+    color:#1a3a5c;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    text-align:left;
+    box-shadow:0 1px 0 #a8b4c4;
+}
+
+#stationsTable.station-excel-table thead th:last-child{
+    text-align:right;
+}
+
+#stationsTable.station-excel-table tbody td{
+    border:1px solid #d4d4d4;
+    padding:6px 10px;
+    font-size:12px;
+    color:#000;
+    vertical-align:middle;
+}
+
+#stationsTable.station-excel-table tbody tr{
+    background:#fff;
+    transition:background .15s;
+}
+
+#stationsTable.station-excel-table tbody tr:hover td{
+    background:#eaf7ed;
+    border-color:#c8e6c9;
+}
+
+#stationsTable.station-excel-table tbody td:last-child{
+    text-align:right;
+}
+
+#stationsTable.station-excel-table tbody td.station-list-empty{
+    text-align:center;
+    color:#5f6368;
+    font-style:italic;
+    padding:24px 10px;
 }
 
 /* =========================
@@ -235,12 +722,12 @@ ul, li{
 .sidebar-gold-submenu{
     display:none;
     position:fixed;
-    min-width:140px;
-    padding:4px 0;
+    min-width:128px;
+    padding:2px 0;
     background:#fff;
-    border:1px solid #d1d6de;
-    border-radius:10px;
-    box-shadow:0 6px 16px rgba(0,0,0,.12);
+    border:1px solid #a8b4c4;
+    border-radius:4px;
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
     z-index:10000;
 }
 .sidebar-gold-submenu.visible{
@@ -250,18 +737,19 @@ ul, li{
     display:block;
     width:100%;
     margin:0;
-    padding:8px 14px;
+    padding:4px 10px;
     border:none;
-    border-radius:6px;
+    border-radius:0;
     background:transparent;
-    font-size:13px;
-    font-weight: bold;
+    font-size:11px;
+    font-weight:600;
+    line-height:1.25;
     text-align:left;
     cursor:pointer;
-    color:#000 !important;
+    color:#1a3a5c !important;
 }
 .sidebar-gold-submenu button:hover{
-    background:#abccff;
+    background:#d6e4f4;
 }
 
 /* Job Worker Book: same hover-to-open side submenu as Gold Order Book */
@@ -277,12 +765,12 @@ ul, li{
 .sidebar-jobworker-submenu{
     display:none;
     position:fixed;
-    min-width:160px;
-    padding:4px 0;
+    min-width:132px;
+    padding:2px 0;
     background:#fff;
-    border:1px solid #d1d6de;
-    border-radius:10px;
-    box-shadow:0 6px 16px rgba(0,0,0,.12);
+    border:1px solid #a8b4c4;
+    border-radius:4px;
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
     z-index:10000;
 }
 .sidebar-jobworker-submenu.visible{
@@ -292,18 +780,19 @@ ul, li{
     display:block;
     width:100%;
     margin:0;
-    padding:8px 14px;
+    padding:4px 10px;
     border:none;
-    border-radius:6px;
+    border-radius:0;
     background:transparent;
-    font-size:13px;
-    font-weight: bold;
+    font-size:11px;
+    font-weight:600;
+    line-height:1.25;
     text-align:left;
     cursor:pointer;
-    color:#000 !important;
+    color:#1a3a5c !important;
 }
 .sidebar-jobworker-submenu button:hover{
-    background:#abccff;
+    background:#d6e4f4;
 }
 
 /* Direct Bill: hover side submenu (Gold / Silver / Raw Gold / Raw Silver invoice) */
@@ -319,12 +808,12 @@ ul, li{
 .sidebar-direct-bill-submenu{
     display:none;
     position:fixed;
-    min-width:180px;
-    padding:4px 0;
+    min-width:148px;
+    padding:2px 0;
     background:#fff;
-    border:1px solid #d1d6de;
-    border-radius:10px;
-    box-shadow:0 6px 16px rgba(0,0,0,.12);
+    border:1px solid #a8b4c4;
+    border-radius:4px;
+    box-shadow:0 4px 12px rgba(0,0,0,.12);
     z-index:10000;
 }
 .sidebar-direct-bill-submenu.visible{
@@ -334,18 +823,42 @@ ul, li{
     display:block;
     width:100%;
     margin:0;
-    padding:8px 14px;
+    padding:4px 10px;
     border:none;
-    border-radius:6px;
+    border-radius:0;
     background:transparent;
-    font-size:13px;
-    font-weight: bold;
+    font-size:11px;
+    font-weight:600;
+    line-height:1.25;
     text-align:left;
     cursor:pointer;
-    color:#000 !important;
+    color:#1a3a5c !important;
 }
 .sidebar-direct-bill-submenu button:hover{
-    background:#abccff;
+    background:#d6e4f4;
+}
+
+/* Sidebar flyouts — shared compact Excel-style (Add Item, Agents, etc.) */
+.sidebar-add-item-submenu,
+.sidebar-agents-submenu{
+    min-width:128px !important;
+    padding:2px 0 !important;
+    border:1px solid #a8b4c4 !important;
+    border-radius:4px !important;
+    box-shadow:0 4px 12px rgba(0,0,0,.12) !important;
+}
+.sidebar-add-item-submenu button,
+.sidebar-agents-submenu button{
+    padding:4px 10px !important;
+    font-size:11px !important;
+    font-weight:600 !important;
+    line-height:1.25 !important;
+    border-radius:0 !important;
+    color:#1a3a5c !important;
+}
+.sidebar-add-item-submenu button:hover,
+.sidebar-agents-submenu button:hover{
+    background:#d6e4f4 !important;
 }
 
 /* =========================
@@ -408,26 +921,130 @@ ul, li{
     --ledger-ws-r:10px;
 }
 
-/* Full-page apps and misc shells inside workspace */
-.workspace[data-page] .app.new-order-page,
-.workspace[data-page] .app.ready-order-page,
-.workspace[data-page] .app#orderApp{
+/* Full-page apps and misc shells inside workspace (excludes full-bleed order pages) */
+.workspace[data-page] .app#orderApp:not(.new-order-page):not(.gold-invoice-page):not(.ready-order-page){
     border-radius:var(--ledger-ws-r);
     overflow:hidden;
 }
 
-.workspace[data-page] .app.new-order-page > .ledger-page-titlebar:first-child,
-.workspace[data-page] .app.ready-order-page > .ledger-page-titlebar:first-child,
-.workspace[data-page] .app#orderApp > .ledger-page-titlebar:first-child{
+.workspace[data-page] .app#orderApp:not(.new-order-page):not(.gold-invoice-page):not(.ready-order-page) > .ledger-page-titlebar:first-child{
     border-radius:var(--ledger-ws-r) var(--ledger-ws-r) 0 0;
 }
 
-.workspace[data-page] .direct-bill-wrap{
-    border-radius:var(--ledger-ws-r);
+/* Ready Extra Order — full width in dashboard */
+.workspace[data-page="ready-extra-order"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
 }
 
-.workspace[data-page] .direct-bill-wrap > .ledger-page-titlebar:first-child{
-    border-radius:var(--ledger-ws-r) var(--ledger-ws-r) 0 0;
+.workspace[data-page="ready-extra-order"] > .app.ready-order-page,
+.workspace[data-page="ready-extra-order"] > #orderApp.ready-order-page{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    overflow:hidden;
+}
+
+.workspace[data-page="ready-extra-order"] .app.ready-order-page > .ledger-page-titlebar:first-child,
+.workspace[data-page="ready-extra-order"] #orderApp.ready-order-page > .ledger-page-titlebar:first-child{
+    border-radius:0;
+}
+
+/* New Order — full width in dashboard */
+.workspace[data-page="new-order"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
+}
+
+.workspace[data-page="new-order"] > .app.new-order-page,
+.workspace[data-page="new-order"] > #orderApp.new-order-page{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    overflow:hidden;
+}
+
+.workspace[data-page="new-order"] .app.new-order-page > .ledger-page-titlebar:first-child,
+.workspace[data-page="new-order"] #orderApp.new-order-page > .ledger-page-titlebar:first-child{
+    border-radius:0;
+}
+
+/* Direct Bill — full width in dashboard */
+.workspace[data-page="direct-bill"],
+.workspace:has(> .direct-bill-wrap){
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
+}
+
+.workspace[data-page="direct-bill"] > .direct-bill-wrap,
+.workspace:has(> .direct-bill-wrap) > .direct-bill-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+}
+
+.workspace[data-page] .direct-bill-wrap > .ledger-page-titlebar:first-child,
+.workspace[data-page="direct-bill"] .direct-bill-wrap > .ledger-page-titlebar:first-child{
+    border-radius:0;
+}
+
+/* Gold Invoice — full width in dashboard */
+.workspace[data-page="gold-invoice"]{
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    background:#fff !important;
+}
+
+.workspace[data-page="gold-invoice"] > .app.gold-invoice-page,
+.workspace[data-page="gold-invoice"] > #orderApp.gold-invoice-page{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    height:100%;
+    max-height:none;
+    margin:0 !important;
+    border:none !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+    overflow:hidden;
+}
+
+.workspace[data-page="gold-invoice"] .app.gold-invoice-page > .ledger-page-titlebar:first-child,
+.workspace[data-page="gold-invoice"] #orderApp.gold-invoice-page > .ledger-page-titlebar:first-child{
+    border-radius:0;
 }
 
 .workspace[data-page] .wrap{

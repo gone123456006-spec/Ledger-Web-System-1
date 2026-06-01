@@ -16,81 +16,105 @@
       font-weight: 700 !important;
     }
 
+    html,
     body {
-      margin: 0;
-      background: #e6ebf2;
+      height: 100%;
+      overflow: hidden;
     }
 
-    .workspace {
-      background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
+    body {
+      margin: 0;
+      background: #fff;
+      height: 100vh;
     }
 
     /* =========================
-   CONTAINER
+   CONTAINER — full screen
 ========================= */
     .ready-orders-wrap {
-      margin: 15px;
+      margin: 0;
       background: #fff !important;
-      border: 1px solid #d1d6de;
-      border-radius: 12px;
+      border: none;
+      border-radius: 0;
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 30px);
-      max-height: calc(100vh - 30px);
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      min-height: 0;
       overflow: hidden;
       box-sizing: border-box;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: none;
     }
 
     .workspace .ready-orders-wrap {
       margin: 0 !important;
       height: 100% !important;
       max-height: 100% !important;
-      border-radius: var(--ledger-ws-r, 10px) !important;
+      border-radius: 0 !important;
       box-shadow: none !important;
       background: #fff !important;
       border: none !important;
     }
 
     .ready-orders-wrap > .ledger-page-titlebar:first-child {
-      border-radius: 12px 12px 0 0;
+      border-radius: 0;
+      flex-shrink: 0;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      color: #1a3a5c;
     }
 
     .workspace .ready-orders-wrap > .ledger-page-titlebar:first-child {
-      border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
+      border-radius: 0;
     }
 
     /* =========================
-   TOOLBAR
+   TOOLBAR — compact Excel style (aligned with Ready Items / Item Process)
 ========================= */
     .ready-toolbar {
-      display: flex;
-      flex-wrap: nowrap;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      border-bottom: 2px solid #d1d6de;
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
       flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
       box-sizing: border-box;
-      overflow-x: auto;
-      overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
+      background: #fff !important;
+      position: relative;
+      z-index: 300;
+      overflow: visible;
     }
 
     .workspace .ready-orders-wrap .ready-toolbar {
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+      background: #fff !important;
     }
 
-    .ready-toolbar>.btn {
-      flex: 0 0 auto;
+    .ready-toolbar-inner {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 6px 8px;
+      padding: 6px 0;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .ready-toolbar-inner > .btn {
+      margin-left: auto;
+    }
+
+    .ready-toolbar-inner > * {
+      flex-shrink: 0;
     }
 
     .ready-order-filters {
       display: flex;
       flex-wrap: nowrap;
       align-items: center;
-      gap: 10px;
+      gap: 6px 10px;
       flex: 1 1 auto;
       min-width: 0;
     }
@@ -105,33 +129,42 @@
     .ready-order-filters input.ro-filter-input,
     .ready-order-filters select.ro-filter-select {
       min-width: 0;
-      width: 158px;
-      max-width: 200px;
-      height: 40px;
+      width: 120px;
+      max-width: 180px;
+      height: 26px;
+      min-height: 26px;
       box-sizing: border-box;
+      padding: 3px 24px 3px 8px;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 400 !important;
+      font-style: normal !important;
+      background: #fff;
+      color: #1a3a5c;
+      outline: none;
+      line-height: 1.2;
     }
 
     .ready-order-filters select.ro-filter-select {
-      padding: 8px 10px;
-      border: 1px solid #d1d6de;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      background: #fff;
       cursor: pointer;
-      color: #1d1d1f;
     }
 
-    .ready-order-filters select.ro-filter-select:focus {
-      outline: none;
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+    .ready-order-filters select.ro-filter-select:focus,
+    .ready-order-filters input.ro-filter-input:focus {
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .ready-order-filters input.ro-filter-input::placeholder {
+      color: #6b7a95;
+      font-weight: 400 !important;
     }
 
     .ready-order-filters .ro-filter-field.ro-filter-search-wrap {
       flex: 1 1 140px;
       min-width: 120px;
-      max-width: 320px;
+      max-width: 280px;
     }
 
     .ready-order-filters .ro-search-bar {
@@ -140,179 +173,145 @@
       max-width: none;
     }
 
-    .ready-order-filters .ro-search-bar:focus {
-      outline: none;
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
-    }
-
-    .btn {
-      padding: 10px 18px;
-      border: 1px solid #d1d6de;
+    .ready-toolbar .btn {
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      border: 1px solid #a8b4c4;
       background: #fff;
       cursor: pointer;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s;
-      color: #1d1d1f !important;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600 !important;
+      font-style: normal !important;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      color: #1a3a5c !important;
+      box-shadow: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      flex: 0 0 auto;
     }
 
-    .btn:hover {
-      background: #007aff;
-      border-color: #007aff;
-      color: #fff !important;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+    .ready-toolbar .btn:hover {
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c !important;
+      transform: none;
+      box-shadow: none;
     }
 
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-    }
-
-    input {
-      height: 40px;
-      padding: 8px 14px;
-      border: 1px solid #d1d6de;
-      border-radius: 8px;
-      font-size: 14px;
-      background: #fff;
-      transition: all 0.2s;
-      min-width: 200px;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
-    }
-
-    input::placeholder {
-      color: #8e8e93;
+    .ready-toolbar .btn:active {
+      transform: none;
     }
 
     /* =========================
-   TABLE
+   TABLE — Microsoft Excel–style grid
 ========================= */
-    .table-wrap {
-      flex: 1;
+    .ready-orders-wrap > .table-wrap {
+      flex: 1 1 auto;
       overflow: auto;
       position: relative;
       min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
       box-sizing: border-box;
       background: #fff !important;
+      border: none;
+      z-index: 1;
     }
 
     .workspace .ready-orders-wrap .table-wrap {
       background: #fff !important;
     }
 
-    table {
+    #readyOrdersTable {
       width: 100%;
-      min-width: 1180px;
+      min-width: max-content;
       border-collapse: collapse;
+      border-spacing: 0;
+      table-layout: fixed;
       background: #fff !important;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      font-size: 12px;
     }
 
-    .workspace .ready-orders-wrap table {
-      background: #fff !important;
-    }
-
-    thead {
+    #readyOrdersTable thead {
       position: sticky;
       top: 0;
       z-index: 10;
-      background: #fff !important;
-      box-shadow: 0 1px 0 0 #c5c9ce;
     }
 
-    .workspace .ready-orders-wrap thead {
-      background: #fff !important;
-    }
-
-    thead th {
-      background: linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
-      border: 1px solid #c5c9ce;
-      padding: 18px;
+    #readyOrdersTable thead th {
+      background: #d6e4f4 !important;
+      border: 1px solid #a8b4c4;
+      padding: 6px 10px;
       white-space: nowrap;
-      font-weight: 600;
-      font-size: 13px;
+      font-weight: 700 !important;
+      font-size: 11px;
       text-align: left;
-      color: #1d1d1f !important;
+      color: #1a3a5c !important;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
+      vertical-align: middle;
+      line-height: 1.25;
+      box-shadow: 0 1px 0 #a8b4c4;
     }
 
-    .workspace .ready-orders-wrap thead th {
-      background: linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
-      color: #1d1d1f !important;
-    }
-
-    thead th.center {
+    #readyOrdersTable thead th.center {
       text-align: center;
     }
 
-    thead th.right {
+    #readyOrdersTable thead th.right {
       text-align: right;
     }
 
-    tbody td {
-      padding: 18px;
-      border: 1px solid #d1d6de;
-      font-size: 14px;
+    #readyOrdersTable tbody td {
+      padding: 6px 10px;
+      border: 1px solid #d4d4d4;
+      font-size: 12px;
+      font-weight: 400 !important;
       vertical-align: middle;
-      color: #333 !important;
+      color: #000 !important;
       background: transparent !important;
-      line-height: 1.35;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 200px;
+      max-width: 220px;
     }
 
-    .workspace .ready-orders-wrap tbody td {
-      color: #333 !important;
-      background: transparent !important;
-    }
-
-    tbody td:nth-child(5) {
+    #readyOrdersTable tbody td.col-customer,
+    #readyOrdersTable tbody td:nth-child(5) {
       max-width: 250px;
       white-space: normal;
       word-break: break-word;
     }
 
-    tbody tr {
+    #readyOrdersTable tbody tr {
       transition: background 0.2s;
       background: #fff !important;
       cursor: pointer;
     }
 
-    tbody tr:nth-child(even) {
-      background: #f8f9fb !important;
-    }
-
-    .workspace .ready-orders-wrap tbody tr:nth-child(even) {
-      background: #f8f9fb !important;
-    }
+    #readyOrdersTable col.col-status { width: 88px; }
+    #readyOrdersTable col.col-order { width: 92px; }
+    #readyOrdersTable col.col-date { width: 88px; }
+    #readyOrdersTable col.col-ready-date { width: 88px; }
+    #readyOrdersTable col.col-customer { width: 120px; }
+    #readyOrdersTable col.col-relation { width: 100px; }
+    #readyOrdersTable col.col-num { width: 88px; }
+    #readyOrdersTable col.col-action { width: 72px; }
 
     /* Row hover — mint aligned with Ready Items (#eaf7ed) */
-    .workflow-stage-ready-orders tbody tr:hover {
+    .workflow-stage-ready-orders #readyOrdersTable tbody tr:hover {
       background: #eaf7ed !important;
       box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.2);
     }
 
-    .workflow-stage-ready-orders tbody tr:hover td {
+    .workflow-stage-ready-orders #readyOrdersTable tbody tr:hover td {
       border-color: #c8e6c9;
-    }
-
-    tbody tr td:first-child {
-      padding-left: 16px;
-    }
-
-    tbody tr td:last-child {
-      padding-right: 16px;
     }
 
     .center {
@@ -321,18 +320,19 @@
 
     .right {
       text-align: right;
-      font-weight: 500;
+      font-weight: 400 !important;
       color: #1d1d1f !important;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       font-variant-numeric: tabular-nums;
     }
 
     .badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600 !important;
       display: inline-block;
+      line-height: 1.2;
+      white-space: nowrap;
     }
 
     .ready {
@@ -342,7 +342,7 @@
     }
 
     /* More fade: lighter green at edges, wide white centre (aligned with Ready Items) */
-    .workflow-stage-ready-orders tbody tr[data-order-id] {
+    .workflow-stage-ready-orders #readyOrdersTable tbody tr[data-order-id] {
       background: linear-gradient(
         90deg,
         rgba(21, 128, 61, 0.28) 0%,
@@ -361,22 +361,22 @@
       transition: background .22s ease, box-shadow .22s ease, border-color .22s ease;
       animation: workflowOrderFade .28s ease;
     }
-    .workflow-stage-ready-orders tbody tr[data-order-id]:hover {
+    .workflow-stage-ready-orders #readyOrdersTable tbody tr[data-order-id]:hover {
       background: #eaf7ed !important;
       box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.22);
     }
 
-    .workflow-stage-ready-orders tbody tr[data-order-id]:hover td {
+    .workflow-stage-ready-orders #readyOrdersTable tbody tr[data-order-id]:hover td {
       border-color: #c8e6c9;
     }
     .workflow-stage-ready-orders .badge.ready {
-      background: linear-gradient(90deg, #dcfce7, #ecfdf5);
-      border: 1px solid #86efac;
-      color: #14532d;
-      box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.06), 0 0 6px rgba(22, 163, 74, 0.07);
+      background: #b8e8d9 !important;
+      border: 1px solid #007a4d;
+      color: #004d3d;
+      box-shadow: none;
     }
     .workflow-stage-ready-orders .action-btn {
-      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.2), 0 6px 16px rgba(22, 163, 74, 0.14);
+      box-shadow: none;
     }
     @keyframes workflowOrderFade {
       from { opacity: .74; transform: translateY(3px); }
@@ -384,25 +384,28 @@
     }
 
     .action-btn {
-      padding: 6px 14px;
-      border-radius: 8px;
-      border: none;
-      background: #007aff;
-      color: #fff;
-      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      color: #1a3a5c !important;
+      font-size: 11px;
       cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+      font-weight: 600 !important;
+      box-shadow: none;
     }
 
     .action-btn:hover {
-      background: #0056b3;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.3);
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c !important;
+      transform: none;
+      box-shadow: none;
     }
 
     .action-btn:active {
-      transform: translateY(0);
+      transform: none;
     }
 
     /* Empty state */
@@ -433,19 +436,24 @@
    FOOTER (Customer Balance style)
 ========================= */
     .footer {
-      padding: 14px 20px;
-      font-size: 14px;
-      color: #6e6e73 !important;
-      border-top: 2px solid #d1d6de;
-      background: #f5f7fa !important;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      font-size: 11px;
+      color: #5f6368 !important;
+      border-top: 1px solid #a8b4c4;
+      background: #fff !important;
       flex-shrink: 0;
       box-sizing: border-box;
-      font-weight: 500;
+      font-weight: 600 !important;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
     }
 
     .workspace .ready-orders-wrap .footer {
-      background: #f5f7fa !important;
-      color: #6e6e73 !important;
+      background: #fff !important;
+      color: #5f6368 !important;
     }
 
     /* =========================
@@ -486,9 +494,9 @@
         max-height: 100%;
       }
 
-      .ready-toolbar {
-        padding: 12px;
-        gap: 8px;
+      .ready-toolbar-inner {
+        padding: 8px;
+        gap: 6px;
       }
 
       .table-wrap {
@@ -497,23 +505,23 @@
         -webkit-overflow-scrolling: touch;
       }
 
-      table {
+      #readyOrdersTable {
         min-width: 900px;
       }
 
-      tbody td {
+      #readyOrdersTable tbody td {
         max-width: 150px;
-        font-size: 12px;
-        padding: 10px;
-      }
-
-      thead th {
         font-size: 11px;
-        padding: 12px 10px;
+        padding: 4px 6px;
       }
 
-      input {
-        min-width: 150px;
+      #readyOrdersTable thead th {
+        font-size: 10px;
+        padding: 4px 6px;
+      }
+
+      .ready-order-filters input.ro-filter-input {
+        min-width: 100px;
       }
     }
 
@@ -754,7 +762,8 @@
   <div class="ready-orders-wrap workflow-stage-ready-orders">
     <div class="ledger-page-titlebar">Ready Orders</div>
     <!-- TOOLBAR -->
-    <div class="ready-toolbar">
+    <div class="ready-toolbar" aria-label="Filters and actions">
+      <div class="ready-toolbar-inner">
       <div class="ready-order-filters">
         <div class="ro-filter-field">
           <select id="filterOrderNo" class="ro-filter-select" onchange="searchOrders()"
@@ -774,12 +783,27 @@
             aria-label="Search ready orders">
         </div>
       </div>
-      <button class="btn" onclick="loadReadyOrders()">🔄 Refresh</button>
+      <button type="button" class="btn" onclick="loadReadyOrders()">🔄 Refresh</button>
+      </div>
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrap">
-      <table>
+    <div class="table-wrap" id="readyOrdersTableScroll">
+      <table id="readyOrdersTable">
+        <colgroup>
+          <col class="col-status">
+          <col class="col-order">
+          <col class="col-date">
+          <col class="col-ready-date">
+          <col class="col-customer">
+          <col class="col-relation">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-action">
+        </colgroup>
         <thead>
           <tr>
             <th>Status</th>

@@ -26,12 +26,18 @@
 
     * {
       box-sizing: border-box;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
       margin: 0;
-      background: var(--bg);
+      background: #fff;
       color: var(--text);
     }
 
@@ -39,13 +45,27 @@
       width: 100%;
       max-width: none;
       margin: 0;
-      padding: 16px 12px;
-      background: #e8f0fe;
+      padding: 0;
     }
 
-    .workspace .app.jobworker-list-page {
+    .app.jobworker-list-page {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      min-height: 0;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .workspace .app.jobworker-list-page,
+    .workspace[data-page] .app.jobworker-list-page {
+      height: 100%;
+      max-height: none;
+      flex: 1 1 auto;
       padding: 0;
-      background: transparent;
+      background: #fff;
     }
 
     .jobworker-list-page > .ledger-page-titlebar.jw-page-titlebar-grid {
@@ -54,19 +74,20 @@
       align-items: center;
       column-gap: 10px;
       text-align: initial;
-      background: linear-gradient(#f4f6fa, #e6eaf0);
-      color: #1d1d1f;
-      padding: 8px 12px;
-      font-size: 15px;
-      font-weight: 600;
-      border-bottom: 1px solid #d1d6de;
+      background: #f4f6f8;
+      color: #1a3a5c;
+      padding: 6px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      border-bottom: 1px solid #a8b4c4;
       margin: 0;
-      letter-spacing: 0.01em;
-      border-radius: var(--radius) var(--radius) 0 0;
+      letter-spacing: 0.02em;
+      border-radius: 0;
+      flex-shrink: 0;
     }
 
     .workspace[data-page] .app.jobworker-list-page > .ledger-page-titlebar.jw-page-titlebar-grid:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
+      border-radius: 0;
     }
 
     .jw-page-titlebar-grid .jw-titlebar-left {
@@ -91,38 +112,69 @@
     }
 
     .jw-titlebar-add-btn {
-      height: 32px;
-      padding: 0 14px;
-      font-size: 13px;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: 3px;
+      border: 1px solid #6aae6a;
+      background: #f0fdf4;
+      color: #166534;
+      box-shadow: none;
+    }
+
+    .jw-titlebar-add-btn:hover,
+    .jobworker-list-page button.primary.jw-titlebar-add-btn:hover {
+      background: #dcfce7;
+      border-color: #4d9a4d;
+      color: #14532d;
+    }
+
+    .jobworker-list-page button.primary.jw-titlebar-add-btn {
+      background: #f0fdf4;
+      border-color: #6aae6a;
+      color: #166534;
     }
 
     .jobworker-list-page > .jobworker-list-shell {
-      margin-top: 0;
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin: 0;
+      border: none;
+      border-radius: 0;
       border-top: none;
     }
 
     .jobworker-list-shell {
       background: #fff;
-      border: 1px solid #b0bcc9;
-      border-radius: 0 0 8px 8px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       min-height: 0;
+      padding: 0 14px;
+      box-sizing: border-box;
     }
 
     .jobworker-list-toolbar {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px 12px;
-      padding: 8px 10px;
-      background: #f4f6f8;
-      border-bottom: 1px solid #b0bcc9;
+      gap: 8px 10px;
+      width: 100%;
+      padding: 6px 0;
+      margin: 0;
+      background: #fff;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
+      border-radius: 0;
+      flex-shrink: 0;
+      overflow-x: auto;
+      box-sizing: border-box;
+    }
+
+    .jobworker-list-toolbar > * {
+      flex-shrink: 0;
     }
 
     .jobworker-list-toolbar .list-station-filter-wrap {
@@ -130,31 +182,68 @@
       align-items: center;
       gap: 6px;
       flex-shrink: 0;
+      margin-left: 0;
     }
 
     .jobworker-list-toolbar #listStationFilter {
-      padding: 5px 8px;
-      border-radius: 6px;
-      border: 1px solid #b0bcc9;
+      padding: 3px 8px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       font-size: 12px;
       min-width: 120px;
-      min-height: 30px;
+      height: 26px;
+      min-height: 26px;
       background: #fff;
+      color: #1a3a5c;
       cursor: pointer;
+      box-sizing: border-box;
     }
 
     .jobworker-list-toolbar #listStationFilter:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     .jobworker-list-toolbar .list-search-wrap {
-      flex: 1 1 200px;
-      min-width: 160px;
+      flex: 0 0 auto;
+      width: 200px;
+      max-width: min(220px, 28vw);
+      min-width: 140px;
       margin: 0;
+      margin-right: auto;
       position: relative;
       display: flex;
       align-items: center;
+    }
+
+    .jobworker-list-toolbar .jw-toolbar-actions {
+      margin-left: auto;
+      margin-right: 0;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .jobworker-list-toolbar .jw-toolbar-add-btn {
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 3px;
+      border: 1px solid #6aae6a;
+      background: #f0fdf4;
+      color: #166534;
+      box-shadow: none;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .jobworker-list-toolbar .jw-toolbar-add-btn:hover {
+      background: #dcfce7;
+      border-color: #4d9a4d;
+      color: #14532d;
     }
 
     .jobworker-list-toolbar .list-search-icon {
@@ -181,26 +270,31 @@
     .jobworker-list-toolbar .list-search-wrap input {
       width: 100%;
       max-width: none;
-      padding: 5px 10px 5px 32px;
+      padding: 3px 10px 3px 32px;
       font-size: 12px;
-      min-height: 30px;
-      border-radius: 6px;
-      border: 1px solid #b0bcc9;
+      height: 26px;
+      min-height: 26px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       background: #fff;
+      color: #1a3a5c;
       box-sizing: border-box;
     }
 
     .jobworker-list-toolbar .list-search-wrap input:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     .jobworker-list-grid-wrap {
       width: 100%;
       overflow: auto;
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
       background: #fff;
+      border: none;
+      box-sizing: border-box;
     }
 
     button {
@@ -241,12 +335,22 @@
     .jw-excel-table th,
     .jw-excel-table td {
       border: 1px solid #a8b4c4;
-      padding: 5px 7px;
+      padding: 6px 10px;
       font-size: 12px;
       line-height: 1.3;
       text-align: left;
       vertical-align: middle;
       white-space: nowrap;
+    }
+
+    .jw-excel-table thead th:first-child,
+    .jw-excel-table tbody td:first-child {
+      padding-left: 12px;
+    }
+
+    .jw-excel-table thead th:last-child,
+    .jw-excel-table tbody td:last-child {
+      padding-right: 12px;
     }
 
     .jw-excel-table th {
@@ -264,11 +368,12 @@
     }
 
     .jw-excel-table tbody tr:nth-child(even) td {
-      background: #f8fafc;
+      background: #fff;
     }
 
     .jw-excel-table tbody tr:hover td {
-      background: #e8f0fe;
+      background: #eaf7ed;
+      border-color: #c8e6c9;
     }
 
     .jw-excel-table .col-num {
@@ -346,29 +451,34 @@
     }
 
     .jw-excel-table tbody td:nth-child(13) .btn-edit {
-      padding: 3px 10px;
+      padding: 2px 8px;
       font-size: 11px;
       font-weight: 600;
-      border-radius: 4px;
-      border: 1px solid #1a73e8;
-      background: #1a73e8;
-      color: #fff;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      color: #1a3a5c;
       cursor: pointer;
       line-height: 1.2;
       min-height: 0;
     }
 
     .jw-excel-table tbody td:nth-child(13) .btn-edit:hover {
-      background: #1557b0;
-      border-color: #1557b0;
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
     }
 
-    .empty-list {
+    .jobworker-list-shell .empty-list {
       text-align: center;
-      padding: 24px;
-      color: var(--muted);
-      font-size: 13px;
-      border-top: 1px solid #b0bcc9;
+      padding: 12px;
+      color: #5f6368;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      border-top: 1px solid #a8b4c4;
+      flex-shrink: 0;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -378,9 +488,7 @@
     <div class="ledger-page-titlebar jw-page-titlebar-grid">
       <div class="jw-titlebar-left" aria-hidden="true"></div>
       <span class="jw-titlebar-heading">Job Worker List</span>
-      <div class="jw-titlebar-right">
-        <button type="button" class="primary jw-titlebar-add-btn" onclick="goToAddJobworker()">Add Job Worker</button>
-      </div>
+      <div class="jw-titlebar-right" aria-hidden="true"></div>
     </div>
 
     <div class="jobworker-list-shell">
@@ -400,6 +508,9 @@
           </span>
           <input type="search" id="searchInput" placeholder="Search by name, id, station, phone..."
             oninput="filterList()" autocomplete="off">
+        </div>
+        <div class="jw-toolbar-actions">
+          <button type="button" class="jw-toolbar-add-btn" onclick="goToAddJobworker()">Add Job Worker</button>
         </div>
       </div>
       <div class="jobworker-list-grid-wrap">

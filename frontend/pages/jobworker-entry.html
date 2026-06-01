@@ -5,24 +5,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jobworker Entry</title>
+  <script>
+    (function () {
+      var params = new URLSearchParams(location.search);
+      if (params.get('mode') === 'assignment') {
+        document.documentElement.classList.add('jwe-assignment-embed');
+      }
+      if (params.get('ui') === 'compact') {
+        document.documentElement.classList.add('jwe-ui-compact');
+      }
+    })();
+  </script>
   <style>
     :root {
-      --bg: #e8f0fe;
-      --bg-gradient: linear-gradient(160deg, #d4e4f7 0%, #e8f0fe 50%, #f0f6fc 100%);
+      --bg: #f4f6f8;
       --card: #ffffff;
-      --text: #1a1a1a;
+      --text: #1a3a5c;
       --muted: #5f6368;
-      --border: #dadce0;
+      --border: #a8b4c4;
+      --grid-border: #d4d4d4;
+      --header-bg: #d6e4f4;
       --primary: #1a73e8;
       --primary-hover: #1557b0;
       --danger: #d93025;
-      --success: #188038;
-      --radius-sm: 8px;
+      --success: #166534;
+      --radius-sm: 3px;
     }
 
     * {
       box-sizing: border-box;
-      font-family: "Google Sans", "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
     }
 
     html,
@@ -30,14 +42,33 @@
       margin: 0;
       padding: 0;
       min-height: 100%;
-      background: var(--bg-gradient);
+      background: var(--bg);
       color: var(--text);
       overflow-x: hidden;
+      font-weight: 400;
+    }
+
+    html.jwe-assignment-embed,
+    html.jwe-assignment-embed body {
+      background: #fff;
+      min-height: 0;
+      height: auto;
+      overflow-x: visible;
+      overflow-y: hidden;
+    }
+
+    html.jwe-assignment-embed .page {
+      padding: 8px 20px 4px;
+      min-height: 0;
+      height: auto;
+      display: block;
+      box-sizing: border-box;
+      overflow: visible;
     }
 
     .page {
       width: 100%;
-      min-height: 100%;
+      min-height: 100vh;
       padding: 24px 32px 40px;
       display: flex;
       flex-direction: column;
@@ -51,6 +82,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
+      flex: 1 1 auto;
       width: 100%;
     }
 
@@ -97,9 +130,85 @@
       flex-direction: column;
       background: #fff;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      border-radius: 3px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       overflow: hidden;
+    }
+
+    html.jwe-assignment-embed .ledger-page-shell.customer-add-shell.jwe-entry-shell {
+      margin: 0 auto;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+      max-width: 100%;
+      width: 100%;
+      height: auto;
+      min-height: 0;
+      flex: 0 0 auto;
+      overflow: visible;
+      box-sizing: border-box;
+    }
+
+    html.jwe-assignment-embed .erp-form {
+      padding: 6px 4px 2px;
+      height: auto;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    html.jwe-assignment-embed .detail-card {
+      min-height: 0 !important;
+      display: flex;
+      flex-direction: column;
+      width: auto;
+      max-width: 100%;
+      min-width: 0;
+      overflow: visible;
+    }
+
+    html.jwe-assignment-embed .detail-card-body {
+      min-height: 0;
+      flex: 0 0 auto;
+      padding: 8px 10px 10px;
+      gap: 8px;
+      box-sizing: border-box;
+    }
+
+    html.jwe-assignment-embed .ledger-page-shell.customer-add-shell.jwe-entry-shell > .ledger-page-titlebar {
+      padding-left: 12px;
+      padding-right: 12px;
+      box-sizing: border-box;
+    }
+
+    html.jwe-assignment-embed .customer-add-shell > .form-actions {
+      flex-shrink: 0;
+      padding-left: 12px;
+      padding-right: 12px;
+      box-sizing: border-box;
+    }
+
+    /* Tighter embed when opened from Item Process popup */
+    html.jwe-ui-compact.jwe-assignment-embed .page {
+      padding: 4px 10px 0;
+    }
+
+    html.jwe-ui-compact.jwe-assignment-embed .erp-form {
+      padding: 4px 6px 0;
+    }
+
+    html.jwe-ui-compact.jwe-assignment-embed .detail-card-body {
+      padding: 6px 8px 8px;
+      gap: 6px;
+    }
+
+    html.jwe-ui-compact.jwe-assignment-embed .customer-add-shell > .form-actions {
+      padding: 4px 10px 6px;
+    }
+
+    html.jwe-ui-compact.jwe-assignment-embed .ledger-page-shell.customer-add-shell.jwe-entry-shell > .ledger-page-titlebar {
+      padding-top: 5px;
+      padding-bottom: 5px;
     }
 
     .workspace .ledger-page-shell.customer-add-shell.jwe-entry-shell {
@@ -107,6 +216,13 @@
       width: fit-content;
       max-width: 100%;
       border-radius: 6px;
+    }
+
+    html:not(.jwe-assignment-embed) .page {
+      justify-content: center;
+    }
+    html:not(.jwe-assignment-embed) .ledger-page-shell.customer-add-shell.jwe-entry-shell {
+      margin: 0 auto;
     }
 
     .jwe-entry-shell {
@@ -135,25 +251,25 @@
     }
 
     .detail-card {
-      border: 1px solid #b0bcc9;
-      border-radius: 4px;
-      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: #fff;
       display: flex;
       flex-direction: column;
       min-width: 0;
-      min-height: 380px;
+      min-height: 420px;
       overflow: hidden;
     }
 
     .detail-card-head {
-      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
-      color: #3c4043;
-      font-size: 12px;
+      background: var(--header-bg);
+      color: #1a3a5c;
+      font-size: 11px;
       font-weight: 700;
-      padding: 7px 10px;
-      letter-spacing: 0.04em;
+      padding: 5px 8px;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
-      border-bottom: 1px solid #b0bcc9;
+      border-bottom: 1px solid var(--border);
     }
 
     .detail-card-body {
@@ -169,15 +285,16 @@
       grid-template-columns: 82px minmax(0, 1fr);
       gap: 4px 8px;
       align-items: center;
-      min-height: 36px;
+      min-height: 28px;
     }
 
     .customer-add-shell .inline-field label {
       margin: 0;
-      font-size: 12px;
+      font-size: 11px;
       text-align: right;
       color: #3c4043;
       font-weight: 600;
+      font-style: normal;
       padding-right: 4px;
     }
 
@@ -189,20 +306,55 @@
     .customer-add-shell .inline-field select,
     .customer-add-shell .inline-field textarea {
       width: 100%;
-      padding: 6px 8px;
-      font-size: 13px;
-      min-height: 34px;
+      padding: 3px 8px;
+      font-size: 12px;
+      font-weight: 400;
+      font-style: normal;
+      min-height: 26px;
+      height: 26px;
       border: 1px solid var(--border);
       border-radius: 3px;
       background: #fff;
-      color: var(--text);
+      color: #1a3a5c;
       box-sizing: border-box;
+      line-height: 1.25;
+    }
+
+    .customer-add-shell .inline-field input[type="date"] {
+      font-weight: 400;
+      font-style: normal;
+      color: #1a3a5c;
     }
 
     .customer-add-shell .inline-field textarea {
-      min-height: 56px;
+      min-height: 72px;
+      height: auto;
       resize: none;
       font-family: inherit;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    /* Standalone page: let card height follow content (no extra white space) */
+    html:not(.jwe-assignment-embed) .detail-card {
+      min-height: 0;
+    }
+    html:not(.jwe-assignment-embed) .detail-card-body {
+      flex: 0 0 auto;
+    }
+    html:not(.jwe-assignment-embed) .customer-add-shell .inline-field textarea {
+      min-height: 72px;
+    }
+    html:not(.jwe-assignment-embed) .customer-add-shell .inline-field input,
+    html:not(.jwe-assignment-embed) .customer-add-shell .inline-field select {
+      min-height: 30px;
+      height: 30px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+    html:not(.jwe-assignment-embed) .jwe-entry-shell .btn-station-add {
+      min-height: 30px;
+      height: 30px;
     }
 
     .customer-add-shell .inline-field input:focus,
@@ -229,8 +381,33 @@
     }
 
     .jwe-entry-shell .inline-field {
+      display: grid;
       grid-template-columns: 82px var(--jw-input-width);
       justify-items: stretch;
+      align-items: center;
+    }
+
+    .jwe-entry-shell .inline-field:has(textarea) {
+      align-items: start;
+    }
+
+    .jwe-entry-shell .inline-field:has(textarea) label {
+      padding-top: 4px;
+    }
+
+    /* Keep label left, input right — never stack label above field */
+    .jwe-entry-shell .inline-field label {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .jwe-entry-shell .inline-field input,
+    .jwe-entry-shell .inline-field select,
+    .jwe-entry-shell .inline-field textarea,
+    .jwe-entry-shell .inline-field .date-wrap,
+    .jwe-entry-shell .inline-field .row {
+      grid-column: 2;
+      grid-row: 1;
     }
 
     .jwe-entry-shell .inline-field input,
@@ -261,15 +438,17 @@
     .jwe-entry-shell select#jwName,
     .jwe-entry-shell .jw-select-wrap select {
       width: 100%;
-      height: 34px;
-      min-height: 34px;
-      padding: 6px 28px 6px 8px;
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 24px 3px 8px;
       border: 1px solid var(--border);
       border-radius: 3px;
-      font-size: 13px;
+      font-size: 12px;
+      font-weight: 400;
+      font-style: normal;
       background: #fff;
       cursor: pointer;
-      color: var(--text);
+      color: #1a3a5c;
       appearance: auto;
     }
 
@@ -288,19 +467,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
+      width: 26px;
+      min-width: 26px;
+      height: 26px;
       padding: 0;
-      background: #eef1f5;
-      border: 1px solid #b0bcc9;
+      background: #fff;
+      border: 1px solid var(--border);
       border-radius: 3px;
       cursor: pointer;
       flex-shrink: 0;
     }
 
     .btn-station-add:hover {
-      background: #e2e6eb;
+      background: #d6e4f4;
+      border-color: #7a8da6;
     }
 
     .btn-station-add svg {
@@ -310,13 +490,67 @@
     }
 
     .ledger-page-shell.customer-add-shell > .ledger-page-titlebar:first-child {
-      background: #f8f9fa;
-      color: #1a1a1a;
+      background: #f4f6f8;
+      color: #1a3a5c;
       text-align: center;
-      padding: 8px 14px;
-      font-size: 14px;
+      padding: 6px 10px;
+      font-size: 12px;
       font-weight: 600;
+      font-style: normal;
       border-bottom: 1px solid var(--border);
+    }
+
+    /* Side-by-side columns + horizontal label|input (popup: flexible width, no clip) */
+    html.jwe-assignment-embed .jwe-entry-shell .customer-cards-grid,
+    html.jwe-assignment-embed .customer-cards-grid {
+      display: grid !important;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+      gap: 10px;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      justify-content: stretch;
+      box-sizing: border-box;
+    }
+
+    html.jwe-assignment-embed .jwe-entry-shell .detail-card {
+      width: auto;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    html.jwe-assignment-embed .customer-add-shell .inline-field {
+      display: grid !important;
+      grid-template-columns: 82px minmax(0, 1fr) !important;
+      align-items: center;
+      min-width: 0;
+    }
+
+    html.jwe-assignment-embed .jwe-entry-shell .inline-field input,
+    html.jwe-assignment-embed .jwe-entry-shell .inline-field select,
+    html.jwe-assignment-embed .jwe-entry-shell .inline-field textarea,
+    html.jwe-assignment-embed .jwe-entry-shell .inline-field .date-wrap,
+    html.jwe-assignment-embed .jwe-entry-shell .inline-field .row,
+    html.jwe-assignment-embed .customer-add-shell .inline-field input,
+    html.jwe-assignment-embed .customer-add-shell .inline-field select,
+    html.jwe-assignment-embed .customer-add-shell .inline-field textarea,
+    html.jwe-assignment-embed .customer-add-shell .inline-field .date-wrap,
+    html.jwe-assignment-embed .customer-add-shell .inline-field .row {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    html.jwe-assignment-embed .customer-add-shell .inline-field label {
+      text-align: right !important;
+    }
+
+    html.jwe-assignment-embed .customer-add-shell .inline-field:has(textarea) {
+      align-items: start;
+    }
+
+    html.jwe-assignment-embed .customer-add-shell .inline-field:has(textarea) label {
+      padding-top: 4px;
     }
 
     .ledger-page-titlebar-label {
@@ -331,68 +565,72 @@
     }
 
     .customer-add-shell > .form-actions {
-      background: #f4f6f8;
+      background: #eef1f5;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 8px;
-      padding: 8px 12px;
+      gap: 6px;
+      padding: 6px 10px;
     }
 
     .customer-add-shell > .form-actions button {
-      padding: 6px 14px;
-      border-radius: 4px;
+      padding: 0 12px;
+      border-radius: 3px;
       font-size: 12px;
       font-weight: 600;
-      min-width: 100px;
-      min-height: 32px;
+      font-style: normal;
+      min-width: 96px;
+      min-height: 26px;
+      height: 26px;
       cursor: pointer;
       border: 1px solid var(--border);
       background: #fff;
-      color: var(--text);
+      color: #1a3a5c;
+      box-shadow: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
 
     .form-actions button.primary {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
+      background: #f0fdf4;
+      color: #166534;
+      border-color: #6aae6a;
     }
 
     .form-actions button.primary:hover {
-      background: var(--primary-hover);
+      background: #dcfce7;
+      border-color: #4d9a4d;
+      color: #14532d;
     }
 
     .form-actions button:not(.primary):hover {
-      background: #f8f9fa;
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
     }
 
+    /* Standalone page only: narrow viewports may stack panels */
     @media (max-width: 900px) {
-      .jwe-entry-shell .customer-cards-grid {
-        grid-template-columns: max-content;
-        justify-content: center;
-      }
-
-      .customer-cards-grid {
+      html:not(.jwe-assignment-embed) .customer-cards-grid {
         grid-template-columns: 1fr;
       }
 
-      .detail-card {
+      html:not(.jwe-assignment-embed) .detail-card {
         min-height: 0;
       }
     }
 
     @media (max-width: 600px) {
-      .page {
+      html:not(.jwe-assignment-embed) .page {
         padding: 8px;
       }
 
-      .customer-add-shell .inline-field {
-        grid-template-columns: 1fr;
+      html:not(.jwe-assignment-embed) .customer-add-shell .inline-field {
+        grid-template-columns: 82px minmax(0, 1fr);
       }
 
-      .customer-add-shell .inline-field label {
-        text-align: left;
+      html:not(.jwe-assignment-embed) .customer-add-shell .inline-field label {
+        text-align: right;
       }
     }
   </style>

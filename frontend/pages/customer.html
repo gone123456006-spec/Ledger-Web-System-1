@@ -32,20 +32,39 @@
       margin: 0;
       padding: 0;
       min-height: 100%;
+      height: 100%;
       background: var(--bg-gradient);
       color: var(--text);
       overflow-x: hidden;
+    }
+
+    .workspace[data-page="customer"]:not(:has(#customerListSection.customer-list-open)) {
+      background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
     }
 
     .page {
       width: 100%;
       min-height: 100%;
       margin: 0;
-      padding: 24px 32px 40px;
+      padding: 16px 16px 32px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
+      box-sizing: border-box;
+    }
+
+    .workspace[data-page="customer"]:not(:has(#customerListSection.customer-list-open)) > .page {
+      background: transparent;
+      min-height: 100%;
+      height: auto;
+      flex: 0 1 auto;
+    }
+
+    .workspace[data-page="customer"]:has(#customerListSection.customer-list-open) > .page {
+      min-height: 0;
+      height: 100%;
+      flex: 1 1 auto;
     }
 
     h2 {
@@ -75,7 +94,7 @@
 
     .ledger-page-shell.customer-add-shell {
       width: 100%;
-      max-width: 1180px;
+      max-width: 880px;
       align-self: center;
       margin-bottom: 16px;
       display: flex;
@@ -89,8 +108,8 @@
 
     .customer-cards-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
-      gap: 12px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px;
       width: 100%;
       align-items: stretch;
     }
@@ -130,8 +149,8 @@
 
     .customer-add-shell .inline-field {
       display: grid;
-      grid-template-columns: 82px minmax(0, 1fr);
-      gap: 4px 8px;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 4px 6px;
       align-items: center;
       margin: 0;
       min-height: 36px;
@@ -425,11 +444,25 @@
 
     body.popup-mode .ledger-page-shell.customer-add-shell > .ledger-page-titlebar:first-child {
       padding-left: 12px;
-      padding-right: 48px;
+      padding-right: 36px;
     }
 
     body.popup-mode .ledger-page-titlebar-close {
       display: flex;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #e8eaed;
+      color: #5f6368;
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    body.popup-mode .ledger-page-titlebar-close:hover {
+      background: #dadce0;
+      color: #1a1a1a;
     }
 
     .ledger-page-shell.customer-add-shell .erp-form {
@@ -547,7 +580,7 @@
       align-items: stretch;
     }
     body.popup-mode .customer-add-shell {
-      margin-bottom: 0;
+      margin: 0;
       max-width: none;
       width: 100%;
       align-self: stretch;
@@ -558,12 +591,12 @@
       border: none;
     }
     body.popup-mode .erp-form {
-      padding: 10px 10px 12px;
+      padding: 10px 6px 12px;
       background: #fff !important;
     }
     body.popup-mode .customer-cards-grid {
-      gap: 10px;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
     body.popup-mode .detail-card {
       min-height: 400px;
@@ -577,8 +610,8 @@
       gap: 8px;
     }
     body.popup-mode .customer-add-shell .inline-field {
-      grid-template-columns: 78px minmax(0, 1fr);
-      gap: 3px 6px;
+      grid-template-columns: 68px minmax(0, 1fr);
+      gap: 3px 5px;
       min-height: 32px;
     }
     body.popup-mode .customer-add-shell .inline-field label {
@@ -671,10 +704,10 @@
       background: var(--primary-hover);
     }
 
-    /* Customer list — PHP shell + Excel-style grid */
+    /* Customer list — full-screen Excel shell */
     #customerListSection.customer-list-shell {
       display: none;
-      flex: 1;
+      flex: 1 1 auto;
       width: 100%;
       max-width: none;
       align-self: stretch;
@@ -682,40 +715,82 @@
       flex-direction: column;
       min-height: 0;
       background: #fff;
-      border-radius: 8px;
-      border: 1px solid #b0bcc9;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
       padding: 0;
     }
 
     #customerListSection.customer-list-shell.customer-list-open {
       display: flex !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      max-height: none !important;
+      border-radius: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      width: 100% !important;
+    }
+
+    .workspace .page:has(#customerListSection.customer-list-open) {
+      padding: 0 !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+      height: 100%;
+      min-height: 0;
+      flex: 1 1 auto;
+      background: #fff;
+    }
+
+    .workspace:has(#customerListSection.customer-list-open) {
+      padding: 0 !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      background: #fff !important;
     }
 
     #customerListSection .customer-list-head {
-      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
-      color: #3c4043;
+      background: #f4f6f8;
+      color: #1a3a5c;
       text-align: center;
-      padding: 8px 12px;
-      font-size: 12px;
+      padding: 6px 12px;
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      border-bottom: 1px solid #b0bcc9;
-      border-radius: 8px 8px 0 0;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      border-bottom: 1px solid #a8b4c4;
+      border-radius: 0;
       flex-shrink: 0;
       margin: 0;
     }
 
     #customerListSection .customer-list-toolbar {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px 12px;
-      padding: 8px 10px;
-      background: #f4f6f8;
-      border-bottom: 1px solid #b0bcc9;
+      gap: 6px 10px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      background: #fff;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
       flex-shrink: 0;
+      box-sizing: border-box;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    #customerListSection .customer-list-toolbar > * {
+      flex-shrink: 0;
+    }
+
+    #customerListSection .list-search-wrap {
+      margin-left: auto;
     }
 
     #customerListSection .list-toolbar-left {
@@ -734,14 +809,18 @@
 
     #customerListSection .list-controls select,
     #customerListSection #listStationFilter {
-      padding: 5px 8px;
-      border-radius: 6px;
-      border: 1px solid #b0bcc9;
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 24px 3px 8px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       font-size: 12px;
       min-width: 120px;
-      min-height: 30px;
+      max-width: 180px;
       background: #fff;
       cursor: pointer;
+      color: #1a3a5c;
+      box-sizing: border-box;
     }
 
     #customerListSection .list-station-filter-wrap {
@@ -757,25 +836,29 @@
     }
 
     #customerListSection .list-back-btn {
-      padding: 5px 14px;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
       font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
-      border-radius: 6px;
-      border: 1px solid #466690;
-      background: linear-gradient(180deg, #5a7ca8 0%, #466690 100%);
-      color: #fff;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      color: #1a3a5c;
       cursor: pointer;
-      min-height: 30px;
     }
 
     #customerListSection .list-back-btn:hover {
-      filter: brightness(1.05);
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      filter: none;
     }
 
     #customerListSection .list-search-wrap {
-      flex: 1 1 200px;
+      flex: 0 1 200px;
       min-width: 160px;
+      max-width: 280px;
       margin: 0;
       position: relative;
       display: flex;
@@ -806,29 +889,34 @@
     #customerListSection #searchCustomer {
       width: 100%;
       max-width: none;
-      padding: 5px 10px 5px 32px;
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 10px 3px 32px;
       font-size: 12px;
-      min-height: 30px;
-      border-radius: 6px;
-      border: 1px solid #b0bcc9;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       background: #fff;
       box-sizing: border-box;
     }
 
     #customerListSection #searchCustomer:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     #customerListSection .customer-list-grid-wrap {
-      width: 100%;
+      width: calc(100% - 28px);
+      margin: 0 14px;
       overflow: auto;
-      flex: 1;
+      flex: 1 1 0;
       min-height: 0;
       background: #fff;
       border: none;
       border-radius: 0;
       box-shadow: none;
+      box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
     }
 
     #customerListSection .customer-excel-table {
@@ -844,7 +932,7 @@
     #customerListSection .customer-excel-table th,
     #customerListSection .customer-excel-table td {
       border: 1px solid #a8b4c4;
-      padding: 5px 7px;
+      padding: 6px 10px;
       font-size: 12px;
       line-height: 1.3;
       text-align: left;
@@ -868,11 +956,12 @@
     }
 
     #customerListSection .customer-excel-table tbody tr:nth-child(even) td {
-      background: #f8fafc;
+      background: #fff;
     }
 
     #customerListSection .customer-excel-table tbody tr:hover td {
-      background: #e8f0fe;
+      background: #eaf7ed;
+      border-color: #c8e6c9;
     }
 
     #customerListSection .customer-excel-table tbody td:last-child {

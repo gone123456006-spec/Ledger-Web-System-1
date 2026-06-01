@@ -16,30 +16,35 @@
             font-weight: 700 !important;
         }
 
+        html,
         body {
-            margin: 0;
-            background: #e6ebf2;
+            height: 100%;
+            overflow: hidden;
         }
 
-        .workspace {
-            background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
+        body {
+            margin: 0;
+            background: #fff;
+            height: 100vh;
         }
 
         /* =========================
-       CONTAINER
+       CONTAINER — full screen
     ========================= */
         .process-items-wrap {
-            margin: 15px;
+            margin: 0;
             background: #fff !important;
-            border: 1px solid #d1d6de;
-            border-radius: 12px;
+            border: none;
+            border-radius: 0;
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 30px);
-            max-height: calc(100vh - 30px);
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            min-height: 0;
             overflow: hidden;
             box-sizing: border-box;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            box-shadow: none;
             position: relative;
         }
 
@@ -47,45 +52,70 @@
             margin: 0 !important;
             height: 100% !important;
             max-height: 100% !important;
-            border-radius: var(--ledger-ws-r, 10px) !important;
+            border-radius: 0 !important;
             box-shadow: none !important;
             background: #fff !important;
             border: none !important;
         }
 
         .process-items-wrap > .ledger-page-titlebar:first-child {
-            border-radius: 12px 12px 0 0;
+            border-radius: 0;
+            flex-shrink: 0;
+            background: #f4f6f8;
+            border-bottom: 1px solid #a8b4c4;
+            color: #1a3a5c;
         }
 
         .workspace .process-items-wrap > .ledger-page-titlebar:first-child {
-            border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
+            border-radius: 0;
         }
 
         /* =========================
-       TOOLBAR
+       TOOLBAR — compact Excel style (aligned with Pending Items)
     ========================= */
         .process-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 20px;
-            border-bottom: 2px solid #d1d6de;
-            background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
             flex-shrink: 0;
+            width: calc(100% - 28px);
+            margin: 0 14px;
             box-sizing: border-box;
+            border: none;
+            border-bottom: 1px solid #a8b4c4;
+            background: #fff !important;
+            position: relative;
+            z-index: 300;
+            overflow: visible;
         }
 
         .workspace .process-items-wrap .process-toolbar {
-            background: linear-gradient(to bottom, #fafbfc, #f5f7fa) !important;
+            background: #fff !important;
         }
 
-        /* Same column filters as Pending Items: Order no., Stamp, Item name */
+        .process-toolbar-inner {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px 8px;
+            padding: 6px 0;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        .process-toolbar-inner #jwFilter + .btn {
+            margin-left: auto;
+        }
+
+        .process-toolbar-inner > * {
+            flex-shrink: 0;
+        }
+
         .ip-field-filters {
             display: flex;
             align-items: center;
-            gap: 8px 14px;
-            flex-wrap: wrap;
+            gap: 6px 10px;
+            flex-wrap: nowrap;
         }
 
         .ip-field-filters .ip-filter-group {
@@ -95,260 +125,291 @@
         }
 
         .ip-field-filters label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
+            font-size: 11px;
+            font-weight: 600 !important;
+            font-style: normal !important;
+            color: #3c4043;
             white-space: nowrap;
         }
 
-        .ip-field-filters select {
-            height: 40px;
-            min-width: 120px;
-            max-width: 200px;
-            padding: 0 10px;
-            border: 1px solid #d1d6de;
-            border-radius: 8px;
-            font-size: 14px;
+        .ip-field-filters select,
+        .process-toolbar #jwFilter {
+            height: 26px;
+            min-height: 26px;
+            min-width: 88px;
+            max-width: 180px;
+            padding: 3px 24px 3px 8px;
+            border: 1px solid #a8b4c4;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 400 !important;
+            font-style: normal !important;
             background: #fff;
-            color: #1d1d1f;
+            color: #1a3a5c;
             cursor: pointer;
             outline: none;
-            transition: all 0.2s;
+            line-height: 1.2;
+            box-sizing: border-box;
         }
 
-        .ip-field-filters select:focus {
-            border-color: #007aff;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+        .ip-field-filters select:focus,
+        .process-toolbar #jwFilter:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
         }
 
         .ip-field-filters select.ip-filter-select--item {
+            min-width: 100px;
+            max-width: 140px;
+        }
+
+        .process-toolbar #jwFilter {
             min-width: 140px;
-            max-width: min(280px, 36vw);
+            max-width: 200px;
         }
 
         .sel-pill {
             background: #eaf0ff;
             color: #3a68e8;
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            font-weight: 700;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 600 !important;
             display: none;
             border: 1px solid #c5d5fb;
         }
 
-        .btn {
-            padding: 9px 16px;
-            border: 1px solid #d1d6de;
+        .process-toolbar .btn {
+            height: 26px;
+            min-height: 26px;
+            padding: 0 10px;
+            border: 1px solid #a8b4c4;
             background: #fff;
             cursor: pointer;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            color: #1d1d1f !important;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600 !important;
+            font-style: normal !important;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            color: #1a3a5c !important;
+            box-shadow: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .process-toolbar .btn:hover {
+            background: #d6e4f4;
+            border-color: #7a8da6;
+            color: #1a3a5c !important;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .process-toolbar .btn:active {
+            transform: none;
+        }
+
+        .ip-select-all-wrap {
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
         }
 
-        .btn:hover {
-            background: #007aff;
-            border-color: #007aff;
-            color: #fff !important;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+        .ip-select-all-wrap input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #1a73e8;
         }
 
-        .btn:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        .ip-select-all-wrap input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.45;
         }
 
-        .btn-ready:disabled {
-            background: #a8e0b8;
-            border-color: #a8e0b8;
-            color: #fff !important;
+        .ip-select-all-label {
+            font-size: 12px;
+            font-weight: 400 !important;
+            font-style: normal !important;
+            color: #1a3a5c;
+            white-space: nowrap;
+        }
+
+        .process-toolbar .filter-btn {
+            height: 26px;
+            min-height: 26px;
+            padding: 0 10px;
+            border: 1px solid #a8b4c4;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600 !important;
+            color: #1a3a5c;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+            white-space: nowrap;
+            box-shadow: none;
+        }
+
+        .process-toolbar .filter-btn:hover {
+            border-color: #ca8a04;
+            color: #713f12;
+            background: #fffbeb;
+        }
+
+        .process-toolbar .filter-btn.active {
+            background: #fef9c3 !important;
+            border-color: #eab308 !important;
+            color: #713f12 !important;
+            box-shadow: none;
+        }
+
+        .process-toolbar .btn-ready {
+            background: #f0fdf4 !important;
+            border-color: #6aae6a !important;
+            color: #166534 !important;
+        }
+
+        .process-toolbar .btn-ready:hover:not(:disabled) {
+            background: #dcfce7 !important;
+            border-color: #4d9a4d !important;
+            color: #14532d !important;
+        }
+
+        .process-toolbar .btn-ready:disabled {
+            background: #f4f6f8 !important;
+            border-color: #d4d4d4 !important;
+            color: #9aa0a6 !important;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
 
-        select {
-            height: 40px;
-            padding: 8px 14px;
-            border: 1px solid #d1d6de;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #fff;
-            color: #1d1d1f;
-            cursor: pointer;
-            transition: all 0.2s;
-            outline: none;
-            min-width: 160px;
-        }
-
-        select:focus {
-            border-color: #007aff;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
-        }
-
-        .filter-btn {
-            padding: 8px 14px;
-            border: 1.5px solid #d1d6de;
-            background: #fff;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #3a3a3c;
-            transition: all 0.18s;
-            white-space: nowrap;
-            height: 40px;
-        }
-
-        .filter-btn:hover {
-            border-color: #007aff;
-            color: #007aff;
-            background: #f0f7ff;
-        }
-
-        .filter-btn.active {
-            background: #007aff;
-            border-color: #007aff;
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.22);
-        }
-
-        /* Item Process toolbar: “In Process” filter — yellow (page-local) */
-        .process-toolbar .filter-btn:hover {
-            border-color: #eab308;
-            color: #a16207;
-            background: #fffbeb;
-        }
-
-        .process-toolbar .filter-btn.active {
-            background: #fef9c3;
-            border-color: #fde68a;
-            color: #713f12;
-            box-shadow: 0 1px 4px rgba(234, 179, 8, 0.14);
-        }
-
         /* =========================
-       TABLE
+       TABLE — Microsoft Excel–style grid
     ========================= */
-        .table-wrap {
-            flex: 1;
+        .process-items-wrap > .table-wrap {
+            flex: 1 1 auto;
             overflow: auto;
             position: relative;
             min-height: 0;
+            width: calc(100% - 28px);
+            margin: 0 14px;
             box-sizing: border-box;
             background: #fff !important;
+            border: none;
+            z-index: 1;
         }
 
         .workspace .process-items-wrap .table-wrap {
             background: #fff !important;
         }
 
-        table {
+        #processItemsTable {
             width: 100%;
-            min-width: 1450px;
+            min-width: max-content;
             border-collapse: collapse;
+            border-spacing: 0;
+            table-layout: fixed;
             background: #fff !important;
+            font-family: Calibri, "Segoe UI", Arial, sans-serif;
+            font-size: 12px;
         }
 
-        .workspace .process-items-wrap table {
-            background: #fff !important;
-        }
-
-        thead {
+        #processItemsTable thead {
             position: sticky;
             top: 0;
             z-index: 10;
-            background: #fff !important;
-            box-shadow: 0 1px 0 0 #c5c9ce;
         }
 
-        .workspace .process-items-wrap thead {
-            background: #fff !important;
-        }
-
-        thead th {
-            background: linear-gradient(to bottom, #eef1f5, #e4e8ed) !important;
-            border: 1px solid #c5c9ce;
-            padding: 14px 16px;
+        #processItemsTable thead th {
+            background: #d6e4f4 !important;
+            border: 1px solid #a8b4c4;
+            padding: 6px 10px;
             white-space: nowrap;
-            font-weight: 600;
-            font-size: 13px;
+            font-weight: 700 !important;
+            font-size: 11px;
             text-align: left;
-            color: #1d1d1f !important;
+            color: #1a3a5c !important;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.02em;
+            vertical-align: middle;
+            line-height: 1.25;
+            box-shadow: 0 1px 0 #a8b4c4;
         }
 
-        thead th.center {
+        #processItemsTable thead th.center {
             text-align: center;
         }
 
-        thead th.right {
+        #processItemsTable thead th.right {
             text-align: right;
         }
 
-        tbody td {
-            padding: 14px 16px;
-            border: 1px solid #d1d6de;
-            font-size: 14px;
+        #processItemsTable tbody td {
+            padding: 6px 10px;
+            border: 1px solid #d4d4d4;
+            font-size: 12px;
+            font-weight: 400 !important;
             vertical-align: middle;
-            color: #333 !important;
+            color: #000 !important;
             background: transparent !important;
-            line-height: 1.35;
+            line-height: 1.25;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 180px;
+            max-width: 220px;
+            white-space: nowrap;
         }
 
-        tbody td.col-item-name,
-        tbody td.col-sample {
-            max-width: 220px;
+        #processItemsTable tbody td.col-item-name,
+        #processItemsTable tbody td.col-sample {
             white-space: normal;
             word-break: break-word;
         }
 
-        .workspace .process-items-wrap tbody td {
-            color: #333 !important;
-            background: transparent !important;
-        }
+        #processItemsTable col.col-cb { width: 36px; }
+        #processItemsTable col.col-mark { width: 52px; }
+        #processItemsTable col.col-status { width: 100px; }
+        #processItemsTable col.col-qty { width: 48px; }
+        #processItemsTable col.col-item { width: 140px; }
+        #processItemsTable col.col-stamp { width: 72px; }
+        #processItemsTable col.col-text { width: 110px; }
+        #processItemsTable col.col-design { width: 72px; }
+        #processItemsTable col.col-size { width: 56px; }
+        #processItemsTable col.col-num { width: 76px; }
+        #processItemsTable col.col-worker { width: 110px; }
+        #processItemsTable col.col-date { width: 88px; }
+        #processItemsTable col.col-order { width: 92px; }
+        #processItemsTable col.col-customer { width: 110px; }
+        #processItemsTable col.col-relation { width: 100px; }
 
-        tbody tr {
-            transition: background 0.2s;
-            background: #fff !important;
-        }
-
-        tbody tr:nth-child(even) {
-            background: #f8f9fb !important;
-        }
-
-        tbody tr:hover {
-            background: #ffffff !important;
-        }
-
-        tbody tr:hover td {
-            border-color: #d1d6de;
-        }
-
-        tbody tr.row-selected {
+        #processItemsTable tbody tr.row-selected {
             background: #eef4ff !important;
         }
 
-        /* Selected row hover — same idea as Pending Items */
-        .workflow-stage-process tbody tr.row-selected:hover {
+        .workflow-stage-process #processItemsTable tbody tr.row-selected:hover {
             background: #e8f1ff !important;
             box-shadow: inset 0 0 0 1px rgba(79, 126, 248, 0.18);
         }
 
-        .workflow-stage-process tbody tr.row-selected:hover td {
+        .workflow-stage-process #processItemsTable tbody tr.row-selected:hover td {
             border-color: #93c5fd;
+        }
+
+        #processItemsTable .cb-cell input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: #1a73e8;
+        }
+
+        #processItemsTable tbody td:nth-child(2) {
+            padding: 4px 6px;
         }
 
         tr.ledger-row-focus-pulse {
@@ -368,17 +429,19 @@
 
         .right {
             text-align: right;
-            font-weight: 500;
+            font-weight: 400 !important;
             color: #1d1d1f !important;
             font-variant-numeric: tabular-nums;
         }
 
         .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600 !important;
             display: inline-block;
+            line-height: 1.2;
+            white-space: nowrap;
         }
 
         .badge.process {
@@ -394,7 +457,7 @@
         }
 
         /* In Process — light yellow at edges, long fade to wide white centre */
-        .workflow-stage-process tbody tr.workflow-item-processing[data-order-id] {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-processing[data-order-id] {
             background: linear-gradient(
                 90deg,
                 rgba(253, 224, 71, 0.52) 0%,
@@ -415,17 +478,17 @@
             animation: workflowProcessFade .28s ease;
         }
         /* In Process hover — pale lemon (user ref #fff4a3) */
-        .workflow-stage-process tbody tr.workflow-item-processing[data-order-id]:hover:not(.row-selected) {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-processing[data-order-id]:hover:not(.row-selected) {
             background: #fff4a3 !important;
             box-shadow: inset 0 0 0 1px rgba(214, 190, 90, 0.35);
         }
 
-        .workflow-stage-process tbody tr.workflow-item-processing[data-order-id]:hover:not(.row-selected) td {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-processing[data-order-id]:hover:not(.row-selected) td {
             border-color: #e8d48e;
         }
         /* Past-due order (same rule as Orders / Pending Orders) — red edge fade over In Process or line Ready */
-        .workflow-stage-process tbody tr.ip-row-overdue-not-ready.workflow-item-processing[data-order-id],
-        .workflow-stage-process tbody tr.ip-row-overdue-not-ready.workflow-item-ready[data-order-id] {
+        .workflow-stage-process #processItemsTable tbody tr.ip-row-overdue-not-ready.workflow-item-processing[data-order-id],
+        .workflow-stage-process #processItemsTable tbody tr.ip-row-overdue-not-ready.workflow-item-ready[data-order-id] {
             background: linear-gradient(
                 90deg,
                 rgba(220, 38, 38, 0.13) 0%,
@@ -443,20 +506,20 @@
             box-shadow: none;
         }
         /* Overdue hover — solid light red (Pending Orders style), not when selected */
-        .workflow-stage-process tbody tr.ip-row-overdue-not-ready.workflow-item-processing[data-order-id]:hover:not(.row-selected),
-        .workflow-stage-process tbody tr.ip-row-overdue-not-ready.workflow-item-ready[data-order-id]:hover:not(.row-selected) {
+        .workflow-stage-process #processItemsTable tbody tr.ip-row-overdue-not-ready.workflow-item-processing[data-order-id]:hover:not(.row-selected),
+        .workflow-stage-process #processItemsTable tbody tr.ip-row-overdue-not-ready.workflow-item-ready[data-order-id]:hover:not(.row-selected) {
             background: #fee2e2 !important;
             box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.22);
         }
 
-        .workflow-stage-process tbody tr.ip-row-overdue-not-ready[data-order-id]:hover:not(.row-selected) td {
+        .workflow-stage-process #processItemsTable tbody tr.ip-row-overdue-not-ready[data-order-id]:hover:not(.row-selected) td {
             border-color: #fca5a5;
         }
-        .workflow-stage-process tbody tr.workflow-item-processing {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-processing {
             animation: none;
         }
         /* Ready: match Ready Items — more fade, wide white centre */
-        .workflow-stage-process tbody tr.workflow-item-ready[data-order-id] {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-ready[data-order-id] {
             background: linear-gradient(
                 90deg,
                 rgba(0, 122, 77, 0.26) 0%,
@@ -477,12 +540,12 @@
         }
         /* Ready line hover — solid green like Pending Orders row hover */
         /* Ready line hover — same mint as Ready Items (#eaf7ed) */
-        .workflow-stage-process tbody tr.workflow-item-ready[data-order-id]:hover:not(.row-selected) {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-ready[data-order-id]:hover:not(.row-selected) {
             background: #eaf7ed !important;
             box-shadow: inset 0 0 0 1px rgba(76, 175, 80, 0.22);
         }
 
-        .workflow-stage-process tbody tr.workflow-item-ready[data-order-id]:hover:not(.row-selected) td {
+        .workflow-stage-process #processItemsTable tbody tr.workflow-item-ready[data-order-id]:hover:not(.row-selected) td {
             border-color: #c8e6c9;
         }
         /* Badges: flat fills, no blue glow */
@@ -501,14 +564,6 @@
         @keyframes workflowProcessFade {
             from { opacity: .74; transform: translateY(3px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Checkbox */
-        .cb-cell input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            accent-color: #eab308;
         }
 
         .mark-cb-wrap {
@@ -596,16 +651,63 @@
             color: #8e8e93;
         }
 
-        /* Footer */
+        /* Footer — status text only */
         .footer {
-            padding: 12px 20px;
-            font-size: 14px;
-            color: #6e6e73 !important;
-            border-top: 2px solid #d1d6de;
-            background: #f5f7fa !important;
+            width: calc(100% - 28px);
+            margin: 0 14px;
+            padding: 6px 0;
+            font-size: 11px;
+            color: #5f6368 !important;
+            border-top: 1px solid #a8b4c4;
+            background: #fff !important;
             flex-shrink: 0;
             box-sizing: border-box;
-            font-weight: 500;
+            font-weight: 600 !important;
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Job Worker Entry popup (Item Process mark) — compact Excel shell */
+        #ipEntryPopupOverlay.modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            padding: 10px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ipEntryPopupOverlay .ip-entry-popup-modal {
+            width: min(98vw, 720px);
+            min-width: 0;
+            max-width: 720px;
+            height: fit-content;
+            max-height: 92vh;
+            margin: 0;
+            border-radius: 10px;
+            border: 1px solid #a8b4c4;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: pop 0.18s ease-out;
+            flex: 0 0 auto;
+            align-self: center;
+        }
+
+        #ipEntryPopupOverlay #ipEntryFrame {
+            flex: 0 0 auto;
+            display: block;
+            width: 100%;
+            height: 360px;
+            min-height: 0;
+            max-height: calc(92vh - 20px);
+            border: none;
+            background: #fff;
+            overflow: hidden;
+            vertical-align: top;
+            box-sizing: border-box;
         }
 
         /* ── MODAL ── */
@@ -1103,7 +1205,8 @@
     <div class="process-items-wrap workflow-stage-process">
         <div class="ledger-page-titlebar">Item Process</div>
         <!-- TOOLBAR -->
-        <div class="process-toolbar">
+        <div class="process-toolbar" aria-label="Filters and actions">
+            <div class="process-toolbar-inner">
             <span class="sel-pill" id="ipSelPill">0 selected</span>
 
             <div class="ip-field-filters" id="ipFieldFilters" aria-label="Filter by column">
@@ -1134,20 +1237,44 @@
                 <option value="">👤 All Job Workers</option>
             </select>
             <button class="btn" onclick="loadProcessItems()">🔄 Refresh</button>
-            <button type="button" class="btn" id="ipToggleSelectAllBtn" onclick="ipToggleSelectAllClick()" disabled
-                title="Select every visible row, or clear all selections">Select all</button>
+            <label class="ip-select-all-wrap" id="ipToggleSelectAllWrap"
+                title="Tick to select all visible rows; untick to clear selection">
+                <input type="checkbox" id="ipToggleSelectAllCb" disabled
+                    onchange="ipSelectAllCheckboxChange(this)" aria-label="Select all visible rows">
+                <span class="ip-select-all-label">Select all</span>
+            </label>
             <button class="btn btn-ready" id="markReadyBtn" onclick="openMarkReadyModal()" disabled>
                 ✅ Mark Ready Item
             </button>
+            </div>
         </div>
 
         <!-- TABLE -->
-        <div class="table-wrap">
+        <div class="table-wrap" id="processItemsTableScroll">
             <table id="processItemsTable">
+                <colgroup>
+                    <col class="col-cb">
+                    <col class="col-mark">
+                    <col class="col-status">
+                    <col class="col-qty">
+                    <col class="col-item">
+                    <col class="col-stamp">
+                    <col class="col-text">
+                    <col class="col-text">
+                    <col class="col-design">
+                    <col class="col-size">
+                    <col class="col-num">
+                    <col class="col-num">
+                    <col class="col-worker">
+                    <col class="col-date">
+                    <col class="col-order">
+                    <col class="col-customer">
+                    <col class="col-relation">
+                </colgroup>
                 <thead>
                     <tr>
-                        <th class="center cb-cell" style="width:46px;" aria-label="Row select"></th>
-                        <th class="center" style="width:68px;">Mark</th>
+                        <th class="center cb-cell" aria-label="Row select"></th>
+                        <th class="center">Mark</th>
                         <th class="center">Status</th>
                         <th class="right">Qty</th>
                         <th>Item Name</th>
@@ -1198,20 +1325,9 @@
     </div>
 
     <!-- ENTRY POPUP OVERLAY -->
-    <div class="modal-overlay" id="ipEntryPopupOverlay" style="z-index: 9999; padding: 20px; position: fixed; inset: 0;"
-        onclick="if(event.target===this)closeIpEntryPopup()">
-        <div class="modal"
-            style="width: 90%; max-width: 1100px; height: 88vh; max-height: 700px; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;">
-            <div class="modal-header"
-                style="background: #f8f9fc; border-bottom: 2px solid #e2e8f0; padding: 12px 20px; flex-shrink:0;">
-                <div class="modal-header-text">
-                    <h3>👷 New Job Worker Entry</h3>
-                    <p>Fill in entry details and save.</p>
-                </div>
-                <button class="modal-close-btn" onclick="closeIpEntryPopup()">✕</button>
-            </div>
-            <iframe id="ipEntryFrame" style="flex: 1; border: none; background: #f8f9fc; min-height: 0;"
-                src="about:blank"></iframe>
+    <div class="modal-overlay" id="ipEntryPopupOverlay" onclick="if(event.target===this)closeIpEntryPopup()">
+        <div class="modal ip-entry-popup-modal">
+            <iframe id="ipEntryFrame" title="Jobworker entry form" src="about:blank"></iframe>
         </div>
     </div>
 
@@ -1344,7 +1460,9 @@
         function getIpEntryPageUrl() {
             const path = window.location.pathname || '';
             const isDashboard = /index\.html$/i.test(path) || /\/$/.test(path) || !/pages\//i.test(path);
-            return isDashboard ? 'pages/jobworker-entry.html?mode=assignment' : 'jobworker-entry.html?mode=assignment';
+            return isDashboard
+                ? 'pages/jobworker-entry.html?mode=assignment&ui=compact'
+                : 'jobworker-entry.html?mode=assignment&ui=compact';
         }
 
         function openIpEntryPopup() {
@@ -1359,7 +1477,10 @@
             const overlay = document.getElementById('ipEntryPopupOverlay');
             const frame = document.getElementById('ipEntryFrame');
             if (overlay) overlay.classList.remove('open');
-            if (frame) frame.src = 'about:blank';
+            if (frame) {
+                frame.src = 'about:blank';
+                frame.style.height = '';
+            }
             if (_ipCurrentMarkCb) { _ipCurrentMarkCb.checked = false; _ipCurrentMarkCb = null; }
         }
 
@@ -1569,31 +1690,56 @@
         }
 
         function ipSyncToggleSelectAllButton() {
-            const btn = document.getElementById('ipToggleSelectAllBtn');
-            if (!btn) return;
+            const master = document.getElementById('ipToggleSelectAllCb');
+            if (!master) return;
             const visible = ipGetVisibleRowCheckboxes();
             if (!visible.length) {
-                btn.disabled = true;
-                btn.textContent = 'Select all';
+                master.disabled = true;
+                master.checked = false;
+                master.indeterminate = false;
                 return;
             }
-            btn.disabled = false;
-            const allChecked = visible.every(cb => cb.checked);
-            btn.textContent = allChecked ? 'Clear selection' : 'Select all';
+            master.disabled = false;
+            const checkedCount = visible.filter(cb => cb.checked).length;
+            if (checkedCount === 0) {
+                master.checked = false;
+                master.indeterminate = false;
+            } else if (checkedCount === visible.length) {
+                master.checked = true;
+                master.indeterminate = false;
+            } else {
+                master.checked = false;
+                master.indeterminate = true;
+            }
         }
 
-        function ipToggleSelectAllClick() {
+        function ipSelectAllCheckboxChange(masterCb) {
             const visible = ipGetVisibleRowCheckboxes();
-            if (!visible.length) return;
-            const allChecked = visible.every(cb => cb.checked);
-            const nextChecked = !allChecked;
+            if (!visible.length || !masterCb) {
+                if (masterCb) {
+                    masterCb.checked = false;
+                    masterCb.indeterminate = false;
+                }
+                return;
+            }
+            const shouldCheck = masterCb.checked;
             visible.forEach(cb => {
-                if (cb.checked !== nextChecked) {
-                    cb.checked = nextChecked;
+                if (cb.checked !== shouldCheck) {
+                    cb.checked = shouldCheck;
                     ipOnCbChange(cb);
                 }
             });
             ipSyncToggleSelectAllButton();
+        }
+
+        function ipToggleSelectAllClick() {
+            const master = document.getElementById('ipToggleSelectAllCb');
+            if (!master || master.disabled) return;
+            const visible = ipGetVisibleRowCheckboxes();
+            if (!visible.length) return;
+            master.checked = !visible.every(cb => cb.checked);
+            master.indeterminate = false;
+            ipSelectAllCheckboxChange(master);
         }
 
         function ipOnCbChange(cb) {
@@ -2115,6 +2261,39 @@
             if (e.target === this) closeMarkReadyModal();
         });
 
+        (function () {
+            var fr = document.getElementById('ipEntryFrame');
+            if (!fr) return;
+            function syncIpEntryFrameHeight() {
+                if (!fr.contentDocument) return;
+                var doc = fr.contentDocument;
+                var shell = doc.querySelector('.jwe-entry-shell');
+                var page = doc.querySelector('.page');
+                var root = shell || page || doc.body;
+                if (!root) return;
+                var pageEl = page || doc.documentElement;
+                var cs = doc.defaultView.getComputedStyle(pageEl);
+                var padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+                var h = Math.ceil(root.offsetHeight + padY + 2);
+                var maxH = Math.floor(window.innerHeight * 0.92 - 20);
+                fr.style.height = Math.min(Math.max(h, 240), Math.max(maxH, 240)) + 'px';
+            }
+            function onIpEntryFrameLoaded() {
+                if (!fr.src || String(fr.src).indexOf('about:blank') !== -1) return;
+                requestAnimationFrame(function () {
+                    syncIpEntryFrameHeight();
+                    requestAnimationFrame(syncIpEntryFrameHeight);
+                });
+                setTimeout(syncIpEntryFrameHeight, 80);
+                setTimeout(syncIpEntryFrameHeight, 200);
+            }
+            if (typeof ledgerNavListen === 'function') {
+                ledgerNavListen(fr, 'load', onIpEntryFrameLoaded);
+            } else {
+                fr.addEventListener('load', onIpEntryFrameLoaded);
+            }
+        })();
+
         /* ── JW INFO MODAL ── */
         function openJwModal(jwId, jwName) {
             // Find job worker in jobworkers list
@@ -2249,6 +2428,7 @@
         window.ipFilterTable = ipFilterTable;
         window.setIpFilter = setIpFilter;
         window.ipToggleSelectAllClick = ipToggleSelectAllClick;
+        window.ipSelectAllCheckboxChange = ipSelectAllCheckboxChange;
         window.ipOnCbChange = ipOnCbChange;
         window.openMarkReadyModal = openMarkReadyModal;
         window.closeMarkReadyModal = closeMarkReadyModal;

@@ -65,14 +65,426 @@
       grid-column: 3; justify-self: end; margin-bottom: 0; min-height: 0;
     }
     .app.gold-invoice-page > .ledger-page-titlebar.order-page-titlebar-grid {
-      border-radius: var(--radius) var(--radius) 0 0;
+      border-radius: 0;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      color: #1a3a5c;
+      flex-shrink: 0;
     }
-    .workspace[data-page] .app#orderApp.gold-invoice-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
+    .workspace[data-page] .app#orderApp.gold-invoice-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child,
+    .workspace[data-page="gold-invoice"] .app#orderApp.gold-invoice-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
+      border-radius: 0;
     }
     .app.gold-invoice-page > .order-top { margin-top: 0; }
     .app.gold-invoice-page > .order-top > .box {
       border-top-left-radius: 0; border-top-right-radius: 0; border-top: none;
+    }
+    /* One-screen layout: only bill rows scroll; bottom dock stays pinned */
+    html:has(#orderApp.gold-invoice-page),
+    body:has(#orderApp.gold-invoice-page) {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .workspace[data-page="gold-invoice"] {
+      padding: 0 !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      background: #fff !important;
+    }
+
+    .workspace[data-page="gold-invoice"] .app#orderApp.gold-invoice-page,
+    .app#orderApp.gold-invoice-page {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: none;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0;
+      margin: 0 !important;
+      background: #fff !important;
+      overflow: hidden;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      box-sizing: border-box;
+    }
+    .app#orderApp.gold-invoice-page > .ledger-page-titlebar {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      border-bottom: 1px solid #a8b4c4;
+      background: #f4f6f8;
+      color: #1a3a5c;
+    }
+    .app#orderApp.gold-invoice-page > .error-message {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      box-sizing: border-box;
+      border-left: none;
+      border-right: none;
+      border-radius: 0;
+    }
+    .app#orderApp.gold-invoice-page > .order-top {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0 4px;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) 260px;
+      border-bottom: none;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .app#orderApp.gold-invoice-page .box {
+      border-radius: 3px;
+      padding: 6px 10px;
+      box-shadow: none;
+      border: 1px solid #a8b4c4;
+      animation: none;
+    }
+    .app#orderApp.gold-invoice-page .box-title {
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4b5b70;
+    }
+    .app#orderApp.gold-invoice-page .row {
+      margin-bottom: 6px;
+      gap: 6px;
+    }
+    .app#orderApp.gold-invoice-page .row label {
+      min-width: 92px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .app#orderApp.gold-invoice-page .row input,
+    .app#orderApp.gold-invoice-page .row select,
+    .app#orderApp.gold-invoice-page .row button {
+      height: 30px;
+      border-radius: 6px;
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+    .app#orderApp.gold-invoice-page .box.box-customer-info,
+    .app#orderApp.gold-invoice-page .box.box-order-info {
+      padding: 6px 8px;
+      border-radius: 4px;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .box-title,
+    .app#orderApp.gold-invoice-page .box-order-info .box-title {
+      margin-bottom: 4px;
+      font-size: 10px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #49586b;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 10px;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-name {
+      grid-column: 1;
+      grid-row: 1;
+      gap: 6px;
+      min-width: 0;
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-name input {
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info #custNameSelect,
+    .app#orderApp.gold-invoice-page .box-customer-info .gi-cust-list-select {
+      display: none !important;
+      width: 0;
+      height: 0;
+      min-height: 0;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      overflow: hidden;
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-add-customer {
+      grid-column: 2;
+      grid-row: 1;
+      align-items: center;
+      min-height: 28px;
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-bal {
+      grid-column: 1;
+      grid-row: 2;
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-relation {
+      grid-column: 2;
+      grid-row: 2;
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-station {
+      grid-column: 1;
+      grid-row: 3;
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-grid-lfno {
+      grid-column: 2;
+      grid-row: 3;
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-field-grid .row label {
+      min-width: 72px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-field-grid .row input {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 28px;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-field-grid .row input[readonly],
+    .app#orderApp.gold-invoice-page .box-customer-info .customer-field-grid #currentBal.current-bal-text {
+      background: #f4f6f8;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .btn-add-customer {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
+      height: 28px;
+      margin: 0;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: normal;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      background: #f4f6f8;
+      color: #1a73e8;
+      box-shadow: none;
+      cursor: pointer;
+    }
+    .app#orderApp.gold-invoice-page .box-customer-info .btn-add-customer:hover {
+      background: #eef2f6;
+      border-color: #a8b4c4;
+      color: #1557b0;
+      transform: none;
+      box-shadow: none;
+    }
+    .app#orderApp.gold-invoice-page .box-order-info .row {
+      margin-bottom: 4px;
+    }
+    .app#orderApp.gold-invoice-page .box-order-info .row:last-child {
+      margin-bottom: 0;
+    }
+    .app#orderApp.gold-invoice-page .box-order-info .row label {
+      min-width: 62px;
+      font-size: 10px;
+    }
+    .app#orderApp.gold-invoice-page .box-order-info #billNo {
+      font-weight: 600;
+      letter-spacing: .02em;
+    }
+    .app#orderApp.gold-invoice-page > .order-details {
+      flex: 1 1 0;
+      min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px !important;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .app#orderApp.gold-invoice-page > .order-details > .box-title {
+      flex-shrink: 0;
+      margin: 0 0 4px;
+      font-size: 12px;
+      color: #4b5b70;
+      font-weight: 600;
+    }
+
+    .app#orderApp.gold-invoice-page > .order-details > .table-wrap.order-details-table-wrap {
+      flex: 1 1 0;
+      min-height: 0;
+      margin: 0 !important;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: auto !important;
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      background-image: none;
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    .app#orderApp.gold-invoice-page .order-details-table-wrap::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    .app#orderApp.gold-invoice-page .order-details-table-wrap::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    .app#orderApp.gold-invoice-page .order-details-table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #7a8da6;
+    }
+    .app#orderApp.gold-invoice-page .order-details-table-wrap table {
+      font-size: 13px;
+    }
+    .app#orderApp.gold-invoice-page .order-details-table-wrap thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-size: 11px;
+      height: 28px;
+      line-height: 28px;
+    }
+    .app#orderApp.gold-invoice-page .order-details-table-wrap input,
+    .app#orderApp.gold-invoice-page .order-details-table-wrap select {
+      height: 28px;
+      font-size: 12px;
+    }
+    .app#orderApp.gold-invoice-page > .gi-bottom-dock {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: min(52vh, 440px);
+      border-top: 1px solid #a8b4c4;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .app#orderApp.gold-invoice-page > .gi-bottom-dock > .actions {
+      margin: 0 !important;
+      padding: 6px 0;
+      gap: 6px;
+      border-top: none;
+      flex-shrink: 0;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+    .app#orderApp.gold-invoice-page > .gi-bottom-dock > .actions button {
+      min-width: 0;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      box-shadow: none;
+    }
+    .app#orderApp.gold-invoice-page > .gi-bottom-dock > .actions button:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    .app#orderApp.gold-invoice-page > .gi-bottom-dock > .info-panel {
+      flex: 1;
+      min-height: 0;
+      margin: 0 !important;
+      padding: 6px 0 8px;
+      border-radius: 0;
+      border-top: none;
+      background: #fff;
+      box-shadow: none;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .app#orderApp.gold-invoice-page > .gi-bottom-dock > .info-panel .panel-grid {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      align-items: stretch;
+      gap: 8px;
+      grid-template-columns: minmax(200px, 0.38fr) minmax(0, 1fr);
+    }
+    .app#orderApp.gold-invoice-page .panel-section {
+      border-radius: 3px;
+      border-color: #a8b4c4;
+      box-shadow: none;
+    }
+    .app#orderApp.gold-invoice-page .panel-section-header {
+      padding: 6px 10px;
+    }
+    .app#orderApp.gold-invoice-page .panel-section-header h3 {
+      font-size: 12px;
+    }
+    .app#orderApp.gold-invoice-page .panel-content {
+      padding: 6px;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .app#orderApp.gold-invoice-page .panel-stack {
+      min-height: 0;
+      overflow: hidden;
+      gap: 8px;
+    }
+    .app#orderApp.gold-invoice-page .panel-section--narration .panel-content {
+      max-height: none;
+      flex: none;
+    }
+    .app#orderApp.gold-invoice-page #paymentList {
+      max-height: none;
+      overflow-y: visible;
+    }
+    .app#orderApp.gold-invoice-page .panel-summary .summary-item {
+      margin-bottom: 2px;
+      padding: 0;
+      font-size: 11px;
+      line-height: 1.15;
+    }
+    .app#orderApp.gold-invoice-page .panel-summary .summary-label,
+    .app#orderApp.gold-invoice-page .panel-summary .summary-value {
+      font-size: 11px;
+      line-height: 1.15;
+    }
+    @media(max-width:1024px) {
+      .app#orderApp.gold-invoice-page > .order-top {
+        grid-template-columns: 1fr;
+      }
+      .app#orderApp.gold-invoice-page > .gi-bottom-dock > .info-panel .panel-grid {
+        grid-template-columns: 1fr;
+      }
+      .app#orderApp.gold-invoice-page .row.row-two-col {
+        grid-template-columns: 1fr;
+      }
     }
     .order-title-meta {
       display: flex; justify-content: flex-end; align-items: center;
@@ -474,26 +886,41 @@
 
   <div class="order-top">
     <!-- CUSTOMER -->
-    <div class="box">
+    <div class="box box-customer-info">
       <div class="box-title">Customer Information</div>
-      <div class="row">
-        <label>Name *</label>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; flex:1; width:100%;">
+      <div class="customer-field-grid">
+        <div class="row row-name-select customer-grid-name">
+          <label>Name *</label>
           <input id="custName" list="custNameList" placeholder="Type manual customer name">
-          <select id="custNameSelect" title="Select customer from list">
+          <select id="custNameSelect" class="gi-cust-list-select" title="Select customer from list" aria-hidden="true" tabindex="-1">
             <option value="">Select customer from list</option>
           </select>
+          <datalist id="custNameList"></datalist>
         </div>
-        <datalist id="custNameList"></datalist>
+        <div class="row customer-grid-add-customer">
+          <label>+Add</label>
+          <button type="button" onclick="openCustomerPopup()" class="btn-add-customer">+ Add / Edit Customer</button>
+        </div>
+        <div class="row customer-grid-bal">
+          <label>Current Bal</label>
+          <input type="text" id="currentBal" class="current-bal-text" placeholder="0.00 Dr" autocomplete="off" title="Example: 10000.00 Dr or 5000.00 Cr">
+        </div>
+        <div class="row customer-grid-relation">
+          <label>Relation</label>
+          <input id="relation" placeholder="Relation">
+        </div>
+        <div class="row customer-grid-station">
+          <label>Station</label>
+          <input id="station" placeholder="Station">
+        </div>
+        <div class="row customer-grid-lfno">
+          <label>LF No.</label>
+          <input id="lfNo" placeholder="LF Number">
+        </div>
       </div>
-      <div class="row"><label>Current Bal</label><input type="text" id="currentBal" class="current-bal-text" placeholder="0.00 Dr" autocomplete="off" title="Example: 10000.00 Dr or 5000.00 Cr"></div>
-      <div class="row"><label>Relation</label><input id="relation" placeholder="Relation"></div>
-      <div class="row"><label>Station</label><input id="station" placeholder="Station"></div>
-      <div class="row"><label>LF No.</label><input id="lfNo" placeholder="LF Number"></div>
-      <div class="row"><label></label><button type="button" onclick="openCustomerPopup()">+ Add Customer</button></div>
     </div>
     <!-- ORDER INFO -->
-    <div class="box">
+    <div class="box box-order-info">
       <div class="box-title">Order Information</div>
       <div class="row"><label>Order No *</label><input id="billNo" required readonly></div>
       <div class="row"><label>Date *</label><input type="date" id="orderDate" required></div>
@@ -526,73 +953,75 @@
     </div>
   </div>
 
-  <!-- ACTIONS -->
-  <div class="actions">
-    <button class="primary" onclick="addRow()">+ Add Row</button>
-    <button type="button" onclick="openPaymentPopup()" title="Record payment (same storage as New Order)">Payment</button>
-    <button type="button" onclick="openDiscountPopup()">Discount</button>
-    <button onclick="openPurchaseSheetPopup()">Purchase</button>
-    <button type="button" class="primary" onclick="saveOrder()">Save Bill</button>
-    <button type="button" onclick="saveAndNew()">Save & New</button>
-    <button type="button" onclick="resetForm()" title="Reset form">Reset</button>
-    <button type="button" class="danger" onclick="closePage()">Close</button>
-  </div>
+  <div class="gi-bottom-dock">
+    <!-- ACTIONS -->
+    <div class="actions">
+      <button class="primary" onclick="addRow()">+ Add Row</button>
+      <button type="button" onclick="openPaymentPopup()" title="Record payment (same storage as New Order)">Payment</button>
+      <button type="button" onclick="openDiscountPopup()">Discount</button>
+      <button onclick="openPurchaseSheetPopup()">Purchase</button>
+      <button type="button" class="primary" onclick="saveOrder()">Save Bill</button>
+      <button type="button" onclick="saveAndNew()">Save & New</button>
+      <button type="button" onclick="resetForm()" title="Reset form">Reset</button>
+      <button type="button" class="danger" onclick="closePage()">Close</button>
+    </div>
 
-  <!-- INFO PANEL -->
-  <div class="info-panel">
-    <div class="panel-grid">
-      <div class="panel-stack">
-        <!-- NARRATION -->
-        <div class="panel-section panel-section--narration">
-          <div class="panel-section-header"><h3>Narration / Description</h3></div>
+    <!-- INFO PANEL -->
+    <div class="info-panel">
+      <div class="panel-grid">
+        <div class="panel-stack">
+          <!-- NARRATION -->
+          <div class="panel-section panel-section--narration">
+            <div class="panel-section-header"><h3>Narration / Description</h3></div>
+            <div class="panel-content">
+              <p class="order-narration-hint">Optional notes for this order.</p>
+              <label for="orderNarration" class="visually-hidden">Order narration</label>
+              <textarea id="orderNarration" class="order-narration-textarea" maxlength="8000"
+                placeholder="Write narration or any notes…"></textarea>
+            </div>
+          </div>
+        </div>
+        <!-- PAYMENT SUMMARY -->
+        <div class="panel-section">
+          <div class="panel-section-header">
+            <h3>Payment Summary</h3>
+            <button class="panel-add-btn" onclick="openPaymentPopup()">+ Add</button>
+          </div>
           <div class="panel-content">
-            <p class="order-narration-hint">Optional notes for this order.</p>
-            <label for="orderNarration" class="visually-hidden">Order narration</label>
-            <textarea id="orderNarration" class="order-narration-textarea" maxlength="8000"
-              placeholder="Write narration or any notes…"></textarea>
+            <div class="panel-summary">
+              <div class="summary-item">
+                <span class="summary-label">Sub Total:</span>
+                <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
+              </div>
+              <div class="summary-item" style="color:#d63384;">
+                <span class="summary-label">Purchase Total:</span>
+                <span class="summary-value" id="panelPurchaseTotal">₹ 0.00</span>
+              </div>
+              <div class="summary-item" style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px;">
+                <span class="summary-label">Net Bill Total:</span>
+                <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
+              </div>
+              <div class="summary-item summary-item--paid-open" role="button" tabindex="0"
+                title="Tap to manage discount"
+                onclick="openDiscountDetailPopup()"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDiscountDetailPopup();}">
+                <span class="summary-label">Discount:</span>
+                <span class="summary-value" style="color:#0ea5e9;" id="panelDiscount">₹ 0.00</span>
+              </div>
+              <div class="summary-item summary-item--paid-open" role="button" tabindex="0"
+                title="Tap to view payments"
+                onclick="openPaymentsDetailPopup()"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPaymentsDetailPopup();}">
+                <span class="summary-label">Paid:</span>
+                <span class="summary-value" style="color:#28a745;" id="panelPaid">₹ 0.00</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Balance:</span>
+                <span class="summary-value" style="color:#dc3545;" id="panelBalance">₹ 0.00</span>
+              </div>
+            </div>
+            <div class="panel-list" id="paymentList" style="display:none;"><div class="empty-state">No payments yet</div></div>
           </div>
-        </div>
-      </div>
-      <!-- PAYMENT SUMMARY -->
-      <div class="panel-section">
-        <div class="panel-section-header">
-          <h3>Payment Summary</h3>
-          <button class="panel-add-btn" onclick="openPaymentPopup()">+ Add</button>
-        </div>
-        <div class="panel-content">
-          <div class="panel-summary">
-            <div class="summary-item">
-              <span class="summary-label">Sub Total:</span>
-              <span class="summary-value" id="panelOrderTotal">₹ 0.00</span>
-            </div>
-            <div class="summary-item" style="color:#d63384;">
-              <span class="summary-label">Purchase Total:</span>
-              <span class="summary-value" id="panelPurchaseTotal">₹ 0.00</span>
-            </div>
-            <div class="summary-item" style="border-top:1px dashed #ccc; padding-top:4px; margin-top:4px;">
-              <span class="summary-label">Net Bill Total:</span>
-              <span class="summary-value" id="panelBillTotal">₹ 0.00</span>
-            </div>
-            <div class="summary-item summary-item--paid-open" role="button" tabindex="0"
-              title="Tap to manage discount"
-              onclick="openDiscountDetailPopup()"
-              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDiscountDetailPopup();}">
-              <span class="summary-label">Discount:</span>
-              <span class="summary-value" style="color:#0ea5e9;" id="panelDiscount">₹ 0.00</span>
-            </div>
-            <div class="summary-item summary-item--paid-open" role="button" tabindex="0"
-              title="Tap to view payments"
-              onclick="openPaymentsDetailPopup()"
-              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPaymentsDetailPopup();}">
-              <span class="summary-label">Paid:</span>
-              <span class="summary-value" style="color:#28a745;" id="panelPaid">₹ 0.00</span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">Balance:</span>
-              <span class="summary-value" style="color:#dc3545;" id="panelBalance">₹ 0.00</span>
-            </div>
-          </div>
-          <div class="panel-list" id="paymentList" style="display:none;"><div class="empty-state">No payments yet</div></div>
         </div>
       </div>
     </div>
@@ -642,7 +1071,7 @@
 
 <!-- CUSTOMER POPUP -->
 <div id="gold-invoice-add-customer-popup" class="popup-bg" style="display:none;" onclick="if(event.target===this)cancelCustomerPopup()">
-  <div class="popup-box" style="width:98%; max-width:1280px; height:auto; max-height:95vh; overflow-x:hidden; overflow-y:auto; padding:0; display:flex; flex-direction:column; background:#fff; border-radius:8px;" onclick="event.stopPropagation()">
+  <div class="popup-box" style="width:100%; max-width:880px; height:auto; max-height:95vh; overflow-x:hidden; overflow-y:auto; padding:0; display:flex; flex-direction:column; background:#fff; border-radius:8px;" onclick="event.stopPropagation()">
     <div style="flex:0 0 auto; overflow:visible; background:#fff;">
       <iframe id="customerPopupIframe" src="" style="width:100%; height:200px; min-height:0; border:none; background:#fff; display:block; border-radius:8px 8px 0 0;"></iframe>
     </div>

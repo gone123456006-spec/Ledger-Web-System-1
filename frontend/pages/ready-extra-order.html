@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -7,7 +7,7 @@
 
   <style>
     /* =====================================================
-   FULLY RESPONSIVE APPLE-STYLE ERP UI – ORDERS
+   FULLY RESPONSIVE APPLE-STYLE ERP UI — ORDERS
 ===================================================== */
 
     :root {
@@ -106,11 +106,16 @@
 
     .app.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid,
     .app#orderApp.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid {
-      border-radius: var(--radius) var(--radius) 0 0;
+      border-radius: 0;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      color: #1a3a5c;
+      flex-shrink: 0;
     }
 
-    .workspace[data-page] .app#orderApp.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
+    .workspace[data-page] .app#orderApp.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child,
+    .workspace[data-page="ready-extra-order"] .app#orderApp.ready-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
+      border-radius: 0;
     }
 
     .app.ready-order-page > .order-top {
@@ -348,7 +353,7 @@
       border-right: 6mm solid #c3d5ef !important;
     }
 
-    /* R. Metal through Total: light green column band (cols 11–17; delete col excluded) */
+    /* R. Metal through Total: light green column band (cols 11“17; delete col excluded) */
     .order-details-table-wrap #ready-order-item-table thead th:nth-child(n+11):nth-child(-n+17),
     .order-details-table-wrap #ready-order-item-table tbody td:nth-child(n+11):nth-child(-n+17) {
       background-color: #ecf9ee;
@@ -365,7 +370,7 @@
     }
 
 
-    /* Order row: Pc, Ut. Wt., Est. Total Wt., Rate, Lbr.%, Total – non-editable */
+    /* Order row: Pc, Ut. Wt., Est. Total Wt., Rate, Lbr.%, Total “ non-editable */
     td input.order-detail-readonly {
       cursor: not-allowed;
       background: rgba(0,0,0,0.03);
@@ -506,6 +511,87 @@
     .order-details-table-wrap #ready-order-item-table thead th:nth-child(3),
     .order-details-table-wrap #ready-order-item-table tbody td:nth-child(3) {
       width: 220px !important;
+    }
+
+    /* Stamp, Pc, Lbr.% — compact columns */
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(4),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(4) {
+      width: 64px !important;
+      max-width: 64px !important;
+      min-width: 58px !important;
+      padding: 0 3px !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(5),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(5) {
+      width: 42px !important;
+      max-width: 42px !important;
+      min-width: 36px !important;
+      padding: 0 2px !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table thead th:nth-child(9),
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(9) {
+      width: 46px !important;
+      max-width: 46px !important;
+      min-width: 40px !important;
+      padding: 0 2px !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(4) select {
+      padding: 0 4px !important;
+      font-size: 12px !important;
+      text-align: center;
+      min-width: 0 !important;
+    }
+
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(5) input,
+    .order-details-table-wrap #ready-order-item-table tbody td:nth-child(9) input {
+      padding: 0 3px !important;
+      font-size: 11px !important;
+      text-align: center;
+    }
+
+    /* Stamp option list — same width as Stamp column cell */
+    .rex-stamp-picker {
+      position: fixed;
+      z-index: 10050;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      border: 1px solid #1a1a1a;
+      max-height: 220px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+    }
+
+    .rex-stamp-picker[hidden] {
+      display: none !important;
+    }
+
+    .rex-stamp-picker button {
+      display: block;
+      width: 100%;
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      background: #fff;
+      color: #000;
+      padding: 5px 4px;
+      text-align: center;
+      font-size: 12px;
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif;
+      line-height: 1.2;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .rex-stamp-picker button:hover,
+    .rex-stamp-picker button.active {
+      background: #0066cc;
+      color: #fff;
     }
 
     /* Total (col 17): wider + bigger input for emphasis */
@@ -698,11 +784,25 @@
       background: #f5f5f7;
     }
 
+    .actions button.danger,
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .actions button.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .actions button.danger:hover,
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .actions button.danger:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+    }
+
     /* After Bill → Transfers: read-only except Close (.rex-post-transfer-allow). */
     #orderApp.rex-post-transfer-locked .order-top,
     #orderApp.rex-post-transfer-locked .order-details,
-    #orderApp.rex-post-transfer-locked .info-panel,
-    #orderApp.rex-post-transfer-locked .actions {
+    #orderApp.rex-post-transfer-locked > .rex-order-bottom-dock > .actions {
       pointer-events: none;
       user-select: none;
     }
@@ -713,7 +813,80 @@
       cursor: pointer;
     }
 
-    /* Hide Type (1) + Ut. Wt. through Est. Total (6–10); data remains in row for save/calc */
+    /* After transfer: bottom panel stays interactive; one scroll on Ratebook + Narration */
+    #orderApp.rex-post-transfer-locked > .rex-order-bottom-dock {
+      pointer-events: auto;
+    }
+
+    #orderApp.rex-post-transfer-locked > .rex-order-bottom-dock > .info-panel {
+      pointer-events: auto;
+      user-select: text;
+    }
+
+    #orderApp.rex-post-transfer-locked > .rex-order-bottom-dock > .info-panel .panel-grid {
+      flex: 1;
+      min-height: 0;
+      max-height: 100%;
+      overflow: hidden;
+      align-items: stretch;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-stack-rex {
+      min-height: 0;
+      max-height: 100%;
+      height: 100%;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      pointer-events: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-stack-rex::-webkit-scrollbar,
+    #orderApp.rex-post-transfer-locked .panel-section--payment-summary .panel-content::-webkit-scrollbar {
+      width: 2px;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-stack-rex::-webkit-scrollbar-thumb,
+    #orderApp.rex-post-transfer-locked .panel-section--payment-summary .panel-content::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-section--payment-summary .panel-content {
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-stack-rex .panel-section,
+    #orderApp.rex-post-transfer-locked .panel-stack-rex .panel-section:first-child {
+      flex: none;
+      min-height: 0;
+      overflow: visible;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-stack-rex .panel-content {
+      overflow: visible !important;
+      max-height: none !important;
+      flex: none !important;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-section--payment-summary {
+      min-height: 0;
+      max-height: 100%;
+      overflow: hidden;
+    }
+
+    #orderApp.rex-post-transfer-locked .panel-section--payment-summary .panel-content {
+      overflow-x: hidden;
+      overflow-y: auto !important;
+      max-height: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Hide Type (1) + Ut. Wt. through Est. Total (6“10); data remains in row for save/calc */
     #ready-order-item-table.ready-order-hide-mid col:nth-child(1),
     #ready-order-item-table.ready-order-hide-mid thead th:nth-child(1),
     #ready-order-item-table.ready-order-hide-mid tbody td:nth-child(1),
@@ -951,6 +1124,1349 @@
     /* =====================
    TABLET (≤ 1024px)
 ===================== */
+    /* =====================
+   PHP COMPACT UI (ported from new-order)
+===================== */
+    /* Add Payment popup — PHP compact */
+    #ready-order-payment-popup .popup-box.payment-php-shell {
+      padding: 0;
+      width: auto;
+      max-width: none;
+      border-radius: 8px;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-box.payment-php-shell {
+      display: flex;
+      flex-direction: column;
+      width: min(440px, calc(100vw - 24px));
+      max-width: min(440px, calc(100vw - 24px));
+      min-width: 0;
+      box-sizing: border-box;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid #b0bcc9;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    #ready-order-payment-popup .payment-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+      margin: 0;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-title {
+      display: none;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-body {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      padding: 8px 10px 10px;
+      overflow: hidden;
+    }
+
+    #ready-order-payment-popup .new-order-payment-add-header-table {
+      display: none;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form.payment-php-form {
+      padding: 0;
+      text-align: left;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form-grid {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form-grid label {
+      color: #3c4043;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form-grid input,
+    #ready-order-payment-popup .advanced-payments-popup-edit-form-grid select,
+    #ready-order-payment-popup .advanced-payments-popup-edit-form-grid textarea {
+      width: 100%;
+      height: 28px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      font-family: inherit;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form-grid textarea {
+      height: auto;
+      min-height: 32px;
+      max-height: 56px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button {
+      padding: 4px 12px;
+      min-height: 28px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    #ready-order-payment-popup .advanced-payments-popup-edit-form .advanced-payments-popup-edit-actions button:first-child {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    #ready-order-payment-popup .new-order-payment-popup-summary {
+      font-weight: 600;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      margin: 8px 0 0;
+      padding: 6px 8px;
+      border-top: 1px solid #b0bcc9;
+      background: #f4f6f8;
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    #ready-order-payment-popup .new-order-payment-popup-summary .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+      font-weight: 500;
+      font-size: 11px;
+    }
+
+    #ready-order-payment-popup .new-order-payment-popup-summary .summary-line:first-child {
+      margin-top: 0;
+    }
+
+    #ready-order-payment-popup .new-order-payment-popup-summary .summary-line--balance .summary-line-value {
+      color: #dc3545;
+      font-weight: 700;
+    }
+
+    @media (max-width: 600px) {
+      #ready-order-payment-popup .advanced-payments-popup-box.payment-php-shell {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+      }
+    }
+
+    /* Rate Booking popup — PHP compact */
+    #ready-order-ratebook-popup .popup-box.ratebook-php-shell {
+      padding: 0;
+      width: min(480px, calc(100vw - 24px));
+      max-width: min(480px, calc(100vw - 24px));
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+    }
+
+    #ready-order-ratebook-popup .popup-box.ratebook-php-shell > h3 {
+      display: none;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-body {
+      padding: 8px 10px 10px;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-grid {
+      display: grid;
+      grid-template-columns: 100px 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-grid label {
+      color: #3c4043;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-grid input,
+    #ready-order-ratebook-popup .ratebook-php-grid select,
+    #ready-order-ratebook-popup .ratebook-php-grid textarea {
+      width: 100%;
+      height: 28px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-grid textarea {
+      height: auto;
+      min-height: 32px;
+      max-height: 56px;
+      resize: vertical;
+      line-height: 1.35;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-actions button {
+      padding: 4px 12px;
+      min-height: 28px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    #ready-order-ratebook-popup .ratebook-php-actions button:first-child {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    /* Ratebook details popup — PHP compact (Ready Extra: 11 columns) */
+    #ready-order-ratebook-details-popup .popup-box.ratebook-list-php-shell {
+      padding: 0;
+      width: min(1120px, calc(100vw - 16px));
+      max-width: min(1120px, calc(100vw - 16px));
+      max-height: 88vh;
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell > h3 {
+      display: none;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border-bottom: 1px solid #b0bcc9;
+      flex-shrink: 0;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .ratebook-list-table-wrap {
+      margin: 8px 10px 0;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: min(440px, 58vh);
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .ratebook-list-table-wrap::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .ratebook-list-table-wrap::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table {
+      min-width: 1060px;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th {
+      background: #d6e4f4;
+      color: #1a3a5c;
+      padding: 6px 8px;
+      font-size: 11px;
+      border: 1px solid #a8b4c4;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td {
+      padding: 4px 6px;
+      font-size: 11px;
+      border: 1px solid #a8b4c4;
+      vertical-align: middle;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(1),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(1) {
+      width: 9%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(2),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(2) {
+      width: 5%;
+      text-align: center;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(3),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(3) {
+      width: 12%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(4),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(4) {
+      width: 7%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(5),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(5),
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(6),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(6),
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(7),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(7),
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(8),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(8),
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(9),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(9),
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(10),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(10) {
+      text-align: right;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(5),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(5) {
+      width: 8%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(6),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(6) {
+      width: 9%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(7),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(7) {
+      width: 7%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(8),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(8) {
+      width: 8%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(9),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(9) {
+      width: 9%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(10),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(10) {
+      width: 10%;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table thead th:nth-child(11),
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td:nth-child(11) {
+      width: 4%;
+      min-width: 36px;
+      text-align: center;
+      overflow: visible;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table tbody td input {
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      height: 28px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-row-actions {
+      gap: 4px;
+      flex-wrap: nowrap;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-row-actions button {
+      font-size: 10px;
+      padding: 3px 6px;
+      min-width: 0;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-table .empty-state {
+      white-space: normal;
+      text-align: center;
+    }
+
+    /* Purchase sheet popup — PHP compact / Excel grid */
+    #ready-extra-order-purchase-sheet-popup .popup-box.purchase-php-shell {
+      padding: 0;
+      width: min(980px, calc(100vw - 20px));
+      max-width: min(980px, calc(100vw - 20px));
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+      margin: 0;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-popup-title {
+      display: none;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-table-wrap {
+      margin: 8px 10px 0;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      overflow: auto;
+      max-height: min(300px, 48vh);
+      background: #fff;
+      box-shadow: none;
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-table-wrap::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-table-wrap::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table {
+      min-width: 0;
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      border-spacing: 0;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      padding: 0 4px;
+      height: 28px;
+      line-height: 28px;
+      border: 1px solid #a8b4c4;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table th,
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table td {
+      padding: 0;
+      vertical-align: middle;
+      border: 1px solid #a8b4c4;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(4),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(5),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(6),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(7),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table thead th:nth-child(8),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(4),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(5),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(6),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(7),
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody td:nth-child(8) {
+      text-align: right;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table input,
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table select {
+      width: 100%;
+      min-width: 0;
+      height: 28px;
+      margin: 0;
+      padding: 0 6px;
+      font-size: 12px;
+      box-sizing: border-box;
+      border-radius: 0;
+      border: 1px solid #d1d9e0;
+      background: #fff;
+      outline: none;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table input:focus,
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table select:focus {
+      border: 2px solid #1a73e8;
+      padding: 0 5px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .ps-stamp {
+      min-width: 0 !important;
+      height: 28px !important;
+      font-size: 12px !important;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table td:last-child button {
+      width: 100%;
+      min-width: 0;
+      height: 28px;
+      padding: 0;
+      border-radius: 0;
+      border: 1px solid #d1d9e0;
+      background: #fff;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tbody tr:hover td {
+      background: #e8f0fe;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-table tfoot td {
+      background: #f4f6f8;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 5px 8px;
+      border: 1px solid #a8b4c4;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-total-label {
+      text-align: right;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-shell .purchase-sheet-total-amt {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 10px 10px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-actions-left {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-actions button {
+      min-height: 28px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    #ready-extra-order-purchase-sheet-popup .purchase-php-actions button.primary {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    /* Order Details popup — PHP compact */
+    #ready-order-order-popup .popup-box.order-details-php-shell {
+      padding: 0;
+      width: min(400px, calc(100vw - 24px));
+      max-width: min(400px, calc(100vw - 24px));
+      border-radius: 8px;
+      border: 1px solid #b0bcc9;
+      overflow: hidden;
+    }
+
+    #ready-order-order-popup .order-details-php-head {
+      background: linear-gradient(180deg, #e8eaed 0%, #d8dde3 100%);
+      color: #3c4043;
+      text-align: center;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #b0bcc9;
+      margin: 0;
+    }
+
+    #ready-order-order-popup .order-details-php-shell > h3 {
+      display: none;
+    }
+
+    #ready-order-order-popup .order-details-php-body {
+      padding: 8px 10px 10px;
+    }
+
+    #ready-order-order-popup .order-details-php-grid {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      font-size: 11px;
+    }
+
+    #ready-order-order-popup .order-details-php-grid label {
+      color: #3c4043;
+      font-weight: 600;
+      font-size: 11px;
+      white-space: nowrap;
+      margin: 0;
+      min-width: 0;
+    }
+
+    #ready-order-order-popup .order-details-php-grid input,
+    #ready-order-order-popup .order-details-php-grid textarea {
+      width: 100%;
+      height: 28px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      font-size: 12px;
+      box-sizing: border-box;
+      background: #fff;
+      margin: 0;
+    }
+
+    #ready-order-order-popup .order-details-php-grid input:focus,
+    #ready-order-order-popup .order-details-php-grid textarea:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    #ready-order-order-popup .order-details-php-grid textarea {
+      height: auto;
+      min-height: 32px;
+      max-height: 56px;
+      resize: vertical;
+      line-height: 1.35;
+      font-family: inherit;
+    }
+
+    #ready-order-order-popup .order-details-php-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+    }
+
+    #ready-order-order-popup .order-details-php-actions button {
+      padding: 4px 12px;
+      min-height: 28px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    #ready-order-order-popup .order-details-php-actions button:first-child {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .popup-actions {
+      margin: 8px 10px 10px;
+      padding-top: 8px;
+      border-top: 1px solid #b0bcc9;
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .popup-actions button {
+      min-height: 28px;
+      padding: 4px 12px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .popup-actions button:first-child {
+      background: #1a73e8;
+      color: #fff;
+      border-color: #1a73e8;
+    }
+
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .popup-actions button.rex-ratebook-details-close,
+    #ready-order-ratebook-details-popup .ratebook-list-php-shell .popup-actions button:last-child:not(:first-child) {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    /* =====================
+   Full screen — Excel shell; only order rows scroll
+===================== */
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body:has(#orderApp.ready-order-page) {
+      background: #fff;
+    }
+
+    .workspace[data-page="ready-extra-order"] {
+      padding: 0 !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      background: #fff !important;
+    }
+
+    .workspace[data-page="ready-extra-order"] .app.ready-order-page,
+    #orderApp.ready-order-page {
+      flex: 1 1 auto;
+      min-height: 0;
+      max-height: none;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 0;
+      margin: 0 !important;
+      background: #fff !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page > .ledger-page-titlebar {
+      flex-shrink: 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      width: 100%;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page > .error-message {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      font-size: 12px;
+      box-sizing: border-box;
+      border-radius: 0;
+    }
+
+    #orderApp.ready-order-page > .order-top {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0 4px;
+      gap: 8px;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page .box {
+      padding: 6px 10px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      box-shadow: none;
+      background: #fff;
+      background-image: none;
+      animation: none;
+    }
+
+    #orderApp.ready-order-page .box-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #5f6368;
+      margin-bottom: 6px;
+    }
+
+    #orderApp.ready-order-page .customer-field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 10px;
+    }
+
+    #orderApp.ready-order-page .customer-field-grid .row-full {
+      grid-column: 1 / -1;
+    }
+
+    #orderApp.ready-order-page .row {
+      margin-bottom: 0;
+      gap: 6px;
+    }
+
+    #orderApp.ready-order-page .row label {
+      min-width: 72px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    #orderApp.ready-order-page .row input,
+    #orderApp.ready-order-page .row select {
+      height: 28px;
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    #orderApp.ready-order-page .row button {
+      height: 28px;
+      font-size: 11px;
+      border-radius: 4px;
+    }
+
+    #orderApp.ready-order-page .box-order-info .row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+    }
+
+    #orderApp.ready-order-page .box-order-info .row label {
+      min-width: 76px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    #orderApp.ready-order-page .box-order-info .row input {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      height: 30px;
+      line-height: normal;
+      border: 1px solid #b0bcc9;
+      background: #fff;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    #orderApp.ready-order-page .box-order-info #billNo {
+      background: #fff;
+      color: #1d1d1f;
+      cursor: default;
+      font-weight: 600;
+    }
+
+    #orderApp.ready-order-page .box-order-info .row input[readonly]:not([type="date"]) {
+      background: #fff;
+      cursor: default;
+    }
+
+    #orderApp.ready-order-page .box-order-info input[type="date"] {
+      padding-right: 28px;
+    }
+
+    #orderApp.ready-order-page > .order-details {
+      flex: 1 1 0;
+      min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page > .order-details > .box-title {
+      flex-shrink: 0;
+      margin-bottom: 4px;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: auto;
+      margin-top: 0;
+      border-radius: 0;
+      box-shadow: none;
+      background: #fff;
+      background-image: none;
+      border: 1px solid #a8b4c4;
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap::-webkit-scrollbar {
+      width: 3px;
+      height: 3px;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 2px;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap::-webkit-scrollbar-thumb:hover {
+      background: #7a8da6;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #d6e4f4;
+      color: #1a3a5c;
+      font-size: 11px;
+      height: 28px;
+      line-height: 28px;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table input,
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table select {
+      height: 28px;
+      font-size: 12px;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table thead th:nth-child(4),
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table tbody td:nth-child(4),
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table thead th:nth-child(5),
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table tbody td:nth-child(5),
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table thead th:nth-child(9),
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table tbody td:nth-child(9) {
+      padding: 0 2px !important;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table tbody td:nth-child(4) select {
+      font-size: 12px !important;
+      padding: 0 3px !important;
+      text-align: center;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table tbody td:nth-child(5) input,
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table tbody td:nth-child(9) input {
+      font-size: 11px !important;
+      padding: 0 2px !important;
+      text-align: center;
+    }
+
+    #orderApp.ready-order-page .order-details-table-wrap #ready-order-item-table .row-del-btn {
+      height: 28px;
+      min-width: 26px;
+    }
+
+    /* Bottom dock: toolbar + payment summary pinned to viewport foot */
+    #orderApp.ready-order-page > .rex-order-bottom-dock {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      max-height: min(52vh, 440px);
+      border-top: 1px solid #a8b4c4;
+      background: #fff;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .actions {
+      flex-shrink: 0;
+      margin: 0;
+      padding: 6px 0;
+      gap: 6px;
+      border-top: none;
+      flex-wrap: wrap;
+    }
+
+    #orderApp.ready-order-page > .actions {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      gap: 6px;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .actions button {
+      min-width: 0;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      box-shadow: none;
+    }
+
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .actions button:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    #orderApp.ready-order-page > .info-panel,
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .info-panel {
+      flex: 1;
+      min-height: 0;
+      margin: 0 !important;
+      padding: 6px 0 8px;
+      border-radius: 0;
+      border-top: none;
+      background: #fff;
+      background-image: none;
+      box-shadow: none;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #orderApp.ready-order-page > .rex-order-bottom-dock > .info-panel .panel-grid {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      align-items: stretch;
+    }
+
+    #orderApp.ready-order-page .panel-grid {
+      gap: 8px;
+    }
+
+    #orderApp.ready-order-page .panel-stack-rex {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #orderApp.ready-order-page .panel-stack-rex .panel-section--rex-order-narration {
+      flex: 0 0 auto;
+    }
+
+    #orderApp.ready-order-page .panel-section--payment-summary {
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #orderApp.ready-order-page .panel-stack {
+      gap: 8px;
+    }
+
+    #orderApp.ready-order-page .panel-section {
+      background: #fff;
+      background-image: none;
+      border-radius: 3px;
+      border-color: #a8b4c4;
+    }
+
+    #orderApp.ready-order-page .panel-section-header {
+      padding: 6px 10px;
+    }
+
+    #orderApp.ready-order-page .panel-section-header h3 {
+      font-size: 12px;
+    }
+
+    #orderApp.ready-order-page .panel-content {
+      padding: 8px;
+      max-height: 88px;
+      overflow-y: auto;
+    }
+
+    /* Ratebook: compact vertical list (one row per rate) */
+    #orderApp.ready-order-page #ratebookPanelContent,
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child .panel-content {
+      flex: 0 0 auto;
+      min-height: 0;
+      max-height: min(120px, 28vh) !important;
+      overflow-x: hidden;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 4px 6px;
+    }
+
+    #orderApp.ready-order-page #ratebookList.panel-list {
+      flex: 0 0 auto;
+      min-height: min-content;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 3px;
+      padding: 0;
+      width: 100%;
+    }
+
+    #orderApp.ready-order-page #ratebookList .panel-item.ratebook-list-row,
+    #ratebookList.panel-list .panel-item.ratebook-list-row {
+      display: grid;
+      grid-template-columns: minmax(4.5rem, auto) minmax(2.5rem, auto) 1fr minmax(3.2rem, auto) 18px;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      max-width: none;
+      min-width: 0;
+      min-height: 24px;
+      padding: 3px 6px;
+      margin: 0;
+      border-radius: 4px;
+      font-size: 10px;
+      line-height: 1.2;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    #orderApp.ready-order-page #ratebookList .ratebook-list-rate {
+      color: #0d6efd;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #orderApp.ready-order-page #ratebookList .ratebook-list-stamp {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #orderApp.ready-order-page #ratebookList .ratebook-list-meta {
+      color: var(--muted);
+      font-size: 9px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    #orderApp.ready-order-page #ratebookList .ratebook-list-time {
+      color: var(--muted);
+      font-size: 9px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    #orderApp.ready-order-page #ratebookList .delete-rate-btn {
+      flex-shrink: 0;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      line-height: 16px;
+      font-size: 11px !important;
+      border-radius: 3px !important;
+      background: #ff3b30;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    #orderApp.ready-order-page #ratebookList > .empty-state {
+      width: 100%;
+      padding: 6px 0;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child {
+      flex: 0 0 auto;
+    }
+
+    #orderApp.ready-order-page .panel-section--narration .panel-content {
+      max-height: none;
+      padding-top: 6px;
+      flex: none;
+    }
+
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-content {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 4px 6px;
+    }
+
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-section-header {
+      padding: 4px 8px;
+    }
+
+    #orderApp.ready-order-page #panelPurchaseSaleDetailWrap .summary-item,
+    #orderApp.ready-order-page #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn {
+      min-height: 24px;
+    }
+
+    #orderApp.ready-order-page #panelPurchaseSaleDetailWrap .summary-item > .summary-label,
+    #orderApp.ready-order-page #panelPurchaseSaleDetailWrap .summary-item > .summary-value,
+    #orderApp.ready-order-page #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-label,
+    #orderApp.ready-order-page #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-value {
+      padding: 3px 6px;
+    }
+
+    /* Thin scrollbars — Ratebook + Payment Summary */
+    #orderApp.ready-order-page #ratebookPanelContent,
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child .panel-content,
+    #orderApp.ready-order-page #paymentPanelContent,
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-content {
+      scrollbar-width: thin;
+      scrollbar-color: #a8b4c4 transparent;
+    }
+
+    #orderApp.ready-order-page #ratebookPanelContent::-webkit-scrollbar,
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child .panel-content::-webkit-scrollbar,
+    #orderApp.ready-order-page #paymentPanelContent::-webkit-scrollbar,
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-content::-webkit-scrollbar {
+      width: 2px;
+      height: 2px;
+    }
+
+    #orderApp.ready-order-page #ratebookPanelContent::-webkit-scrollbar-track,
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child .panel-content::-webkit-scrollbar-track,
+    #orderApp.ready-order-page #paymentPanelContent::-webkit-scrollbar-track,
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-content::-webkit-scrollbar-track {
+      background: transparent;
+      border-radius: 2px;
+    }
+
+    #orderApp.ready-order-page #ratebookPanelContent::-webkit-scrollbar-thumb,
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child .panel-content::-webkit-scrollbar-thumb,
+    #orderApp.ready-order-page #paymentPanelContent::-webkit-scrollbar-thumb,
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-content::-webkit-scrollbar-thumb {
+      background: #a8b4c4;
+      border-radius: 2px;
+    }
+
+    #orderApp.ready-order-page #ratebookPanelContent::-webkit-scrollbar-thumb:hover,
+    #orderApp.ready-order-page .panel-stack-rex .panel-section:first-child .panel-content::-webkit-scrollbar-thumb:hover,
+    #orderApp.ready-order-page #paymentPanelContent::-webkit-scrollbar-thumb:hover,
+    #orderApp.ready-order-page .panel-section--payment-summary .panel-content::-webkit-scrollbar-thumb:hover {
+      background: #7a8da6;
+    }
+
+    #orderApp.ready-order-page .order-narration-hint {
+      display: none;
+    }
+
+    #orderApp.ready-order-page .order-narration-textarea {
+      min-height: 44px;
+      max-height: 56px;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    #orderApp.ready-order-page .panel-summary {
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+    }
+
+    #orderApp.ready-order-page .summary-item {
+      margin-bottom: 3px;
+      font-size: 11px;
+    }
+
+    #orderApp.ready-order-page .empty-state {
+      padding: 8px 0;
+      font-size: 11px;
+    }
+
     @media(max-width:1024px) {
       .order-top {
         grid-template-columns: 1fr;
@@ -1701,9 +3217,10 @@
       align-items: stretch;
       gap: 0;
       margin: 0;
-      min-height: 38px;
+      min-height: 26px;
       border-bottom: 1px solid #d1d6de;
-      font-size: 12px;
+      font-size: 11px;
+      line-height: 1.2;
     }
 
     #panelPurchaseSaleDetailWrap .summary-item:last-child {
@@ -1712,7 +3229,7 @@
 
     #panelPurchaseSaleDetailWrap .summary-item>.summary-label,
     #panelPurchaseSaleDetailWrap .summary-item>.summary-value {
-      padding: 10px 12px;
+      padding: 4px 8px;
       display: flex;
       align-items: center;
     }
@@ -1757,17 +3274,19 @@
       grid-template-columns: minmax(0, 1fr) minmax(6.5rem, auto);
       align-items: stretch;
       width: 100%;
-      min-height: 38px;
+      min-height: 26px;
       margin: 0;
       padding: 0;
       border: none;
       border-radius: 0;
       background: transparent;
       font: inherit;
+      font-size: 11px;
+      line-height: 1.2;
     }
 
     #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-label {
-      padding: 10px 12px;
+      padding: 4px 8px;
       border-right: 1px solid #d1d6de;
       text-align: left;
       display: flex;
@@ -1775,7 +3294,7 @@
     }
 
     #panelPurchaseSaleDetailWrap .panel-open-purchase-sheet-btn .summary-value {
-      padding: 10px 12px;
+      padding: 4px 8px;
       text-align: right;
       justify-content: flex-end;
       display: flex;
@@ -2345,42 +3864,44 @@
       <div class="box">
         <div class="box-title">Customer Information</div>
 
-        <div class="row">
-          <label>Name *</label>
-          <select id="custName"></select>
-        </div>
+        <div class="customer-field-grid">
+          <div class="row row-full">
+            <label>Name *</label>
+            <select id="custName"></select>
+          </div>
 
-        <div class="row">
-          <label>Current Bal</label>
-          <input id="currentBal" readonly>
-        </div>
+          <div class="row">
+            <label>Current Bal</label>
+            <input id="currentBal" readonly>
+          </div>
 
-        <div class="row">
-          <label>Relation</label>
-          <input id="relation" readonly>
-        </div>
+          <div class="row">
+            <label>Relation</label>
+            <input id="relation" readonly>
+          </div>
 
-        <div class="row">
-          <label>Station</label>
-          <input id="station" readonly>
-        </div>
+          <div class="row">
+            <label>Station</label>
+            <input id="station" readonly>
+          </div>
 
-        <div class="row">
-          <label>LF No.</label>
-          <input id="lfNo" readonly>
+          <div class="row">
+            <label>LF No.</label>
+            <input id="lfNo" readonly>
+          </div>
         </div>
       </div>
 
       <!-- BILL -->
-      <div class="box">
+      <div class="box box-order-info">
         <div class="box-title" id="rexOrderInfoBoxTitle">Order Information</div>
 
-        <div class="row">
+        <div class="row" id="rexOrderNoRow">
           <label id="rexOrderNoLabel">Order No</label>
           <input id="billNo" readonly>
         </div>
 
-        <div class="row">
+        <div class="row" id="rexOrderDateRow">
           <label id="rexOrderDateLabel">Date</label>
           <input type="date" id="orderDate">
         </div>
@@ -2418,12 +3939,12 @@
             <col style="width:6.5%">
             <col style="width:6%">
             <col style="width:11.5%">
-            <col style="width:5%">
-            <col style="width:4%">
+            <col class="col-stamp" style="width:4.5%">
+            <col class="col-pc" style="width:2.5%">
             <col style="width:5%">
             <col style="width:6%">
             <col style="width:4%">
-            <col style="width:4%">
+            <col class="col-lbr" style="width:2.5%">
             <col style="width:6%">
             <col style="width:5%">
             <col style="width:4%">
@@ -2460,6 +3981,7 @@
       </div>
     </div>
 
+    <div class="rex-order-bottom-dock">
     <!-- ACTIONS -->
     <div class="actions">
       <button type="button" id="rexToolbarAddRowBtn" onclick="addRow()"> Add Row</button>
@@ -2479,9 +4001,8 @@
       <button type="button" onclick="saveOrder()"
         title="Without Bill: save to Ready Orders. After Bill: one Save posts to All Bill + Customer Balance only.">
         Save</button>
-      <button type="button" class="rex-post-transfer-allow" onclick="showInvoice()"> A4 Invoice</button>
-      <button type="button" class="rex-post-transfer-allow" onclick="closeDashboard()"
-        style="background:#dc3545; border-color:#dc3545; color:white;"> Close</button>
+      <button type="button" class="rex-post-transfer-allow" onclick="printOrder()">Print</button>
+      <button type="button" class="danger rex-post-transfer-allow" id="rexBtnClose" onclick="closeDashboard()">Close</button>
     </div>
 
     <!-- PAYMENT, RATEBOOK & RECEIPT PANEL -->
@@ -2501,14 +4022,14 @@
           </div>
 
           <!-- Order narration (same field as New Order → orders[].orderNarration) -->
-          <div class="panel-section panel-section--rex-order-narration">
+          <div class="panel-section panel-section--narration panel-section--rex-order-narration">
             <div class="panel-section-header">
               <h3>Narration / description</h3>
             </div>
             <div class="panel-content">
-              <p class="rex-order-narration-hint">Optional message or notes for this order. Saved when you save the order.</p>
+              <p class="rex-order-narration-hint order-narration-hint">Optional message or notes for this order. Saved when you save the order.</p>
               <label for="rexOrderNarration" class="visually-hidden-rex">Order narration or description</label>
-              <textarea id="rexOrderNarration" class="rex-order-narration-textarea" maxlength="8000"
+              <textarea id="rexOrderNarration" class="rex-order-narration-textarea order-narration-textarea" maxlength="8000"
                 placeholder="Write narration, description, or any message for this order…"></textarea>
               <p id="rexTransferToBanner" class="rex-transfer-to-banner" role="status" aria-live="polite" hidden></p>
             </div>
@@ -2516,20 +4037,19 @@
         </div>
 
         <!-- PAYMENT SECTION -->
-        <div class="panel-section">
+        <div class="panel-section panel-section--payment-summary">
           <div class="panel-section-header">
             <h3>Payment Summary</h3>
           </div>
           <div class="panel-content" id="paymentPanelContent">
             <div class="payment-summary-columns">
               <div class="payment-section-block payment-section--est">
-                <h4 class="payment-section-heading">Total</h4>
                 <div class="billing-detail" id="panelPurchaseSaleDetailWrap">
                   <div class="summary-item billing-detail-line--add">
                     <span class="summary-label">Ready Order Total:</span>
                     <span class="summary-value" id="panelOrderAdd">₹ 0.00</span>
                   </div>
-                  <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
+                  <div class="summary-item purchase-minus" style="padding:0;margin:0;">
                     <button type="button"
                       class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--adv-purchase"
                       data-purchase-sheet-source="new-order" data-purchase-new-order-ui="full"
@@ -2559,7 +4079,7 @@
                       <span class="summary-label">Paid minus:</span>
                       <span class="summary-value" id="panelPaidMinus">₹ 0.00</span>
                     </button>
-                    <div class="summary-item purchase-minus" style="padding:0;margin-bottom:6px;">
+                    <div class="summary-item purchase-minus" style="padding:0;margin:0;">
                       <button type="button"
                         class="panel-open-purchase-sheet-btn panel-open-purchase-sheet-btn--paid-purchase"
                         data-purchase-sheet-source="ready-extra" data-purchase-ready-extra-ui="full"
@@ -2606,12 +4126,13 @@
 
 
   </div>
+    </div>
 
   <!-- INVOICE -->
   <div id="invoice">
     <div class="no-print" style="margin-bottom:15px;">
       <button onclick="back()" style="padding:8px 15px; margin-right:10px; cursor:pointer;">← Back</button>
-      <button onclick="window.print()" style="padding:8px 15px; cursor:pointer;">🖨️ Print</button>
+      <button onclick="window.print()" style="padding:8px 15px; cursor:pointer;">ðŸ–¨ï¸ Print</button>
     </div>
 
     <h2 style="text-align:center">GST TAX INVOICE</h2>
@@ -2778,24 +4299,23 @@
   <!-- ORDER DETAILS POPUP (same as new-order) -->
   <div id="ready-order-order-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closePopup()">
-    <div class="popup-box" style="max-width: 420px;">
+    <div class="popup-box order-details-php-shell" onclick="event.stopPropagation()">
+      <div class="order-details-php-head">Order Details</div>
       <h3>Order Details</h3>
-      <div class="popup-row">
-        <label>Days to Delivery</label>
-        <input type="number" id="orderDetailsDays" min="0" placeholder="0" style="width:100px;"
-          oninput="calculateOrderDetailsDeliveryDate()">
-      </div>
-      <div class="popup-row">
-        <label>Delivery Date</label>
-        <input type="date" id="orderDetailsDeliveryDate">
-      </div>
-      <div class="popup-row">
-        <label>Sample Details</label>
-        <textarea id="orderDetailsSample" placeholder="Sample details..." rows="2"></textarea>
-      </div>
-      <div class="popup-actions">
-        <button onclick="saveOrderPopup()">Save</button>
-        <button onclick="closePopup()">Cancel</button>
+      <div class="order-details-php-body">
+        <div class="order-details-php-grid">
+          <label for="orderDetailsDays">Days to Delivery</label>
+          <input type="number" id="orderDetailsDays" min="0" placeholder="0"
+            oninput="calculateOrderDetailsDeliveryDate()">
+          <label for="orderDetailsDeliveryDate">Delivery Date</label>
+          <input type="date" id="orderDetailsDeliveryDate">
+          <label for="orderDetailsSample">Sample Details</label>
+          <textarea id="orderDetailsSample" placeholder="Sample details..." rows="1"></textarea>
+        </div>
+        <div class="popup-actions order-details-php-actions">
+          <button type="button" onclick="saveOrderPopup()">Save</button>
+          <button type="button" onclick="closePopup()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2803,30 +4323,30 @@
   <!-- PAYMENT POPUP (same as new-order) -->
   <div id="ready-order-payment-popup" class="popup-bg ready-order-popup"
     onclick="if(event.target===this) closePaymentPopup()">
-    <div class="popup-box">
-      <h3>Add Payment</h3>
-      <div class="popup-row">
-        <label>Payment Mode</label>
-        <select id="paymentMode">
-          <option>Cash</option>
-          <option>Card</option>
-          <option>Cheque</option>
-          <option>UPI</option>
-          <option>Online</option>
-        </select>
-      </div>
-      <div class="popup-row">
-        <label>Amount Paid *</label>
-        <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
-      </div>
-      <div class="popup-row">
-        <label>Narration</label>
-        <textarea id="paymentNarration" placeholder="Enter narration..."></textarea>
-      </div>
-
-      <div class="popup-actions">
-        <button onclick="savePaymentFromPopup()">Save Payment</button>
-        <button onclick="closePaymentPopup()">Cancel</button>
+    <div class="popup-box advanced-payments-popup-box payment-php-shell" onclick="event.stopPropagation()">
+      <div class="payment-php-head">Add Payment</div>
+      <h3 class="advanced-payments-popup-title">Add Payment</h3>
+      <div class="advanced-payments-popup-body">
+        <div class="advanced-payments-popup-edit-form payment-php-form">
+          <div class="advanced-payments-popup-edit-form-grid">
+            <label for="paymentMode">Mode</label>
+            <select id="paymentMode">
+              <option>Cash</option>
+              <option>Card</option>
+              <option>Cheque</option>
+              <option>UPI</option>
+              <option>Online</option>
+            </select>
+            <label for="paymentAmount">Amount (₹)</label>
+            <input type="number" id="paymentAmount" step="0.01" min="0" placeholder="0.00" required>
+            <label for="paymentNarration">Narration</label>
+            <textarea id="paymentNarration" rows="1" placeholder="Narration"></textarea>
+          </div>
+          <div class="advanced-payments-popup-edit-actions">
+            <button type="button" onclick="savePaymentFromPopup()">Save</button>
+            <button type="button" onclick="closePaymentPopup()">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2868,11 +4388,12 @@
   <!-- PURCHASE SHEET: New Order = full list. Ready/Extra = blank add-only rows, appended on Save then cleared. Legacy RE map merged into New Order view only. -->
   <div id="ready-extra-order-purchase-sheet-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closePurchaseSheetPopup()">
-    <div class="popup-box purchase-sheet-box" onclick="event.stopPropagation()">
+    <div class="popup-box purchase-sheet-box purchase-php-shell" onclick="event.stopPropagation()">
+      <div class="purchase-php-head">Purchase</div>
       <h3 id="rex-purchase-popup-title" class="purchase-popup-title">Purchase</h3>
       <p id="rex-purchase-popup-readonly-hint" class="rex-purchase-readonly-hint"
-        style="display:none; margin:0 0 10px; font-size:13px; color:#666;"></p>
-      <div class="purchase-sheet-wrap">
+        style="display:none; margin:0 10px; font-size:11px; color:#666;"></p>
+      <div class="purchase-sheet-wrap purchase-php-table-wrap">
         <table class="purchase-sheet-table">
           <thead>
             <tr>
@@ -2897,10 +4418,9 @@
           </tfoot>
         </table>
       </div>
-      <div class="popup-actions" style="flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
-        <div class="rex-purchase-edit-only" style="display:flex; flex-wrap:wrap; gap:8px;">
-          <button type="button" class="primary" data-rex-purchase-add-row>+
-            Add Row</button>
+      <div class="popup-actions purchase-php-actions">
+        <div class="purchase-php-actions-left rex-purchase-edit-only" style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button type="button" class="primary" data-rex-purchase-add-row>+ Add Row</button>
           <button type="button" class="primary" data-rex-purchase-save>Save</button>
         </div>
         <button type="button" data-rex-purchase-close>Close</button>
@@ -2911,45 +4431,36 @@
   <!-- RATE BOOKING FORM POPUP (same as new-order: add one rate entry) -->
   <div id="ready-order-ratebook-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closeRatebookPopup()">
-    <div class="popup-box" style="max-width: 500px;">
+    <div class="popup-box ratebook-php-shell" onclick="event.stopPropagation()">
+      <div class="ratebook-php-head">Rate Booking</div>
       <h3>Rate Booking</h3>
-      <div class="popup-row">
-        <label>Stamp *</label>
-        <select id="rbStamp">
-          <option value="14 CR">14 CR</option>
-          <option value="18 CR">18 CR</option>
-          <option value="20 CR">20 CR</option>
-          <option value="22 CR">22 CR</option>
-          <option value="24 CR">24 CR</option>
-        </select>
-      </div>
-      <div class="popup-row">
-        <label>Weight (g)</label>
-        <input type="number" id="rbWeight" step="0.001" placeholder="0.000" oninput="calcRatebookAmount()">
-      </div>
-      <div class="popup-row">
-        <label>Rate (₹)</label>
-        <input type="number" id="rbRate" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
-      </div>
-      <div class="popup-row">
-        <label>Amount (₹)</label>
-        <input type="number" id="rbAmount" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
-      </div>
-      <div class="popup-row">
-        <label>Delivery Date</label>
-        <input type="date" id="rbDelDate">
-      </div>
-      <div class="popup-row">
-        <label>Type</label>
-        <input id="rbType" value="S" maxlength="1" style="text-align: center; width: 60px;">
-      </div>
-      <div class="popup-row">
-        <label>Narration</label>
-        <textarea id="rbNarration" placeholder="Enter narration..."></textarea>
-      </div>
-      <div class="popup-actions">
-        <button onclick="saveRatebookEntry()">Save Rate</button>
-        <button onclick="closeRatebookPopup()">Cancel</button>
+      <div class="ratebook-php-body">
+        <div class="ratebook-php-grid">
+          <label for="rbStamp">Stamp *</label>
+          <select id="rbStamp">
+            <option value="14 CR">14 CR</option>
+            <option value="18 CR">18 CR</option>
+            <option value="20 CR">20 CR</option>
+            <option value="22 CR">22 CR</option>
+            <option value="24 CR">24 CR</option>
+          </select>
+          <label for="rbWeight">Weight (g)</label>
+          <input type="number" id="rbWeight" step="0.001" placeholder="0.000" oninput="calcRatebookAmount()">
+          <label for="rbRate">Rate (₹)</label>
+          <input type="number" id="rbRate" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
+          <label for="rbAmount">Amount (₹)</label>
+          <input type="number" id="rbAmount" step="0.01" placeholder="0.00" oninput="calcRatebookAmount()">
+          <label for="rbDelDate">Delivery Date</label>
+          <input type="date" id="rbDelDate">
+          <label for="rbType">Type</label>
+          <input type="text" id="rbType" value="S" maxlength="1">
+          <label for="rbNarration">Narration</label>
+          <textarea id="rbNarration" rows="1" placeholder="Enter narration..."></textarea>
+        </div>
+        <div class="popup-actions ratebook-php-actions">
+          <button type="button" onclick="saveRatebookEntry()">Save Rate</button>
+          <button type="button" onclick="closeRatebookPopup()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -2957,61 +4468,38 @@
   <!-- RATEBOOK DETAILS POPUP (table: view/edit existing rates for this bill) -->
   <div id="ready-order-ratebook-details-popup" class="popup-bg ready-order-popup" style="display:none;"
     onclick="if(event.target===this) closeRatebookDetailsPopup()">
-    <div class="popup-box" style="max-width:98%; width:1350px;">
+    <div class="popup-box ratebook-list-php-shell" onclick="event.stopPropagation()">
+      <div class="ratebook-list-php-head">Rate Booking</div>
       <h3>Rate Booking</h3>
-      <div class="popup-row" style="margin-bottom:0;">
-        <div style="overflow-y:auto; max-height:420px; border:1px solid var(--border); border-radius:8px;">
-          <table style="width:100%; border-collapse:collapse; font-size:13px; table-layout:fixed;">
+      <div class="ratebook-list-table-wrap">
+          <table class="ratebook-list-table">
             <thead>
-              <tr style="background:#e8f0fe; position:sticky; top:0; z-index:10;">
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:left; font-weight:600; width:9%;">
-                  Date</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:center; font-weight:600; width:5%;">
-                  Type</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:left; font-weight:600; width:14%;">
-                  Remarks</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:left; font-weight:600; width:7%;">
-                  Stamp</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:8%;">
-                  Weight</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:9%;">
-                  Rate Book</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:7%;">
-                  Bal Wt</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:8%;">
-                  Adj Wt</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:9%;">
-                  Cur.Rate</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:right; font-weight:600; width:9%;">
-                  Diff Amount</th>
-                <th
-                  style="padding:8px 10px; border:1px solid var(--border); text-align:center; font-weight:600; width:5%;">
-                  ❌</th>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Remarks</th>
+                <th>Stamp</th>
+                <th>Weight</th>
+                <th>Rate Book</th>
+                <th>Bal Wt</th>
+                <th>Adj Wt</th>
+                <th>Cur.Rate</th>
+                <th>Diff Amount</th>
+                <th>❌</th>
               </tr>
             </thead>
             <tbody id="ready-order-ratebook-details-table"></tbody>
           </table>
-        </div>
       </div>
-      <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+      <div style="display:flex; justify-content:flex-end; margin:8px 10px 0;">
         <div id="ready-order-ratebook-total-diff"
-          style="font-size:14px; font-weight:700; color:#1f2937; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:8px 12px;">
+          style="font-size:12px; font-weight:700; color:#1f2937; background:#f4f6f8; border:1px solid #b0bcc9; border-radius:4px; padding:6px 10px;">
           Total Diff Amount: 0
         </div>
       </div>
       <div class="popup-actions">
-        <button id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()">Save</button>
-        <button onclick="closeRatebookDetailsPopup()">Close</button>
+        <button type="button" id="ready-order-ratebook-details-save-btn" onclick="saveRatebookDetailsFromPopup()">Save</button>
+        <button type="button" class="rex-ratebook-details-close" onclick="closeRatebookDetailsPopup()">Close</button>
       </div>
     </div>
   </div>
@@ -3126,11 +4614,11 @@
 
       var activeRow = null;
       var readyMetaActiveRow = null;
-      /** When true, Ut. Wt.–Est. Total columns are hidden; persisted on save (bills / customer balance). */
+      /** When true, Ut. Wt.“Est. Total columns are hidden; persisted on save (bills / customer balance). */
       var billMidColumnsHidden = false;
       /** Set true only when user taps Bill (UI preview). Next Save uses All Bill finalization and skips Ready Orders. Cleared on Order view restore or after successful finalize. */
       var billButtonPendingAllBillSave = false;
-      /** When true, hide only Ut. Wt.–Est. Total columns (display-only; does not affect Bill flow). */
+      /** When true, hide only Ut. Wt.“Est. Total columns (display-only; does not affect Bill flow). */
       var midColumnsHiddenOnly = false;
       /** Bill-mode snapshot so pre-Bill values stay unchanged while user adds new values after Bill. */
       /** After Bill: freeze advance-era totals only — separate from Paid-type payments / post-bill purchases. */
@@ -3425,11 +4913,17 @@
         var infoTitle = root.querySelector("#rexOrderInfoBoxTitle");
         if (infoTitle) infoTitle.textContent = billMidColumnsHidden ? "Bill Information" : "Order Information";
 
+        var orderNoRow = root.querySelector("#rexOrderNoRow");
+        if (orderNoRow) orderNoRow.style.display = billMidColumnsHidden ? "none" : "";
+
+        var orderDateRow = root.querySelector("#rexOrderDateRow");
+        if (orderDateRow) orderDateRow.style.display = billMidColumnsHidden ? "none" : "";
+
         var orderNoLbl = root.querySelector("#rexOrderNoLabel");
-        if (orderNoLbl) orderNoLbl.textContent = billMidColumnsHidden ? "Order No." : "Order No";
+        if (orderNoLbl) orderNoLbl.textContent = "Order No";
 
         var dateLabel = root.querySelector("#rexOrderDateLabel");
-        if (dateLabel) dateLabel.textContent = billMidColumnsHidden ? "Order Date" : "Date";
+        if (dateLabel) dateLabel.textContent = "Date";
 
         var dueRow = root.querySelector("#rexDueDateRow");
         if (dueRow) dueRow.style.display = billMidColumnsHidden ? "none" : "";
@@ -3529,7 +5023,7 @@
         return Number.isFinite(n) && n > 0;
       }
 
-      /** Bill: only R. Wt must be filled per row (col 13 in table = cells[12]). Purchase rows hide R.Metal–Making — skip R.Wt gate for those. */
+      /** Bill: only R. Wt must be filled per row (col 13 in table = cells[12]). Purchase rows hide R.Metal“Making — skip R.Wt gate for those. */
       var READY_EXTRA_RW_COL = 12;
 
       function readyExtraAllRowsReadyForBillView() {
@@ -3808,6 +5302,11 @@
             if (!['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
             const target = e.target;
             if (!target.matches('input, select')) return;
+            if (target.tagName === 'SELECT' && target.classList.contains('stamp-select') &&
+              target.closest('#ready-order-item-table') &&
+              (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+              return;
+            }
             const tbody = target.closest('#itemTable tbody, #ready-order-item-table tbody');
             if (!tbody) return;
             const isEditableNavField = function (el) {
@@ -3971,6 +5470,9 @@
             }
           });
         }
+
+        setupPopupFormArrowKeys();
+        setupStampKeyboardOpen();
       }
 
       // Check if we're in workspace context
@@ -4160,7 +5662,7 @@
         return out;
       }
 
-      /* Set row values by column index. New Order row has 13 inputs: 0–3 Type..Stamp, 4–6 Remark/Design/Size, 7–12 Pc..Est.Total. Ready Order has 17 (Other=15, Total=16). */
+      /* Set row values by column index. New Order row has 13 inputs: 0“3 Type..Stamp, 4“6 Remark/Design/Size, 7“12 Pc..Est.Total. Ready Order has 17 (Other=15, Total=16). */
       function setReadyOrderRowValues(tr, vals, fromNewOrder, onlyIfEmpty) {
         if (!tr || !tr.cells) return;
         vals = vals || [];
@@ -4214,12 +5716,12 @@
         }
         setCol(0, vals[0]); setCol(1, vals[1]); setCol(2, vals[2]); setCol(3, vals[3]);
         if (fromNewOrder && vals.length >= 13) {
-          /* New Order: cols 4–6 are Remark/Design/Size; Pc=7, Ut.Wt=8, Est.Total Wt=9, Rate=10, Lbr%=11, Est.Total=12 */
+          /* New Order: cols 4“6 are Remark/Design/Size; Pc=7, Ut.Wt=8, Est.Total Wt=9, Rate=10, Lbr%=11, Est.Total=12 */
           setCol(4, vals[7]); setCol(5, vals[8]); setCol(6, vals[9]); setCol(7, vals[10]); setCol(8, vals[11]); setCol(9, vals[12]);
           for (var i = 10; i <= 16; i++) clearCol(i);
         } else {
           setCol(4, vals[4]); setCol(5, vals[5]); setCol(6, vals[6]); setCol(7, vals[7]); setCol(8, vals[8]); setCol(9, vals[9]);
-          /* Ready order: cols 10–16 are R. Metal, Neg, R. Wt, Rate, Making, Other, Total – restore from saved values */
+          /* Ready order: cols 10“16 are R. Metal, Neg, R. Wt, Rate, Making, Other, Total “ restore from saved values */
           for (var i = 10; i <= 16; i++) setCol(i, vals[i]);
         }
       }
@@ -4445,7 +5947,7 @@
                 input.setAttribute("readonly", "readonly");
                 input.classList.add("order-detail-readonly");
                 input.placeholder = "Total";
-                input.title = "Total = Pc × Rate + Other";
+                input.title = "Total = Pc — Rate + Other";
                 input.tabIndex = 0;
                 input.style.visibility = "visible";
                 input.style.border = "";
@@ -4553,7 +6055,7 @@
             input.classList.remove("purchase-field-disabled");
             input.style.visibility = "visible";
 
-            // Sale row: hide Ut. Wt.–Est. Total (5–9); do NOT clear values (saved bill / All Bill restore needs them; calc() would zero totals if these were wiped).
+            // Sale row: hide Ut. Wt.“Est. Total (5“9); do NOT clear values (saved bill / All Bill restore needs them; calc() would zero totals if these were wiped).
             if (isSale && idx >= 5 && idx <= 9) {
               input.setAttribute("readonly", "readonly");
               input.classList.add("purchase-field-disabled");
@@ -4976,7 +6478,7 @@
         if (!r || !r.cells) return;
 
         const typeSelectCalc = r.cells[0] && r.cells[0].querySelector("select");
-        /** Purchase: same Pc×Ut.Wt.→Est.Total Wt. and amount = net×rate+Lbr% as Other rows; never zero col 9/15 when inputs incomplete (manual Est. Total still works). */
+        /** Purchase: same Pc—Ut.Wt.→Est.Total Wt. and amount = net—rate+Lbr% as Other rows; never zero col 9/15 when inputs incomplete (manual Est. Total still works). */
         if (typeSelectCalc && typeSelectCalc.value === "Purchase") {
           try {
             const pcP = parseFloat(r.cells[4].children[0].value) || 0;
@@ -5007,7 +6509,7 @@
           return;
         }
 
-        // Sale: totals come from Ready Wt × Rate × Making (cols 12–14), not Pc×Ut.Wt. path — never run that path or it zeros col 9/15.
+        // Sale: totals come from Ready Wt — Rate — Making (cols 12“14), not Pc—Ut.Wt. path — never run that path or it zeros col 9/15.
         if (typeSelectCalc && typeSelectCalc.value === "Sale") {
           try {
             const rmEl = r.cells[10] && r.cells[10].children[0];
@@ -5037,8 +6539,8 @@
         }
 
         try {
-          // Other: same formulas as Purchase for cols 4–9, but never zero col 9/15 when net×rate
-          // is incomplete after All Bill restore — Final Total still comes from R.Wt×Rate (syncSecondTotalFromRow).
+          // Other: same formulas as Purchase for cols 4“9, but never zero col 9/15 when net—rate
+          // is incomplete after All Bill restore — Final Total still comes from R.Wt—Rate (syncSecondTotalFromRow).
           const pc = parseFloat(r.cells[4].children[0].value) || 0;
           const utWt = parseFloat(r.cells[5].children[0].value) || 0;
 
@@ -5098,7 +6600,7 @@
         }
       }
 
-      /** Other-type row: Total (col 16) = Pc (4) × Rate (13) + Other (15). */
+      /** Other-type row: Total (col 16) = Pc (4) — Rate (13) + Other (15). */
       function syncOtherRowSimpleTotal(r) {
         if (!r || !r.cells) return;
         const typeSelect = r.cells[0] && r.cells[0].querySelector("select");
@@ -5116,7 +6618,7 @@
         }
       }
 
-      /* Total = R.Wt×Rate×Making + Other (col 15). Purchase: Est. Total (col 9) + Other → col 16. Other: Pc×Rate+Other. */
+      /* Total = R.Wt—Rate—Making + Other (col 15). Purchase: Est. Total (col 9) + Other → col 16. Other: Pc—Rate+Other. */
       function syncSecondTotalFromRow(r) {
         if (!r || !r.cells) return;
         try {
@@ -5153,7 +6655,7 @@
         }
       }
 
-      /* Update second Total: Ready weight × Rate × Making */
+      /* Update second Total: Ready weight — Rate — Making */
       function calcReadyTotal(el) {
         if (!el || !el.closest) return;
         const r = el.closest("tr");
@@ -5299,7 +6801,7 @@
         localStorage.setItem(NEW_ORDER_PURCHASE_SHEETS_KEY, JSON.stringify(map));
       }
 
-      /** Amount for one saved purchase-sheet row (prefer stored Amount; else Net×Rate). */
+      /** Amount for one saved purchase-sheet row (prefer stored Amount; else Net—Rate). */
       function purchaseSheetRowAmount(r) {
         if (!r) return 0;
         if (r.amount != null && String(r.amount).trim() !== "") {
@@ -5660,7 +7162,7 @@
         return p && !isPaidTypePayment(p);
       }
 
-      /** All advance (non‑Paid) payment rows for a bill — same filter as getPaidAmount(bill, 'Advanced'). */
+      /** All advance (non-Paid) payment rows for a bill — same filter as getPaidAmount(bill, 'Advanced'). */
       function getAdvancedPaymentRecordsForBill(billNoVal) {
         if (!billNoVal) return [];
         if (isGoldInvoiceSourceBill(billNoVal)) return [];
@@ -6242,7 +7744,7 @@
         alert("Bill Transferred and Saved Successfully!");
       }
 
-      /* TRANSFER TO CUSTOMER BALANCE – saves current order data to Customer Balance (customerBalances + customer openingBalance) */
+      /* TRANSFER TO CUSTOMER BALANCE “ saves current order data to Customer Balance (customerBalances + customer openingBalance) */
       function transferToCustomerBalance(targetCustOverride = null, dateOverride = null, narrationOverride = null) {
         try {
           if (!custName || !billNo || !itemBody) {
@@ -6547,7 +8049,7 @@
           orderDataR.ratebookOrderedWeight = orderedNetWtR.toFixed(3);
           orderDataR.ratebookDeliveredWeight = rbSafeNum(existingOrder && existingOrder.ratebookDeliveredWeight, 0).toFixed(3);
           orderDataR.timestamp = orderTimestampR;
-          /* Ready Orders list uses order.items for display; this marks post–Ready Extra save so UIs can prefer saved lines over workshop-only snapshots. */
+          /* Ready Orders list uses order.items for display; this marks post“Ready Extra save so UIs can prefer saved lines over workshop-only snapshots. */
           orderDataR.readyExtraSavedAt = orderTimestampR;
           orderDataR.hideBillMidColumns = billMidColumnsHidden;
           orderDataR.billStagedForAllBill = false;
@@ -6754,7 +8256,7 @@
         const ordersFiltered = orders.filter(o => o && o.orderNo !== billNo.value);
         localStorage.setItem("orders", JSON.stringify(ordersFiltered));
 
-        // Also save to "bills" for All Bills page – with all data (rows, totals, rate diff, etc.)
+        // Also save to "bills" for All Bills page “ with all data (rows, totals, rate diff, etc.)
         const allBills = JSON.parse(localStorage.getItem("bills") || "[]");
         const billIndex = allBills.findIndex(b => b.billNo === billNo.value);
         const existingBill = billIndex >= 0 ? allBills[billIndex] : null;
@@ -8016,7 +9518,7 @@
         if (orderApp) orderApp.style.display = "none";
       }
 
-      // Ratebook total = Σ(NetWt × RatebookRate × (1 + Lbr%/100)) using latest rate per Stamp
+      // Ratebook total = Î£(NetWt — RatebookRate — (1 + Lbr%/100)) using latest rate per Stamp
       function calculateRatebookTotalForBill() {
         try {
           if (!itemBody) return 0;
@@ -8184,6 +9686,255 @@
           invoice.style.display = "none";
         }
         if (orderApp) orderApp.style.display = "block";
+      }
+
+      function resetCustomerNameOnly() {
+        if (!custName && !initElements()) return;
+        if (!custName) return;
+        if (!confirm('Clear the selected customer (Name)? Order number, dates, and item rows stay unchanged.')) {
+          return;
+        }
+        custName.value = '';
+        custName.dispatchEvent(new Event('change'));
+        if (typeof updateInfoPanel === 'function') updateInfoPanel();
+      }
+
+      function printOrder() {
+        showInvoice();
+        setTimeout(function () {
+          window.print();
+        }, 150);
+      }
+
+      function setupPopupFormArrowKeys() {
+        if (window.__rexPopupArrowWired) return;
+        window.__rexPopupArrowWired = true;
+        document.addEventListener('keydown', function (e) {
+          var key = e.key;
+          if (key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'ArrowLeft' && key !== 'ArrowRight') return;
+          var t = e.target;
+          if (!t || !/^(INPUT|SELECT|TEXTAREA)$/i.test(t.tagName)) return;
+          var grid = t.closest(
+            '.order-details-php-grid, .advanced-payments-popup-edit-form-grid, .ratebook-php-grid'
+          );
+          if (!grid) return;
+          var popup = grid.closest(
+            '#ready-order-order-popup, #ready-order-payment-popup, #ready-order-ratebook-popup'
+          );
+          if (!popup || popup.style.display === 'none') return;
+          var fields = Array.from(
+            grid.querySelectorAll('input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)')
+          ).filter(function (el) {
+            return el.offsetParent !== null;
+          });
+          var idx = fields.indexOf(t);
+          if (idx < 0) return;
+          var nextIdx = idx;
+          if (key === 'ArrowDown' || key === 'ArrowRight') nextIdx = idx + 1;
+          if (key === 'ArrowUp' || key === 'ArrowLeft') nextIdx = idx - 1;
+          if (nextIdx < 0 || nextIdx >= fields.length) return;
+          e.preventDefault();
+          fields[nextIdx].focus();
+          try {
+            if (fields[nextIdx].tagName === 'INPUT' && fields[nextIdx].type !== 'date' && typeof fields[nextIdx].select === 'function') {
+              fields[nextIdx].select();
+            }
+          } catch (errSel) { }
+        });
+      }
+
+      function setupStampKeyboardOpen() {
+        if (window.__rexStampKeyboardWired) return;
+        window.__rexStampKeyboardWired = true;
+
+        var picker = document.getElementById('rex-stamp-picker');
+        if (!picker) {
+          picker = document.createElement('div');
+          picker.id = 'rex-stamp-picker';
+          picker.className = 'rex-stamp-picker';
+          picker.setAttribute('role', 'listbox');
+          picker.hidden = true;
+          document.body.appendChild(picker);
+        }
+
+        var activeSelect = null;
+        var highlightIdx = 0;
+
+        function isOrderTableStampSelect(el) {
+          return el && el.tagName === 'SELECT' && el.classList &&
+            el.classList.contains('stamp-select') &&
+            el.closest('#ready-order-item-table');
+        }
+
+        function stampPickerDisabled(sel) {
+          return !sel || sel.disabled ||
+            sel.classList.contains('purchase-field-disabled') ||
+            sel.getAttribute('aria-disabled') === 'true';
+        }
+
+        function closeStampPicker() {
+          picker.hidden = true;
+          picker.innerHTML = '';
+          activeSelect = null;
+        }
+
+        function scrollStampHighlightIntoView() {
+          var activeBtn = picker.querySelector('button.active');
+          if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+            activeBtn.scrollIntoView({ block: 'nearest' });
+          }
+        }
+
+        function setStampHighlight(idx) {
+          var btns = picker.querySelectorAll('button');
+          if (!btns.length) return;
+          highlightIdx = Math.max(0, Math.min(btns.length - 1, idx));
+          btns.forEach(function (btn, i) {
+            btn.classList.toggle('active', i === highlightIdx);
+          });
+          scrollStampHighlightIntoView();
+        }
+
+        function applyStampSelection(select, idx) {
+          if (!select || !select.options || !select.options.length) return;
+          var i = Math.max(0, Math.min(select.options.length - 1, idx));
+          if (select.selectedIndex === i) return;
+          select.selectedIndex = i;
+          try {
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          } catch (errCh) {
+            var evt = document.createEvent('HTMLEvents');
+            evt.initEvent('change', true, false);
+            select.dispatchEvent(evt);
+          }
+        }
+
+        function openStampPicker(select) {
+          if (!isOrderTableStampSelect(select) || stampPickerDisabled(select)) return;
+
+          var td = select.closest('td');
+          var anchor = td || select;
+          var rect = anchor.getBoundingClientRect();
+          activeSelect = select;
+          highlightIdx = Math.max(0, select.selectedIndex);
+
+          picker.innerHTML = '';
+          Array.from(select.options).forEach(function (opt, i) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.setAttribute('role', 'option');
+            btn.textContent = opt.text;
+            if (i === highlightIdx) btn.classList.add('active');
+            btn.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+            btn.addEventListener('click', function () {
+              applyStampSelection(select, i);
+              closeStampPicker();
+              select.focus();
+            });
+            picker.appendChild(btn);
+          });
+
+          picker.style.left = rect.left + 'px';
+          picker.style.top = rect.bottom + 'px';
+          picker.style.width = Math.round(rect.width) + 'px';
+          picker.style.minWidth = Math.round(rect.width) + 'px';
+          picker.style.maxWidth = Math.round(rect.width) + 'px';
+          picker.hidden = false;
+          scrollStampHighlightIntoView();
+        }
+
+        document.addEventListener('mousedown', function (e) {
+          if (picker.contains(e.target)) return;
+          if (isOrderTableStampSelect(e.target)) {
+            e.preventDefault();
+            e.target.focus();
+            openStampPicker(e.target);
+            return;
+          }
+          if (!picker.hidden) closeStampPicker();
+        }, true);
+
+        document.addEventListener('focusin', function (e) {
+          if (!picker.hidden && activeSelect && e.target !== activeSelect && !picker.contains(e.target)) {
+            closeStampPicker();
+          }
+        });
+
+        var tableWrap = document.querySelector('.order-details-table-wrap');
+        if (tableWrap) {
+          tableWrap.addEventListener('scroll', closeStampPicker, { passive: true });
+        }
+        window.addEventListener('resize', closeStampPicker);
+
+        document.addEventListener('keydown', function (e) {
+          var t = e.target;
+          var k = e.key;
+
+          if (!picker.hidden && activeSelect) {
+            if (k === 'Escape') {
+              e.preventDefault();
+              closeStampPicker();
+              activeSelect.focus();
+              return;
+            }
+            if (k === 'ArrowDown') {
+              e.preventDefault();
+              setStampHighlight(highlightIdx + 1);
+              return;
+            }
+            if (k === 'ArrowUp') {
+              e.preventDefault();
+              setStampHighlight(highlightIdx - 1);
+              return;
+            }
+            if (k === 'Enter') {
+              e.preventDefault();
+              applyStampSelection(activeSelect, highlightIdx);
+              closeStampPicker();
+              activeSelect.focus();
+              return;
+            }
+          }
+
+          if (!t || t.tagName !== 'SELECT') return;
+          if (!t.classList || !t.classList.contains('stamp-select')) return;
+          if (k === 'Tab' || k === 'Shift' || k === 'Control' || k === 'Alt' ||
+            k === 'Meta') return;
+
+          if (isOrderTableStampSelect(t)) {
+            if (k === 'Escape') {
+              if (!picker.hidden) {
+                e.preventDefault();
+                closeStampPicker();
+              }
+              return;
+            }
+            if (picker.hidden) openStampPicker(t);
+            if (k === 'ArrowDown') {
+              e.preventDefault();
+              setStampHighlight(highlightIdx + 1);
+              return;
+            }
+            if (k === 'ArrowUp') {
+              e.preventDefault();
+              setStampHighlight(highlightIdx - 1);
+              return;
+            }
+            if (k === 'Enter' || k === ' ') {
+              e.preventDefault();
+              return;
+            }
+            return;
+          }
+
+          if (k === 'Escape') return;
+          if (typeof t.showPicker === 'function') {
+            try { t.showPicker(); } catch (err) { }
+          }
+          if (k === 'Enter' || k === ' ') {
+            e.preventDefault();
+          }
+        });
       }
 
       /* PAYMENT POPUP */
@@ -9949,17 +11700,15 @@
             const itemName = (r.itemName || '—').substring(0, 25);
             const dateStr = r.timestamp ? new Date(r.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
 
+            const weightStr = r.weight ? (String(r.weight).replace(/g$/i, '') + 'g') : '—';
+            const metaStr = itemName !== '—' ? itemName + (r.weight ? ' · ' + weightStr : '') : weightStr;
             html += `
-        <div class="panel-item" style="cursor:pointer;" onclick="showRateDetails('${r.id}')" title="Click to view details">
-          <div class="panel-item-header">
-            <span>₹ ${(Number(r.rate) || 0).toFixed(2)}</span>
-            <span>${r.stamp || '—'}</span>
-            <button class="delete-rate-btn" onclick="event.stopPropagation(); deleteRate('${r.id}')" style="background:#ff3b30; color:#fff; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; font-size:10px; margin-left:auto;">❌</button>
-          </div>
-          <div class="panel-item-detail">
-            <span>${itemName}${r.weight ? ' - ' + r.weight + 'g' : ''}</span>
-            <span style="float:right; opacity:0.7;">${dateStr}</span>
-          </div>
+        <div class="panel-item ratebook-list-row" onclick="showRateDetails('${r.id}')" title="Click to view details">
+          <span class="ratebook-list-rate">₹ ${(Number(r.rate) || 0).toFixed(2)}</span>
+          <span class="ratebook-list-stamp">${r.stamp || '—'}</span>
+          <span class="ratebook-list-meta">${metaStr}</span>
+          <span class="ratebook-list-time">${dateStr}</span>
+          <button type="button" class="delete-rate-btn" onclick="event.stopPropagation(); deleteRate('${r.id}')" title="Delete rate">×</button>
         </div>
       `;
           });
@@ -10499,6 +12248,8 @@
         window.onBillButtonClick = onBillButtonClick;
         window.onHideUnhideColumnsClick = onHideUnhideColumnsClick;
         window.showInvoice = showInvoice;
+        window.printOrder = printOrder;
+        window.resetCustomerNameOnly = resetCustomerNameOnly;
         window.back = back;
         window.openPayment = openPayment;
         window.openPurchaseSheet = openPurchaseSheet;
@@ -10577,7 +12328,7 @@
       ensureFunctionsGlobal();
 
       window.__currentPageCleanup = function () {
-        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'isPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'onBillButtonClick', 'showInvoice', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'openReadyMetaPopup', 'saveReadyMetaPopup', 'closeReadyMetaPopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
+        var globals = ['openBillTransferPopup', 'closeBillTransferPopup', 'confirmBillTransfer', 'updateTransferCustDetails', 'setPostTransferLocked', 'isPostTransferLocked', 'addRow', 'removeReadyExtraRow', 'calc', 'syncReadyWeight', 'calcReadyTotal', 'saveOrder', 'saveAndNew', 'transferToCustomerBalance', 'resetOrder', 'resetCustomerNameOnly', 'onBillButtonClick', 'showInvoice', 'printOrder', 'back', 'openPayment', 'openAdvancedPaymentsPopup', 'closeAdvancedPaymentsPopup', 'openPaidPaymentsPopup', 'closePaidPaymentsPopup', 'openPurchaseSheet', 'closePurchaseSheetPopup', 'savePurchaseSheet', 'addPurchaseSheetRow', 'openCustomer', 'openReceipt', 'openRateBook', 'setCustomerName', 'getCustomerName', 'loadOrderForEdit', 'loadBill', 'handleTypeChange', 'onEstTotalChange', 'calculateDeliveryDate', 'saveOrderPopup', 'closePopup', 'openReadyMetaPopup', 'saveReadyMetaPopup', 'closeReadyMetaPopup', 'calculatePaymentBalance', 'closePaymentPopup', 'savePaymentFromPopup', 'openPaymentDetailTableEdit', 'savePaymentDetailTableEdit', 'cancelPaymentDetailTableEdit', 'deletePaymentDetailTableRow', 'saveRateBook', 'closeRateBookPopup', 'closeRatebookPopup', 'calcRatebookAmount', 'saveRatebookEntry', 'calculateRateAmount', 'loadRateBookHistory', 'applyRateToRow', 'initOrderPage', 'initElements', 'saveOrderState', 'restoreOrderState', 'generateBillNo', 'generateJobNo', 'calculateBillTotal', 'getPaidAmount', 'updateInfoPanel', 'updatePaymentPanel', 'updateRatebookPanel', 'updateReceiptPanel', 'refreshInvoiceReceiptTable', 'deleteReceipt', 'deleteRate', 'showRateDetails', 'closeRatebookDetailsPopup', 'saveRatebookFromRows', 'addRatebookRow', 'saveRatebookDetailsFromPopup', 'updateRateBookingRow', 'closeDashboard'];
         globals.forEach(function (k) { try { delete window[k]; } catch (e) { } });
       };
     })();

@@ -145,13 +145,18 @@
       min-height: 0;
     }
 
-    /* One band: title bar + top row cards — same top radius, no rounded “shoulder” gap */
+    /* Title bar — full width (flat in dashboard) */
     .app.new-order-page > .ledger-page-titlebar.order-page-titlebar-grid {
-      border-radius: var(--radius) var(--radius) 0 0;
+      border-radius: 0;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      color: #1a3a5c;
+      flex-shrink: 0;
     }
 
-    .workspace[data-page] .app.new-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
-      border-radius: var(--radius) var(--radius) 0 0;
+    .workspace[data-page] .app.new-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child,
+    .workspace[data-page="new-order"] .app.new-order-page > .ledger-page-titlebar.order-page-titlebar-grid:first-child {
+      border-radius: 0;
     }
 
     .app.new-order-page > .order-top {
@@ -2361,58 +2366,84 @@
     }
 
     /* =====================
-   PHP COMPACT — one screen; only order rows scroll
+   Full screen — Excel shell; only order rows scroll
 ===================== */
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body:has(#orderApp.new-order-page) {
+      background: #fff;
+    }
+
     .workspace[data-page="new-order"] {
-      padding: 6px 8px !important;
+      padding: 0 !important;
       overflow: hidden !important;
-      display: flex;
-      flex-direction: column;
+      display: flex !important;
+      flex-direction: column !important;
+      min-height: 0 !important;
+      background: #fff !important;
     }
 
     .workspace[data-page="new-order"] .app.new-order-page,
     #orderApp.new-order-page {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
-      max-height: 100%;
+      max-height: none;
+      width: 100%;
       height: 100%;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       padding: 0;
-      margin: 0;
-      background: #fff;
-      border: 1px solid #b0bcc9;
-      border-radius: var(--ledger-ws-r, 10px);
+      margin: 0 !important;
+      background: #fff !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      box-sizing: border-box;
     }
 
     #orderApp.new-order-page > .ledger-page-titlebar {
       flex-shrink: 0;
-      padding: 6px 10px;
+      padding: 6px 12px;
       font-size: 14px;
+      font-weight: 700;
+      width: 100%;
+      margin: 0;
+      box-sizing: border-box;
     }
 
     #orderApp.new-order-page > .error-message {
       flex-shrink: 0;
-      margin: 0;
-      padding: 6px 10px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
       font-size: 12px;
+      box-sizing: border-box;
+      border-radius: 0;
     }
 
     #orderApp.new-order-page > .order-top {
       flex-shrink: 0;
-      margin: 0;
-      padding: 6px 8px 4px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0 4px;
       gap: 8px;
       grid-template-columns: minmax(0, 1fr) 240px;
+      box-sizing: border-box;
     }
 
     #orderApp.new-order-page .box {
-      padding: 8px 10px;
-      border-radius: 6px;
+      padding: 6px 10px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       box-shadow: none;
       background: #fff;
       background-image: none;
+      animation: none;
     }
 
     #orderApp.new-order-page .box-title {
@@ -2432,6 +2463,85 @@
 
     #orderApp.new-order-page .customer-field-grid .row-full {
       grid-column: 1 / -1;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .customer-grid-name {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .customer-grid-add-customer {
+      grid-column: 2;
+      grid-row: 1;
+      align-items: center;
+      min-height: 28px;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .customer-grid-bal {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .customer-grid-relation {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .customer-grid-station {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .customer-grid-lfno {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .row-name-customer {
+      gap: 6px;
+      min-width: 0;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .row-name-customer select {
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .btn-add-customer {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 100%;
+      height: 28px;
+      margin: 0;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: normal;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border: 1px solid #b0bcc9;
+      border-radius: 4px;
+      background: #f4f6f8;
+      color: #1a73e8;
+      box-shadow: none;
+      cursor: pointer;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .btn-add-customer:hover {
+      background: #eef2f6;
+      border-color: #a8b4c4;
+      color: #1557b0;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #orderApp.new-order-page .customer-field-grid .btn-add-customer:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      color: #5f6368;
     }
 
     #orderApp.new-order-page .row {
@@ -2505,13 +2615,15 @@
     }
 
     #orderApp.new-order-page > .order-details {
-      flex: 1;
+      flex: 1 1 0;
       min-height: 0;
-      margin: 0;
-      padding: 0 8px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      box-sizing: border-box;
     }
 
     #orderApp.new-order-page > .order-details > .box-title {
@@ -2520,15 +2632,15 @@
     }
 
     #orderApp.new-order-page .order-details-table-wrap {
-      flex: 1;
+      flex: 1 1 0;
       min-height: 0;
       overflow: auto;
       margin-top: 0;
-      border-radius: 4px;
+      border-radius: 0;
       box-shadow: none;
       background: #fff;
       background-image: none;
-      border: 1px solid #b0bcc9;
+      border: 1px solid #a8b4c4;
       scrollbar-width: thin;
       scrollbar-color: #a8b4c4 transparent;
     }
@@ -2576,28 +2688,44 @@
 
     #orderApp.new-order-page > .actions {
       flex-shrink: 0;
-      margin: 0;
-      padding: 6px 8px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
       gap: 6px;
+      box-sizing: border-box;
+      border-top: 1px solid #a8b4c4;
+      background: #fff;
+      flex-wrap: wrap;
     }
 
     #orderApp.new-order-page > .actions button {
       min-width: 0;
-      height: 30px;
-      padding: 4px 10px;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
       font-size: 12px;
-      border-radius: 6px;
+      font-weight: 600;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      box-shadow: none;
+    }
+
+    #orderApp.new-order-page > .actions button:hover {
+      transform: none;
+      box-shadow: none;
     }
 
     #orderApp.new-order-page > .info-panel {
       flex-shrink: 0;
-      margin: 0;
-      padding: 6px 8px 8px;
-      border-radius: 0 0 6px 6px;
-      border-top: 1px solid #b0bcc9;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0 8px;
+      border-radius: 0;
+      border-top: 1px solid #a8b4c4;
       background: #fff;
       background-image: none;
       box-shadow: none;
+      box-sizing: border-box;
     }
 
     #orderApp.new-order-page .panel-grid {
@@ -2611,8 +2739,8 @@
     #orderApp.new-order-page .panel-section {
       background: #fff;
       background-image: none;
-      border-radius: 6px;
-      border-color: #b0bcc9;
+      border-radius: 3px;
+      border-color: #a8b4c4;
     }
 
     #orderApp.new-order-page .panel-section-header {
@@ -2697,37 +2825,38 @@
         <div class="box-title">Customer Information</div>
 
         <div class="customer-field-grid">
-          <div class="row row-full">
+          <div class="row row-name-customer customer-grid-name">
             <label>Name *</label>
             <select id="custName" required>
               <option value="">-- Select Customer --</option>
             </select>
           </div>
 
-          <div class="row">
+          <div class="row customer-grid-add-customer">
+            <label>+Add</label>
+            <button type="button" onclick="openCustomer()" class="no-print btn-add-customer">
+              + Add / Edit Customer
+            </button>
+          </div>
+
+          <div class="row customer-grid-bal">
             <label>Current Bal</label>
             <input id="currentBal" readonly>
           </div>
 
-          <div class="row">
+          <div class="row customer-grid-relation">
             <label>Relation</label>
             <input id="relation" readonly>
           </div>
 
-          <div class="row">
+          <div class="row customer-grid-station">
             <label>Station</label>
             <input id="station" readonly>
           </div>
 
-          <div class="row">
+          <div class="row customer-grid-lfno">
             <label>LF No.</label>
             <input id="lfNo" readonly>
-          </div>
-
-          <div class="row row-full">
-            <button onclick="openCustomer()" class="no-print">
-              + Add / Edit Customer
-            </button>
           </div>
         </div>
       </div>
@@ -2930,7 +3059,7 @@
   <!-- CUSTOMER POPUP -->
   <div id="new-order-add-customer-popup" class="popup-bg new-order-popup" style="display:none;"
     onclick="if(event.target===this) cancelCustomerPopup()">
-    <div class="popup-box" style="width: 98%; max-width: 1280px; height: auto; max-height: 95vh; overflow-x: hidden; overflow-y: auto; padding: 0; display: flex; flex-direction: column; background: #fff; border-radius: 8px;">
+    <div class="popup-box" style="width: 100%; max-width: 880px; height: auto; max-height: 95vh; overflow-x: hidden; overflow-y: auto; padding: 0; display: flex; flex-direction: column; background: #fff; border-radius: 8px;">
       <div style="flex: 0 0 auto; overflow: visible; background: #fff;">
         <iframe id="customerPopupIframe" src="" style="width: 100%; height: 200px; min-height: 0; border: none; background: #fff; display: block; border-radius: 8px 8px 0 0;"></iframe>
       </div>

@@ -16,78 +16,113 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     }
 
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
       margin: 0;
-      background: #e8f0fe;
-    }
-
-    .workspace {
-      background: linear-gradient(to bottom, #cde1ff, #e6f1ff) !important;
-    }
-
-    /* PHP list shell — matches Customer List */
-    .customer-balance-wrap {
-      margin: 15px;
       background: #fff;
-      border: 1px solid #b0bcc9;
-      border-radius: 8px;
+      height: 100vh;
+    }
+
+    /* Customer Balance list — full screen Excel shell */
+    .customer-balance-wrap {
+      margin: 0;
+      background: #fff;
+      border: none;
+      border-radius: 0;
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 30px);
-      max-height: calc(100vh - 30px);
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      min-height: 0;
       overflow: hidden;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      box-shadow: none;
+      box-sizing: border-box;
     }
 
     .workspace .customer-balance-wrap {
-      margin: 0;
-      height: 100%;
-      max-height: 100%;
-      border-radius: var(--ledger-ws-r, 10px);
-      box-shadow: none;
+      margin: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
     }
 
     .customer-balance-wrap > .ledger-page-titlebar:first-child {
-      border-radius: 8px 8px 0 0;
-      padding: 8px 12px;
-      font-size: 15px;
+      border-radius: 0;
+      flex-shrink: 0;
+      padding: 6px 10px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a3a5c;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
     }
 
     .workspace .customer-balance-wrap > .ledger-page-titlebar:first-child {
-      border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
+      border-radius: 0;
     }
 
     .customer-balance-toolbar {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px 10px;
-      padding: 8px 10px;
-      border-bottom: 1px solid #b0bcc9;
-      background: #f4f6f8;
+      gap: 6px 10px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
+      background: #fff;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .workspace .customer-balance-wrap .customer-balance-toolbar {
+      background: #fff;
+    }
+
+    .customer-balance-toolbar > * {
       flex-shrink: 0;
     }
 
+    .customer-balance-toolbar .list-search-wrap {
+      margin-left: auto;
+      flex: 0 1 200px;
+      min-width: 160px;
+      max-width: 280px;
+    }
+
     .customer-balance-toolbar .btn-refresh {
-      padding: 5px 12px;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
       font-size: 12px;
       font-weight: 600;
       white-space: nowrap;
-      border-radius: 6px;
-      border: 1px solid #466690;
-      background: linear-gradient(180deg, #5a7ca8 0%, #466690 100%);
-      color: #fff;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      color: #1a3a5c;
       cursor: pointer;
-      min-height: 30px;
     }
 
     .customer-balance-toolbar .btn-refresh:hover {
-      filter: brightness(1.05);
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      filter: none;
     }
 
     .customer-balance-toolbar .list-search-wrap {
-      flex: 1 1 180px;
-      min-width: 160px;
       position: relative;
       display: flex;
       align-items: center;
@@ -113,61 +148,69 @@
 
     .customer-balance-toolbar #customerBalanceSearch {
       width: 100%;
-      padding: 5px 10px 5px 32px;
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 10px 3px 32px;
       font-size: 12px;
-      min-height: 30px;
-      border-radius: 6px;
-      border: 1px solid #b0bcc9;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       background: #fff;
       box-sizing: border-box;
     }
 
     .customer-balance-toolbar #customerBalanceSearch:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     .customer-balance-toolbar #stationFilter,
     .customer-balance-toolbar #balanceFilterSelect {
-      padding: 5px 8px;
-      border-radius: 6px;
-      border: 1px solid #b0bcc9;
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 24px 3px 8px;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
       font-size: 12px;
       min-width: 120px;
-      min-height: 30px;
+      max-width: 180px;
       background: #fff;
       cursor: pointer;
+      color: #1a3a5c;
+      box-sizing: border-box;
     }
 
     .customer-balance-toolbar #stationFilter:focus,
     .customer-balance-toolbar #balanceFilterSelect:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     .customer-balance-toolbar .filter-sep {
       width: 1px;
-      height: 24px;
-      background: #b0bcc9;
+      height: 22px;
+      background: #d4d4d4;
       flex-shrink: 0;
     }
 
     .customer-balance-toolbar .filter-btn {
-      padding: 4px 10px;
-      border: 1px solid #b0bcc9;
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      border: 1px solid #a8b4c4;
       background: #fff;
       cursor: pointer;
-      border-radius: 6px;
-      font-size: 11px;
+      border-radius: 3px;
+      font-size: 12px;
       font-weight: 600;
-      color: #3c4043;
+      color: #1a3a5c;
       white-space: nowrap;
-      min-height: 30px;
     }
 
     .customer-balance-toolbar .filter-btn:hover {
-      background: #e8f0fe;
-      border-color: #5a7ca8;
+      background: #d6e4f4;
+      border-color: #7a8da6;
     }
 
     .customer-balance-toolbar .mark-toggle-btn.mark-all-btn {
@@ -191,9 +234,12 @@
     }
 
     .customer-balance-grid-wrap {
-      flex: 1;
+      flex: 1 1 auto;
       overflow: auto;
       min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      box-sizing: border-box;
       background: #fff;
     }
 
@@ -210,7 +256,7 @@
     .customer-excel-table th,
     .customer-excel-table td {
       border: 1px solid #a8b4c4;
-      padding: 5px 7px;
+      padding: 6px 10px;
       font-size: 12px;
       line-height: 1.3;
       text-align: left;
@@ -327,12 +373,79 @@
     }
 
     .customer-balance-footer {
-      padding: 7px 10px;
-      font-size: 11px;
-      color: #5f6368;
-      border-top: 1px solid #b0bcc9;
+      width: 100%;
+      margin: 0;
+      padding: 6px 10px;
+      font-size: 12px;
+      color: #1a3a5c;
+      border-top: 1px solid #a8b4c4;
+      border-left: none;
+      border-right: none;
       background: #f4f6f8;
       flex-shrink: 0;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 18px;
+      flex-wrap: wrap;
+    }
+
+    .customer-balance-footer .footer-meta {
+      font-size: 12px;
+      color: #5f6368;
+      font-weight: 500;
+    }
+
+    .customer-balance-footer .footer-totals {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: #1a3a5c;
+      border: 1px solid #c7d3e0;
+      border-radius: 3px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .customer-balance-footer .footer-totals > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-right: 1px solid #d4dce7;
+      min-height: 26px;
+      white-space: nowrap;
+    }
+
+    .customer-balance-footer .footer-totals > span:last-child {
+      border-right: none;
+      background: #f4f7fc;
+    }
+
+    .customer-balance-footer .footer-totals strong {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1a3a5c;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .customer-balance-footer .dr-total strong {
+      color: #d93025;
+    }
+
+    .customer-balance-footer .cr-total strong {
+      color: #1a73e8;
+    }
+
+    .customer-balance-footer .net-total strong.net-dr {
+      color: #d93025;
+    }
+
+    .customer-balance-footer .net-total strong.net-cr {
+      color: #1a73e8;
     }
 
     .customer-excel-table tbody td.mark-td {
@@ -379,16 +492,9 @@
     }
 
     @media (max-width: 768px) {
-      .customer-balance-wrap {
-        margin: 8px;
-        height: calc(100vh - 16px);
-        max-height: calc(100vh - 16px);
-      }
-
-      .workspace .customer-balance-wrap {
-        margin: 0;
-        height: 100%;
-        max-height: 100%;
+      .customer-balance-toolbar .list-search-wrap {
+        flex: 0 1 160px;
+        min-width: 140px;
       }
     }
   </style>
@@ -443,7 +549,14 @@
       </table>
     </div>
 
-    <div class="customer-balance-footer" id="customerBalanceFooter">Customer Balance — one row per bill. Same customer name with different bills is not merged.</div>
+    <div class="customer-balance-footer" id="customerBalanceFooter">
+      <span class="footer-meta">Customer Balance — one row per bill. Same customer name with different bills is not merged.</span>
+      <span class="footer-totals">
+        <span class="dr-total">Total Dr:<strong id="footerTotalDr">0.00</strong></span>
+        <span class="cr-total">Total Cr:<strong id="footerTotalCr">0.00</strong></span>
+        <span class="net-total">Dr - Cr = <strong id="footerNetAmount">0.00</strong></span>
+      </span>
+    </div>
   </div>
 
   <script>
@@ -454,6 +567,9 @@
 
     let tbody = null;
     let footer = null;
+    let footerTotalDrEl = null;
+    let footerTotalCrEl = null;
+    let footerNetAmountEl = null;
 
     function getRoot() {
       const wrap = document.querySelector(".customer-balance-wrap");
@@ -464,9 +580,30 @@
       const root = getRoot();
       tbody = root.querySelector("#customerBalanceTableBody");
       footer = root.querySelector("#customerBalanceFooter");
+      footerTotalDrEl = root.querySelector("#footerTotalDr");
+      footerTotalCrEl = root.querySelector("#footerTotalCr");
+      footerNetAmountEl = root.querySelector("#footerNetAmount");
       if (!tbody) tbody = document.getElementById("customerBalanceTableBody");
       if (!footer) footer = document.getElementById("customerBalanceFooter");
+      if (!footerTotalDrEl) footerTotalDrEl = document.getElementById("footerTotalDr");
+      if (!footerTotalCrEl) footerTotalCrEl = document.getElementById("footerTotalCr");
+      if (!footerNetAmountEl) footerNetAmountEl = document.getElementById("footerNetAmount");
       return !!(tbody && footer);
+    }
+
+    function updateFooter(metaText, totalDr, totalCr) {
+      if (!footer) return;
+      const metaEl = footer.querySelector(".footer-meta");
+      if (metaEl) metaEl.textContent = metaText || "";
+      else footer.textContent = metaText || "";
+      if (footerTotalDrEl) footerTotalDrEl.textContent = formatAmount(totalDr || 0);
+      if (footerTotalCrEl) footerTotalCrEl.textContent = formatAmount(totalCr || 0);
+      if (footerNetAmountEl) {
+        const net = (Number(totalDr) || 0) - (Number(totalCr) || 0);
+        footerNetAmountEl.textContent = formatAmount(Math.abs(net)) + (net < 0 ? " Cr" : " Dr");
+        footerNetAmountEl.classList.toggle("net-cr", net < 0);
+        footerNetAmountEl.classList.toggle("net-dr", net >= 0);
+      }
     }
 
     function getCustomers() {
@@ -904,7 +1041,7 @@
 
       if (sorted.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No bill balances yet. Finalize bills (Ready Order / All Bill) so each Bill / Order No appears as its own row.</td></tr>';
-        if (footer) footer.textContent = "Customer Balance — no bill-linked rows in customerBalances.";
+        updateFooter("Customer Balance — no bill-linked rows in customerBalances.", 0, 0);
         return;
       }
 
@@ -919,6 +1056,7 @@
         tr.dataset.customerId = r.id != null ? r.id : i;
         tr.dataset.billNo = (r.billNo || "").toLowerCase();
         tr.dataset.amount = String(Number(r.amount) || 0);
+        tr.dataset.balanceType = String(r.balanceType || "Dr");
         tr.dataset.marked = r.mark && r.mark !== "—" ? "1" : "0";
         tr.dataset.station = (r.station || "—").trim().toLowerCase();
         const drCrTag = r.balanceType ? ` <span style="font-size:11px;font-weight:700;color:${r.balanceType === "Dr" ? "#d93025" : "#1a73e8"}">${r.balanceType}</span>` : "";
@@ -963,8 +1101,6 @@
       }
 
       filterRows(); // apply any active filters
-
-      if (footer) footer.textContent = "Customer Balance — " + sorted.length + " bills (one row per Bill / Order No).";
     }
 
     function saveMarkCheckbox(checkbox) {
@@ -1030,6 +1166,8 @@
       const rows = tbody.querySelectorAll("tr");
       if (rows.length === 0) return;
       let visible = 0;
+      let totalDr = 0;
+      let totalCr = 0;
       rows.forEach(row => {
         if (row.querySelector(".empty-state")) {
           row.style.display = q ? "none" : "";
@@ -1059,14 +1197,20 @@
 
         const show = matchesSearch && matchesFilter && matchesStation;
         row.style.display = show ? "" : "none";
-        if (show) visible++;
+        if (show) {
+          visible++;
+          const amtAbs = Math.abs(parseFloat(row.dataset.amount || "0") || 0);
+          const balType = String(row.dataset.balanceType || "Dr").trim().toLowerCase();
+          if (balType === "cr") totalCr += amtAbs;
+          else totalDr += amtAbs;
+        }
       });
       if (footer) {
         const total = rows.length;
         const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All bills)' : '';
-        if (!q && activeFilter === 'nonzero') footer.textContent = "Customer Balance — " + visible + " bills (zero balance hidden)";
-        else if (!q && activeFilter === 'zero') footer.textContent = "Customer Balance — " + visible + " bills (non-zero hidden)";
-        else footer.textContent = "Customer Balance — showing " + visible + " of " + total + " bills" + filterLabel + ".";
+        if (!q && activeFilter === 'nonzero') updateFooter("Customer Balance — " + visible + " bills (zero balance hidden)", totalDr, totalCr);
+        else if (!q && activeFilter === 'zero') updateFooter("Customer Balance — " + visible + " bills (non-zero hidden)", totalDr, totalCr);
+        else updateFooter("Customer Balance — showing " + visible + " of " + total + " bills" + filterLabel + ".", totalDr, totalCr);
       }
       updateMarkToggleButtonLabel();
     }

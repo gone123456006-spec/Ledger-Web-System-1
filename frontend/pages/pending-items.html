@@ -14,12 +14,18 @@
       padding: 0;
     }
 
+    html,
     body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      margin: 0;
       font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
       font-weight: 700;
-      background: #eef2f7;
+      background: #fff;
       height: 100vh;
-      overflow: hidden;
     }
 
     body * {
@@ -28,61 +34,200 @@
     }
 
     .wrap {
-      margin: 14px;
+      margin: 0;
       background: #fff;
-      border-radius: 14px;
-      border: 1px solid #dde3ec;
+      border-radius: 0;
+      border: none;
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 28px);
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      min-height: 0;
+      box-shadow: none;
       overflow: hidden;
       position: relative;
+      box-sizing: border-box;
+    }
+
+    .workspace .wrap {
+      margin: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: #fff !important;
+      border: none !important;
     }
 
     .wrap > .ledger-page-titlebar:first-child {
-      border-radius: 14px 14px 0 0;
+      border-radius: 0;
+      flex-shrink: 0;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      color: #1a3a5c;
     }
 
-    /* ── TOOLBAR ── */
+    .workspace .wrap > .ledger-page-titlebar:first-child {
+      border-radius: 0;
+    }
+
+    /* ── TOOLBAR — single horizontal line ── */
     .toolbar {
+      flex-shrink: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      box-sizing: border-box;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
+      background: #fff !important;
+      position: relative;
+      z-index: 300;
+      overflow: visible;
+    }
+
+    .workspace .wrap .toolbar {
+      background: #fff !important;
+    }
+
+    .toolbar-inner {
       display: flex;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
-      padding: 14px 20px;
-      border-bottom: 1px solid #e2e7ef;
-      background: #fafbfc;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 6px 8px;
+      padding: 6px 0;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .toolbar-inner .due-date-dropdown-wrap + .btn {
+      margin-left: auto;
+    }
+
+    .toolbar-inner > * {
       flex-shrink: 0;
     }
 
-    .toolbar-row-main {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    /* Assign / Skip / Unassign: one horizontal row directly under the page title row */
-    .toolbar-actions-row {
+    .toolbar-actions-group {
       display: flex;
       flex-direction: row;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 8px;
-      width: 100%;
+      gap: 6px;
+      border-left: 1px solid #c5cdd8;
+      padding-left: 8px;
+      margin-left: 2px;
     }
 
-    .toolbar-actions-row .btn {
+    .toolbar-actions-group .btn {
       width: auto;
       justify-content: center;
+      min-height: 26px;
+      height: 26px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 600 !important;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    /* Excel ribbon–style: each action has its own tint (compact bordered buttons) */
+    .toolbar-actions-group .btn {
+      box-shadow: none;
+      transform: none;
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    .toolbar-actions-group .btn-assign {
+      background: #f0fdf4 !important;
+      border-color: #6aae6a !important;
+      color: #166534 !important;
+    }
+
+    .toolbar-actions-group .btn-assign:hover:not(:disabled) {
+      background: #dcfce7 !important;
+      border-color: #4d9a4d !important;
+      color: #14532d !important;
+    }
+
+    .toolbar-actions-group .btn-skip-assign {
+      background: #f0fdfa !important;
+      border-color: #5ab8b0 !important;
+      color: #0f766e !important;
+    }
+
+    .toolbar-actions-group .btn-skip-assign:hover:not(:disabled) {
+      background: #ccfbf1 !important;
+      border-color: #0d9488 !important;
+      color: #115e59 !important;
+    }
+
+    .toolbar-actions-group .btn-unassign {
+      background: #fef2f2 !important;
+      border-color: #e57373 !important;
+      color: #b91c1c !important;
+    }
+
+    .toolbar-actions-group .btn-unassign:hover:not(:disabled) {
+      background: #fee2e2 !important;
+      border-color: #dc2626 !important;
+      color: #991b1b !important;
+    }
+
+    .toolbar-actions-group .btn-assign:disabled,
+    .toolbar-actions-group .btn-skip-assign:disabled,
+    .toolbar-actions-group .btn-unassign:disabled {
+      background: #f4f6f8 !important;
+      border-color: #d4d4d4 !important;
+      color: #9aa0a6 !important;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    .toolbar-actions-group .btn svg {
+      stroke: currentColor;
+    }
+
+    .toolbar-actions-group .btn-count {
+      border-radius: 2px;
+      font-weight: 600 !important;
+      font-size: 11px;
+      padding: 0 5px;
+    }
+
+    .toolbar-actions-group .btn-assign:not(:disabled) .btn-count {
+      background: rgba(255, 255, 255, 0.75);
+      color: #166534;
+      border: 1px solid #6aae6a;
+    }
+
+    .toolbar-actions-group .btn-skip-assign:not(:disabled) .btn-count {
+      background: rgba(255, 255, 255, 0.75);
+      color: #0f766e;
+      border: 1px solid #5ab8b0;
+    }
+
+    .toolbar-actions-group .btn-unassign:not(:disabled) .btn-count {
+      background: rgba(255, 255, 255, 0.75);
+      color: #b91c1c;
+      border: 1px solid #e57373;
+    }
+
+    .toolbar-actions-group .btn:disabled .btn-count {
+      color: #9aa0a6;
+      border-color: #d4d4d4;
+      background: #fff;
     }
 
     .pending-field-filters {
       display: flex;
       align-items: center;
-      gap: 8px 14px;
-      flex-wrap: wrap;
+      gap: 6px 10px;
+      flex-wrap: nowrap;
     }
 
     .pending-field-filters .pending-filter-group {
@@ -92,59 +237,113 @@
     }
 
     .pending-field-filters label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
+      font-size: 11px;
+      font-weight: 600 !important;
+      color: #3c4043;
       white-space: nowrap;
     }
 
     .pending-field-filters select {
-      height: 36px;
+      height: 26px;
+      min-height: 26px;
       min-width: 120px;
-      max-width: 200px;
-      padding: 0 10px;
-      border: 1px solid #dde3ec;
-      border-radius: 8px;
+      max-width: 180px;
+      padding: 3px 24px 3px 8px;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
       font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
-      font-size: 13px;
+      font-size: 12px;
+      font-weight: 400 !important;
+      font-style: normal !important;
       background: #fff;
-      color: #1a1f2e;
+      color: #1a3a5c;
       cursor: pointer;
       outline: none;
+      line-height: 1.2;
+      box-sizing: border-box;
     }
 
     .pending-field-filters select:focus {
-      border-color: #4f7ef8;
-      box-shadow: 0 0 0 3px rgba(79, 126, 248, 0.1);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     .pending-field-filters select.pending-filter-select--item {
-      min-width: 140px;
-      max-width: min(280px, 36vw);
+      min-width: 100px;
+      max-width: 140px;
     }
 
-    .btn {
-      height: 36px;
-      padding: 0 16px;
-      border: 1px solid #dde3ec;
+    .pending-field-filters select {
+      min-width: 88px;
+      max-width: 120px;
+    }
+
+    .toolbar .btn,
+    .toolbar .btn-filter-toggle {
+      height: 26px;
+      min-height: 26px;
+      padding: 0 10px;
+      border: 1px solid #a8b4c4;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 3px;
       font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: #444c5c;
+      font-size: 12px;
+      font-weight: 600 !important;
+      font-style: normal !important;
+      color: #1a3a5c;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
       white-space: nowrap;
+      box-shadow: none;
     }
 
-    .btn:hover {
-      background: #f0f4fd;
-      border-color: #b8c8f5;
-      color: #2a50d8;
+    .toolbar .btn:hover {
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
+    }
+
+    .pending-select-all-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      flex-shrink: 0;
+      padding: 0 2px;
+    }
+
+    .pending-select-all-wrap input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      min-width: 14px;
+      min-height: 14px;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #1a73e8;
+      flex-shrink: 0;
+    }
+
+    .pending-select-all-wrap input[type="checkbox"]:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .pending-select-all-label {
+      font-size: 12px;
+      font-weight: 400 !important;
+      font-style: normal !important;
+      color: #1a3a5c;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    .pending-select-all-wrap:has(input:disabled) {
+      cursor: not-allowed;
+      opacity: 0.65;
     }
 
     .btn-assign {
@@ -219,10 +418,10 @@
     .sel-pill {
       background: #eaf0ff;
       color: #3a68e8;
-      border-radius: 20px;
-      padding: 4px 12px;
-      font-size: 12px;
-      font-weight: 700;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600 !important;
       display: none;
       border: 1px solid #c5d5fb;
     }
@@ -232,10 +431,13 @@
       display: none;
       flex-wrap: wrap;
       align-items: center;
-      gap: 14px;
-      padding: 12px 20px;
-      background: linear-gradient(to bottom, #f0f3f8, #e8ecf4);
-      border-bottom: 1px solid #dce2ec;
+      gap: 8px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      box-sizing: border-box;
+      padding: 6px 0;
+      background: #fff;
+      border-bottom: 1px solid #a8b4c4;
       flex-shrink: 0;
     }
 
@@ -258,31 +460,33 @@
     }
 
     .filter-bar select {
-      height: 34px;
-      padding: 0 28px 0 10px;
-      border: 1px solid #cdd5e4;
-      border-radius: 8px;
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 24px 3px 8px;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
       font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      color: #1a1f2e;
+      font-size: 12px;
+      font-weight: 600 !important;
+      color: #1a3a5c;
       background: #fff;
       cursor: pointer;
-      min-width: 160px;
+      min-width: 140px;
       outline: none;
+      box-sizing: border-box;
     }
 
     .filter-bar select:focus {
-      border-color: #4f7ef8;
-      box-shadow: 0 0 0 2px rgba(79, 126, 248, 0.12);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
     }
 
     .filter-bar .btn-clear-filters {
       margin-left: auto;
-      height: 34px;
-      padding: 0 12px;
-      font-size: 12px;
-      font-weight: 600;
+      height: 26px;
+      padding: 0 10px;
+      font-size: 11px;
+      font-weight: 600 !important;
       color: #64748b;
       background: transparent;
       border: 1px dashed #94a3b8;
@@ -298,84 +502,117 @@
     }
 
     .btn-filter-toggle.active {
-      background: #eef2ff;
-      border-color: #4f7ef8;
-      color: #2a50d8;
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
     }
 
-    /* ── DUE DATE DROPDOWN ── */
+    /* ── DUE DATE — same trigger + list look as Order no. select ── */
+    .due-date-dropdown-wrap.pending-filter-group {
+      gap: 6px;
+    }
+
     .due-date-dropdown-wrap {
       position: relative;
+      z-index: 301;
     }
 
-    .btn.btn-due-dropdown {
-      min-width: 200px;
-      max-width: min(280px, 42vw);
-      justify-content: space-between;
-      gap: 10px;
-      padding: 0 12px;
+    .pending-due-select {
+      position: relative;
+      height: 26px;
+      min-height: 26px;
+      min-width: 120px;
+      max-width: 180px;
+      width: 120px;
+      padding: 3px 26px 3px 8px;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
+      font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
+      font-size: 12px;
+      font-weight: 400 !important;
+      font-style: normal !important;
       background: #fff;
-      border: 2px solid #212529;
-      border-radius: 8px;
-      color: #212529;
-      font-weight: 400;
+      color: #1a3a5c;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-start;
+      box-sizing: border-box;
+      line-height: 1.2;
       box-shadow: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
 
-    .btn.btn-due-dropdown:hover {
-      border-color: #212529;
-      background: #fff;
-      color: #212529;
+    .pending-due-select:hover {
+      border-color: #7a8da6;
     }
 
-    .btn.btn-due-dropdown .due-dd-label {
+    .pending-due-select[aria-expanded="true"],
+    .pending-due-select:focus-visible {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+    }
+
+    .pending-due-select .due-dd-label {
       flex: 1;
+      min-width: 0;
       text-align: left;
-      font-size: 13px;
+      font-size: 12px;
+      font-weight: 400 !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-style: normal !important;
+      color: #1a3a5c;
     }
 
-    .btn.btn-due-dropdown:not(.active) .due-dd-label {
-      color: #6c757d;
-      font-style: italic;
+    .pending-due-select:not(.active) .due-dd-label {
+      color: #1a3a5c;
+      font-style: normal !important;
+      font-weight: 400 !important;
     }
 
-    .btn.btn-due-dropdown.active .due-dd-label {
-      color: #212529;
-      font-style: normal;
-      font-weight: 500;
+    .pending-due-select.active .due-dd-label {
+      font-weight: 400 !important;
+      font-style: normal !important;
     }
 
-    .btn.btn-due-dropdown.active {
-      border-color: #212529;
-      background: #fff;
-      color: #212529;
-      box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+    .due-date-dropdown-wrap label {
+      font-weight: 400 !important;
+      font-style: normal !important;
     }
 
-    .btn-due-dropdown .due-dd-chevron {
-      opacity: 0.75;
+    .pending-due-select .due-dd-chevron {
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      margin-top: -6px;
+      opacity: 0.85;
       flex-shrink: 0;
+      pointer-events: none;
       transition: transform 0.15s;
+      stroke: #1a3a5c;
     }
 
-    .btn-due-dropdown[aria-expanded="true"] .due-dd-chevron {
+    .pending-due-select[aria-expanded="true"] .due-dd-chevron {
       transform: rotate(180deg);
     }
 
+    /* Open list — native select–style (white panel, blue selected row) */
     .due-date-dropdown-panel {
       display: none;
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0;
-      z-index: 250;
-      min-width: 100%;
-      width: max(100%, 260px);
-      max-width: min(320px, calc(100vw - 32px));
-      background: #eef2f6;
-      border: 1px solid #c5cdd8;
-      border-radius: 8px;
-      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+      position: fixed;
+      z-index: 10050;
+      min-width: 120px;
+      max-width: min(320px, calc(100vw - 24px));
+      background: #fff;
+      border: 1px solid #212529;
+      border-radius: 3px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
       overflow: hidden;
+      margin: 0;
+      padding: 0;
     }
 
     .due-date-dropdown-panel.open {
@@ -396,22 +633,15 @@
 
     .due-date-toolbar.due-date-toolbar--panel {
       border-bottom: none;
-      background: transparent;
+      background: #fff;
       flex-direction: column;
       align-items: stretch;
-      padding: 12px 12px 14px;
+      padding: 0;
       gap: 0;
     }
 
     .due-date-toolbar--panel .filter-due-heading {
-      font-size: 11px;
-      font-weight: 700;
-      color: #1e3a5f;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      width: 100%;
-      padding: 4px 4px 10px;
-      margin: 0;
+      display: none;
     }
 
     .filter-due-heading {
@@ -435,70 +665,62 @@
       flex-wrap: nowrap;
       align-items: stretch;
       width: 100%;
-      gap: 6px;
+      gap: 0;
       border: none;
       border-radius: 0;
       overflow: visible;
     }
 
     .due-filter-btn {
-      height: 30px;
-      padding: 0 10px;
+      height: auto;
+      min-height: 28px;
+      padding: 6px 10px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 600 !important;
       font-family: Calibri, "Carlito", "Segoe UI", Candara, sans-serif;
-      border: 1px solid #cbd5e1;
+      border: none;
+      border-radius: 0;
       background: #fff;
-      border-radius: 6px;
-      color: #475569;
+      color: #1a3a5c;
       cursor: pointer;
-      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      transition: background 0.1s, color 0.1s;
+      text-align: left;
+      width: 100%;
+      box-sizing: border-box;
+      display: block;
     }
 
     .due-date-toolbar--panel .due-filter-btns .due-filter-btn {
       width: 100%;
-      min-height: 38px;
+      min-height: 28px;
       height: auto;
-      padding: 10px 14px;
-      text-align: center;
-      font-weight: 400;
-      font-size: 14px;
-      color: #1e3a5f;
-      border: 1px solid #ced4da;
-      border-radius: 6px;
+      padding: 6px 10px;
+      text-align: left;
+      font-weight: 600 !important;
+      font-size: 12px;
+      color: #1a3a5c;
+      border: none;
+      border-radius: 0;
       background: #fff;
-      justify-content: center;
-      display: flex;
-      align-items: center;
+      justify-content: flex-start;
+      display: block;
     }
 
-    .due-filter-btn:hover {
-      border-color: #4f7ef8;
-      color: #2a50d8;
-      background: #f8fafc;
-    }
-
+    .due-filter-btn:hover,
     .due-date-toolbar--panel .due-filter-btns .due-filter-btn:hover {
-      border-color: #adb5bd;
-      background: #f8f9fa;
-      color: #1e3a5f;
+      background: #e8f0fe;
+      color: #1a3a5c;
     }
 
-    .due-filter-btn.active {
-      background: #4f7ef8;
-      border-color: #4f7ef8;
-      color: #fff;
-    }
-
+    .due-filter-btn.active,
     .due-date-toolbar--panel .due-filter-btns .due-filter-btn.active {
       background: #0d6efd;
-      border-color: #0d6efd;
-      color: #fff;
+      color: #fff !important;
     }
 
     .due-date-toolbar--panel .due-filter-btns .due-filter-btn.active:hover {
       background: #0b5ed7;
-      color: #fff;
+      color: #fff !important;
     }
 
     .custom-due-inline {
@@ -567,9 +789,10 @@
     }
 
     .due-date-toolbar--panel .custom-due-inline {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e9ecef;
+      margin-top: 0;
+      padding: 8px 10px 10px;
+      border-top: 1px solid #dee2e6;
+      background: #fafbfc;
     }
 
     .due-date-toolbar--panel .custom-due-inline.open {
@@ -622,9 +845,10 @@
       flex-direction: column;
       align-items: stretch;
       gap: 8px;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e9ecef;
+      margin-top: 0;
+      padding: 8px 10px 10px;
+      border-top: 1px solid #dee2e6;
+      background: #fafbfc;
       font-size: 12px;
       color: #6c757d;
     }
@@ -669,98 +893,158 @@
       color: #fff;
     }
 
-    /* ── TABLE ── */
-    .table-wrap {
-      flex: 1;
+    /* ── TABLE — Microsoft Excel–style grid ── */
+    .wrap > .table-wrap {
+      flex: 1 1 auto;
       overflow: auto;
       min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      box-sizing: border-box;
+      background: #fff !important;
+      border: none;
+      position: relative;
+      z-index: 1;
     }
 
-    table {
+    .workspace .wrap .table-wrap {
+      background: #fff !important;
+    }
+
+    #pendingTable {
       width: 100%;
-      min-width: 1300px;
+      min-width: max-content;
       border-collapse: collapse;
+      border-spacing: 0;
+      table-layout: fixed;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      font-size: 12px;
     }
 
-    thead {
+    #pendingTable thead {
       position: sticky;
       top: 0;
       z-index: 10;
     }
 
-    thead th {
-      background: #f8fafc;
-      border: 1px solid #ddd;
-      padding: 12px 16px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #334155;
+    #pendingTable thead th {
+      background: #d6e4f4 !important;
+      border: 1px solid #a8b4c4;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700 !important;
+      color: #1a3a5c !important;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.02em;
       white-space: nowrap;
       text-align: left;
-    }
-
-    thead th.center {
-      text-align: center;
-    }
-
-    thead th.right {
-      text-align: right;
-    }
-
-    tbody td {
-      padding: 12px 16px;
-      border: 1px solid #ddd;
-      font-size: 13.5px;
-      color: #1e293b;
       vertical-align: middle;
+      line-height: 1.25;
+      box-shadow: 0 1px 0 #a8b4c4;
     }
 
-    tbody td.right {
-      text-align: right;
-      font-weight: 500;
-    }
-
-    tbody td.center {
+    #pendingTable thead th.center {
       text-align: center;
     }
 
-    tbody tr {
-      background: #fff;
-      transition: background 0.1s;
+    #pendingTable thead th.right {
+      text-align: right;
     }
 
-    .workflow-stage-pending tbody tr:hover:not(.row-sel) {
+    #pendingTable tbody td {
+      padding: 6px 10px;
+      border: 1px solid #d4d4d4;
+      font-size: 12px;
+      font-weight: 400 !important;
+      color: #000 !important;
+      vertical-align: middle;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+      background: transparent !important;
+    }
+
+    #pendingTable tbody td.right {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #pendingTable tbody td.center {
+      text-align: center;
+    }
+
+    #pendingTable tbody td:nth-child(5),
+    #pendingTable tbody td:nth-child(7),
+    #pendingTable tbody td:nth-child(8) {
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    #pendingTable tbody td:last-child {
+      color: #007aff !important;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #pendingTable tbody td:nth-child(16) {
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #pendingTable col.col-cb { width: 36px; }
+    #pendingTable col.col-mark { width: 52px; }
+    #pendingTable col.col-status { width: 100px; }
+    #pendingTable col.col-qty { width: 48px; }
+    #pendingTable col.col-item { width: 140px; }
+    #pendingTable col.col-stamp { width: 72px; }
+    #pendingTable col.col-text { width: 110px; }
+    #pendingTable col.col-design { width: 72px; }
+    #pendingTable col.col-size { width: 56px; }
+    #pendingTable col.col-num { width: 76px; }
+    #pendingTable col.col-order { width: 92px; }
+    #pendingTable col.col-customer { width: 110px; }
+    #pendingTable col.col-relation { width: 100px; }
+    #pendingTable col.col-date { width: 88px; }
+
+    #pendingTable tbody tr {
+      background: #fff;
+      transition: background 0.15s;
+    }
+
+    .workflow-stage-pending #pendingTable tbody tr:hover:not(.row-sel) {
       background: #fbe4c8 !important;
       box-shadow: inset 0 0 0 1px rgba(225, 160, 80, 0.3);
     }
 
-    .workflow-stage-pending tbody tr[data-order-id]:hover:not(.row-sel) td {
+    .workflow-stage-pending #pendingTable tbody tr[data-order-id]:hover:not(.row-sel) td {
       border-color: #e8c8a0;
     }
 
-    .workflow-stage-pending tbody tr.row-sel:hover {
+    .workflow-stage-pending #pendingTable tbody tr.row-sel:hover {
       background: #e8f1ff !important;
       box-shadow: inset 0 0 0 1px rgba(79, 126, 248, 0.18);
     }
 
-    .workflow-stage-pending tbody tr.row-sel:hover td {
+    .workflow-stage-pending #pendingTable tbody tr.row-sel:hover td {
       border-color: #93c5fd;
     }
 
-    tbody tr.row-sel {
+    #pendingTable tbody tr.row-sel {
       background: #eef4ff !important;
     }
 
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600 !important;
+      line-height: 1.2;
+      white-space: nowrap;
     }
 
     .badge-pending {
@@ -782,7 +1066,7 @@
     }
 
     /* Pending Items — more fade: lighter edge tint, wider white middle */
-    .workflow-stage-pending tbody tr[data-order-id] {
+    .workflow-stage-pending #pendingTable tbody tr[data-order-id] {
       background: linear-gradient(
         90deg,
         rgba(225, 160, 80, 0.38) 0%,
@@ -812,42 +1096,65 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .cb-cell input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
+    #pendingTable .cb-cell input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      min-height: 14px;
       cursor: pointer;
-      accent-color: #4f7ef8;
+      accent-color: #1a73e8;
+      vertical-align: middle;
     }
 
-    /* ── FOOTER ── */
+    #pendingTable tbody td:nth-child(2) {
+      padding: 4px 6px;
+    }
+
+    #pendingTable tbody td:nth-child(2) span[style] {
+      font-size: 14px !important;
+    }
+
+    /* ── FOOTER (status text only — no column totals) ── */
     .footer {
-      padding: 11px 20px;
-      font-size: 12px;
-      color: #8a93a6;
-      border-top: 1px solid #e2e7ef;
-      background: #fafbfc;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      font-size: 11px;
+      color: #5f6368;
+      border-top: 1px solid #a8b4c4;
+      background: #fff;
       flex-shrink: 0;
-      font-weight: 500;
+      font-weight: 600 !important;
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 12px;
+      min-height: 28px;
+      box-sizing: border-box;
+    }
+
+    .footer #footerText {
+      font-weight: 600 !important;
     }
 
     .footer-stats {
       display: flex;
-      gap: 16px;
+      gap: 12px;
+      margin-left: auto;
     }
 
     .footer-stat {
       display: flex;
       align-items: center;
       gap: 5px;
+      font-size: 11px;
+      font-weight: 600 !important;
+      color: #1a3a5c;
     }
 
     .footer-dot {
-      width: 7px;
-      height: 7px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
+      flex-shrink: 0;
     }
 
     /* ── EMPTY ── */
@@ -942,6 +1249,89 @@
     .modal-close-btn:hover {
       background: #e2e5ef;
       color: #1a1f2e;
+    }
+
+    /* Job Worker Entry iframe (from Pending Items mark) — Excel shell */
+    #entryPopupOverlay.modal-overlay {
+      z-index: 9999;
+      padding: 12px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #entryPopupOverlay .entry-popup-modal {
+      width: min(98vw, 740px);
+      min-width: 640px;
+      max-width: 740px;
+      height: fit-content;
+      max-height: 92vh;
+      flex: 0 0 auto;
+      align-self: center;
+      border-radius: 3px;
+      border: 1px solid #a8b4c4;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+      animation: none;
+    }
+
+    #entryPopupOverlay .entry-popup-header {
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      padding: 4px 10px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-height: 34px;
+    }
+
+    #entryPopupOverlay .entry-popup-header-text {
+      display: none;
+    }
+
+    #entryPopupOverlay .entry-popup-icon {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 3px;
+      background: #d6e4f4;
+      color: #1a3a5c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #a8b4c4;
+    }
+
+    #entryPopupOverlay .entry-popup-close {
+      width: 26px;
+      height: 26px;
+      min-height: 26px;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
+      background: #fff;
+      color: #1a3a5c;
+    }
+
+    #entryPopupOverlay .entry-popup-close:hover {
+      background: #d6e4f4;
+      border-color: #7a8da6;
+    }
+
+    #entryPopupOverlay #entryFrame {
+      flex: 0 0 auto;
+      display: block;
+      width: 100%;
+      height: 320px;
+      min-height: 0;
+      max-height: calc(92vh - 42px);
+      border: none;
+      background: #fff;
+      overflow: hidden;
+      vertical-align: top;
+      box-sizing: border-box;
     }
 
     .assign-strip {
@@ -1183,41 +1573,42 @@
 
     .btn-confirm.assigning { background: #3a68e8; cursor: wait; }
 
-    /* Assign modal — Google / Material 3–inspired (flat, real SVG icons, no emoji) */
+    /* Assign modal — Excel-style (matches Pending Items grid / ribbon) */
     #assignModal.modal-overlay {
-      background: rgba(32, 33, 36, 0.46);
-      backdrop-filter: blur(4px);
+      background: rgba(15, 23, 42, 0.42);
+      backdrop-filter: blur(2px);
     }
 
     .modal.assign-modal-v2 {
-      width: min(448px, calc(100vw - 32px));
-      border-radius: 8px;
+      --assign-radius-outer: 12px;
+      --assign-radius-inner: 8px;
+      --assign-radius-pill: 10px;
+      width: min(540px, calc(100vw - 24px));
+      border-radius: var(--assign-radius-outer);
       overflow: hidden;
-      border: none;
-      box-shadow:
-        0 1px 2px rgba(60, 64, 67, 0.3),
-        0 2px 6px rgba(60, 64, 67, 0.15),
-        0 8px 24px 4px rgba(60, 64, 67, 0.12);
+      border: 1px solid #a8b4c4;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
       background: #fff;
-      font-family: Roboto, "Segoe UI", Helvetica, Arial, sans-serif;
-      animation: assignModalMatIn 0.22s cubic-bezier(0.2, 0, 0, 1);
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      font-weight: 400;
+      animation: assignModalExcelIn 0.16s ease-out;
     }
 
-    @keyframes assignModalMatIn {
-      from { opacity: 0; transform: scale(0.98) translateY(6px); }
-      to { opacity: 1; transform: scale(1) translateY(0); }
+    @keyframes assignModalExcelIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__header.modal-header {
-      padding: 20px 8px 12px 24px;
-      border-bottom: 1px solid #e8eaed;
-      background: #fff;
+      padding: 12px 14px 12px 16px;
+      border-bottom: 1px solid #a8b4c4;
+      background: #d6e4f4;
       align-items: stretch;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__head-top {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 8px;
       width: 100%;
@@ -1225,288 +1616,364 @@
 
     .modal.assign-modal-v2 .assign-modal-v2__head-row {
       display: flex;
-      align-items: flex-start;
-      gap: 16px;
+      align-items: center;
+      gap: 10px;
       min-width: 0;
       flex: 1;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__title-icon {
       flex-shrink: 0;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: #e8f0fe;
-      color: #1967d2;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--assign-radius-inner);
+      background: #fff;
+      color: #1a3a5c;
+      border: 1px solid #a8b4c4;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
+    .modal.assign-modal-v2 .assign-modal-v2__title-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
     .modal.assign-modal-v2 .assign-modal-v2__header-text h3 {
-      font-size: 1.375rem;
-      font-weight: 400;
-      letter-spacing: 0;
-      color: #202124;
-      margin: 0 0 6px;
-      line-height: 1.3;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      color: #1a3a5c;
+      margin: 0 0 4px;
+      line-height: 1.25;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__header-text p {
-      font-size: 0.875rem;
-      line-height: 1.43;
-      color: #5f6368;
+      font-size: 12px;
+      line-height: 1.35;
+      color: #3c4043;
       margin: 0;
       font-weight: 400;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__close.modal-close-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: transparent;
-      border: none;
-      color: #5f6368;
-      margin: -4px 8px 0 0;
+      width: 30px;
+      height: 30px;
+      min-height: 30px;
+      border-radius: var(--assign-radius-inner);
+      background: #fff;
+      border: 1px solid #a8b4c4;
+      color: #1a3a5c;
+      margin: 0;
+      flex-shrink: 0;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__close.modal-close-btn:hover {
-      background: #f1f3f4;
-      color: #202124;
+      background: #eef6f0;
+      border-color: #6aae6a;
+      color: #166534;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__strip.assign-strip {
       margin: 0;
-      padding: 12px 24px;
+      padding: 10px 16px;
       border-radius: 0;
       border: none;
-      border-bottom: 1px solid #dadce0;
-      background: #e8f0fe;
-      color: #1967d2;
-      font-size: 0.875rem;
-      font-weight: 500;
+      border-bottom: 1px solid #d4d4d4;
+      background: #eef6f0;
+      color: #166534;
+      font-size: 12px;
+      font-weight: 600;
       letter-spacing: 0;
       box-shadow: none;
-      gap: 12px;
+      gap: 10px;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__strip-icon {
       display: flex;
-      color: #1967d2;
+      color: #217346;
       flex-shrink: 0;
-      opacity: 0.95;
+      opacity: 1;
+    }
+
+    .modal.assign-modal-v2 .assign-modal-v2__strip-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__strip .assign-strip-count {
       margin-left: auto;
-      background: #1a73e8;
+      background: #217346;
       color: #fff;
-      border-radius: 999px;
+      border-radius: var(--assign-radius-pill);
       padding: 2px 10px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      border: none;
-      min-width: 24px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid #185c37;
+      min-width: 22px;
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.45;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__search.modal-search {
-      padding: 16px 24px 8px;
-      border-bottom: none;
-      background: #fff;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #d4d4d4;
+      background: #f4f6f8;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__search-wrap.modal-search-wrap input {
-      height: 48px;
-      border-radius: 4px;
-      border: 1px solid #dadce0;
+      height: 32px;
+      border-radius: var(--assign-radius-inner);
+      border: 1px solid #a8b4c4;
       background: #fff;
-      padding-left: 44px;
-      font-size: 1rem;
+      padding-left: 34px;
+      font-size: 13px;
       box-shadow: none;
-      font-family: Roboto, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      color: #1a3a5c;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__search-wrap.modal-search-wrap input:hover {
-      border-color: #80868b;
+      border-color: #7a8da6;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__search-wrap.modal-search-wrap input:focus {
-      border-color: #1a73e8;
-      box-shadow: inset 0 0 0 1px #1a73e8;
+      border-color: #217346;
+      box-shadow: inset 0 0 0 1px #217346;
       outline: none;
     }
 
+    .modal.assign-modal-v2 .assign-modal-v2__search-wrap.modal-search-wrap input::placeholder {
+      color: #6b7a95;
+    }
+
     .modal.assign-modal-v2 .assign-modal-v2__search-wrap.modal-search-wrap svg {
-      left: 14px;
+      left: 10px;
       color: #5f6368;
+      width: 13px;
+      height: 13px;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__list.jw-list {
-      max-height: 280px;
-      margin: 0;
-      padding: 8px 8px 12px;
+      max-height: 320px;
+      margin: 0 16px 12px;
+      padding: 0;
       background: #fff;
-      border-radius: 0;
-      border: none;
+      border-radius: var(--assign-radius-inner);
+      border: 1px solid #d4d4d4;
       box-shadow: none;
+      overflow: hidden;
+      overflow-y: auto;
+    }
+
+    .modal.assign-modal-v2 .assign-modal-v2__list.jw-list::before {
+      content: "Job worker";
+      display: block;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: 6px 12px 6px 40px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #1a3a5c;
+      background: #d6e4f4;
+      border-bottom: 1px solid #a8b4c4;
+      border-radius: var(--assign-radius-inner) var(--assign-radius-inner) 0 0;
     }
 
     .modal.assign-modal-v2 .jw-item {
-      padding: 10px 16px;
-      border-radius: 4px;
-      border: 1px solid transparent;
-      margin-bottom: 2px;
-      background: transparent;
-      transition: background 0.12s ease;
-      min-height: 48px;
+      padding: 8px 12px;
+      border-radius: 0;
+      border: none;
+      border-bottom: 1px solid #d4d4d4;
+      margin-bottom: 0;
+      background: #fff;
+      transition: background 0.1s ease;
+      min-height: 36px;
+      gap: 10px;
+    }
+
+    .modal.assign-modal-v2 .jw-item:last-child {
+      border-bottom: none;
     }
 
     .modal.assign-modal-v2 .jw-item:hover {
-      background: #f8f9fa;
-      border-color: transparent;
+      background: #f4f6f8;
     }
 
     .modal.assign-modal-v2 .jw-item.selected {
-      background: #e8f0fe;
-      border-color: transparent;
-      box-shadow: inset 3px 0 0 #1a73e8;
+      background: #e2efda;
+      box-shadow: inset 3px 0 0 #217346;
     }
 
     .modal.assign-modal-v2 .jw-radio {
-      border-color: #5f6368;
-      width: 20px;
-      height: 20px;
+      border-color: #a8b4c4;
+      width: 18px;
+      height: 18px;
+      background: #fff;
     }
 
     .modal.assign-modal-v2 .jw-item.selected .jw-radio {
-      border-color: #1a73e8;
+      border-color: #217346;
       border-width: 2px;
     }
 
     .modal.assign-modal-v2 .jw-radio-dot {
-      width: 10px;
-      height: 10px;
-      background: #1a73e8;
+      width: 9px;
+      height: 9px;
+      background: #217346;
     }
 
     .modal.assign-modal-v2 .jw-name {
-      font-size: 1rem;
+      font-size: 13px;
       font-weight: 400;
-      color: #202124;
+      color: #1a3a5c;
     }
 
     .modal.assign-modal-v2 .jw-item.selected .jw-name {
-      color: #1967d2;
-      font-weight: 500;
+      color: #166534;
+      font-weight: 600;
     }
 
     .modal.assign-modal-v2 .jw-sel-chip {
-      border-radius: 4px;
-      background: #fff;
-      color: #1967d2;
-      border: 1px solid #dadce0;
-      font-weight: 500;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      letter-spacing: 0;
+      border-radius: var(--assign-radius-pill);
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #6aae6a;
+      font-weight: 600;
+      font-size: 11px;
+      padding: 2px 8px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
     }
 
     .modal.assign-modal-v2 .jw-empty,
     .modal.assign-modal-v2 .jw-loading {
       color: #5f6368;
-      font-size: 0.875rem;
+      font-size: 13px;
+      font-weight: 400;
+      border: none;
+      padding: 28px 16px;
+    }
+
+    .modal.assign-modal-v2 .jw-empty span {
+      color: #6b7a95 !important;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__empty-illu {
-      width: 48px;
-      height: 48px;
-      margin: 0 auto 12px;
-      border-radius: 50%;
-      background: #f1f3f4;
-      color: #5f6368;
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 10px;
+      border-radius: var(--assign-radius-inner);
+      background: #d6e4f4;
+      color: #1a3a5c;
+      border: 1px solid #a8b4c4;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
     .modal.assign-modal-v2 .spinner {
-      border-color: #e8eaed;
-      border-top-color: #1a73e8;
+      border-color: #d4d4d4;
+      border-top-color: #217346;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__footer.modal-footer {
-      padding: 12px 24px 16px;
-      border-top: 1px solid #e8eaed;
-      background: #fff;
-      gap: 12px;
+      padding: 10px 16px 12px;
+      border-top: 1px solid #a8b4c4;
+      background: #eef1f5;
+      gap: 10px;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__hint.modal-footer-left {
-      font-size: 0.75rem;
-      color: #5f6368;
-      line-height: 1.4;
-      max-width: 48%;
+      font-size: 12px;
+      color: #3c4043;
+      line-height: 1.35;
+      max-width: 50%;
+      font-weight: 400;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__hint.modal-footer-left span {
-      color: #1967d2;
-      font-weight: 500;
+      color: #166534;
+      font-weight: 600;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__actions.modal-footer-right {
-      gap: 8px;
+      gap: 6px;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__btn-cancel.btn-cancel {
-      height: 36px;
-      padding: 0 16px;
-      border-radius: 4px;
-      border: none;
-      background: transparent;
-      color: #1a73e8;
-      font-weight: 500;
-      font-size: 0.875rem;
+      height: 30px;
+      padding: 0 14px;
+      border-radius: var(--assign-radius-inner);
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      color: #1a3a5c;
+      font-weight: 600;
+      font-size: 13px;
       letter-spacing: 0;
+      box-shadow: none;
+      transform: none;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__btn-cancel.btn-cancel:hover {
-      background: #f1f3f4;
-      color: #174ea6;
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm {
-      height: 36px;
-      padding: 0 16px;
-      border-radius: 4px;
-      border: none;
-      background: #1a73e8;
-      color: #fff !important;
-      font-weight: 500;
-      font-size: 0.875rem;
+      height: 30px;
+      padding: 0 14px;
+      border-radius: var(--assign-radius-inner);
+      border: 1px solid #6aae6a;
+      background: #f0fdf4;
+      color: #166534 !important;
+      font-weight: 600;
+      font-size: 13px;
       letter-spacing: 0;
       box-shadow: none;
+      transform: none;
+    }
+
+    .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm svg {
+      stroke: #166534;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm:hover:not(:disabled) {
-      background: #1765cc;
-      box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+      background: #dcfce7;
+      border-color: #4d9a4d;
+      color: #14532d !important;
+      box-shadow: none;
       transform: none;
     }
 
     .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm:disabled {
-      background: #f1f3f4;
-      color: #80868b !important;
+      background: #f4f6f8;
+      color: #9aa3b0 !important;
+      border-color: #d4d4d4;
       box-shadow: none;
       cursor: default;
     }
 
+    .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm:disabled svg {
+      stroke: #9aa3b0;
+    }
+
     .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm.assigning {
-      background: #1a73e8;
+      background: #217346;
+      border-color: #185c37;
       color: #fff !important;
       cursor: wait;
-      opacity: 0.92;
+      opacity: 1;
+    }
+
+    .modal.assign-modal-v2 .assign-modal-v2__btn-confirm.btn-confirm.assigning svg {
+      stroke: #fff;
     }
 
     /* ── TOAST ── */
@@ -1609,8 +2076,8 @@
   <div class="wrap workflow-stage-pending">
     <div class="ledger-page-titlebar">Pending Items</div>
     <!-- TOOLBAR -->
-    <div class="toolbar">
-      <div class="toolbar-row-main">
+    <div class="toolbar" aria-label="Filters and actions">
+      <div class="toolbar-inner">
       <span class="sel-pill" id="selPill">0 selected</span>
       <div class="pending-field-filters" id="pendingFieldFilters" aria-label="Filter by column">
         <div class="pending-filter-group">
@@ -1639,22 +2106,23 @@
         </svg>
         Filter
       </button>
-      <div class="due-date-dropdown-wrap" id="dueDateDropdownWrap">
-        <button type="button" class="btn btn-due-dropdown" id="dueDateDropdownBtn"
+      <div class="pending-filter-group due-date-dropdown-wrap" id="dueDateDropdownWrap">
+        <label for="dueDateDropdownBtn">Due date</label>
+        <button type="button" class="pending-due-select" id="dueDateDropdownBtn"
           onclick="toggleDueDateDropdown(event)" aria-expanded="false" aria-haspopup="true"
           title="Filter by order due date">
-          <span class="due-dd-label">Due date</span>
+          <span class="due-dd-label">All</span>
           <svg class="due-dd-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2.2">
+            stroke-width="2.2" aria-hidden="true">
             <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
         <div class="due-date-dropdown-panel" id="dueDateDropdownPanel" role="menu" aria-hidden="true">
           <div class="due-date-toolbar due-date-toolbar--panel">
-            <div class="filter-due-heading">Due date</div>
+            <div class="filter-due-heading" aria-hidden="true">Due date</div>
             <div class="due-filter-btns">
               <button type="button" class="due-filter-btn" data-due-mode="clear" onclick="setDueFilter('clear')"
-                title="Remove due date filter">Clear</button>
+                title="Show all due dates">All</button>
               <button type="button" class="due-filter-btn" data-due-mode="today" onclick="setDueFilter('today')"
                 title="Due today">Today</button>
               <button type="button" class="due-filter-btn" data-due-mode="week" onclick="setDueFilter('week')"
@@ -1691,10 +2159,13 @@
         </svg>
         Refresh
       </button>
-      <button type="button" class="btn" id="pendingToggleSelectAllBtn" onclick="pendingToggleSelectAllClick()" disabled
-        title="Select every visible row, or clear all selections">Select all</button>
-      </div>
-      <div class="toolbar-actions-row" aria-label="Assign, skip to ready, and unassign">
+      <label class="pending-select-all-wrap" id="pendingToggleSelectAllWrap"
+        title="Tick to select all visible rows; untick to clear selection">
+        <input type="checkbox" id="pendingToggleSelectAllCb" disabled
+          onchange="pendingSelectAllCheckboxChange(this)" aria-label="Select all visible rows">
+        <span class="pending-select-all-label">Select all</span>
+      </label>
+      <div class="toolbar-actions-group" aria-label="Assign, skip to ready, and unassign">
         <button class="btn btn-assign" id="assignBtn" onclick="openAssignModal()" disabled>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12" />
@@ -1716,6 +2187,7 @@
           Unassign Selected
           <span class="btn-count" id="btnUnassignCount">0</span>
         </button>
+      </div>
       </div>
     </div>
 
@@ -1741,12 +2213,31 @@
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrap">
+    <div class="table-wrap" id="pendingItemsTableScroll">
       <table id="pendingTable">
+        <colgroup>
+          <col class="col-cb">
+          <col class="col-mark">
+          <col class="col-status">
+          <col class="col-qty">
+          <col class="col-item">
+          <col class="col-stamp">
+          <col class="col-text">
+          <col class="col-text">
+          <col class="col-design">
+          <col class="col-size">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-order">
+          <col class="col-customer">
+          <col class="col-relation">
+          <col class="col-date">
+          <col class="col-date">
+        </colgroup>
         <thead>
           <tr>
-            <th class="center cb-cell" style="width:46px;" aria-label="Row select"></th>
-            <th class="center" style="width:68px;">Mark</th>
+            <th class="center cb-cell" aria-label="Row select"></th>
+            <th class="center">Mark</th>
             <th class="center">Status</th>
             <th class="right">Qty</th>
             <th>Item Name</th>
@@ -1853,31 +2344,28 @@
   </div>
 
   <!-- ENTRY POPUP OVERLAY -->
-  <div class="modal-overlay" id="entryPopupOverlay" style="z-index: 9999; padding: 20px; position: fixed; inset: 0;">
-    <div class="modal"
-      style="width: 90%; max-width: 1100px; height: 88vh; max-height: 700px; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden;">
-      <div class="modal-header"
-        style="background: #f8f9fc; border-bottom: 2px solid #e2e8f0; padding: 12px 20px; flex-shrink:0;">
-        <div class="modal-header-text" style="display:flex;align-items:flex-start;gap:12px;">
-          <span style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:#e8f0fe;color:#1967d2;display:flex;align-items:center;justify-content:center;" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+  <div class="modal-overlay" id="entryPopupOverlay">
+    <div class="modal entry-popup-modal">
+      <div class="modal-header entry-popup-header">
+        <div class="modal-header-text entry-popup-header-text">
+          <span class="entry-popup-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
               <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
             </svg>
           </span>
           <span>
-            <h3 style="margin:0 0 4px;">New Job Worker Entry</h3>
-            <p style="margin:0;">Fill in entry details and Save to proceed to assignment.</p>
+            <h3>New Job Worker Entry</h3>
+            <p>Fill in entry details and Save to proceed to assignment.</p>
           </span>
         </div>
-        <button class="modal-close-btn" onclick="closeEntryPopup()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <button type="button" class="modal-close-btn entry-popup-close" onclick="closeEntryPopup()" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <path d="M18 6 6 18M6 6l12 12" />
           </svg>
         </button>
       </div>
-      <iframe id="entryFrame" style="flex: 1; border: none; background: #f8f9fc; min-height: 0;"
-        src="about:blank"></iframe>
+      <iframe id="entryFrame" title="Jobworker entry form" src="about:blank"></iframe>
     </div>
   </div>
 
@@ -1960,30 +2448,60 @@
       const label = btn && btn.querySelector('.due-dd-label');
       if (!btn || !label) return;
       if (dueFilterMode === 'none' || !dueDateFilter) {
-        label.textContent = 'Due date';
+        label.textContent = 'All';
         btn.classList.remove('active');
         return;
       }
       btn.classList.add('active');
-      if (dueFilterMode === 'today') label.textContent = 'Due: Today';
-      else if (dueFilterMode === 'week') label.textContent = 'Due: Week';
-      else if (dueFilterMode === 'month') label.textContent = 'Due: Month';
-      else if (dueFilterMode === 'year') label.textContent = 'Due: Year';
-      else if (dueFilterMode === 'custom') label.textContent = 'Due: Custom';
+      if (dueFilterMode === 'today') label.textContent = 'Today';
+      else if (dueFilterMode === 'week') label.textContent = 'This week';
+      else if (dueFilterMode === 'month') label.textContent = 'This month';
+      else if (dueFilterMode === 'year') label.textContent = 'This year';
+      else if (dueFilterMode === 'custom') label.textContent = 'Custom range';
       else if (dueFilterMode === 'nextn') {
         const n = document.getElementById('dueNextNDays');
         const v = (n && n.value) ? String(n.value).trim() : '7';
-        label.textContent = 'Due: Next ' + v + 'd';
+        label.textContent = 'Next ' + v + ' days';
       } else {
-        label.textContent = 'Due date';
+        label.textContent = 'All';
         btn.classList.remove('active');
+      }
+    }
+
+    function positionDueDateDropdownPanel() {
+      const btn = document.getElementById('dueDateDropdownBtn');
+      const panel = document.getElementById('dueDateDropdownPanel');
+      if (!btn || !panel) return;
+      const r = btn.getBoundingClientRect();
+      const gap = 4;
+      const panelW = Math.max(r.width, 120);
+      let left = r.left;
+      if (left + panelW > window.innerWidth - 12) {
+        left = Math.max(12, window.innerWidth - panelW - 12);
+      }
+      let top = r.bottom + gap;
+      panel.style.left = left + 'px';
+      panel.style.top = top + 'px';
+      panel.style.minWidth = panelW + 'px';
+      panel.style.width = panelW + 'px';
+      const ph = panel.offsetHeight;
+      if (ph && top + ph > window.innerHeight - 12) {
+        const above = r.top - gap - ph;
+        if (above >= 12) panel.style.top = above + 'px';
       }
     }
 
     function closeDueDateDropdown() {
       const panel = document.getElementById('dueDateDropdownPanel');
       const btn = document.getElementById('dueDateDropdownBtn');
-      if (panel) { panel.classList.remove('open'); panel.setAttribute('aria-hidden', 'true'); }
+      if (panel) {
+        panel.classList.remove('open');
+        panel.setAttribute('aria-hidden', 'true');
+        panel.style.left = '';
+        panel.style.top = '';
+        panel.style.minWidth = '';
+        panel.style.width = '';
+      }
       if (btn) btn.setAttribute('aria-expanded', 'false');
     }
 
@@ -1996,12 +2514,25 @@
       panel.classList.toggle('open', willOpen);
       panel.setAttribute('aria-hidden', willOpen ? 'false' : 'true');
       btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (willOpen) {
+        requestAnimationFrame(function () {
+          positionDueDateDropdownPanel();
+        });
+      } else {
+        panel.style.left = '';
+        panel.style.top = '';
+        panel.style.minWidth = '';
+        panel.style.width = '';
+      }
     }
 
     function syncDueFilterButtons() {
       document.querySelectorAll('.due-filter-btn[data-due-mode]').forEach(btn => {
         const m = btn.getAttribute('data-due-mode');
-        if (m === 'clear') { btn.classList.remove('active'); return; }
+        if (m === 'clear') {
+          btn.classList.toggle('active', dueFilterMode === 'none' || !dueDateFilter);
+          return;
+        }
         let on = false;
         if (m === 'custom') {
           const wrap = document.getElementById('customDueWrap');
@@ -2138,31 +2669,56 @@
     }
 
     function pendingSyncToggleSelectAllButton() {
-      const btn = document.getElementById('pendingToggleSelectAllBtn');
-      if (!btn) return;
+      const master = document.getElementById('pendingToggleSelectAllCb');
+      if (!master) return;
       const visible = pendingGetVisibleRowCheckboxes();
       if (!visible.length) {
-        btn.disabled = true;
-        btn.textContent = 'Select all';
+        master.disabled = true;
+        master.checked = false;
+        master.indeterminate = false;
         return;
       }
-      btn.disabled = false;
-      const allChecked = visible.every(cb => cb.checked);
-      btn.textContent = allChecked ? 'Clear selection' : 'Select all';
+      master.disabled = false;
+      const checkedCount = visible.filter(cb => cb.checked).length;
+      if (checkedCount === 0) {
+        master.checked = false;
+        master.indeterminate = false;
+      } else if (checkedCount === visible.length) {
+        master.checked = true;
+        master.indeterminate = false;
+      } else {
+        master.checked = false;
+        master.indeterminate = true;
+      }
     }
 
-    function pendingToggleSelectAllClick() {
+    function pendingSelectAllCheckboxChange(masterCb) {
       const visible = pendingGetVisibleRowCheckboxes();
-      if (!visible.length) return;
-      const allChecked = visible.every(cb => cb.checked);
-      const nextChecked = !allChecked;
+      if (!visible.length || !masterCb) {
+        if (masterCb) {
+          masterCb.checked = false;
+          masterCb.indeterminate = false;
+        }
+        return;
+      }
+      const shouldCheck = masterCb.checked;
       visible.forEach(cb => {
-        if (cb.checked !== nextChecked) {
-          cb.checked = nextChecked;
+        if (cb.checked !== shouldCheck) {
+          cb.checked = shouldCheck;
           onCbChange(cb);
         }
       });
       pendingSyncToggleSelectAllButton();
+    }
+
+    function pendingToggleSelectAllClick() {
+      const master = document.getElementById('pendingToggleSelectAllCb');
+      if (!master || master.disabled) return;
+      const visible = pendingGetVisibleRowCheckboxes();
+      if (!visible.length) return;
+      master.checked = !visible.every(cb => cb.checked);
+      master.indeterminate = false;
+      pendingSelectAllCheckboxChange(master);
     }
 
     /* ══════════════════════════════════════════════════════════════
@@ -2487,7 +3043,7 @@
                   data-order-id="${r.orderId}" data-item-idx="${r.itemIdx}"
                   onchange="onCbChange(this)">
               </td>
-              <td class="center" style="padding:10px 8px;">
+              <td class="center">
                 ${r.assigned
                   ? `<span style="font-size:18px;color:#16a34a;">&#10003;</span>`
                   : `<label class="mark-cb-wrap" title="Mark to open Job Worker Entry">
@@ -2689,6 +3245,22 @@
       return isDashboard ? 'pages/jobworker-entry.html?mode=assignment' : 'jobworker-entry.html?mode=assignment';
     }
 
+    function syncEntryFrameHeight() {
+      const frame = document.getElementById('entryFrame');
+      if (!frame || !frame.contentDocument) return;
+      const doc = frame.contentDocument;
+      const shell = doc.querySelector('.jwe-entry-shell');
+      const page = doc.querySelector('.page');
+      const root = shell || page || doc.body;
+      if (!root) return;
+      const pageEl = page || doc.documentElement;
+      const cs = doc.defaultView.getComputedStyle(pageEl);
+      const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+      const h = Math.ceil(root.offsetHeight + padY + 2);
+      const maxH = Math.floor(window.innerHeight * 0.92 - 42);
+      frame.style.height = Math.min(Math.max(h, 240), Math.max(maxH, 240)) + 'px';
+    }
+
     function onMarkCbChange(cb, event) {
       if (event && !event.isTrusted) { cb.checked = false; return; }
       if (!_pageReady) { cb.checked = false; return; }
@@ -2721,6 +3293,7 @@
       const frame   = document.getElementById('entryFrame');
       overlay.classList.remove('open');
       frame.src = 'about:blank';
+      frame.style.height = '';
       if (_currentMarkCb) { _currentMarkCb.checked = false; _currentMarkCb = null; }
     }
 
@@ -3031,7 +3604,24 @@
       var ov = document.getElementById('entryPopupOverlay');
       var fr = document.getElementById('entryFrame');
       if (ov) ov.classList.remove('open');
-      if (fr) fr.src = 'about:blank';
+      if (fr) {
+        fr.src = 'about:blank';
+        function onEntryFrameLoaded() {
+          if (!fr.src || String(fr.src).indexOf('about:blank') !== -1) return;
+          function runSync() { syncEntryFrameHeight(); }
+          requestAnimationFrame(function () {
+            runSync();
+            requestAnimationFrame(runSync);
+          });
+          setTimeout(runSync, 80);
+          setTimeout(runSync, 200);
+        }
+        if (typeof ledgerNavListen === 'function') {
+          ledgerNavListen(fr, 'load', onEntryFrameLoaded);
+        } else {
+          fr.addEventListener('load', onEntryFrameLoaded);
+        }
+      }
     })();
 
     if (document.readyState === 'loading') {
@@ -3068,9 +3658,14 @@
       function onDueDocClick(e) {
         const wrap  = document.getElementById('dueDateDropdownWrap');
         const panel = document.getElementById('dueDateDropdownPanel');
+        const btn   = document.getElementById('dueDateDropdownBtn');
         if (!wrap || !panel || !panel.classList.contains('open')) return;
-        if (wrap.contains(e.target)) return;
+        if (wrap.contains(e.target) || panel.contains(e.target) || (btn && btn.contains(e.target))) return;
         closeDueDateDropdown();
+      }
+      function onDueReposition() {
+        const panel = document.getElementById('dueDateDropdownPanel');
+        if (panel && panel.classList.contains('open')) positionDueDateDropdownPanel();
       }
       function onDueDocKeydown(e) {
         if (e.key !== 'Escape') return;
@@ -3080,9 +3675,13 @@
       if (typeof ledgerNavListen === 'function') {
         ledgerNavListen(document, 'click', onDueDocClick);
         ledgerNavListen(document, 'keydown', onDueDocKeydown);
+        ledgerNavListen(window, 'resize', onDueReposition);
+        ledgerNavListen(window, 'scroll', onDueReposition, true);
       } else {
         document.addEventListener('click', onDueDocClick);
         document.addEventListener('keydown', onDueDocKeydown);
+        window.addEventListener('resize', onDueReposition);
+        window.addEventListener('scroll', onDueReposition, true);
       }
       const nEl = document.getElementById('dueNextNDays');
       if (nEl) {
@@ -3118,6 +3717,7 @@
     window.selectJw               = selectJw;
     window.onCbChange             = onCbChange;
     window.pendingToggleSelectAllClick = pendingToggleSelectAllClick;
+    window.pendingSelectAllCheckboxChange = pendingSelectAllCheckboxChange;
     window.markEntry              = markEntry;
     window.closeEntryPopup        = closeEntryPopup;
     window.getEntryPageUrl        = getEntryPageUrl;

@@ -15,94 +15,137 @@
       font-size: 14px;
     }
 
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
     body {
       margin: 0;
-      background: #e6ebf2;
+      background: #fff;
     }
 
     /* =========================
-   CONTAINER
+   CONTAINER — full screen
 ========================= */
     .orders-wrap {
-      margin: 15px;
+      margin: 0;
       background: #fff;
-      border: 1px solid #d1d6de;
-      border-radius: 12px;
+      border: none;
+      border-radius: 0;
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 30px);
-      max-height: calc(100vh - 30px);
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      min-height: 0;
       overflow: hidden;
       box-sizing: border-box;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      box-shadow: none;
     }
 
-    /* Workspace integration */
     .workspace .orders-wrap {
       margin: 0;
       height: 100%;
       max-height: 100%;
-      border-radius: var(--ledger-ws-r, 10px);
+      border-radius: 0;
       box-shadow: none;
     }
 
     .orders-wrap > .ledger-page-titlebar:first-child {
-      border-radius: 12px 12px 0 0;
+      border-radius: 0;
+      flex-shrink: 0;
+      background: #f4f6f8;
+      border-bottom: 1px solid #a8b4c4;
+      color: #1a3a5c;
+      font-weight: 700;
     }
 
     .workspace .orders-wrap > .ledger-page-titlebar:first-child {
-      border-radius: var(--ledger-ws-r, 10px) var(--ledger-ws-r, 10px) 0 0;
+      border-radius: 0;
     }
 
     /* =========================
-   TOOLBAR (Customer Balance style)
+   TOOLBAR — compact (Excel page style)
 ========================= */
     .orders-toolbar {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 14px;
-      padding: 18px 20px;
-      border-bottom: 2px solid #d1d6de;
-      background: linear-gradient(to bottom, #fafbfc, #f5f7fa);
+      gap: 8px 10px;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
+      background: #fff;
       flex-shrink: 0;
       box-sizing: border-box;
+      overflow-x: visible;
+      overflow-y: visible;
     }
 
-    .btn {
-      padding: 10px 18px;
-      border: 1px solid #d1d6de;
+    .orders-toolbar > .btn:first-child {
+      flex-shrink: 0;
+      margin-left: 0;
+    }
+
+    .orders-toolbar .orders-filter-group {
+      flex-shrink: 0;
+    }
+
+    .orders-toolbar .orders-filter-menu {
+      margin-left: auto;
+      flex-shrink: 0;
+      margin-right: 0;
+    }
+
+    .orders-toolbar #filterActions {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .orders-toolbar .btn {
+      padding: 4px 10px;
+      min-height: 26px;
+      height: 26px;
+      border: 1px solid #a8b4c4;
       background: #fff;
       cursor: pointer;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s;
-      color: #1d1d1f;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      color: #1a3a5c;
+      box-shadow: none;
     }
 
-    .btn:hover {
-      background: #007aff;
-      border-color: #007aff;
-      color: #fff;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+    .orders-toolbar .btn:hover {
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
+      transform: none;
+      box-shadow: none;
     }
 
-    .btn:active {
-      transform: translateY(0);
+    .orders-toolbar .btn:active {
+      transform: none;
     }
 
     .orders-filter-group {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 14px;
+      gap: 6px 10px;
+      position: relative;
+      overflow: visible;
     }
 
     .orders-filter-menu {
       position: relative;
+      z-index: 1200;
     }
 
     .orders-filter-menu>summary {
@@ -123,13 +166,13 @@
     .orders-filter-menu-panel {
       position: absolute;
       right: 0;
-      top: calc(100% + 6px);
-      min-width: 200px;
+      top: calc(100% + 4px);
+      min-width: 160px;
       background: #fff;
-      border: 1px solid #d1d6de;
-      border-radius: 8px;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
-      z-index: 100;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+      z-index: 2000;
       padding: 6px;
       display: flex;
       flex-direction: column;
@@ -140,98 +183,104 @@
     .orders-filter-menu-item {
       width: 100%;
       text-align: left;
-      padding: 10px 14px;
+      padding: 6px 10px;
       border: none;
-      border-radius: 6px;
+      border-radius: 2px;
       background: transparent;
-      font-size: 14px;
-      font-weight: 500;
-      color: #1d1d1f;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1a3a5c;
       cursor: pointer;
       font-family: inherit;
       transition: background 0.15s;
     }
 
     .orders-filter-menu-item:hover {
-      background: #eef1f5;
+      background: #e8f0fe;
     }
 
-    label {
-      font-size: 14px;
-      color: #3a3a3c;
-      font-weight: 500;
+    .orders-toolbar label {
+      font-size: 11px;
+      color: #3c4043;
+      font-weight: 600;
       white-space: nowrap;
+      margin: 0;
     }
 
-    input,
-    select {
-      height: 40px;
-      padding: 8px 14px;
-      border: 1px solid #d1d6de;
-      border-radius: 8px;
-      font-size: 14px;
+    .orders-toolbar select {
+      height: 26px;
+      min-height: 26px;
+      padding: 3px 24px 3px 8px;
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
+      font-size: 12px;
       background: #fff;
-      transition: all 0.2s;
-      min-width: 140px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      min-width: 120px;
+      max-width: 180px;
+      line-height: 1.2;
     }
 
-    input:focus,
-    select:focus {
+    .orders-toolbar select:focus {
       outline: none;
-      border-color: #007aff;
-      box-shadow: 0 0 0 3px rgba(0, 122, 255, .12);
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
       background: #fff;
-    }
-
-    input::placeholder {
-      color: #8e8e93;
     }
 
     /* =========================
-   TABLE (Customer Balance style)
+   TABLE — Microsoft Excel–style grid
 ========================= */
-    .table-wrap {
-      flex: 1;
+    .orders-wrap > .table-wrap {
+      flex: 1 1 auto;
       overflow: auto;
       position: relative;
       min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
       box-sizing: border-box;
       background: #fff;
+      border: none;
     }
 
-    table {
+    #ordersTable {
       width: 100%;
-      min-width: 1120px;
+      min-width: max-content;
       border-collapse: collapse;
+      border-spacing: 0;
+      table-layout: fixed;
       background: #fff;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      font-size: 12px;
     }
 
-    thead {
+    #ordersTable thead {
       position: sticky;
       top: 0;
       z-index: 10;
-      background: #fff;
-      box-shadow: 0 1px 0 0 #c5c9ce;
     }
 
-    thead th {
-      background: linear-gradient(to bottom, #eef1f5, #e4e8ed);
-      border: 1px solid #c5c9ce;
-      padding: 18px;
+    #ordersTable thead th {
+      background: #d6e4f4;
+      color: #1a3a5c;
+      border: 1px solid #a8b4c4;
+      padding: 6px 10px;
       white-space: nowrap;
-      font-weight: 600;
-      font-size: 13px;
+      font-weight: 700;
+      font-size: 11px;
       text-align: left;
-      color: #1d1d1f;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
+      vertical-align: middle;
+      line-height: 1.25;
+      box-shadow: 0 1px 0 #a8b4c4;
     }
 
-    thead th.center {
+    #ordersTable thead th.center {
       text-align: center;
     }
 
-    thead th.right {
+    #ordersTable thead th.right {
       text-align: right;
     }
 
@@ -240,59 +289,77 @@
       width: 40px;
       max-width: 40px;
       min-width: 40px;
-      padding: 8px 4px;
+      padding: 6px 8px;
       box-sizing: border-box;
       vertical-align: middle;
       text-align: center;
       overflow: visible;
     }
 
-    #ordersTable thead th:first-child {
-      padding: 10px 4px;
-      font-size: 11px;
-      letter-spacing: 0.03em;
-    }
-
-    tbody td {
-      padding: 18px;
-      border: 1px solid #d1d6de;
-      font-size: 14px;
+    #ordersTable tbody td {
+      padding: 6px 10px;
+      border: 1px solid #d4d4d4;
+      font-size: 12px;
       vertical-align: middle;
-      color: #333;
-      line-height: 1.35;
+      color: #000;
+      line-height: 1.25;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 200px;
+      max-width: 220px;
+      background: transparent;
     }
 
-    tbody td:nth-child(3) {
+    #ordersTable tbody td:nth-child(3),
+    #ordersTable tbody td:nth-child(4) {
       white-space: normal;
       word-break: break-word;
     }
 
-    tbody td:nth-child(6) {
+    #ordersTable tbody td:nth-child(5),
+    #ordersTable tbody td:nth-child(6) {
       text-align: center;
-      font-weight: 500;
-      color: #007aff;
-      text-transform: capitalize;
+      font-variant-numeric: tabular-nums;
     }
 
-    tbody tr {
-      transition: background 0.2s;
+    #ordersTable tbody tr {
       background: #fff;
     }
 
-    tbody tr:nth-child(even) {
-      background: #f8f9fb;
+    #ordersTable tbody tr:nth-child(even) {
+      background: #f8fafc;
     }
 
-    tbody tr:hover {
-      background: #e8f2ff;
+    #ordersTable tbody tr:hover td {
+      background: #eaf7ed;
+      border-color: #c8e6c9;
     }
 
-    tbody tr:hover td {
-      border-color: #b8d4f0;
+    #ordersTable thead th:last-child,
+    #ordersTable tbody td:last-child {
+      padding-right: 12px;
+    }
+
+    #ordersTable tbody tr .btn {
+      padding: 2px 10px;
+      min-height: 22px;
+      height: 22px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 2px;
+      border: 1px solid #a8b4c4;
+      background: #fff;
+      color: #1a3a5c;
+      box-shadow: none;
+      transform: none;
+    }
+
+    #ordersTable tbody tr .btn:hover {
+      background: #d6e4f4;
+      border-color: #7a8da6;
+      color: #1a3a5c;
+      transform: none;
+      box-shadow: none;
     }
 
     /* Orders list: side colour fade to white centre (aligned with Pending / Ready / Item Process) */
@@ -334,7 +401,8 @@
     }
 
     #ordersTable tbody tr.orders-row-ready-items:hover td {
-      border-color: #d4edda;
+      background: #f0faf4 !important;
+      border-color: #a8b4c4;
     }
 
     #ordersTable tbody tr.orders-row-ready-orders {
@@ -374,7 +442,8 @@
     }
 
     #ordersTable tbody tr.orders-row-ready-orders:hover td {
-      border-color: #c8e6c9;
+      background: #eaf7ed !important;
+      border-color: #a8b4c4;
     }
 
     #ordersTable tbody tr.orders-row-item-process {
@@ -416,7 +485,8 @@
     }
 
     #ordersTable tbody tr.orders-row-item-process:hover td {
-      border-color: #e8d48e;
+      background: #fff4a3 !important;
+      border-color: #a8b4c4;
     }
 
     /* Past due and not yet on Ready Orders — red edge fade, white centre */
@@ -443,48 +513,49 @@
     }
 
     #ordersTable tbody tr.orders-row-overdue-not-ready:hover td {
-      border-color: #fca5a5;
+      background: #fee2e2 !important;
+      border-color: #a8b4c4;
     }
 
-    tbody tr.selected {
+    #ordersTable tbody tr.selected td {
       background: #ffe6e6 !important;
-      border-left: 3px solid #ff3b30;
+      border-color: #f5a8a8 !important;
     }
 
-    tbody tr.selected td {
-      border-color: #ffcccc;
+    #ordersTable tbody tr.selected td:first-child {
+      box-shadow: inset 3px 0 0 #ff3b30;
     }
 
-    .center {
+    #ordersTable .center {
       text-align: center;
     }
 
-    .right {
+    #ordersTable .right {
       text-align: right;
-      font-weight: 500;
-      color: #1d1d1f;
+      font-weight: 600;
+      color: #000;
       font-variant-numeric: tabular-nums;
     }
 
-    /* Mark column: thick square checkbox (fixed box — avoid stretch to cell width) */
+    /* Mark column: Excel-style checkbox */
     #ordersTable tbody td:first-child input[type="checkbox"] {
       -webkit-appearance: none;
       appearance: none;
       display: inline-block;
-      width: 20px !important;
-      min-width: 20px !important;
-      max-width: 20px !important;
-      height: 20px !important;
-      min-height: 20px !important;
-      max-height: 20px !important;
+      width: 14px !important;
+      min-width: 14px !important;
+      max-width: 14px !important;
+      height: 14px !important;
+      min-height: 14px !important;
+      max-height: 14px !important;
       aspect-ratio: 1;
       margin: 0 auto;
       padding: 0;
       cursor: pointer;
       vertical-align: middle;
       box-sizing: border-box;
-      border: 3px solid #2c2c2e;
-      border-radius: 2px;
+      border: 1px solid #5f6368;
+      border-radius: 0;
       background: #fff;
       flex: 0 0 auto;
       transition: background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
@@ -509,18 +580,103 @@
       box-shadow: 0 0 0 2px #fff, 0 0 0 4px #007aff;
     }
 
-    /* =========================
-   FOOTER (Customer Balance style)
-========================= */
-    .footer {
-      padding: 14px 20px;
-      font-size: 14px;
-      color: #6e6e73;
-      border-top: 2px solid #d1d6de;
-      background: #f5f7fa;
+    /* Shared column widths — main grid + footer totals row align */
+    #ordersTable,
+    #ordersFooterTable {
+      table-layout: fixed;
+    }
+
+    #ordersTable col.col-mark,
+    #ordersFooterTable col.col-mark { width: 36px; }
+
+    #ordersTable col.col-order-no,
+    #ordersFooterTable col.col-order-no { width: 92px; }
+
+    #ordersTable col.col-customer,
+    #ordersFooterTable col.col-customer { width: 120px; }
+
+    #ordersTable col.col-relation,
+    #ordersFooterTable col.col-relation { width: 110px; }
+
+    #ordersTable col.col-date,
+    #ordersFooterTable col.col-date { width: 88px; }
+
+    #ordersTable col.col-num,
+    #ordersFooterTable col.col-num { width: 88px; }
+
+    #ordersTable col.col-action,
+    #ordersFooterTable col.col-action { width: 56px; }
+
+    /* Footer totals row — lines up under Gr.Wt … Balance columns */
+    .orders-footer-align {
       flex-shrink: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border-top: 1px solid #a8b4c4;
+      background: #eef1f5;
+      scrollbar-width: none;
+    }
+
+    .orders-footer-align::-webkit-scrollbar {
+      display: none;
+    }
+
+    #ordersFooterTable {
+      width: 100%;
+      min-width: max-content;
+      border-collapse: collapse;
+      border-spacing: 0;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
+      font-size: 12px;
+      background: #eef1f5;
+    }
+
+    #ordersFooterTable td {
+      border: 1px solid #d4d4d4;
+      padding: 4px 7px;
+      vertical-align: middle;
+      line-height: 1.25;
       box-sizing: border-box;
-      font-weight: 500;
+    }
+
+    #ordersFooterTable .orders-footer-count-cell {
+      font-size: 11px;
+      font-weight: 600;
+      color: #5f6368;
+      text-align: left;
+      background: #eef1f5;
+    }
+
+    #ordersFooterTable .orders-footer-sum-cell {
+      text-align: right;
+      vertical-align: top;
+      background: #eef1f5;
+      padding: 3px 6px;
+    }
+
+    #ordersFooterTable .orders-footer-sum-k {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: #1a3a5c;
+      line-height: 1.15;
+      margin-bottom: 2px;
+    }
+
+    #ordersFooterTable .orders-footer-sum-v {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #000;
+      line-height: 1.2;
+    }
+
+    #ordersFooterTable .orders-footer-action-cell {
+      background: #eef1f5;
+      border-left: none;
     }
 
     /* =========================
@@ -550,9 +706,9 @@
 ========================= */
     @media (max-width: 768px) {
       .orders-wrap {
-        margin: 8px;
-        height: calc(100vh - 16px);
-        max-height: calc(100vh - 16px);
+        margin: 0;
+        height: 100vh;
+        max-height: 100vh;
       }
 
       .workspace .orders-wrap {
@@ -561,29 +717,39 @@
         max-height: 100%;
       }
 
+      .orders-toolbar,
+      .orders-wrap > .table-wrap {
+        width: calc(100% - 16px);
+        margin-left: 8px;
+        margin-right: 8px;
+      }
+
       .orders-toolbar {
-        padding: 12px;
-        gap: 8px;
+        padding: 6px 0;
+        gap: 6px;
+        flex-wrap: wrap;
       }
 
       .orders-toolbar label {
-        font-size: 12px;
+        font-size: 10px;
       }
 
-      .orders-toolbar input,
       .orders-toolbar select {
-        height: 32px;
-        font-size: 12px;
-        min-width: 100px;
+        height: 24px;
+        min-height: 24px;
+        font-size: 11px;
+        min-width: 96px;
       }
 
-      .btn {
-        padding: 6px 12px;
-        font-size: 12px;
+      .orders-toolbar .btn {
+        padding: 3px 8px;
+        min-height: 24px;
+        height: 24px;
+        font-size: 11px;
       }
 
       .orders-filter-group {
-        gap: 8px;
+        gap: 6px;
       }
 
       .orders-filter-menu-panel {
@@ -591,7 +757,7 @@
         right: auto;
       }
 
-      .table-wrap {
+      .orders-wrap > .table-wrap {
         overflow-x: scroll;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
@@ -601,15 +767,15 @@
         min-width: 900px;
       }
 
-      tbody td {
+      #ordersTable tbody td {
         max-width: 150px;
-        font-size: 13px;
-        padding: 14px;
+        font-size: 11px;
+        padding: 4px 6px;
       }
 
-      thead th {
-        font-size: 12px;
-        padding: 14px;
+      #ordersTable thead th {
+        font-size: 10px;
+        padding: 4px 6px;
       }
     }
   </style>
@@ -636,30 +802,31 @@
           <option value="">All stations</option>
         </select>
 
-        <details class="orders-filter-menu" id="ordersFilterMenu">
-          <summary class="btn orders-filter-menu-trigger">Filter</summary>
-          <div class="orders-filter-menu-panel">
-            <button type="button" class="orders-filter-menu-item" onclick="closeOrdersFilterMenu(); clearDateFilter();">
-              Clear filters
-            </button>
-            <button type="button" class="orders-filter-menu-item"
-              title="Mark every order currently shown in the list (respects order and station filters)"
-              onclick="closeOrdersFilterMenu(); setMarkAllVisible(true);">
-              Mark all
-            </button>
-            <button type="button" class="orders-filter-menu-item"
-              title="Clear mark on every order currently shown in the list (respects order and station filters)"
-              onclick="closeOrdersFilterMenu(); setMarkAllVisible(false);">
-              Unmark all
-            </button>
-          </div>
-        </details>
+        <select id="filterActions" title="Filter actions" onchange="handleOrdersFilterAction(this.value)">
+          <option value="" selected disabled hidden>Actions</option>
+          <option value="mark-all">Mark all</option>
+          <option value="unmark-all">Unmark all</option>
+        </select>
       </div>
     </div>
 
     <!-- TABLE -->
-    <div class="table-wrap">
+    <div class="table-wrap" id="ordersTableScroll">
       <table id="ordersTable">
+        <colgroup>
+          <col class="col-mark">
+          <col class="col-order-no">
+          <col class="col-customer">
+          <col class="col-relation">
+          <col class="col-date">
+          <col class="col-date">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-action">
+        </colgroup>
         <thead>
           <tr>
             <th class="center">Mark</th>
@@ -682,8 +849,49 @@
       </table>
     </div>
 
-    <div class="footer" id="footerText">
-      No orders available
+    <div class="orders-footer-align" id="ordersFooter" aria-label="Order list totals">
+      <table id="ordersFooterTable">
+        <colgroup>
+          <col class="col-mark">
+          <col class="col-order-no">
+          <col class="col-customer">
+          <col class="col-relation">
+          <col class="col-date">
+          <col class="col-date">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-num">
+          <col class="col-action">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td colspan="6" class="orders-footer-count-cell" id="footerCount">No orders available</td>
+            <td class="orders-footer-sum-cell">
+              <span class="orders-footer-sum-k">Gr.Wt</span>
+              <span class="orders-footer-sum-v" id="footerTotalGrWt">0.000</span>
+            </td>
+            <td class="orders-footer-sum-cell">
+              <span class="orders-footer-sum-k">Order Total</span>
+              <span class="orders-footer-sum-v" id="footerTotalOrder">0.00</span>
+            </td>
+            <td class="orders-footer-sum-cell">
+              <span class="orders-footer-sum-k">Total Purchase</span>
+              <span class="orders-footer-sum-v" id="footerTotalPurchase">0.00</span>
+            </td>
+            <td class="orders-footer-sum-cell">
+              <span class="orders-footer-sum-k">Advance</span>
+              <span class="orders-footer-sum-v" id="footerTotalAdvance">0.00</span>
+            </td>
+            <td class="orders-footer-sum-cell">
+              <span class="orders-footer-sum-k">Balance</span>
+              <span class="orders-footer-sum-v" id="footerTotalBalance">0.00</span>
+            </td>
+            <td class="orders-footer-action-cell"></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
   </div>
@@ -695,6 +903,12 @@
     ========================= */
     let tbody = null;
     let footer = null;
+    let footerCount = null;
+    let footerTotalGrWt = null;
+    let footerTotalOrder = null;
+    let footerTotalPurchase = null;
+    let footerTotalAdvance = null;
+    let footerTotalBalance = null;
 
     /* =========================
        INITIALIZE ELEMENTS
@@ -704,14 +918,32 @@
 
       if (workspace) {
         tbody = workspace.querySelector("#ordersTable tbody");
-        footer = workspace.querySelector("#footerText");
-
-        if (!tbody) tbody = document.querySelector("#ordersTable tbody");
-        if (!footer) footer = document.querySelector("#footerText") || document.getElementById("footerText");
+        footer = workspace.querySelector("#ordersFooter");
+        footerCount = workspace.querySelector("#footerCount");
+        footerTotalGrWt = workspace.querySelector("#footerTotalGrWt");
+        footerTotalOrder = workspace.querySelector("#footerTotalOrder");
+        footerTotalPurchase = workspace.querySelector("#footerTotalPurchase");
+        footerTotalAdvance = workspace.querySelector("#footerTotalAdvance");
+        footerTotalBalance = workspace.querySelector("#footerTotalBalance");
       } else {
         tbody = document.querySelector("#ordersTable tbody");
-        footer = document.querySelector("#footerText") || document.getElementById("footerText");
+        footer = document.querySelector("#ordersFooter") || document.getElementById("ordersFooter");
+        footerCount = document.querySelector("#footerCount") || document.getElementById("footerCount");
+        footerTotalGrWt = document.getElementById("footerTotalGrWt");
+        footerTotalOrder = document.getElementById("footerTotalOrder");
+        footerTotalPurchase = document.getElementById("footerTotalPurchase");
+        footerTotalAdvance = document.getElementById("footerTotalAdvance");
+        footerTotalBalance = document.getElementById("footerTotalBalance");
       }
+
+      if (!tbody) tbody = document.querySelector("#ordersTable tbody");
+      if (!footer) footer = document.getElementById("ordersFooter");
+      if (!footerCount) footerCount = document.getElementById("footerCount");
+      if (!footerTotalGrWt) footerTotalGrWt = document.getElementById("footerTotalGrWt");
+      if (!footerTotalOrder) footerTotalOrder = document.getElementById("footerTotalOrder");
+      if (!footerTotalPurchase) footerTotalPurchase = document.getElementById("footerTotalPurchase");
+      if (!footerTotalAdvance) footerTotalAdvance = document.getElementById("footerTotalAdvance");
+      if (!footerTotalBalance) footerTotalBalance = document.getElementById("footerTotalBalance");
 
       if (!tbody || !footer) return false;
       return true;
@@ -1062,6 +1294,12 @@
 
           const wfClass = ordersListRowWorkflowClass(order, listOrders, itemProcess);
           if (wfClass) row.classList.add(wfClass);
+
+          row.dataset.sumGrwt = String(displayGrWt);
+          row.dataset.sumOrderTotal = String(orderSideTotal);
+          row.dataset.sumPurchase = String(totalPurchaseDisplay);
+          row.dataset.sumAdvance = String(displayAdvance);
+          row.dataset.sumBalance = String(displayBalance);
 
           const OPdue = window.OrderProcessing;
           if (OPdue && typeof OPdue.orderIsPastDueAndNotReadyForReadyOrders === "function" &&
@@ -1579,6 +1817,17 @@
       if (menu) menu.open = false;
     }
 
+    function handleOrdersFilterAction(action) {
+      if (!action) return;
+      if (action === "mark-all") {
+        setMarkAllVisible(true);
+      } else if (action === "unmark-all") {
+        setMarkAllVisible(false);
+      }
+      const actionSelect = document.getElementById("filterActions");
+      if (actionSelect) actionSelect.value = "";
+    }
+
     /* =========================
        FOOTER UPDATE
     ========================= */
@@ -1592,21 +1841,53 @@
       const count = visibleRows.length;
       const total = allRows.length;
 
+      let sumGrWt = 0;
+      let sumOrderTotal = 0;
+      let sumPurchase = 0;
+      let sumAdvance = 0;
+      let sumBalance = 0;
+      visibleRows.forEach(function (row) {
+        sumGrWt += parseFloat(row.dataset.sumGrwt || "0") || 0;
+        sumOrderTotal += parseFloat(row.dataset.sumOrderTotal || "0") || 0;
+        sumPurchase += parseFloat(row.dataset.sumPurchase || "0") || 0;
+        sumAdvance += parseFloat(row.dataset.sumAdvance || "0") || 0;
+        sumBalance += parseFloat(row.dataset.sumBalance || "0") || 0;
+      });
+
+      const countEl = footerCount || footer;
       if (count < total && total > 0) {
-        footer.textContent = `Showing ${count} of ${total} orders`;
+        countEl.textContent = "Showing " + count + " of " + total + " orders";
       } else {
-        footer.textContent = count ? `Showing ${count} orders` : "No orders available";
+        countEl.textContent = count ? ("Showing " + count + " order" + (count === 1 ? "" : "s")) : "No orders available";
       }
+
+      if (footerTotalGrWt) footerTotalGrWt.textContent = sumGrWt.toFixed(3);
+      if (footerTotalOrder) footerTotalOrder.textContent = sumOrderTotal.toFixed(2);
+      if (footerTotalPurchase) footerTotalPurchase.textContent = sumPurchase.toFixed(2);
+      if (footerTotalAdvance) footerTotalAdvance.textContent = sumAdvance.toFixed(2);
+      if (footerTotalBalance) footerTotalBalance.textContent = sumBalance.toFixed(2);
     }
 
     /* =========================
        INITIALIZE PAGE
     ========================= */
+    function bindOrdersFooterScrollSync() {
+      if (window.__ordersFooterScrollWired) return;
+      window.__ordersFooterScrollWired = true;
+      const scrollEl = document.getElementById("ordersTableScroll");
+      const footEl = document.getElementById("ordersFooter");
+      if (!scrollEl || !footEl) return;
+      scrollEl.addEventListener("scroll", function () {
+        footEl.scrollLeft = scrollEl.scrollLeft;
+      }, { passive: true });
+    }
+
     function initOrdersPage() {
       if (!initElements()) {
         setTimeout(initOrdersPage, 100);
         return;
       }
+      bindOrdersFooterScrollSync();
       loadOrders();
       ensureFunctionsGlobal();
     }
@@ -1732,6 +2013,7 @@
       window.filterTable = filterTable;
       window.populateOrderNoFilter = populateOrderNoFilter;
       window.clearDateFilter = clearDateFilter;
+      window.handleOrdersFilterAction = handleOrdersFilterAction;
       window.closeOrdersFilterMenu = closeOrdersFilterMenu;
       window.setMarkAllVisible = setMarkAllVisible;
       window.updateFooter = updateFooter;

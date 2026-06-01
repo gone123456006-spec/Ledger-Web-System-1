@@ -15,58 +15,167 @@
 
     * { box-sizing: border-box; }
 
+    html,
     body {
-      margin: 0;
-      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-      color: var(--text);
-      background: transparent;
-    }
-
-    .direct-bill-wrap {
-      max-width: 980px;
-      margin: 8px auto;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+      height: 100%;
       overflow: hidden;
     }
 
+    body {
+      margin: 0;
+      font-family: Calibri, "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--text);
+      background: #fff;
+      height: 100vh;
+    }
+
+    .direct-bill-wrap {
+      width: 100%;
+      height: 100vh;
+      max-height: 100vh;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      overflow: hidden;
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .workspace .direct-bill-wrap {
+      height: 100% !important;
+      max-height: 100% !important;
+      flex: 1 1 auto;
+    }
+
     .direct-bill-wrap > .ledger-page-titlebar:first-child {
-      border-radius: 12px 12px 0 0;
+      border-radius: 0;
+      flex-shrink: 0;
+      background: #f4f6f8;
+      color: #1a3a5c;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 12px;
+      text-align: center;
+      border: none;
+      border-bottom: 1px solid #a8b4c4;
+    }
+
+    .workspace .direct-bill-wrap > .ledger-page-titlebar:first-child {
+      border-radius: 0;
     }
 
     .direct-bill-body {
-      padding: 22px 18px;
+      flex: 1 1 0;
+      min-height: 0;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-sizing: border-box;
+    }
+
+    .direct-bill-top {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .db-box {
+      border: 1px solid #a8b4c4;
+      border-radius: 3px;
+      padding: 6px 10px;
+      background: #fff;
+      box-shadow: none;
+    }
+
+    .db-box-title {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: #4b5b70;
+      font-weight: 600;
     }
 
     .direct-bill-note {
-      margin: 0 0 14px;
+      margin: 0;
       color: var(--muted);
       line-height: 1.4;
-      font-size: 14px;
+      font-size: 12px;
+    }
+
+    .direct-bill-details {
+      flex: 1 1 0;
+      min-height: 0;
+      border: 1px solid #a8b4c4;
+      border-radius: 0;
+      background: #fff;
+      padding: 6px 0;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .direct-bill-details-head {
+      font-size: 12px;
+      color: #4b5b70;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .direct-bill-details-placeholder {
+      border: 1px dashed #c9d3e2;
+      border-radius: 6px;
+      min-height: 120px;
+      padding: 10px;
+      font-size: 12px;
+      color: #5e6b7a;
     }
 
     .direct-bill-actions {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       flex-wrap: wrap;
+      width: calc(100% - 28px);
+      margin: 0 14px;
+      padding: 6px 0;
+      border-top: 1px solid #a8b4c4;
+      background: #fff;
+      flex-shrink: 0;
+      box-sizing: border-box;
     }
 
     .btn {
-      border: 1px solid var(--border);
+      border: 1px solid #a8b4c4;
       background: #fff;
-      color: var(--text);
-      padding: 9px 14px;
-      border-radius: 8px;
+      color: #1a3a5c;
+      padding: 0 10px;
+      height: 26px;
+      min-height: 26px;
+      border-radius: 3px;
       font-weight: 600;
+      font-size: 12px;
       cursor: pointer;
+      box-shadow: none;
+    }
+
+    .btn:hover {
+      background: #d6e4f4;
+      border-color: #7a8da6;
     }
 
     .btn.primary {
-      border-color: var(--primary);
-      background: var(--primary);
-      color: #fff;
+      border-color: #6aae6a;
+      background: #f0fdf4;
+      color: #166534;
+    }
+
+    .btn.primary:hover {
+      background: #dcfce7;
+      border-color: #4d9a4d;
     }
   </style>
 </head>
@@ -74,13 +183,31 @@
   <section class="direct-bill-wrap">
     <header class="ledger-page-titlebar" id="directBillHeader">Direct Bill</header>
     <div class="direct-bill-body">
-      <p class="direct-bill-note" id="directBillNote">
-        Direct Bill page is ready. You can now continue implementing bill form fields and save logic here.
-      </p>
-      <div class="direct-bill-actions">
-        <button type="button" class="btn primary">New Direct Bill</button>
-        <button type="button" class="btn">View Recent Bills</button>
+      <div class="direct-bill-top">
+        <div class="db-box">
+          <p class="db-box-title">Customer Information</p>
+          <p class="direct-bill-note" id="directBillNote">
+            Direct Bill page is ready. You can now continue implementing bill form fields and save logic here.
+          </p>
+        </div>
+        <div class="db-box">
+          <p class="db-box-title">Bill Information</p>
+          <p class="direct-bill-note">Layout aligned with Ready Extra Order bill-style screen.</p>
+        </div>
       </div>
+
+      <div class="direct-bill-details">
+        <div class="direct-bill-details-head">Bill Details</div>
+        <div class="direct-bill-details-placeholder">
+          Bill rows/table area placeholder. Keep existing Direct Bill logic and add fields here as needed.
+        </div>
+      </div>
+    </div>
+    <div class="direct-bill-actions">
+      <button type="button" class="btn primary">New Direct Bill</button>
+      <button type="button" class="btn">View Recent Bills</button>
+      <button type="button" class="btn">Save Bill</button>
+      <button type="button" class="btn">Close</button>
     </div>
   </section>
   <script>
