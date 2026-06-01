@@ -32,6 +32,10 @@
   }
 
   if (isLocalDevHost(h)) {
+    if (typeof location !== 'undefined' && location.origin && /^https?:$/i.test(location.protocol || '')) {
+      global.LEDGER_API_BASE = location.origin.replace(/\/$/, '') + '/api/v1';
+      return;
+    }
     global.LEDGER_API_BASE = LOCAL_API;
     return;
   }

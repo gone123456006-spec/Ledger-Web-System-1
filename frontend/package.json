@@ -2,6 +2,6 @@
   "name": "ledger-frontend",
   "private": true,
   "scripts": {
-    "dev": "live-server --port=8080 --proxy=/api:http://127.0.0.1:5001"
+    "dev": "live-server frontend --port=8080 --entry-file=index.html --proxy=/api:http://127.0.0.1:5001"
   }
 }

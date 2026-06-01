@@ -10,7 +10,12 @@
   function defaultApiBase() {
     try {
       const h = location.hostname;
-      if (h === 'localhost' || h === '127.0.0.1') {
+      if (h === 'localhost' || h === '127.0.0.1' ||
+          /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h) ||
+          /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) {
+        if (location.origin && /^https?:$/i.test(location.protocol || '')) {
+          return location.origin.replace(/\/$/, '') + '/api/v1';
+        }
         return 'http://127.0.0.1:5001/api/v1';
       }
       return location.origin.replace(/\/$/, '') + '/api/v1';

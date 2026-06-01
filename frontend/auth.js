@@ -1,12 +1,21 @@
 // Auth against backend only — credentials live in MongoDB (hashed). No secrets in this file.
 (function () {
   const SESSION_KEY = 'ledger_auth_session_v1';
+  const OFFLINE_AUTH_CACHE_KEY = 'ledger_offline_auth_cache_v1';
+  const LOCAL_BOOTSTRAP_EMAIL = 'u9xQ7mL2vT8kR4pZ@ledger.co';
+  const LOCAL_BOOTSTRAP_USER_ID = 'local_bootstrap_admin';
+  /** SHA-256 of default seed password — local offline bootstrap only (matches BackEnd/seeders/defaultUser.js). */
+  const LOCAL_BOOTSTRAP_PW_HASH = '2297605cbe0c624804c889de4d8aa4256d62981cd1f95234c69f82d41f377d2f';
+
   function defaultApiBase() {
     try {
       const h = location.hostname;
       if (!h || h === 'localhost' || h === '127.0.0.1' ||
           /^192\.168\.\d{1,3}\.\d{1,3}$/.test(h) ||
           /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) {
+        if (location.origin && /^https?:$/i.test(location.protocol || '')) {
+          return location.origin.replace(/\/$/, '') + '/api/v1';
+        }
         return 'http://127.0.0.1:5001/api/v1';
       }
       if (/\.vercel\.app$/i.test(h)) {
@@ -31,6 +40,31 @@
     if (!raw) return '';
     if (raw.includes('@')) return raw;
     return raw + LOGIN_EMAIL_DOMAIN;
+  }
+
+  function isLocalAppHost() {
+    try {
+      const h = location.hostname;
+      if (!h || h === 'localhost' || h === '127.0.0.1') return true;
+      if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+      if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+      if (/^172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+      return location.protocol === 'file:';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function sha256Hex(text) {
+    const value = String(text || '');
+    if (globalThis.crypto && crypto.subtle && typeof TextEncoder !== 'undefined') {
+      const data = new TextEncoder().encode(value);
+      const hash = await crypto.subtle.digest('SHA-256', data);
+      return Array.from(new Uint8Array(hash))
+        .map(function (b) { return b.toString(16).padStart(2, '0'); })
+        .join('');
+    }
+    return value;
   }
 
   function getStorage() {
@@ -76,6 +110,100 @@
     return s && s.token ? s.token : null;
   }
 
+  function saveOfflineAuthCache(user, displayLogin, passwordVerifier) {
+    try {
+      localStorage.setItem(
+        OFFLINE_AUTH_CACHE_KEY,
+        JSON.stringify({
+          email: user.email,
+          userId: user.id,
+          role: user.role,
+          name: user.name,
+          displayLogin: normalizeInput(displayLogin),
+          passwordVerifier: passwordVerifier,
+          cachedAt: new Date().toISOString(),
+        })
+      );
+    } catch (e) {}
+  }
+
+  function readOfflineAuthCache() {
+    try {
+      const raw = localStorage.getItem(OFFLINE_AUTH_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeSession(session) {
+    const storage = getStorage();
+    if (!storage) return false;
+    storage.setItem(SESSION_KEY, JSON.stringify(session));
+    return true;
+  }
+
+  async function tryOfflineLogin(email, password, displayLogin) {
+    if (!isLocalAppHost()) return null;
+
+    const verifier = await sha256Hex(password);
+    const cache = readOfflineAuthCache();
+
+    if (cache && String(cache.email || '').toLowerCase() === email && cache.passwordVerifier === verifier) {
+      if (!writeSession({
+        token: 'offline_' + String(cache.userId || 'user'),
+        email: cache.email,
+        userId: cache.userId,
+        role: cache.role || 'admin',
+        name: cache.name || 'Ledger User',
+        displayLogin: normalizeInput(displayLogin) || cache.displayLogin || email,
+        loginAt: new Date().toISOString(),
+        offline: true,
+      })) {
+        return { ok: false, message: 'Browser storage is blocked. Please allow site data.' };
+      }
+      if (window.ledgerSync) {
+        window.ledgerSync.setContext(cache.email, 'offline_' + String(cache.userId || 'user'));
+      }
+      return { ok: true, message: 'Login successful (offline mode)', offline: true };
+    }
+
+    if (
+      email === LOCAL_BOOTSTRAP_EMAIL.toLowerCase() &&
+      verifier === LOCAL_BOOTSTRAP_PW_HASH
+    ) {
+      const display = normalizeInput(displayLogin) || 'u9xQ7mL2vT8kR4pZ';
+      saveOfflineAuthCache(
+        {
+          email: LOCAL_BOOTSTRAP_EMAIL,
+          id: LOCAL_BOOTSTRAP_USER_ID,
+          role: 'admin',
+          name: 'Ledger Admin',
+        },
+        display,
+        verifier
+      );
+      if (!writeSession({
+        token: 'offline_' + LOCAL_BOOTSTRAP_USER_ID,
+        email: LOCAL_BOOTSTRAP_EMAIL,
+        userId: LOCAL_BOOTSTRAP_USER_ID,
+        role: 'admin',
+        name: 'Ledger Admin',
+        displayLogin: display,
+        loginAt: new Date().toISOString(),
+        offline: true,
+      })) {
+        return { ok: false, message: 'Browser storage is blocked. Please allow site data.' };
+      }
+      if (window.ledgerSync) {
+        window.ledgerSync.setContext(LOCAL_BOOTSTRAP_EMAIL, 'offline_' + LOCAL_BOOTSTRAP_USER_ID);
+      }
+      return { ok: true, message: 'Login successful (offline mode)', offline: true };
+    }
+
+    return null;
+  }
+
   function loginFailedMessage(httpStatus, serverMessage) {
     const s = Number(httpStatus) || 0;
     const m = serverMessage ? String(serverMessage).trim() : '';
@@ -96,6 +224,9 @@
   }
 
   function networkFailedMessage() {
+    if (isLocalAppHost()) {
+      return 'Server is not running. Logged in using offline mode, or start the app with: npm run dev';
+    }
     return 'Failed to log in — we could not reach the server. Check that it is running and try again.';
   }
 
@@ -117,6 +248,10 @@
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (isLocalAppHost() && (response.status >= 500 || response.status === 0)) {
+          const offline = await tryOfflineLogin(email, pw, usernameOrEmail);
+          if (offline) return offline;
+        }
         const serverMsg = data.message || data.error;
         return {
           ok: false,
@@ -146,20 +281,45 @@
         })
       );
 
+      saveOfflineAuthCache(data.user, usernameOrEmail, await sha256Hex(pw));
+
       if (window.ledgerSync) {
         window.ledgerSync.setContext(data.user.email, data.token);
       }
 
       return { ok: true, message: 'Login successful', user: data.user };
     } catch (err) {
+      const offline = await tryOfflineLogin(email, pw, usernameOrEmail);
+      if (offline) return offline;
+
       const msg = err && err.message ? String(err.message) : '';
       const looksNetwork =
         (err && err.name === 'TypeError') ||
         /failed to fetch|network|load failed|aborted/i.test(msg);
       return {
         ok: false,
-        message: looksNetwork ? networkFailedMessage() : 'Failed to log in. Something went wrong. Please try again.',
+        message: looksNetwork
+          ? (isLocalAppHost()
+            ? 'Could not reach the server. Use your saved password to log in offline, or run npm run dev from the project folder.'
+            : networkFailedMessage())
+          : 'Failed to log in. Something went wrong. Please try again.',
       };
+    }
+  }
+
+  async function checkServerHealth() {
+    try {
+      const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = controller ? setTimeout(function () { controller.abort(); }, 4000) : null;
+      const response = await fetch(`${API_BASE}/health`, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller ? controller.signal : undefined,
+      });
+      if (timer) clearTimeout(timer);
+      return !!(response && response.ok);
+    } catch (e) {
+      return false;
     }
   }
 
@@ -196,5 +356,7 @@
     getUsername,
     getToken,
     requireAuth,
+    checkServerHealth,
+    isLocalAppHost,
   };
 })();
