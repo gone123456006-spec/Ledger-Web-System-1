@@ -1,7 +1,6 @@
-# External keep-alive: wakes Render free-tier web services that spin down when idle.
-# Backend cron job (node-cron) also runs internally every 1 minute as backup.
-# Set repo variable LEDGER_API_HEALTH_URL to override the default health URL.
-# https://docs.github.com/en/actions/writing-workflows/choosing-when-your-trigger-workflows#schedule
+# External keep-alive: pings Render every 1 minute so the API does not sleep (Free tier).
+# Also: BackEnd/services/uptimeService.js (when server is awake) + frontend uptime-ping.js (when app open).
+# Override URL: GitHub repo variable LEDGER_API_HEALTH_URL
 name: Backend uptime ping (1-min)
 
 on:
@@ -12,13 +11,22 @@ on:
 jobs:
   ping-health:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: GET /api/v1/health
+      - name: GET /api/v1/health (keep Render alive)
         env:
           LEDGER_API_HEALTH_URL: ${{ vars.LEDGER_API_HEALTH_URL }}
         run: |
           HEALTH="${LEDGER_API_HEALTH_URL:-https://ledger-api-qmtc.onrender.com/api/v1/health}"
-          echo "⏰ $(date -u +'%Y-%m-%d %H:%M:%S UTC') - Pinging ${HEALTH}"
-          curl -fsS --max-time 60 "$HEALTH" | head -c 500
-          echo ""
-          echo "✅ Ping sent"
+          echo "Pinging ${HEALTH} at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          for attempt in 1 2 3; do
+            if curl -fsS --max-time 90 --retry 2 --retry-delay 5 "$HEALTH"; then
+              echo ""
+              echo "Ping OK (attempt ${attempt})"
+              exit 0
+            fi
+            echo "Attempt ${attempt} failed, retrying..."
+            sleep 5
+          done
+          echo "All ping attempts failed"
+          exit 1
