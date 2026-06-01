@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Order Print</title>
+  <style>
+    * { box-sizing: border-box; }
+    @page {
+      size: A4 portrait;
+      margin: 0.5cm;
+    }
+    html {
+      margin: 0;
+    }
+    body {
+      margin: 0;
+      padding: 05px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 12px;
+      color: #111;
+      background: #e8eaed;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .print-sheet {
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto;
+      padding: 0.5cm;
+      background: #fff;
+      box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+    }
+    .no-print {
+      margin-bottom: 16px;
+    }
+    .no-print button {
+      padding: 8px 16px;
+      margin-right: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .bill-print-datetime {
+      font-size: 8px;
+      line-height: 1.3;
+      color: #555;
+      margin: 0 0 8px;
+      text-align: left;
+    }
+    .shop-header {
+      text-align: center;
+      margin-bottom: 12px;
+      padding: 0 0 8px;
+      border-bottom: 2px solid #111;
+    }
+    .shop-header .shop-name {
+      margin: 0 0 6px;
+      font-family: "Times New Roman", Georgia, "Book Antiqua", serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      line-height: 1.15;
+      text-transform: uppercase;
+      color: #0000cc;
+    }
+    .shop-header .shop-tagline,
+    .shop-header .shop-address-line {
+      margin: 0 0 4px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.35;
+      text-transform: uppercase;
+      color: #a00000;
+    }
+    .shop-header .shop-address-line {
+      margin-bottom: 6px;
+    }
+    .doc-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .customer-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px 10px;
+      margin-bottom: 14px;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      background: #fafafa;
+    }
+    .customer-block p {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    .customer-block strong {
+      display: inline;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin: 14px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 4px;
+      table-layout: fixed;
+      font-size: 10px;
+    }
+    table.data-table th,
+    table.data-table td {
+      border: 1px solid #bbb;
+      padding: 5px 4px;
+      word-wrap: break-word;
+    }
+    table.data-table th {
+      background: #eee;
+      font-weight: 600;
+      text-align: left;
+    }
+    table.data-table td.num,
+    table.data-table th.num {
+      text-align: right;
+    }
+    table.data-table tfoot td {
+      font-weight: 700;
+      background: #f5f5f5;
+    }
+    .empty-row td {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+    }
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+        display: block;
+        min-height: auto;
+      }
+      .no-print { display: none !important; }
+      .print-sheet {
+        width: auto;
+        min-height: auto;
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+      .section-title, table.data-table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-sheet">
+    <div class="no-print">
+      <button type="button" onclick="window.print()">Print</button>
+      <button type="button" onclick="window.close()">Close</button>
+    </div>
+
+    <p class="bill-print-datetime" id="billPrintDateTime"></p>
+
+    <header class="shop-header" id="shopHeader">
+      <h1 class="shop-name" id="shopName">JAI MATA JEWELLY SHOP</h1>
+      <p class="shop-tagline" id="shopTagline">DEALS IN ALL KINDS OF GOLD, SILVER &amp; DIAMOND ETC.</p>
+      <p class="shop-address-line" id="shopAddress">ADDRESS: NEAR MUZAFFARPUR, BIHAR</p>
+    </header>
+
+    <h2 class="doc-title">New Order</h2>
+
+    <div class="customer-block" id="customerBlock">
+      <p><strong>Customer:</strong> <span id="custName">—</span></p>
+      <p><strong>Relation:</strong> <span id="custRelation">—</span></p>
+      <p><strong>Order No.:</strong> <span id="orderNo">—</span></p>
+      <p><strong>Order Date:</strong> <span id="orderDate">—</span></p>
+      <p><strong>Due Date:</strong> <span id="dueDate">—</span></p>
+      <p><strong>LF No.:</strong> <span id="lfNo">—</span></p>
+    </div>
+
+    <div class="section-title">Order Items</div>
+    <table class="data-table" id="itemsTable">
+      <thead>
+        <tr>
+          <th style="width:28%;">Item Name</th>
+          <th style="width:12%;">Stamp</th>
+          <th style="width:8%;" class="num">Pc</th>
+          <th style="width:12%;" class="num">Ut Wt</th>
+          <th style="width:14%;" class="num">Est Total</th>
+          <th style="width:12%;" class="num">Rate</th>
+        </tr>
+      </thead>
+      <tbody id="itemsBody"></tbody>
+    </table>
+
+    <div class="section-title">Purchase</div>
+    <table class="data-table" id="purchaseTable">
+      <thead>
+        <tr>
+          <th style="width:12%;">On Date</th>
+          <th style="width:18%;">Item Name</th>
+          <th style="width:10%;">Stamp</th>
+          <th style="width:11%;" class="num">Gross Wt</th>
+          <th style="width:10%;" class="num">Less Wt</th>
+          <th style="width:11%;" class="num">Net Weight</th>
+          <th style="width:10%;" class="num">Rate</th>
+          <th style="width:12%;" class="num">Amount</th>
+        </tr>
+      </thead>
+      <tbody id="purchaseBody"></tbody>
+      <tfoot id="purchaseFoot" style="display:none;">
+        <tr>
+          <td colspan="7">Total Purchase</td>
+          <td class="num" id="purchaseTotal"></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="section-title">Advanced</div>
+    <table class="data-table" id="advancedTable">
+      <thead>
+        <tr>
+          <th style="width:18%;">Date</th>
+          <th style="width:18%;">Payment Mode</th>
+          <th style="width:16%;" class="num">Amount</th>
+          <th style="width:48%;">Narration</th>
+        </tr>
+      </thead>
+      <tbody id="advancedBody"></tbody>
+      <tfoot id="advancedFoot" style="display:none;">
+        <tr>
+          <td colspan="2">Total</td>
+          <td class="num" id="advancedTotal"></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="section-title">Ratebook</div>
+    <table class="data-table" id="ratebookTable">
+      <thead>
+        <tr>
+          <th style="width:12%;">Stamp</th>
+          <th style="width:12%;" class="num">Weight (g)</th>
+          <th style="width:12%;" class="num">Rate (₹)</th>
+          <th style="width:12%;" class="num">Amount (₹)</th>
+          <th style="width:14%;">Delivery Date</th>
+          <th style="width:8%;">Type</th>
+          <th style="width:30%;">Narration</th>
+        </tr>
+      </thead>
+      <tbody id="ratebookBody"></tbody>
+      <tfoot id="ratebookFoot" style="display:none;">
+        <tr>
+          <td colspan="3">Total</td>
+          <td class="num" id="ratebookTotal"></td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <script>
+    (function () {
+      var STORAGE_KEY = 'newOrderPrintPayload';
+
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function fmtDate(val) {
+        if (!val) return '—';
+        var s = String(val);
+        var iso = s.indexOf('T') >= 0 ? s.split('T')[0] : s.substring(0, 10);
+        if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
+          var d = new Date(iso + 'T12:00:00');
+          return isNaN(d.getTime()) ? s : d.toLocaleDateString('en-IN');
+        }
+        var d2 = new Date(val);
+        return isNaN(d2.getTime()) ? s : d2.toLocaleDateString('en-IN');
+      }
+
+      function fmtMoney(n) {
+        var num = Number(n);
+        if (!Number.isFinite(num)) num = 0;
+        return '₹ ' + num.toFixed(2);
+      }
+
+      function fmtNum(n, dec) {
+        var num = Number(n);
+        if (!Number.isFinite(num)) num = 0;
+        return num.toFixed(dec);
+      }
+
+      function readPayload() {
+        try {
+          var raw = sessionStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function renderPaymentTable(bodyId, footId, totalId, rows, emptyLabel) {
+        var body = document.getElementById(bodyId);
+        var foot = document.getElementById(footId);
+        var totalEl = document.getElementById(totalId);
+        if (!body) return;
+        if (!rows || !rows.length) {
+          body.innerHTML = '<tr class="empty-row"><td colspan="4">' + esc(emptyLabel) + '</td></tr>';
+          if (foot) foot.style.display = 'none';
+          return;
+        }
+        var sum = 0;
+        var html = '';
+        rows.forEach(function (r) {
+          var amt = Number(r.amount) || 0;
+          sum += amt;
+          html += '<tr>' +
+            '<td>' + esc(fmtDate(r.date)) + '</td>' +
+            '<td>' + esc(r.mode || 'Cash') + '</td>' +
+            '<td class="num">' + esc(fmtMoney(amt)) + '</td>' +
+            '<td>' + esc(r.narration || '—') + '</td>' +
+            '</tr>';
+        });
+        body.innerHTML = html;
+        if (foot && totalEl) {
+          totalEl.textContent = fmtMoney(sum);
+          foot.style.display = '';
+        }
+      }
+
+      function setBillPrintDateTime() {
+        var el = document.getElementById('billPrintDateTime');
+        if (!el) return;
+        var now = new Date();
+        var dateStr = now.toLocaleDateString('en-IN');
+        var timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+        el.textContent = dateStr + '  ' + timeStr;
+      }
+
+      function render() {
+        var data = readPayload();
+        if (!data) {
+          document.body.innerHTML = '<p style="padding:24px;font-family:sans-serif;">No print data found. Open this page from New Order using the Print button.</p>';
+          return;
+        }
+
+        setBillPrintDateTime();
+
+        var shop = data.shop || {};
+        document.getElementById('shopName').textContent = shop.name || 'JAI MATA JEWELLY SHOP';
+        document.getElementById('shopTagline').textContent = shop.tagline || 'DEALS IN ALL KINDS OF GOLD, SILVER & DIAMOND ETC.';
+        var addrText = shop.address || shop.location || 'NEAR MUZAFFARPUR, BIHAR';
+        if (addrText && !/^ADDRESS\s*:/i.test(addrText)) {
+          addrText = 'ADDRESS: ' + addrText.replace(/^Address\s*:\s*/i, '');
+        }
+        document.getElementById('shopAddress').textContent = addrText;
+
+        document.getElementById('custName').textContent = data.customerName || '—';
+        document.getElementById('custRelation').textContent = data.relation || '—';
+        document.getElementById('orderNo').textContent = data.orderNo || '—';
+        document.getElementById('orderDate').textContent = fmtDate(data.orderDate);
+        document.getElementById('dueDate').textContent = fmtDate(data.dueDate);
+        document.getElementById('lfNo').textContent = data.lfNo || '—';
+
+        var itemsBody = document.getElementById('itemsBody');
+        var items = data.items || [];
+        if (!items.length) {
+          itemsBody.innerHTML = '<tr class="empty-row"><td colspan="6">No items</td></tr>';
+        } else {
+          var itemsHtml = '';
+          items.forEach(function (it) {
+            itemsHtml += '<tr>' +
+              '<td>' + esc(it.itemName || '—') + '</td>' +
+              '<td>' + esc(it.stamp || '—') + '</td>' +
+              '<td class="num">' + esc(it.pc || '0') + '</td>' +
+              '<td class="num">' + esc(it.utWt || '0') + '</td>' +
+              '<td class="num">' + esc(it.estTotal || '0') + '</td>' +
+              '<td class="num">' + esc(it.rate || '0') + '</td>' +
+              '</tr>';
+          });
+          itemsBody.innerHTML = itemsHtml;
+        }
+
+        var purchaseBody = document.getElementById('purchaseBody');
+        var purchaseFoot = document.getElementById('purchaseFoot');
+        var purchaseTotal = document.getElementById('purchaseTotal');
+        var purchase = data.purchase || [];
+        if (!purchase.length) {
+          purchaseBody.innerHTML = '<tr class="empty-row"><td colspan="8">No purchase entries</td></tr>';
+          if (purchaseFoot) purchaseFoot.style.display = 'none';
+        } else {
+          var purchaseSum = 0;
+          var purchaseHtml = '';
+          purchase.forEach(function (r) {
+            var amt = Number(r.amount) || 0;
+            purchaseSum += amt;
+            purchaseHtml += '<tr>' +
+              '<td>' + esc(fmtDate(r.onDate)) + '</td>' +
+              '<td>' + esc(r.itemName || '—') + '</td>' +
+              '<td>' + esc(r.stamp || '—') + '</td>' +
+              '<td class="num">' + esc(r.grossWt || '0') + '</td>' +
+              '<td class="num">' + esc(r.lessWt || '0') + '</td>' +
+              '<td class="num">' + esc(r.netWt || '0') + '</td>' +
+              '<td class="num">' + esc(r.rate || '0') + '</td>' +
+              '<td class="num">' + esc(fmtMoney(amt)) + '</td>' +
+              '</tr>';
+          });
+          purchaseBody.innerHTML = purchaseHtml;
+          if (purchaseFoot && purchaseTotal) {
+            purchaseTotal.textContent = fmtMoney(purchaseSum);
+            purchaseFoot.style.display = '';
+          }
+        }
+
+        renderPaymentTable('advancedBody', 'advancedFoot', 'advancedTotal', data.advanced, 'No advanced entries');
+
+        var rbBody = document.getElementById('ratebookBody');
+        var rbFoot = document.getElementById('ratebookFoot');
+        var rbTotal = document.getElementById('ratebookTotal');
+        var ratebook = data.ratebook || [];
+        if (!ratebook.length) {
+          rbBody.innerHTML = '<tr class="empty-row"><td colspan="7">No ratebook entries</td></tr>';
+          if (rbFoot) rbFoot.style.display = 'none';
+        } else {
+          var rbSum = 0;
+          var rbHtml = '';
+          ratebook.forEach(function (r) {
+            var amt = Number(r.amount) || 0;
+            rbSum += amt;
+            rbHtml += '<tr>' +
+              '<td>' + esc(r.stamp || '—') + '</td>' +
+              '<td class="num">' + esc(fmtNum(r.weight, 3)) + '</td>' +
+              '<td class="num">' + esc(fmtNum(r.rate, 2)) + '</td>' +
+              '<td class="num">' + esc(fmtMoney(amt)) + '</td>' +
+              '<td>' + esc(fmtDate(r.delDate)) + '</td>' +
+              '<td>' + esc(r.type || 'S') + '</td>' +
+              '<td>' + esc(r.narration || '—') + '</td>' +
+              '</tr>';
+          });
+          rbBody.innerHTML = rbHtml;
+          if (rbFoot && rbTotal) {
+            rbTotal.textContent = fmtMoney(rbSum);
+            rbFoot.style.display = '';
+          }
+        }
+
+        setTimeout(function () {
+          try { window.print(); } catch (e) { }
+        }, 300);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', render);
+      } else {
+        render();
+      }
+    })();
+  </script>
+</body>
+</html>

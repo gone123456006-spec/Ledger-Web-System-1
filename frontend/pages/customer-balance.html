@@ -165,7 +165,8 @@
     }
 
     .customer-balance-toolbar #stationFilter,
-    .customer-balance-toolbar #balanceFilterSelect {
+    .customer-balance-toolbar #balanceFilterSelect,
+    .customer-balance-toolbar #drCrFilter {
       height: 26px;
       min-height: 26px;
       padding: 3px 24px 3px 8px;
@@ -181,7 +182,8 @@
     }
 
     .customer-balance-toolbar #stationFilter:focus,
-    .customer-balance-toolbar #balanceFilterSelect:focus {
+    .customer-balance-toolbar #balanceFilterSelect:focus,
+    .customer-balance-toolbar #drCrFilter:focus {
       outline: none;
       border-color: #1a73e8;
       box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
@@ -523,6 +525,11 @@
         <option value="all">All</option>
         <option value="nonzero" selected>With Balance</option>
         <option value="zero">Zero Balance</option>
+      </select>
+      <select id="drCrFilter" aria-label="Debit credit filter" onchange="filterRows()">
+        <option value="">All Types</option>
+        <option value="dr">Debit (Dr)</option>
+        <option value="cr">Credit (Cr)</option>
       </select>
       <div class="filter-sep"></div>
       <button type="button" class="filter-btn mark-toggle-btn mark-all-btn" id="markToggleBtn" onclick="toggleMarkAll()"
@@ -1183,6 +1190,7 @@
         const isZeroBalance = Math.abs(amt) < AMT_EPS;
         const isMarked = row.dataset.marked === '1';
         const rowStation = row.dataset.station || "";
+        const rowType = String(row.dataset.balanceType || "dr").toLowerCase();
 
         let matchesFilter = true;
         if (activeFilter === 'nonzero') matchesFilter = !isZeroBalance;
@@ -1194,8 +1202,11 @@
         const stationEl = document.getElementById("stationFilter");
         const selStation = stationEl ? stationEl.value : "";
         const matchesStation = !selStation || rowStation === selStation;
+        const drCrEl = document.getElementById("drCrFilter");
+        const selDrCr = drCrEl ? String(drCrEl.value || "").toLowerCase() : "";
+        const matchesDrCr = !selDrCr || rowType === selDrCr;
 
-        const show = matchesSearch && matchesFilter && matchesStation;
+        const show = matchesSearch && matchesFilter && matchesStation && matchesDrCr;
         row.style.display = show ? "" : "none";
         if (show) {
           visible++;
@@ -1207,7 +1218,10 @@
       });
       if (footer) {
         const total = rows.length;
-        const filterLabel = activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All bills)' : '';
+        const drCrEl = document.getElementById("drCrFilter");
+        const selDrCr = drCrEl ? String(drCrEl.value || "").toLowerCase() : "";
+        const drCrLabel = selDrCr === "dr" ? " (Debit only)" : selDrCr === "cr" ? " (Credit only)" : "";
+        const filterLabel = (activeFilter === 'marked' ? ' (Marked)' : activeFilter === 'zero' ? ' (Zero Balance)' : activeFilter === 'all' ? ' (All bills)' : '') + drCrLabel;
         if (!q && activeFilter === 'nonzero') updateFooter("Customer Balance — " + visible + " bills (zero balance hidden)", totalDr, totalCr);
         else if (!q && activeFilter === 'zero') updateFooter("Customer Balance — " + visible + " bills (non-zero hidden)", totalDr, totalCr);
         else updateFooter("Customer Balance — showing " + visible + " of " + total + " bills" + filterLabel + ".", totalDr, totalCr);

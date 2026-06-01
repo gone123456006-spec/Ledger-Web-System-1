@@ -399,8 +399,11 @@
     }
 
     #new-order-item-table td.total input {
-      min-width: 4.5em;
+      min-width: 7.5em;
       box-sizing: border-box;
+      font-weight: 600;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
 
     .order-details-table-wrap #new-order-item-table {
@@ -417,6 +420,12 @@
       width: 17%;
     }
 
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(4),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(4) {
+      min-width: 92px;
+      width: 6%;
+    }
+
     .order-details-table-wrap #new-order-item-table thead th:nth-child(5),
     .order-details-table-wrap #new-order-item-table tbody td:nth-child(5) {
       min-width: 230px;
@@ -424,11 +433,47 @@
     }
 
     .order-details-table-wrap #new-order-item-table thead th:nth-child(6),
-    .order-details-table-wrap #new-order-item-table tbody td:nth-child(6),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(6) {
+      min-width: 132px;
+      width: 9%;
+    }
+
     .order-details-table-wrap #new-order-item-table thead th:nth-child(7),
     .order-details-table-wrap #new-order-item-table tbody td:nth-child(7) {
       min-width: 115px;
       width: 6.5%;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(8),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(8),
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(9),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(9) {
+      min-width: 70px;
+      width: 5.5%;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(12),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(12),
+    .order-details-table-wrap #new-order-item-table thead th.col-lbr {
+      min-width: 52px;
+      width: 4%;
+      max-width: 62px;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(12),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(12) input,
+    .order-details-table-wrap #new-order-item-table .col-lbr input {
+      padding: 0 4px;
+      text-align: center;
+    }
+
+    .order-details-table-wrap #new-order-item-table thead th:nth-child(13),
+    .order-details-table-wrap #new-order-item-table tbody td:nth-child(13),
+    .order-details-table-wrap #new-order-item-table th.total,
+    .order-details-table-wrap #new-order-item-table td.total,
+    .order-details-table-wrap #new-order-item-table thead th.col-total {
+      min-width: 128px;
+      width: 11%;
     }
 
     .order-details-table-wrap #new-order-item-table th,
@@ -2907,8 +2952,8 @@
               <th>Ut. Wt.</th>
               <th>Est. Total Wt.</th>
               <th>Rate</th>
-              <th>Lbr.%</th>
-              <th class="total">Total</th>
+              <th class="col-lbr">Lbr.%</th>
+              <th class="total col-total">Total</th>
               <th>❌</th>
             </tr>
           </thead>
@@ -2927,7 +2972,7 @@
       <button type="button" id="newOrderBtnSaveAndNew" onclick="saveAndNew()">Save & New</button>
       <button type="button" onclick="resetCustomerNameOnly()"
         title="Clears only Customer Name (and linked Current Bal / Relation / Station). Order lines and bill are unchanged.">Reset</button>
-      <button type="button" onclick="printOrder()">Print</button>
+      <button type="button" onclick="openNewOrderPrintPage()">Print</button>
       <button type="button" class="danger" id="newOrderBtnClose" onclick="closeDashboard()">Close</button>
     </div>
 
@@ -3728,7 +3773,7 @@
         <td><input placeholder="Design"></td>
         <td><input placeholder="Size"></td>
         <td><input type="number" step="0.01" placeholder="0" oninput="calculateRow(this)" min="0"></td>
-        <td><input type="number" step="0.001" placeholder="0" oninput="calculateRow(this)" min="0"></td>
+        <td><input type="number" step="0.001" placeholder="0" oninput="calculateRow(this)" onblur="formatUtWtInput(this)" min="0"></td>
         <td><input type="number" step="0.001" placeholder="0" readonly></td>
         <td><input type="number" step="0.01" placeholder="0" oninput="calculateRow(this)" min="0"></td>
         <td><input type="number" step="0.01" placeholder="0" oninput="calculateRow(this)" min="0" max="100"></td>
@@ -3794,6 +3839,19 @@
           scheduleAutoSave();
         } catch (e) {
           console.error('Error calculating row:', e);
+        }
+      }
+
+      function formatUtWtInput(input) {
+        if (!input) return;
+        const raw = String(input.value || '').trim();
+        if (!raw) return;
+        const num = safeNumber(raw);
+        if (!isFinite(num) || num < 0) return;
+        // If user enters whole number in Ut. Wt., normalize as X.00.
+        if (raw.indexOf('.') === -1) {
+          input.value = num.toFixed(2);
+          calculateRow(input);
         }
       }
 
@@ -6255,6 +6313,163 @@
       }
 
       // =====================================================
+      // NEW ORDER PRINT PAGE (dedicated layout — does not use invoice DOM)
+      // =====================================================
+
+      function isNewOrderPaidPayment(p) {
+        return p && String(p.type || '').trim().toLowerCase() === 'paid';
+      }
+
+      function isNewOrderAdvancedPayment(p) {
+        return p && !isNewOrderPaidPayment(p);
+      }
+
+      function getNewOrderPrintPaymentRecords() {
+        const keys = new Set();
+        const sessionKey = String(getCurrentPaymentKey() || '').trim();
+        if (sessionKey) keys.add(sessionKey);
+        const fromField = String(
+          AppState.elements.billNo && AppState.elements.billNo.value ? AppState.elements.billNo.value : ''
+        ).trim();
+        if (fromField && fromField !== sessionKey) keys.add(fromField);
+        if (keys.size === 0) return [];
+
+        let payments = [];
+        try {
+          payments = JSON.parse(localStorage.getItem('payments') || '[]');
+        } catch (e) {
+          return [];
+        }
+        return payments.filter(function (p) {
+          return p && keys.has(String(p.billNo || '').trim());
+        });
+      }
+
+      function collectNewOrderItemsForPrint() {
+        const items = [];
+        const tbody = AppState.elements.itemBody;
+        if (!tbody) return items;
+
+        tbody.querySelectorAll('tr').forEach(function (row) {
+          const getVal = function (idx) {
+            const cell = row.cells[idx];
+            if (!cell) return '';
+            const inp = cell.querySelector('input, select, textarea');
+            return inp ? String(inp.value || '').trim() : String(cell.textContent || '').trim();
+          };
+          items.push({
+            itemName: getVal(2),
+            stamp: getVal(3),
+            pc: getVal(7),
+            utWt: getVal(8),
+            estTotal: getVal(9),
+            rate: getVal(10)
+          });
+        });
+        return items;
+      }
+
+      function isPurchaseRowMeaningful(r) {
+        if (!r) return false;
+        return String(r.itemName || '').trim() !== ''
+          || safeNumber(r.amount) > 0
+          || safeNumber(r.grossWt) > 0
+          || safeNumber(r.netWt) > 0;
+      }
+
+      function mapPurchaseRowForPrint(r) {
+        return {
+          onDate: r.onDate || '',
+          itemName: r.itemName || '',
+          stamp: r.stamp || '',
+          grossWt: r.grossWt != null ? String(r.grossWt) : '',
+          lessWt: r.lessWt != null ? String(r.lessWt) : '',
+          netWt: r.netWt != null ? String(r.netWt) : '',
+          rate: r.rate != null ? String(r.rate) : '',
+          amount: safeNumber(r.amount)
+        };
+      }
+
+      function collectPurchaseRowsForPrint() {
+        const domRows = collectPurchaseSheetRowsFromDom().filter(isPurchaseRowMeaningful);
+        if (domRows.length) {
+          return domRows.map(mapPurchaseRowForPrint);
+        }
+        const bn = AppState.elements.billNo ? String(AppState.elements.billNo.value || '').trim() : '';
+        if (!bn) return [];
+        const map = readPurchaseSheetsMap();
+        const rec = map[bn];
+        if (!rec || !Array.isArray(rec.rows)) return [];
+        return rec.rows.filter(isPurchaseRowMeaningful).map(mapPurchaseRowForPrint);
+      }
+
+      function collectNewOrderPrintPayload() {
+        const allPayments = getNewOrderPrintPaymentRecords();
+        const mapPayment = function (p) {
+          return {
+            date: p.date || (p.timestamp ? String(p.timestamp).split('T')[0] : ''),
+            mode: p.mode || 'Cash',
+            amount: safeNumber(p.amount),
+            narration: p.narration || ''
+          };
+        };
+
+        return {
+          shop: {
+            name: 'JAI MATA JEWELLY SHOP',
+            tagline: 'DEALS IN ALL KINDS OF GOLD, SILVER & DIAMOND ETC.',
+            address: 'ADDRESS: NEAR MUZAFFARPUR, BIHAR'
+          },
+          customerName: getCustomerName() || '—',
+          relation: AppState.elements.relation ? String(AppState.elements.relation.value || '').trim() : '',
+          orderNo: AppState.elements.billNo ? String(AppState.elements.billNo.value || '').trim() : '—',
+          orderDate: AppState.elements.orderDate ? AppState.elements.orderDate.value : '',
+          dueDate: AppState.elements.dueDate ? AppState.elements.dueDate.value : '',
+          lfNo: AppState.elements.lfNo ? AppState.elements.lfNo.value : '',
+          items: collectNewOrderItemsForPrint(),
+          purchase: collectPurchaseRowsForPrint(),
+          payments: allPayments.filter(isNewOrderPaidPayment).map(mapPayment),
+          advanced: allPayments.filter(isNewOrderAdvancedPayment).map(mapPayment),
+          ratebook: getRatebookRowsForCurrentBill().map(function (r) {
+            return {
+              stamp: r.stamp || '',
+              weight: safeNumber(r.weight),
+              rate: safeNumber(r.rate),
+              amount: safeNumber(r.amount),
+              delDate: r.delDate || '',
+              type: r.type || 'S',
+              narration: r.narration || ''
+            };
+          })
+        };
+      }
+
+      function resolveNewOrderPrintUrl() {
+        try {
+          const path = window.location.pathname || '';
+          if (path.indexOf('/pages/') >= 0) return 'new-order-print.html';
+        } catch (e) { }
+        return 'pages/new-order-print.html';
+      }
+
+      function openNewOrderPrintPage() {
+        if (!validateOrder()) return;
+        try {
+          sessionStorage.setItem('newOrderPrintPayload', JSON.stringify(collectNewOrderPrintPayload()));
+        } catch (e) {
+          showError('Unable to prepare print data');
+          return;
+        }
+        const printUrl = resolveNewOrderPrintUrl();
+        try {
+          const w = window.open(printUrl, '_blank');
+          if (!w) showError('Please allow pop-ups to open the print page');
+        } catch (e2) {
+          try { window.location.href = printUrl; } catch (e3) { }
+        }
+      }
+
+      // =====================================================
       // INVOICE
       // =====================================================
 
@@ -6577,6 +6792,7 @@
         window.resetCustomerNameOnly = resetCustomerNameOnly;
         window.showInvoice = showInvoice;
         window.printOrder = printOrder;
+        window.openNewOrderPrintPage = openNewOrderPrintPage;
         window.back = back;
         window.closeDashboard = closeDashboard;
         window.saveOrderState = saveOrderState;
@@ -6619,7 +6835,7 @@
             'newOrderCloseOrderDetailsPopup', 'newOrderSaveOrderDetailsPopup',
             'saveOrderDetailsPopup', 'calculateOrderDetailsDeliveryDate', 'calcRatebookAmount',
             'saveRatebookEntry', 'applyRateToRow', 'deleteRate', 'saveOrder', 'saveAndNew',
-            'resetOrder', 'resetCustomerNameOnly', 'showInvoice', 'printOrder', 'back', 'closeDashboard', 'saveOrderState',
+            'resetOrder', 'resetCustomerNameOnly', 'showInvoice', 'printOrder', 'openNewOrderPrintPage', 'back', 'closeDashboard', 'saveOrderState',
             'restoreOrderState', 'openPaymentCardEdit', 'savePaymentCardEdit',
             'cancelPaymentCardEdit', 'cancelPaymentDetailTableEdit'
           ];
